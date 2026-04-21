@@ -1,4 +1,3 @@
-export * from "./components/PairingLab";
 export * from "./components/PairingDialog";
 export * from "./hooks/usePairingState";
 export * from "./services/desktopBridge";

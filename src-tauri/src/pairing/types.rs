@@ -14,5 +14,4 @@ pub struct DesktopPairingStatus {
     pub paired: bool,
     pub device_name: Option<String>,
     pub last_seen_at: Option<String>,
-    pub last_sequence: u64,
 }

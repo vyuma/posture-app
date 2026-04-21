@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     io::{Read, Write},
     net::{TcpListener, TcpStream},
     sync::{Arc, Mutex, OnceLock},
@@ -11,6 +12,7 @@ use sha1::{Digest, Sha1};
 use super::state::{timestamp_string, ErrorResponse, PairingStateHandle};
 
 type WsSink = Arc<Mutex<Vec<TcpStream>>>;
+type QueryMap = HashMap<String, String>;
 static WS_SINK: OnceLock<WsSink> = OnceLock::new();
 
 pub fn start_pairing_server(state: PairingStateHandle) -> Result<(), String> {
@@ -66,15 +68,7 @@ fn handle_connection(
     let target = parts.next().unwrap_or_default();
 
     if method != "GET" {
-        return write_json(
-            &mut stream,
-            405,
-            &serde_json::json!({
-                "ok": false,
-                "errorCode": "INTERNAL_ERROR",
-                "message": "method not allowed"
-            }),
-        );
+        return write_internal_error_json(&mut stream, 405, "method not allowed");
     }
 
     let (path, query) = split_target(target);
@@ -86,26 +80,17 @@ fn handle_connection(
         "/pair" => handle_pair(&mut stream, &state, &query_map),
         "/disconnect" => handle_disconnect(&mut stream, &state, &query_map),
         "/ws" => handle_websocket(stream, &state, &query_map, &headers, &ws_sink),
-        _ => write_json(
-            &mut stream,
-            404,
-            &serde_json::json!({
-                "ok": false,
-                "errorCode": "INTERNAL_ERROR",
-                "message": "not found"
-            }),
-        ),
+        _ => write_internal_error_json(&mut stream, 404, "not found"),
     }
 }
 
 fn handle_pair(
     stream: &mut TcpStream,
     state: &PairingStateHandle,
-    query_map: &std::collections::HashMap<String, String>,
+    query_map: &QueryMap,
 ) -> Result<(), String> {
-    match validate_token(state, query_map)? {
-        Some(error) => return write_json(stream, 400, &error),
-        None => {}
+    if !ensure_valid_token(stream, state, query_map)? {
+        return Ok(());
     }
 
     let device_name = match query_map.get("deviceName") {
@@ -121,11 +106,10 @@ fn handle_pair(
 fn handle_disconnect(
     stream: &mut TcpStream,
     state: &PairingStateHandle,
-    query_map: &std::collections::HashMap<String, String>,
+    query_map: &QueryMap,
 ) -> Result<(), String> {
-    match validate_token(state, query_map)? {
-        Some(error) => return write_json(stream, 400, &error),
-        None => {}
+    if !ensure_valid_token(stream, state, query_map)? {
+        return Ok(());
     }
 
     let response = state.disconnect_device();
@@ -136,25 +120,16 @@ fn handle_disconnect(
 fn handle_websocket(
     mut stream: TcpStream,
     state: &PairingStateHandle,
-    query_map: &std::collections::HashMap<String, String>,
-    headers: &std::collections::HashMap<String, String>,
+    query_map: &QueryMap,
+    headers: &HashMap<String, String>,
     ws_sink: &WsSink,
 ) -> Result<(), String> {
-    match validate_token(state, query_map)? {
-        Some(error) => return write_json(&mut stream, 400, &error),
-        None => {}
+    if !ensure_valid_token(&mut stream, state, query_map)? {
+        return Ok(());
     }
 
     if !is_websocket_upgrade(headers) {
-        return write_json(
-            &mut stream,
-            400,
-            &serde_json::json!({
-                "ok": false,
-                "errorCode": "INTERNAL_ERROR",
-                "message": "invalid websocket upgrade request"
-            }),
-        );
+        return write_internal_error_json(&mut stream, 400, "invalid websocket upgrade request");
     }
 
     let websocket_key = headers
@@ -253,7 +228,7 @@ fn websocket_accept_key(client_key: &str) -> String {
     base64::engine::general_purpose::STANDARD.encode(hash)
 }
 
-fn is_websocket_upgrade(headers: &std::collections::HashMap<String, String>) -> bool {
+fn is_websocket_upgrade(headers: &HashMap<String, String>) -> bool {
     let upgrade = headers
         .get("upgrade")
         .map(|value| value.eq_ignore_ascii_case("websocket"))
@@ -270,8 +245,8 @@ fn is_websocket_upgrade(headers: &std::collections::HashMap<String, String>) -> 
     upgrade && connection_upgrade
 }
 
-fn parse_headers(request: &str) -> std::collections::HashMap<String, String> {
-    let mut headers = std::collections::HashMap::new();
+fn parse_headers(request: &str) -> HashMap<String, String> {
+    let mut headers = HashMap::new();
 
     for line in request.lines().skip(1) {
         if line.trim().is_empty() {
@@ -288,18 +263,18 @@ fn parse_headers(request: &str) -> std::collections::HashMap<String, String> {
 
 fn validate_token(
     state: &PairingStateHandle,
-    query_map: &std::collections::HashMap<String, String>,
-) -> Result<Option<ErrorResponse>, String> {
+    query_map: &QueryMap,
+) -> Option<ErrorResponse> {
     let token = match query_map.get("token") {
         Some(token) if !token.is_empty() => token,
-        _ => return Ok(Some(state.missing_token_error())),
+        _ => return Some(state.missing_token_error()),
     };
 
-    if token != &state.snapshot().token {
-        return Ok(Some(state.invalid_token_error()));
+    if !state.matches_token(token) {
+        return Some(state.invalid_token_error());
     }
 
-    Ok(None)
+    None
 }
 
 fn split_target(target: &str) -> (&str, &str) {
@@ -309,8 +284,8 @@ fn split_target(target: &str) -> (&str, &str) {
     }
 }
 
-fn parse_query(query: &str) -> std::collections::HashMap<String, String> {
-    let mut params = std::collections::HashMap::new();
+fn parse_query(query: &str) -> QueryMap {
+    let mut params = HashMap::new();
 
     for entry in query.split('&') {
         if entry.is_empty() {
@@ -330,36 +305,66 @@ fn parse_query(query: &str) -> std::collections::HashMap<String, String> {
 
 fn percent_decode(value: &str) -> String {
     let bytes = value.as_bytes();
-    let mut decoded = String::with_capacity(value.len());
+    let mut decoded = Vec::with_capacity(value.len());
     let mut index = 0;
 
     while index < bytes.len() {
         match bytes[index] {
             b'+' => {
-                decoded.push(' ');
+                decoded.push(b' ');
                 index += 1;
             }
             b'%' if index + 2 < bytes.len() => {
                 let hex = &value[index + 1..index + 3];
                 match u8::from_str_radix(hex, 16) {
                     Ok(byte) => {
-                        decoded.push(byte as char);
+                        decoded.push(byte);
                         index += 3;
                     }
                     Err(_) => {
-                        decoded.push('%');
+                        decoded.push(b'%');
                         index += 1;
                     }
                 }
             }
             byte => {
-                decoded.push(byte as char);
+                decoded.push(byte);
                 index += 1;
             }
         }
     }
 
-    decoded
+    String::from_utf8_lossy(&decoded).into_owned()
+}
+
+fn ensure_valid_token(
+    stream: &mut TcpStream,
+    state: &PairingStateHandle,
+    query_map: &QueryMap,
+) -> Result<bool, String> {
+    match validate_token(state, query_map) {
+        Some(error) => {
+            write_json(stream, 400, &error)?;
+            Ok(false)
+        }
+        None => Ok(true),
+    }
+}
+
+fn write_internal_error_json(
+    stream: &mut TcpStream,
+    status_code: u16,
+    message: &str,
+) -> Result<(), String> {
+    write_json(
+        stream,
+        status_code,
+        &serde_json::json!({
+            "ok": false,
+            "errorCode": "INTERNAL_ERROR",
+            "message": message
+        }),
+    )
 }
 
 fn write_json<T: serde::Serialize>(

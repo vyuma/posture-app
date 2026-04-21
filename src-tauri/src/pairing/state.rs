@@ -14,12 +14,8 @@ pub struct PairingStateHandle {
 }
 
 #[derive(Clone)]
-pub struct PairingSnapshot {
-    pub token: String,
-    pub paired: bool,
-}
-
 struct PairingState {
+    host: String,
     port: u16,
     token: String,
     paired: bool,
@@ -75,6 +71,7 @@ impl PairingStateHandle {
     pub fn new() -> Self {
         Self {
             inner: Arc::new(Mutex::new(PairingState {
+                host: local_ip_address(),
                 port: 0,
                 token: generate_token(),
                 paired: false,
@@ -94,7 +91,7 @@ impl PairingStateHandle {
         let state = self.inner.lock().expect("pairing state poisoned");
 
         PairingInfo {
-            host: local_ip_address(),
+            host: state.host.clone(),
             port: state.port,
             token: state.token.clone(),
         }
@@ -107,17 +104,12 @@ impl PairingStateHandle {
             paired: state.paired,
             device_name: state.device_name.clone(),
             last_seen_at: state.last_seen_at.clone(),
-            last_sequence: state.last_sequence,
         }
     }
 
-    pub fn snapshot(&self) -> PairingSnapshot {
+    pub fn matches_token(&self, token: &str) -> bool {
         let state = self.inner.lock().expect("pairing state poisoned");
-
-        PairingSnapshot {
-            token: state.token.clone(),
-            paired: state.paired,
-        }
+        state.token == token
     }
 
     pub fn pair_device(&self, device_name: String) -> PairResponse {
@@ -151,11 +143,6 @@ impl PairingStateHandle {
             paired: false,
             disconnected_at: now,
         }
-    }
-
-    pub fn update_last_seen(&self) {
-        let mut state = self.inner.lock().expect("pairing state poisoned");
-        state.last_seen_at = Some(timestamp_string());
     }
 
     pub fn mark_posture_signal(&self) {
@@ -206,13 +193,6 @@ impl PairingStateHandle {
         }
     }
 
-    pub fn not_paired_error(&self) -> ErrorResponse {
-        ErrorResponse {
-            ok: false,
-            error_code: "NOT_PAIRED".to_string(),
-            message: "端末がまだ接続されていません".to_string(),
-        }
-    }
 }
 
 pub fn timestamp_string() -> String {

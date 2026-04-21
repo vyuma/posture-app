@@ -6,7 +6,6 @@ export type DesktopPairingStatus = {
   paired: boolean;
   deviceName: string | null;
   lastSeenAt: string | null;
-  lastSequence: number;
 };
 
 export async function getPairingInfo(): Promise<PairingInfo> {

@@ -15,6 +15,9 @@ type PairingState = {
 };
 
 const POLL_INTERVAL_MS = 1500;
+const INITIAL_LOAD_ERROR_MESSAGE = "ペアリング状態の読み込みに失敗しました。";
+const STATUS_POLL_ERROR_MESSAGE = "接続状態の更新に失敗しました。";
+const REFRESH_ERROR_MESSAGE = "ペアリング情報の更新に失敗しました。";
 
 const defaultState: PairingState = {
   pairingInfo: null,
@@ -22,6 +25,9 @@ const defaultState: PairingState = {
   isLoading: true,
   error: null,
 };
+
+const readPairingSnapshot = () =>
+  Promise.all([getPairingInfo(), getDesktopPairingStatus()]);
 
 export function usePairingState() {
   const [state, setState] = useState<PairingState>(defaultState);
@@ -31,10 +37,7 @@ export function usePairingState() {
 
     async function loadInitialState() {
       try {
-        const [pairingInfo, status] = await Promise.all([
-          getPairingInfo(),
-          getDesktopPairingStatus(),
-        ]);
+        const [pairingInfo, status] = await readPairingSnapshot();
 
         if (!active) {
           return;
@@ -57,7 +60,7 @@ export function usePairingState() {
           error:
             error instanceof Error
               ? error.message
-              : "ペアリング状態の読み込みに失敗しました。",
+              : INITIAL_LOAD_ERROR_MESSAGE,
         }));
       }
     }
@@ -87,7 +90,7 @@ export function usePairingState() {
           error:
             error instanceof Error
               ? error.message
-              : "接続状態の更新に失敗しました。",
+              : STATUS_POLL_ERROR_MESSAGE,
         }));
       }
     }, POLL_INTERVAL_MS);
@@ -101,17 +104,25 @@ export function usePairingState() {
   return {
     ...state,
     refresh: async () => {
-      const [pairingInfo, status] = await Promise.all([
-        getPairingInfo(),
-        getDesktopPairingStatus(),
-      ]);
+      try {
+        const [pairingInfo, status] = await readPairingSnapshot();
 
-      setState({
-        pairingInfo,
-        status,
-        isLoading: false,
-        error: null,
-      });
+        setState({
+          pairingInfo,
+          status,
+          isLoading: false,
+          error: null,
+        });
+      } catch (error) {
+        setState((prev) => ({
+          ...prev,
+          isLoading: false,
+          error:
+            error instanceof Error
+              ? error.message
+              : REFRESH_ERROR_MESSAGE,
+        }));
+      }
     },
   };
 }
