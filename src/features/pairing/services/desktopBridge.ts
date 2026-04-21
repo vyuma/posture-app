@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 
-import type { PairingInfo, VibrationPattern } from "../types/pairing";
+import type { PairingInfo } from "../types/pairing";
 
 export type DesktopPairingStatus = {
   paired: boolean;
@@ -17,8 +17,6 @@ export async function getDesktopPairingStatus(): Promise<DesktopPairingStatus> {
   return invoke<DesktopPairingStatus>("get_pairing_status");
 }
 
-export async function triggerMobileVibration(
-  pattern: VibrationPattern = "short",
-): Promise<void> {
-  await invoke("trigger_mobile_vibration", { pattern });
+export async function emitPostureSignal(isBad: boolean): Promise<void> {
+  await invoke("emit_posture_signal", { isBad });
 }

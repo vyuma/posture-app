@@ -1,7 +1,7 @@
 use tauri::State;
 
 use crate::pairing::{
-    DesktopPairingStatus, PairingInfo, PairingStateHandle, VibrationPattern,
+    broadcast_ws_state_event, DesktopPairingStatus, PairingInfo, PairingStateHandle,
 };
 
 #[tauri::command]
@@ -15,11 +15,11 @@ pub fn get_pairing_status(state: State<'_, PairingStateHandle>) -> DesktopPairin
 }
 
 #[tauri::command]
-pub fn trigger_mobile_vibration(
-    pattern: String,
+pub fn emit_posture_signal(
+    is_bad: bool,
     state: State<'_, PairingStateHandle>,
-) -> Result<(), String> {
-    let parsed_pattern = VibrationPattern::try_from(pattern.as_str())?;
-    state.trigger_vibration(parsed_pattern);
-    Ok(())
+) {
+    let event_type = if is_bad { "posture_bad" } else { "posture_good" };
+    state.mark_posture_signal();
+    broadcast_ws_state_event(&state, event_type);
 }

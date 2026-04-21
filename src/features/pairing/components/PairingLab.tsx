@@ -1,10 +1,9 @@
 import { useState } from "react";
 
-import { usePairingState, type VibrationPattern } from "..";
+import { usePairingState } from "..";
 
 export function PairingLab() {
-  const { pairingInfo, status, isLoading, error, refresh, sendVibration } =
-    usePairingState();
+  const { pairingInfo, status, isLoading, error, refresh } = usePairingState();
   const [copyState, setCopyState] = useState<"idle" | "done" | "error">("idle");
 
   const pairingLink = pairingInfo
@@ -18,10 +17,6 @@ export function PairingLab() {
     } catch {
       setCopyState("error");
     }
-  }
-
-  async function handleSend(pattern: VibrationPattern) {
-    await sendVibration(pattern);
   }
 
   return (
@@ -88,20 +83,6 @@ export function PairingLab() {
         </div>
       </section>
 
-      <section className="panel">
-        <p className="eyebrow">振動テスト</p>
-        <div className="actions">
-          <button onClick={() => void handleSend("short")} type="button">
-            短く送信
-          </button>
-          <button onClick={() => void handleSend("double")} type="button">
-            2回送信
-          </button>
-          <button onClick={() => void handleSend("long")} type="button">
-            長く送信
-          </button>
-        </div>
-      </section>
     </>
   );
 }

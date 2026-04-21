@@ -3,10 +3,9 @@ import { useEffect, useState } from "react";
 import {
   getDesktopPairingStatus,
   getPairingInfo,
-  triggerMobileVibration,
   type DesktopPairingStatus,
 } from "../services/desktopBridge";
-import type { PairingInfo, VibrationPattern } from "../types/pairing";
+import type { PairingInfo } from "../types/pairing";
 
 type PairingState = {
   pairingInfo: PairingInfo | null;
@@ -99,17 +98,6 @@ export function usePairingState() {
     };
   }, []);
 
-  async function sendVibration(pattern: VibrationPattern) {
-    await triggerMobileVibration(pattern);
-
-    const status = await getDesktopPairingStatus();
-    setState((prev) => ({
-      ...prev,
-      status,
-      error: null,
-    }));
-  }
-
   return {
     ...state,
     refresh: async () => {
@@ -125,6 +113,5 @@ export function usePairingState() {
         error: null,
       });
     },
-    sendVibration,
   };
 }

@@ -6,7 +6,7 @@ use std::{
 
 use serde::Serialize;
 
-use super::types::{DesktopPairingStatus, PairingInfo, VibrationPattern};
+use super::types::{DesktopPairingStatus, PairingInfo};
 
 #[derive(Clone)]
 pub struct PairingStateHandle {
@@ -26,7 +26,6 @@ struct PairingState {
     device_name: Option<String>,
     last_seen_at: Option<String>,
     last_sequence: u64,
-    last_pattern: Option<VibrationPattern>,
 }
 
 #[derive(Serialize)]
@@ -47,6 +46,14 @@ pub struct PairResponse {
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
+pub struct DisconnectResponse {
+    ok: bool,
+    paired: bool,
+    disconnected_at: String,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct ErrorResponse {
     ok: bool,
     error_code: String,
@@ -55,21 +62,13 @@ pub struct ErrorResponse {
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct EventResponse {
+pub struct WsEvent {
     r#type: String,
     sequence: u64,
-    pattern: String,
-    created_at: String,
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PollResponse {
-    ok: bool,
     paired: bool,
-    has_event: bool,
-    event: Option<EventResponse>,
-    server_time: String,
+    device_name: Option<String>,
+    last_seen_at: Option<String>,
+    created_at: String,
 }
 
 impl PairingStateHandle {
@@ -82,7 +81,6 @@ impl PairingStateHandle {
                 device_name: None,
                 last_seen_at: None,
                 last_sequence: 0,
-                last_pattern: None,
             })),
         }
     }
@@ -113,12 +111,6 @@ impl PairingStateHandle {
         }
     }
 
-    pub fn trigger_vibration(&self, pattern: VibrationPattern) {
-        let mut state = self.inner.lock().expect("pairing state poisoned");
-        state.last_sequence += 1;
-        state.last_pattern = Some(pattern);
-    }
-
     pub fn snapshot(&self) -> PairingSnapshot {
         let state = self.inner.lock().expect("pairing state poisoned");
 
@@ -135,6 +127,7 @@ impl PairingStateHandle {
         state.paired = true;
         state.device_name = Some(device_name.clone());
         state.last_seen_at = Some(now.clone());
+        state.last_sequence += 1;
 
         PairResponse {
             ok: true,
@@ -144,9 +137,30 @@ impl PairingStateHandle {
         }
     }
 
+    pub fn disconnect_device(&self) -> DisconnectResponse {
+        let now = timestamp_string();
+        let mut state = self.inner.lock().expect("pairing state poisoned");
+
+        state.paired = false;
+        state.device_name = None;
+        state.last_seen_at = None;
+        state.last_sequence += 1;
+
+        DisconnectResponse {
+            ok: true,
+            paired: false,
+            disconnected_at: now,
+        }
+    }
+
     pub fn update_last_seen(&self) {
         let mut state = self.inner.lock().expect("pairing state poisoned");
         state.last_seen_at = Some(timestamp_string());
+    }
+
+    pub fn mark_posture_signal(&self) {
+        let mut state = self.inner.lock().expect("pairing state poisoned");
+        state.last_sequence += 1;
     }
 
     pub fn build_health_response(&self) -> HealthResponse {
@@ -156,30 +170,15 @@ impl PairingStateHandle {
         }
     }
 
-    pub fn build_poll_response(&self, last_sequence: u64) -> PollResponse {
+    pub fn build_ws_event(&self, event_type: &str) -> WsEvent {
         let state = self.inner.lock().expect("pairing state poisoned");
-        let has_event = state.last_sequence > last_sequence && state.last_pattern.is_some();
-        let event = if has_event {
-            Some(EventResponse {
-                r#type: "vibrate".to_string(),
-                sequence: state.last_sequence,
-                pattern: state
-                    .last_pattern
-                    .expect("last pattern missing")
-                    .as_str()
-                    .to_string(),
-                created_at: timestamp_string(),
-            })
-        } else {
-            None
-        };
-
-        PollResponse {
-            ok: true,
+        WsEvent {
+            r#type: event_type.to_string(),
+            sequence: state.last_sequence,
             paired: state.paired,
-            has_event,
-            event,
-            server_time: timestamp_string(),
+            device_name: state.device_name.clone(),
+            last_seen_at: state.last_seen_at.clone(),
+            created_at: timestamp_string(),
         }
     }
 

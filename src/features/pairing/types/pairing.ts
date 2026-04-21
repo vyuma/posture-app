@@ -11,15 +11,6 @@ export type PairErrorCode =
   | "NOT_PAIRED"
   | "INTERNAL_ERROR";
 
-export type VibrationPattern = "short" | "double" | "long";
-
-export type VibrationEvent = {
-  type: "vibrate";
-  sequence: number;
-  pattern: VibrationPattern;
-  createdAt: string;
-};
-
 export type PairResponse = {
   ok: true;
   paired: true;
@@ -32,13 +23,6 @@ export type PollResponse =
       ok: true;
       paired: true;
       hasEvent: false;
-      serverTime: string;
-    }
-  | {
-      ok: true;
-      paired: true;
-      hasEvent: true;
-      event: VibrationEvent;
       serverTime: string;
     };
 

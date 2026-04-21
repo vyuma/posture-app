@@ -109,6 +109,25 @@ body {
   color: #31435f;
 }
 
+.hero-topline {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.pairing-launch {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: #0f766e;
+  color: #f8fafc;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 8px 18px rgba(15, 118, 110, 0.22);
+}
+
 .status {
   margin-top: 8px;
   width: fit-content;
@@ -192,6 +211,11 @@ body {
   opacity: 0;
 }
 
+.pairing-launch:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .item {
   font-size: 0.78rem;
   font-weight: 600;
@@ -246,5 +270,13 @@ body {
 
   .hero h1 {
     font-size: 1.25rem;
+  }
+
+  .hero-topline {
+    flex-direction: column;
+  }
+
+  .pairing-launch {
+    width: 100%;
   }
 }
