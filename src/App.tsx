@@ -6,6 +6,8 @@ import {
   NormalizedLandmark,
   PoseLandmarker,
 } from "@mediapipe/tasks-vision";
+import { PairingDialog } from "./features/pairing";
+import { emitPostureSignal } from "./features/pairing/services/desktopBridge";
 import "./App.css";
 
 const FACE_OUTLINE = [
@@ -227,6 +229,7 @@ function App() {
     rightShoulderY: null,
   });
   const isBadPostureRef = useRef(false);
+  const lastSignaledPostureRef = useRef<boolean | null>(null);
   const badFrameCountRef = useRef(0);
   const goodFrameCountRef = useRef(0);
   const lastInferenceAtRef = useRef(0);
@@ -244,6 +247,23 @@ function App() {
   const [registeredPosture, setRegisteredPosture] =
     useState<RegisteredPosture | null>(null);
   const [lastLog, setLastLog] = useState("");
+  const [isPairingDialogOpen, setIsPairingDialogOpen] = useState(false);
+
+  useEffect(() => {
+    if (lastSignaledPostureRef.current === null) {
+      lastSignaledPostureRef.current = isBadPosture;
+      return;
+    }
+
+    if (lastSignaledPostureRef.current === isBadPosture) {
+      return;
+    }
+
+    lastSignaledPostureRef.current = isBadPosture;
+    void emitPostureSignal(isBadPosture).catch(() => {
+      // Pairing can be inactive; posture detection should continue even if signaling fails.
+    });
+  }, [isBadPosture]);
 
   const updateCriterion = (key: keyof CriteriaSettings, value: number) => {
     const clamped = Math.max(0, Math.min(100, value));
@@ -1270,11 +1290,23 @@ function App() {
   return (
     <main className="app-shell">
       <section className="hero">
-        <h1>姿勢カメラトラッカー</h1>
-        <p>
-          Windowsカメラ映像に、顔輪郭・視線方向・鼻先・肩位置をリアルタイム表示します。
-        </p>
-        <div className={`status ${ready ? "ok" : "warn"}`}>{status}</div>
+        <div className="hero-topline">
+          <div>
+            <h1>姿勢カメラトラッカー</h1>
+            <p>
+              Windowsカメラ映像に、顔輪郭・視線方向・鼻先・肩位置をリアルタイム表示します。
+            </p>
+            <div className={`status ${ready ? "ok" : "warn"}`}>{status}</div>
+          </div>
+
+          <button
+            type="button"
+            className="pairing-launch"
+            onClick={() => setIsPairingDialogOpen(true)}
+          >
+            モバイル連携
+          </button>
+        </div>
       </section>
 
       <section className="workbench">
@@ -1461,6 +1493,10 @@ function App() {
           </div>
         </section>
       </section>
+
+      {isPairingDialogOpen ? (
+        <PairingDialog onClose={() => setIsPairingDialogOpen(false)} />
+      ) : null}
     </main>
   );
 }
