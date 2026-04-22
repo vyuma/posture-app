@@ -1,0 +1,193 @@
+.pairing-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.46);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 30;
+}
+
+.pairing-dialog {
+  width: min(760px, 100%);
+  max-height: min(88vh, 820px);
+  overflow: auto;
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.28);
+}
+
+.pairing-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.pairing-dialog-header h2 {
+  margin: 4px 0 0;
+  font-size: 1.4rem;
+}
+
+.pairing-eyebrow {
+  margin: 0;
+  color: #0f766e;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.pairing-description {
+  margin: 10px 0 0;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.pairing-close {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: #e2e8f0;
+  color: #0f172a;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pairing-dialog-body {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 18px;
+}
+
+.pairing-qr-card {
+  background: linear-gradient(180deg, #f8fafc 0%, #eef6ff 100%);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 20px;
+  padding: 18px;
+  display: grid;
+  place-items: center;
+  min-height: 280px;
+}
+
+.pairing-qr-image {
+  width: min(240px, 100%);
+  height: auto;
+  display: block;
+  border-radius: 14px;
+  background: #fff;
+  padding: 10px;
+}
+
+.pairing-qr-placeholder {
+  color: #64748b;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.pairing-info {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+.pairing-status-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.06);
+}
+
+.pairing-field {
+  display: grid;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.pairing-field textarea {
+  width: 100%;
+  resize: vertical;
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  padding: 12px;
+  font: inherit;
+  color: #0f172a;
+  background: #fff;
+}
+
+.pairing-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.pairing-actions button {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: #0f172a;
+  color: #f8fafc;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pairing-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* バイブテスト開始ボタン: ティール系の配色でアクションボタンと区別する */
+.pairing-vibe-test {
+  background: #0f766e !important;
+  color: #f0fdfa !important;
+}
+
+.pairing-vibe-test:hover:not(:disabled) {
+  background: #115e59 !important;
+}
+
+/* バイブテスト停止ボタン: 赤系の配色で停止アクションであることを明示する */
+.pairing-vibe-stop {
+  background: #b91c1c !important;
+  color: #fef2f2 !important;
+}
+
+.pairing-vibe-stop:hover:not(:disabled) {
+  background: #991b1b !important;
+}
+
+.pairing-hint {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.pairing-ok {
+  color: #166534;
+}
+
+.pairing-error {
+  color: #b91c1c;
+}
+
+@media (max-width: 900px) {
+  .pairing-dialog {
+    padding: 18px;
+  }
+
+  .pairing-dialog-body {
+    grid-template-columns: 1fr;
+  }
+
+  .pairing-qr-card {
+    min-height: 220px;
+  }
+}

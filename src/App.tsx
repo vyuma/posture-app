@@ -6,7 +6,21 @@ import {
   NormalizedLandmark,
   PoseLandmarker,
 } from "@mediapipe/tasks-vision";
+import { PairingDialog } from "./features/pairing";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import "./App.css";
+import {
+  buildPairingUrl,
+  getPairingStatus,
+  getPrimaryIpv4,
+  getSavedPhoneIp,
+  sendPostureSignal,
+  sendVibrationSignal,
+  setBlackoutWindow,
+  startPairingServer,
+  stopPairingServer,
+} from "./lib/desktopBridge";
+import { generateQrDataUrl } from "./lib/qrcode";
 
 const FACE_OUTLINE = [
   [10, 338],
@@ -59,14 +73,19 @@ const RIGHT_SHOULDER = 12;
 
 const DORSO_BAD_FRAME_THRESHOLD = 8;
 const DORSO_GOOD_FRAME_THRESHOLD = 5;
-const DORSO_GAZE_BASE_THRESHOLD = 0.12;
-const DORSO_NOSE_DEAD_ZONE = 0.03;
-const DORSO_FORWARD_HEAD_BASE_THRESHOLD = 0.05;
-const DORSO_SHOULDER_BASE_THRESHOLD = 0.04;
-const BASELINE_ADAPT_RATE_DEFAULT = 0.005;
-const BASELINE_ADAPT_RATE_MIN = 0.001;
-const BASELINE_ADAPT_RATE_MAX = 0.02;
+// User calibration baseline: slider=50 should match this captured profile.
+const CALIBRATED_GAZE_BASE_THRESHOLD = 0.216;
+const CALIBRATED_NOSE_BASE_THRESHOLD = 0.0652;
+const CALIBRATED_FACE_SIZE_BASE_THRESHOLD = 0.12;
+const CALIBRATED_SHOULDER_BASE_THRESHOLD = 0.0272;
+const BASELINE_ADAPT_RATE_CENTER = 0.02;
+const TEST_VIBRATION_INTERVAL_MS = 1400;
+
+// Slider span: 0 => center*0.2, 100 => center*1.8
+const SLIDER_RANGE_RATIO = 0.8;
 const TRACKING_INTERVAL_MS = 50;
+
+type AlertDisplayMode = "blackout" | "debug";
 
 type VisionModels = {
   faceLandmarker: FaceLandmarker;
@@ -104,6 +123,8 @@ const CRITERION_LABEL: Record<keyof CriteriaSettings, string> = {
 type RegisteredPosture = {
   gaze: number;
   noseY: number;
+  faceCenterX: number;
+  faceCenterY: number;
   faceWidth: number;
   shoulderAngle: number;
   noseX: number;
@@ -120,6 +141,8 @@ type RegisteredPosture = {
 type LivePostureSample = {
   gaze: number | null;
   noseY: number | null;
+  faceCenterX: number | null;
+  faceCenterY: number | null;
   faceWidth: number | null;
   shoulderAngle: number | null;
   noseX: number | null;
@@ -142,39 +165,28 @@ const DEFAULT_CRITERIA: CriteriaSettings = {
 };
 
 const getBaselineAdaptRateFromSlider = (value: number) => {
-  // Slider 50 matches the previous fixed follow speed.
-  if (value <= 50) {
-    const t = value / 50;
-    return (
-      BASELINE_ADAPT_RATE_MIN +
-      (BASELINE_ADAPT_RATE_DEFAULT - BASELINE_ADAPT_RATE_MIN) * t
-    );
-  }
-
-  const t = (value - 50) / 50;
-  return (
-    BASELINE_ADAPT_RATE_DEFAULT +
-    (BASELINE_ADAPT_RATE_MAX - BASELINE_ADAPT_RATE_DEFAULT) * t
-  );
+  const normalized = (value - 50) / 50;
+  const scale = 1 + normalized * SLIDER_RANGE_RATIO;
+  return Math.max(0.0001, BASELINE_ADAPT_RATE_CENTER * scale);
 };
 
 const getThresholdFromSlider = (
   key: keyof CriteriaSettings,
   value: number,
 ) => {
-  // Slider 50 means Dorso-like default. 0=relaxed, 100=strict.
+  // Slider 50 = calibrated baseline profile. 0=relaxed, 100=strict.
   const normalized = (value - 50) / 50;
-  const scale = 1 - normalized * 0.8;
+  const scale = 1 - normalized * SLIDER_RANGE_RATIO;
 
   switch (key) {
     case "gaze":
-      return DORSO_GAZE_BASE_THRESHOLD * scale;
+      return CALIBRATED_GAZE_BASE_THRESHOLD * scale;
     case "nose":
-      return DORSO_NOSE_DEAD_ZONE * scale;
+      return CALIBRATED_NOSE_BASE_THRESHOLD * scale;
     case "faceSize":
-      return DORSO_FORWARD_HEAD_BASE_THRESHOLD * scale;
+      return CALIBRATED_FACE_SIZE_BASE_THRESHOLD * scale;
     case "shoulder":
-      return DORSO_SHOULDER_BASE_THRESHOLD * scale;
+      return CALIBRATED_SHOULDER_BASE_THRESHOLD * scale;
     default:
       return 0;
   }
@@ -199,6 +211,8 @@ function App() {
   const streamRef = useRef<MediaStream | null>(null);
   const modelsRef = useRef<VisionModels | null>(null);
   const baselineFaceWidthRef = useRef<number | null>(null);
+  const baselineFaceCenterXRef = useRef<number | null>(null);
+  const baselineFaceCenterYRef = useRef<number | null>(null);
   const baselineNoseXRef = useRef<number | null>(null);
   const baselineNoseYRef = useRef<number | null>(null);
   const baselineLeftIrisRef = useRef<{ x: number; y: number } | null>(null);
@@ -210,10 +224,11 @@ function App() {
   const criteriaRef = useRef<CriteriaSettings>(DEFAULT_CRITERIA);
   const dragStateRef = useRef<DragState | null>(null);
   const registeredPostureRef = useRef<RegisteredPosture | null>(null);
-  const adaptiveRegisteredPostureRef = useRef<RegisteredPosture | null>(null);
   const livePostureSampleRef = useRef<LivePostureSample>({
     gaze: null,
     noseY: null,
+    faceCenterX: null,
+    faceCenterY: null,
     faceWidth: null,
     shoulderAngle: null,
     noseX: null,
@@ -227,12 +242,28 @@ function App() {
     rightShoulderY: null,
   });
   const isBadPostureRef = useRef(false);
+  const lastBroadcastedPostureRef = useRef<boolean | null>(null);
+  const vibrationTestIntervalRef = useRef<number | null>(null);
   const badFrameCountRef = useRef(0);
   const goodFrameCountRef = useRef(0);
   const lastInferenceAtRef = useRef(0);
 
   const [status, setStatus] = useState("カメラを初期化しています...");
   const [ready, setReady] = useState(false);
+  const [alertDisplayMode, setAlertDisplayMode] =
+    useState<AlertDisplayMode>("debug");
+  const [deviceIp, setDeviceIp] = useState<string | null>(null);
+  const [phoneIp, setPhoneIp] = useState("");
+  const [savedPhoneIp, setSavedPhoneIp] = useState<string | null>(null);
+  const [pairingToken, setPairingToken] = useState<string | null>(null);
+  const [qrPayload, setQrPayload] = useState("取得中...");
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+  const [isPairingServerRunning, setIsPairingServerRunning] = useState(false);
+  // 実接続状態はバックエンドのペアリング状態で追跡する
+  const [isWebSocketConnected, setIsWebSocketConnected] = useState(false);
+  const [isVibrationTestRunning, setIsVibrationTestRunning] = useState(false);
+  const isRestartingPairingRef = useRef(false);
+  const [isPairingDialogOpen, setIsPairingDialogOpen] = useState(false);
   const [criteria, setCriteria] = useState<CriteriaSettings>(DEFAULT_CRITERIA);
   const [metrics, setMetrics] = useState<Metrics>({
     gaze: 0,
@@ -290,6 +321,8 @@ function App() {
     if (
       sample.gaze === null ||
       sample.noseY === null ||
+      sample.faceCenterX === null ||
+      sample.faceCenterY === null ||
       sample.faceWidth === null ||
       sample.shoulderAngle === null ||
       sample.noseX === null ||
@@ -309,6 +342,8 @@ function App() {
     const next: RegisteredPosture = {
       gaze: sample.gaze,
       noseY: sample.noseY,
+      faceCenterX: sample.faceCenterX,
+      faceCenterY: sample.faceCenterY,
       faceWidth: sample.faceWidth,
       shoulderAngle: sample.shoulderAngle,
       noseX: sample.noseX,
@@ -323,10 +358,83 @@ function App() {
     };
 
     registeredPostureRef.current = next;
-    adaptiveRegisteredPostureRef.current = next;
+    isBadPostureRef.current = false;
+    badFrameCountRef.current = 0;
+    goodFrameCountRef.current = 0;
+    setIsBadPosture(false);
     setRegisteredPosture(next);
     setStatus("現在の姿勢を良い姿勢として登録しました。");
     exportDebugLog("register_posture", next);
+  };
+
+  const clearVibrationTestInterval = () => {
+    if (vibrationTestIntervalRef.current !== null) {
+      window.clearInterval(vibrationTestIntervalRef.current);
+      vibrationTestIntervalRef.current = null;
+    }
+  };
+
+  const stopVibrationTest = async (silent = false) => {
+    clearVibrationTestInterval();
+    setIsVibrationTestRunning(false);
+    await sendPostureSignal(false);
+    if (!silent) {
+      setStatus("バイブ信号テスト送信を停止しました。");
+    }
+  };
+
+  const handleSendVibrationSignal = async () => {
+    if (isVibrationTestRunning) {
+      await stopVibrationTest();
+      return;
+    }
+
+    const targetIp = phoneIp.trim() || undefined;
+    const success = await sendVibrationSignal(targetIp);
+    if (!success) {
+      setStatus("バイブ信号送信に失敗しました。");
+      return;
+    }
+
+    vibrationTestIntervalRef.current = window.setInterval(() => {
+      void sendVibrationSignal(targetIp);
+    }, TEST_VIBRATION_INTERVAL_MS);
+    setIsVibrationTestRunning(true);
+    setStatus("バイブ信号テスト送信を開始しました。停止ボタンで終了できます。");
+  };
+
+  const ensurePairingHostRunning = async () => {
+    const pairingUrl = await startPairingServer();
+    if (pairingUrl) {
+      setQrPayload(pairingUrl);
+    }
+
+    const pairingStatus = await getPairingStatus();
+    setPairingToken(pairingStatus.pairingToken ?? null);
+    setIsPairingServerRunning(pairingStatus.running);
+  };
+
+  const resetToPairingMode = async (message: string) => {
+    if (isRestartingPairingRef.current) {
+      return;
+    }
+
+    isRestartingPairingRef.current = true;
+    try {
+      setIsWebSocketConnected(false);
+      setSavedPhoneIp(null);
+      await ensurePairingHostRunning();
+      setStatus(message);
+    } finally {
+      isRestartingPairingRef.current = false;
+    }
+  };
+
+  const handleDisconnectPhone = async () => {
+    await stopVibrationTest(true);
+    await resetToPairingMode(
+      "スマホ接続を解除しました。QRを再表示して接続待機に戻ります。",
+    );
   };
 
   const modelUrl = useMemo(
@@ -345,10 +453,189 @@ function App() {
     () => getBaselineAdaptRateFromSlider(criteria.baselineAdapt),
     [criteria.baselineAdapt],
   );
+  const shouldBlackoutScreen =
+    isBadPosture && alertDisplayMode === "blackout";
 
   useEffect(() => {
     criteriaRef.current = criteria;
   }, [criteria]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadConnectionState = async () => {
+      const [primaryIpv4, persistedPhoneIp, pairingStatus] = await Promise.all([
+        getPrimaryIpv4(),
+        getSavedPhoneIp(),
+        getPairingStatus(),
+      ]);
+
+      if (!mounted) {
+        return;
+      }
+
+      setDeviceIp(primaryIpv4);
+      setPairingToken(pairingStatus.pairingToken ?? null);
+      const initialPhoneIp = pairingStatus.pairedPhoneIp ?? persistedPhoneIp;
+      if (initialPhoneIp) {
+        setPhoneIp(initialPhoneIp);
+        setSavedPhoneIp(initialPhoneIp);
+      }
+
+      // アプリ起動時に自動でペアリングサーバーを開始
+      if (!pairingStatus.running) {
+        const url = await startPairingServer();
+        if (mounted && url) {
+          setQrPayload(url);
+          setIsPairingServerRunning(true);
+          setStatus("ペアリングサーバーを自動起動しました。スマホでQRを読み取ってください。");
+        }
+      } else {
+        setIsPairingServerRunning(true);
+      }
+    };
+
+    void loadConnectionState();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isPairingServerRunning) {
+      return;
+    }
+
+    let mounted = true;
+
+    const syncPairingState = async () => {
+      const pairingStatus = await getPairingStatus();
+      if (!mounted) {
+        return;
+      }
+
+      setPairingToken(pairingStatus.pairingToken ?? null);
+      const nextConnected = Boolean(pairingStatus.paired);
+      setIsWebSocketConnected(nextConnected);
+
+      if (!pairingStatus.running) {
+        if (nextConnected) {
+          setIsPairingServerRunning(false);
+        } else {
+          const url = await startPairingServer();
+          if (!mounted) {
+            return;
+          }
+          if (url) {
+            setQrPayload(url);
+            setIsPairingServerRunning(true);
+            setStatus("接続待機に戻りました。QRを再表示しています。");
+          }
+        }
+      } else {
+        setIsPairingServerRunning(true);
+      }
+
+      if (!nextConnected) {
+        setSavedPhoneIp(null);
+        return;
+      }
+
+      if (!pairingStatus.pairedPhoneIp) {
+        return;
+      }
+
+      setPhoneIp(pairingStatus.pairedPhoneIp);
+      setSavedPhoneIp(pairingStatus.pairedPhoneIp);
+      setStatus(`スマホを自動ペアリングしました: ${pairingStatus.pairedPhoneIp}`);
+    };
+
+    void syncPairingState();
+    const intervalId = window.setInterval(() => {
+      void syncPairingState();
+    }, 1000);
+
+    return () => {
+      mounted = false;
+      window.clearInterval(intervalId);
+    };
+  }, [isPairingServerRunning]);
+
+  useEffect(() => {
+    if (!isWebSocketConnected || !isPairingServerRunning) {
+      return;
+    }
+
+    let mounted = true;
+
+    const stopHostAfterConnected = async () => {
+      await stopPairingServer();
+      if (mounted) {
+        setIsPairingServerRunning(false);
+      }
+    };
+
+    void stopHostAfterConnected();
+
+    return () => {
+      mounted = false;
+    };
+  }, [isWebSocketConnected, isPairingServerRunning]);
+
+  useEffect(() => {
+    const payload =
+      qrPayload !== "取得中..."
+        ? qrPayload
+        : buildPairingUrl(deviceIp ?? "127.0.0.1", pairingToken ?? undefined);
+
+    if (qrPayload === "取得中..." && payload !== qrPayload) {
+      setQrPayload(payload);
+    }
+
+    let mounted = true;
+
+    const updateQr = async () => {
+      const nextQrDataUrl = await generateQrDataUrl(payload);
+      if (mounted) {
+        setQrDataUrl(nextQrDataUrl);
+      }
+    };
+
+    void updateQr();
+
+    return () => {
+      mounted = false;
+    };
+  }, [deviceIp, pairingToken, qrPayload]);
+
+  useEffect(() => {
+    void setBlackoutWindow(shouldBlackoutScreen);
+
+    // タスクバーも含めて画面全体を覆うためにフルスクリーンを制御する
+    const appWindow = getCurrentWindow();
+    void appWindow.setFullscreen(shouldBlackoutScreen);
+
+    if (lastBroadcastedPostureRef.current !== isBadPosture) {
+      lastBroadcastedPostureRef.current = isBadPosture;
+      void sendPostureSignal(isBadPosture);
+    }
+  }, [isBadPosture, shouldBlackoutScreen]);
+
+  useEffect(() => {
+    if (!isWebSocketConnected && isVibrationTestRunning) {
+      void stopVibrationTest(true);
+    }
+  }, [isWebSocketConnected, isVibrationTestRunning]);
+
+  useEffect(() => {
+    return () => {
+      clearVibrationTestInterval();
+      void sendPostureSignal(false);
+      void setBlackoutWindow(false);
+      void stopPairingServer();
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -495,12 +782,16 @@ function App() {
             let currentGaze: number | null = null;
             let currentNoseX: number | null = null;
             let currentNoseY: number | null = null;
+            let currentFaceCenterX: number | null = null;
+            let currentFaceCenterY: number | null = null;
             let currentFaceWidth: number | null = null;
             let currentShoulderAngle: number | null = null;
             let currentLeftIris: { x: number; y: number } | null = null;
             let currentRightIris: { x: number; y: number } | null = null;
             let currentLeftShoulder: { x: number; y: number } | null = null;
             let currentRightShoulder: { x: number; y: number } | null = null;
+            let registeredTranslationX: number | null = null;
+            let registeredTranslationY: number | null = null;
             const baselineAdaptRate = getBaselineAdaptRateFromSlider(
               criteriaRef.current.baselineAdapt,
             );
@@ -601,8 +892,15 @@ function App() {
                   Math.abs(faceRight.x - faceLeft.x),
                   0.0001,
                 );
+                const faceCenterX = (faceLeft.x + faceRight.x) / 2;
+                const faceCenterY =
+                  ((landmarks[10]?.y ?? Math.max(nose.y - 0.2, 0)) +
+                    (landmarks[152]?.y ?? Math.min(nose.y + 0.2, 1))) /
+                  2;
                 currentNoseX = nose.x;
                 currentNoseY = nose.y;
+                currentFaceCenterX = faceCenterX;
+                currentFaceCenterY = faceCenterY;
                 currentFaceWidth = faceWidth;
                 currentLeftIris = { x: leftIris.x, y: leftIris.y };
                 currentRightIris = { x: rightIris.x, y: rightIris.y };
@@ -620,59 +918,53 @@ function App() {
                 };
 
                 if (registeredPostureRef.current) {
-                  if (!adaptiveRegisteredPostureRef.current) {
-                    adaptiveRegisteredPostureRef.current = registeredPostureRef.current;
-                  }
-                  const reference =
-                    adaptiveRegisteredPostureRef.current ?? registeredPostureRef.current;
+                  const reference = registeredPostureRef.current;
+                  const translationX = faceCenterX - reference.faceCenterX;
+                  const translationY = faceCenterY - reference.faceCenterY;
+                  registeredTranslationX = translationX;
+                  registeredTranslationY = translationY;
+                  const expectedLeftIrisX = reference.leftIrisX + translationX;
+                  const expectedLeftIrisY = reference.leftIrisY + translationY;
+                  const expectedRightIrisX = reference.rightIrisX + translationX;
+                  const expectedRightIrisY = reference.rightIrisY + translationY;
+                  const expectedNoseX = reference.noseX + translationX;
+                  const expectedNoseY = reference.noseY + translationY;
+
                   const leftGazeDistance =
                     Math.hypot(
-                      leftIris.x - reference.leftIrisX,
-                      leftIris.y - reference.leftIrisY,
+                      leftIris.x - expectedLeftIrisX,
+                      leftIris.y - expectedLeftIrisY,
                     ) / Math.max(leftEyeWidth, 0.0001);
                   const rightGazeDistance =
                     Math.hypot(
-                      rightIris.x - reference.rightIrisX,
-                      rightIris.y - reference.rightIrisY,
+                      rightIris.x - expectedRightIrisX,
+                      rightIris.y - expectedRightIrisY,
                     ) / Math.max(rightEyeWidth, 0.0001);
                   gazeMetric = Math.max(leftGazeDistance, rightGazeDistance);
-                  noseMetric = Math.max(
-                    0,
-                    currentNoseY - reference.noseY,
+                  noseMetric = Math.hypot(
+                    currentNoseX - expectedNoseX,
+                    currentNoseY - expectedNoseY,
                   );
-                  faceSizeMetric = Math.max(
-                    0,
-                    currentFaceWidth /
-                      Math.max(reference.faceWidth, 0.0001) -
-                      1,
+                  faceSizeMetric = Math.abs(
+                    currentFaceWidth / Math.max(reference.faceWidth, 0.0001) - 1,
                   );
-
-                  adaptiveRegisteredPostureRef.current = {
-                    ...reference,
-                    gaze: reference.gaze * (1 - baselineAdaptRate) + currentGaze * baselineAdaptRate,
-                    noseX:
-                      reference.noseX * (1 - baselineAdaptRate) +
-                      currentNoseX * baselineAdaptRate,
-                    noseY:
-                      reference.noseY * (1 - baselineAdaptRate) +
-                      currentNoseY * baselineAdaptRate,
-                    faceWidth:
-                      reference.faceWidth * (1 - baselineAdaptRate) +
-                      currentFaceWidth * baselineAdaptRate,
-                    leftIrisX:
-                      reference.leftIrisX * (1 - baselineAdaptRate) +
-                      leftIris.x * baselineAdaptRate,
-                    leftIrisY:
-                      reference.leftIrisY * (1 - baselineAdaptRate) +
-                      leftIris.y * baselineAdaptRate,
-                    rightIrisX:
-                      reference.rightIrisX * (1 - baselineAdaptRate) +
-                      rightIris.x * baselineAdaptRate,
-                    rightIrisY:
-                      reference.rightIrisY * (1 - baselineAdaptRate) +
-                      rightIris.y * baselineAdaptRate,
-                  };
                 } else {
+                  if (baselineFaceCenterXRef.current === null) {
+                    baselineFaceCenterXRef.current = faceCenterX;
+                  } else {
+                    baselineFaceCenterXRef.current =
+                      baselineFaceCenterXRef.current * (1 - baselineAdaptRate) +
+                      faceCenterX * baselineAdaptRate;
+                  }
+
+                  if (baselineFaceCenterYRef.current === null) {
+                    baselineFaceCenterYRef.current = faceCenterY;
+                  } else {
+                    baselineFaceCenterYRef.current =
+                      baselineFaceCenterYRef.current * (1 - baselineAdaptRate) +
+                      faceCenterY * baselineAdaptRate;
+                  }
+
                   if (!baselineLeftIrisRef.current) {
                     baselineLeftIrisRef.current = { x: leftIris.x, y: leftIris.y };
                   } else {
@@ -700,15 +992,27 @@ function App() {
                   }
 
                   const leftGazeDistance = baselineLeftIrisRef.current
+                    && baselineFaceCenterXRef.current !== null
+                    && baselineFaceCenterYRef.current !== null
                     ? Math.hypot(
-                        leftIris.x - baselineLeftIrisRef.current.x,
-                        leftIris.y - baselineLeftIrisRef.current.y,
+                        leftIris.x -
+                          (baselineLeftIrisRef.current.x +
+                            (faceCenterX - baselineFaceCenterXRef.current)),
+                        leftIris.y -
+                          (baselineLeftIrisRef.current.y +
+                            (faceCenterY - baselineFaceCenterYRef.current)),
                       ) / Math.max(leftEyeWidth, 0.0001)
                     : 0;
                   const rightGazeDistance = baselineRightIrisRef.current
+                    && baselineFaceCenterXRef.current !== null
+                    && baselineFaceCenterYRef.current !== null
                     ? Math.hypot(
-                        rightIris.x - baselineRightIrisRef.current.x,
-                        rightIris.y - baselineRightIrisRef.current.y,
+                        rightIris.x -
+                          (baselineRightIrisRef.current.x +
+                            (faceCenterX - baselineFaceCenterXRef.current)),
+                        rightIris.y -
+                          (baselineRightIrisRef.current.y +
+                            (faceCenterY - baselineFaceCenterYRef.current)),
                       ) / Math.max(rightEyeWidth, 0.0001)
                     : 0;
 
@@ -730,7 +1034,20 @@ function App() {
                       nose.y * baselineAdaptRate;
                   }
 
-                  noseMetric = Math.max(0, nose.y - baselineNoseYRef.current);
+                  noseMetric =
+                    baselineNoseXRef.current !== null &&
+                    baselineNoseYRef.current !== null &&
+                    baselineFaceCenterXRef.current !== null &&
+                    baselineFaceCenterYRef.current !== null
+                      ? Math.hypot(
+                          nose.x -
+                            (baselineNoseXRef.current +
+                              (faceCenterX - baselineFaceCenterXRef.current)),
+                          nose.y -
+                            (baselineNoseYRef.current +
+                              (faceCenterY - baselineFaceCenterYRef.current)),
+                        )
+                      : 0;
 
                   if (baselineFaceWidthRef.current === null) {
                     baselineFaceWidthRef.current = faceWidth;
@@ -740,8 +1057,7 @@ function App() {
                       faceWidth * baselineAdaptRate;
                   }
 
-                  faceSizeMetric = Math.max(
-                    0,
+                  faceSizeMetric = Math.abs(
                     faceWidth / Math.max(baselineFaceWidthRef.current, 0.0001) - 1,
                   );
                 }
@@ -808,39 +1124,38 @@ function App() {
                 currentShoulderAngle = shoulderAngle;
 
                 if (registeredPostureRef.current) {
-                  if (!adaptiveRegisteredPostureRef.current) {
-                    adaptiveRegisteredPostureRef.current = registeredPostureRef.current;
-                  }
-                  const reference =
-                    adaptiveRegisteredPostureRef.current ?? registeredPostureRef.current;
+                  const reference = registeredPostureRef.current;
+                  const referenceShoulderCenterX =
+                    (reference.leftShoulderX + reference.rightShoulderX) / 2;
+                  const referenceShoulderCenterY =
+                    (reference.leftShoulderY + reference.rightShoulderY) / 2;
+                  const currentShoulderCenterX =
+                    (leftShoulder.x + rightShoulder.x) / 2;
+                  const currentShoulderCenterY =
+                    (leftShoulder.y + rightShoulder.y) / 2;
+                  const translationX =
+                    registeredTranslationX ??
+                    (currentShoulderCenterX - referenceShoulderCenterX);
+                  const translationY =
+                    registeredTranslationY ??
+                    (currentShoulderCenterY - referenceShoulderCenterY);
+                  const expectedLeftShoulderX =
+                    reference.leftShoulderX + translationX;
+                  const expectedLeftShoulderY =
+                    reference.leftShoulderY + translationY;
+                  const expectedRightShoulderX =
+                    reference.rightShoulderX + translationX;
+                  const expectedRightShoulderY =
+                    reference.rightShoulderY + translationY;
                   const leftDistance = Math.hypot(
-                    leftShoulder.x - reference.leftShoulderX,
-                    leftShoulder.y - reference.leftShoulderY,
+                    leftShoulder.x - expectedLeftShoulderX,
+                    leftShoulder.y - expectedLeftShoulderY,
                   );
                   const rightDistance = Math.hypot(
-                    rightShoulder.x - reference.rightShoulderX,
-                    rightShoulder.y - reference.rightShoulderY,
+                    rightShoulder.x - expectedRightShoulderX,
+                    rightShoulder.y - expectedRightShoulderY,
                   );
                   shoulderMetric = Math.max(leftDistance, rightDistance);
-
-                  adaptiveRegisteredPostureRef.current = {
-                    ...reference,
-                    shoulderAngle:
-                      reference.shoulderAngle * (1 - baselineAdaptRate) +
-                      shoulderAngle * baselineAdaptRate,
-                    leftShoulderX:
-                      reference.leftShoulderX * (1 - baselineAdaptRate) +
-                      leftShoulder.x * baselineAdaptRate,
-                    leftShoulderY:
-                      reference.leftShoulderY * (1 - baselineAdaptRate) +
-                      leftShoulder.y * baselineAdaptRate,
-                    rightShoulderX:
-                      reference.rightShoulderX * (1 - baselineAdaptRate) +
-                      rightShoulder.x * baselineAdaptRate,
-                    rightShoulderY:
-                      reference.rightShoulderY * (1 - baselineAdaptRate) +
-                      rightShoulder.y * baselineAdaptRate,
-                  };
                 } else {
                   if (!baselineLeftShoulderRef.current) {
                     baselineLeftShoulderRef.current = {
@@ -913,6 +1228,8 @@ function App() {
               gaze: currentGaze,
               noseX: currentNoseX,
               noseY: currentNoseY,
+              faceCenterX: currentFaceCenterX,
+              faceCenterY: currentFaceCenterY,
               faceWidth: currentFaceWidth,
               shoulderAngle: currentShoulderAngle,
               leftIrisX: currentLeftIris?.x ?? null,
@@ -928,9 +1245,251 @@ function App() {
             const liveThresholds = buildThresholds(criteriaRef.current);
             const activeDrag = dragStateRef.current;
 
+            let renderedRangeGuide = false;
+            ctx.save();
+
+            if (faceGuide) {
+              const registered = registeredPostureRef.current;
+              const faceTranslationX =
+                registered && currentFaceCenterX !== null
+                  ? currentFaceCenterX - registered.faceCenterX
+                  : 0;
+              const faceTranslationY =
+                registered && currentFaceCenterY !== null
+                  ? currentFaceCenterY - registered.faceCenterY
+                  : 0;
+
+              const leftOrigin = registered
+                ? {
+                    x: registered.leftIrisX + faceTranslationX,
+                    y: registered.leftIrisY + faceTranslationY,
+                  }
+                : baselineLeftIrisRef.current;
+              const rightOrigin = registered
+                ? {
+                    x: registered.rightIrisX + faceTranslationX,
+                    y: registered.rightIrisY + faceTranslationY,
+                  }
+                : baselineRightIrisRef.current;
+
+              const drawEyeRange = (
+                originX: number,
+                originY: number,
+                eyeWidth: number,
+              ) => {
+                const radius = eyeWidth * liveThresholds.gaze * canvas.width;
+                ctx.beginPath();
+                ctx.arc(
+                  originX * canvas.width,
+                  originY * canvas.height,
+                  Math.max(radius, 4),
+                  0,
+                  Math.PI * 2,
+                );
+                ctx.fillStyle = "rgba(34, 197, 94, 0.25)";
+                ctx.strokeStyle = "rgba(34, 197, 94, 0.95)";
+                ctx.lineWidth = 2;
+                ctx.fill();
+                ctx.stroke();
+              };
+
+              if (leftOrigin) {
+                drawEyeRange(leftOrigin.x, leftOrigin.y, faceGuide.leftEyeWidth);
+                renderedRangeGuide = true;
+              }
+              if (rightOrigin) {
+                drawEyeRange(rightOrigin.x, rightOrigin.y, faceGuide.rightEyeWidth);
+                renderedRangeGuide = true;
+              }
+
+              const noseBaseY = registered
+                ? registered.noseY
+                : baselineNoseYRef.current;
+              if (
+                noseBaseY !== null &&
+                currentFaceCenterX !== null &&
+                currentFaceCenterY !== null
+              ) {
+                const referenceFaceCenterX = registered
+                  ? registered.faceCenterX
+                  : baselineFaceCenterXRef.current;
+                const referenceFaceCenterY = registered
+                  ? registered.faceCenterY
+                  : baselineFaceCenterYRef.current;
+                const referenceNoseX = registered
+                  ? registered.noseX
+                  : baselineNoseXRef.current;
+
+                if (
+                  referenceFaceCenterX !== null &&
+                  referenceFaceCenterY !== null &&
+                  referenceNoseX !== null
+                ) {
+                  const translationX = currentFaceCenterX - referenceFaceCenterX;
+                  const translationY = currentFaceCenterY - referenceFaceCenterY;
+                  const expectedNoseX = referenceNoseX + translationX;
+                  const expectedNoseY = noseBaseY + translationY;
+                  const faceSpan = Math.max(
+                    (faceGuide.faceRightX - faceGuide.faceLeftX) * canvas.width,
+                    1,
+                  );
+                  const radius = Math.max(faceSpan * liveThresholds.nose, 8);
+
+                  ctx.beginPath();
+                  ctx.arc(
+                    expectedNoseX * canvas.width,
+                    expectedNoseY * canvas.height,
+                    radius,
+                    0,
+                    Math.PI * 2,
+                  );
+                  ctx.fillStyle = "rgba(34, 197, 94, 0.22)";
+                  ctx.strokeStyle = "rgba(34, 197, 94, 0.95)";
+                  ctx.lineWidth = 2;
+                  ctx.fill();
+                  ctx.stroke();
+                }
+                renderedRangeGuide = true;
+              }
+
+              const faceBaseWidth = registered
+                ? registered.faceWidth
+                : baselineFaceWidthRef.current;
+              if (
+                faceBaseWidth !== null &&
+                currentFaceCenterX !== null &&
+                currentFaceCenterY !== null
+              ) {
+                const allowedWidth = faceBaseWidth * (1 + liveThresholds.faceSize);
+                const referenceFaceCenterX = registered
+                  ? registered.faceCenterX
+                  : baselineFaceCenterXRef.current;
+                const referenceFaceCenterY = registered
+                  ? registered.faceCenterY
+                  : baselineFaceCenterYRef.current;
+
+                const expectedCenterX =
+                  referenceFaceCenterX !== null
+                    ? referenceFaceCenterX +
+                      (currentFaceCenterX - referenceFaceCenterX)
+                    : currentFaceCenterX;
+                const expectedCenterY =
+                  referenceFaceCenterY !== null
+                    ? referenceFaceCenterY +
+                      (currentFaceCenterY - referenceFaceCenterY)
+                    : currentFaceCenterY;
+
+                const innerRadius = Math.max((faceBaseWidth * canvas.width) / 2, 10);
+                const outerRadius = Math.max((allowedWidth * canvas.width) / 2, innerRadius + 4);
+
+                ctx.beginPath();
+                ctx.arc(
+                  expectedCenterX * canvas.width,
+                  expectedCenterY * canvas.height,
+                  outerRadius,
+                  0,
+                  Math.PI * 2,
+                );
+                ctx.fillStyle = "rgba(34, 197, 94, 0.14)";
+                ctx.fill();
+
+                ctx.setLineDash([8, 5]);
+                ctx.strokeStyle = "rgba(34, 197, 94, 0.95)";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(
+                  expectedCenterX * canvas.width,
+                  expectedCenterY * canvas.height,
+                  outerRadius,
+                  0,
+                  Math.PI * 2,
+                );
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                ctx.strokeStyle = "rgba(22, 163, 74, 0.95)";
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(
+                  expectedCenterX * canvas.width,
+                  expectedCenterY * canvas.height,
+                  innerRadius,
+                  0,
+                  Math.PI * 2,
+                );
+                ctx.stroke();
+                renderedRangeGuide = true;
+              }
+            }
+
+            if (hasShoulder) {
+              const registered = registeredPostureRef.current;
+              const referenceShoulderCenterX = registered
+                ? (registered.leftShoulderX + registered.rightShoulderX) / 2
+                : null;
+              const referenceShoulderCenterY = registered
+                ? (registered.leftShoulderY + registered.rightShoulderY) / 2
+                : null;
+              const currentShoulderCenterX =
+                currentLeftShoulder && currentRightShoulder
+                  ? (currentLeftShoulder.x + currentRightShoulder.x) / 2
+                  : null;
+              const currentShoulderCenterY =
+                currentLeftShoulder && currentRightShoulder
+                  ? (currentLeftShoulder.y + currentRightShoulder.y) / 2
+                  : null;
+              const shoulderTranslationX =
+                registeredTranslationX ??
+                (currentShoulderCenterX !== null && referenceShoulderCenterX !== null
+                  ? currentShoulderCenterX - referenceShoulderCenterX
+                  : 0);
+              const shoulderTranslationY =
+                registeredTranslationY ??
+                (currentShoulderCenterY !== null && referenceShoulderCenterY !== null
+                  ? currentShoulderCenterY - referenceShoulderCenterY
+                  : 0);
+
+              const leftOrigin = registered
+                ? {
+                    x: registered.leftShoulderX + shoulderTranslationX,
+                    y: registered.leftShoulderY + shoulderTranslationY,
+                  }
+                : baselineLeftShoulderRef.current;
+              const rightOrigin = registered
+                ? {
+                    x: registered.rightShoulderX + shoulderTranslationX,
+                    y: registered.rightShoulderY + shoulderTranslationY,
+                  }
+                : baselineRightShoulderRef.current;
+              const radius = Math.max(liveThresholds.shoulder * canvas.width, 6);
+
+              const drawShoulderRange = (origin: { x: number; y: number }) => {
+                ctx.beginPath();
+                ctx.arc(
+                  origin.x * canvas.width,
+                  origin.y * canvas.height,
+                  radius,
+                  0,
+                  Math.PI * 2,
+                );
+                ctx.fillStyle = "rgba(34, 197, 94, 0.22)";
+                ctx.strokeStyle = "rgba(34, 197, 94, 0.92)";
+                ctx.lineWidth = 2;
+                ctx.fill();
+                ctx.stroke();
+              };
+
+              if (leftOrigin) {
+                drawShoulderRange(leftOrigin);
+                renderedRangeGuide = true;
+              }
+              if (rightOrigin) {
+                drawShoulderRange(rightOrigin);
+                renderedRangeGuide = true;
+              }
+            }
+
             if (activeDrag) {
-              let renderedRangeGuide = false;
-              ctx.save();
               ctx.font = "600 15px 'Segoe UI', 'Noto Sans', sans-serif";
               ctx.fillStyle = "rgba(15, 23, 42, 0.78)";
               ctx.fillRect(14, 14, 265, 34);
@@ -941,169 +1500,6 @@ function App() {
                 36,
               );
 
-              if (activeDrag.key === "gaze" && faceGuide) {
-                const gazeThreshold = liveThresholds.gaze;
-                const drawEyeRange = (
-                  originX: number,
-                  originY: number,
-                  eyeWidth: number,
-                ) => {
-                  const radius = eyeWidth * gazeThreshold * canvas.width;
-                  ctx.beginPath();
-                  ctx.arc(
-                    originX * canvas.width,
-                    originY * canvas.height,
-                    Math.max(radius, 4),
-                    0,
-                    Math.PI * 2,
-                  );
-                  ctx.fillStyle = "rgba(34, 197, 94, 0.25)";
-                  ctx.strokeStyle = "rgba(34, 197, 94, 0.95)";
-                  ctx.lineWidth = 2;
-                  ctx.fill();
-                  ctx.stroke();
-                };
-
-                const adaptiveRegistered =
-                  adaptiveRegisteredPostureRef.current ?? registeredPostureRef.current;
-                const leftOrigin = adaptiveRegistered
-                  ? {
-                      x: adaptiveRegistered.leftIrisX,
-                      y: adaptiveRegistered.leftIrisY,
-                    }
-                  : baselineLeftIrisRef.current;
-                const rightOrigin = adaptiveRegistered
-                  ? {
-                      x: adaptiveRegistered.rightIrisX,
-                      y: adaptiveRegistered.rightIrisY,
-                    }
-                  : baselineRightIrisRef.current;
-
-                if (leftOrigin) {
-                  drawEyeRange(leftOrigin.x, leftOrigin.y, faceGuide.leftEyeWidth);
-                  renderedRangeGuide = true;
-                }
-                if (rightOrigin) {
-                  drawEyeRange(rightOrigin.x, rightOrigin.y, faceGuide.rightEyeWidth);
-                  renderedRangeGuide = true;
-                }
-              }
-
-              if (activeDrag.key === "nose" && faceGuide) {
-                const adaptiveRegistered =
-                  adaptiveRegisteredPostureRef.current ?? registeredPostureRef.current;
-                const noseBaseY = adaptiveRegistered
-                  ? adaptiveRegistered.noseY
-                  : baselineNoseYRef.current;
-                if (noseBaseY !== null) {
-                  const x = faceGuide.faceLeftX * canvas.width;
-                  const width =
-                    (faceGuide.faceRightX - faceGuide.faceLeftX) * canvas.width;
-                  const yStart = Math.max(0, faceGuide.faceTopY * canvas.height);
-                  const yEnd = Math.min(
-                    canvas.height,
-                    (noseBaseY + liveThresholds.nose) * canvas.height,
-                  );
-
-                  ctx.fillStyle = "rgba(34, 197, 94, 0.22)";
-                  ctx.strokeStyle = "rgba(34, 197, 94, 0.95)";
-                  ctx.lineWidth = 2;
-                  ctx.fillRect(x, yStart, width, Math.max(2, yEnd - yStart));
-                  ctx.strokeRect(x, yStart, width, Math.max(2, yEnd - yStart));
-
-                  ctx.strokeStyle = "rgba(22, 163, 74, 0.95)";
-                  ctx.beginPath();
-                  ctx.moveTo(x, Math.min(canvas.height, noseBaseY * canvas.height));
-                  ctx.lineTo(
-                    x + width,
-                    Math.min(canvas.height, noseBaseY * canvas.height),
-                  );
-                  ctx.stroke();
-                  renderedRangeGuide = true;
-                }
-              }
-
-              if (activeDrag.key === "faceSize" && faceGuide) {
-                const adaptiveRegistered =
-                  adaptiveRegisteredPostureRef.current ?? registeredPostureRef.current;
-                const faceBaseWidth = adaptiveRegistered
-                  ? adaptiveRegistered.faceWidth
-                  : baselineFaceWidthRef.current;
-                if (faceBaseWidth !== null) {
-                  const allowedWidth = faceBaseWidth * (1 + liveThresholds.faceSize);
-                  const centerX =
-                    ((faceGuide.faceLeftX + faceGuide.faceRightX) / 2) *
-                    canvas.width;
-                  const halfAllowedWidth = (allowedWidth * canvas.width) / 2;
-                  const x = centerX - halfAllowedWidth;
-                  const top = faceGuide.faceTopY * canvas.height;
-                  const height =
-                    (faceGuide.faceBottomY - faceGuide.faceTopY) * canvas.height;
-
-                  ctx.setLineDash([8, 5]);
-                  ctx.strokeStyle = "rgba(34, 197, 94, 0.95)";
-                  ctx.lineWidth = 2;
-                  ctx.strokeRect(
-                    x,
-                    top,
-                    halfAllowedWidth * 2,
-                    Math.max(10, height),
-                  );
-                  ctx.setLineDash([]);
-                  ctx.fillStyle = "rgba(34, 197, 94, 0.14)";
-                  ctx.fillRect(
-                    x,
-                    top,
-                    halfAllowedWidth * 2,
-                    Math.max(10, height),
-                  );
-                  renderedRangeGuide = true;
-                }
-              }
-
-              if (activeDrag.key === "shoulder" && hasShoulder) {
-                const adaptiveRegistered =
-                  adaptiveRegisteredPostureRef.current ?? registeredPostureRef.current;
-                const leftOrigin = adaptiveRegistered
-                  ? {
-                      x: adaptiveRegistered.leftShoulderX,
-                      y: adaptiveRegistered.leftShoulderY,
-                    }
-                  : baselineLeftShoulderRef.current;
-                const rightOrigin = adaptiveRegistered
-                  ? {
-                      x: adaptiveRegistered.rightShoulderX,
-                      y: adaptiveRegistered.rightShoulderY,
-                    }
-                  : baselineRightShoulderRef.current;
-                const radius = Math.max(liveThresholds.shoulder * canvas.width, 6);
-
-                const drawShoulderRange = (origin: { x: number; y: number }) => {
-                  ctx.beginPath();
-                  ctx.arc(
-                    origin.x * canvas.width,
-                    origin.y * canvas.height,
-                    radius,
-                    0,
-                    Math.PI * 2,
-                  );
-                  ctx.fillStyle = "rgba(34, 197, 94, 0.22)";
-                  ctx.strokeStyle = "rgba(34, 197, 94, 0.92)";
-                  ctx.lineWidth = 2;
-                  ctx.fill();
-                  ctx.stroke();
-                };
-
-                if (leftOrigin) {
-                  drawShoulderRange(leftOrigin);
-                  renderedRangeGuide = true;
-                }
-                if (rightOrigin) {
-                  drawShoulderRange(rightOrigin);
-                  renderedRangeGuide = true;
-                }
-              }
-
               if (activeDrag.key === "baselineAdapt") {
                 const guideWidth = 260;
                 const barHeight = 14;
@@ -1113,8 +1509,9 @@ function App() {
                   0,
                   Math.min(
                     1,
-                    (baselineAdaptRate - BASELINE_ADAPT_RATE_MIN) /
-                      (BASELINE_ADAPT_RATE_MAX - BASELINE_ADAPT_RATE_MIN),
+                    (baselineAdaptRate / BASELINE_ADAPT_RATE_CENTER -
+                      (1 - SLIDER_RANGE_RATIO)) /
+                      (2 * SLIDER_RANGE_RATIO),
                   ),
                 );
 
@@ -1133,17 +1530,16 @@ function App() {
                   x,
                   y + 32,
                 );
-                renderedRangeGuide = true;
               }
-
-              if (!renderedRangeGuide) {
-                ctx.font = "600 13px 'Segoe UI', 'Noto Sans', sans-serif";
-                ctx.fillStyle = "rgba(248, 250, 252, 0.95)";
-                ctx.fillText("顔または肩が映ると判定範囲を表示します", 22, 58);
-              }
-
-              ctx.restore();
             }
+
+            if (!renderedRangeGuide) {
+              ctx.font = "600 13px 'Segoe UI', 'Noto Sans', sans-serif";
+              ctx.fillStyle = "rgba(248, 250, 252, 0.95)";
+              ctx.fillText("顔または肩が映ると判定範囲を表示します", 22, 58);
+            }
+
+            ctx.restore();
 
             const gazeBad = hasFace && gazeMetric > liveThresholds.gaze;
             const noseBad =
@@ -1234,13 +1630,14 @@ function App() {
       }
 
       baselineFaceWidthRef.current = null;
+      baselineFaceCenterXRef.current = null;
+      baselineFaceCenterYRef.current = null;
       baselineNoseXRef.current = null;
       baselineNoseYRef.current = null;
       baselineLeftIrisRef.current = null;
       baselineRightIrisRef.current = null;
       baselineLeftShoulderRef.current = null;
       baselineRightShoulderRef.current = null;
-      adaptiveRegisteredPostureRef.current = null;
       lastInferenceAtRef.current = 0;
       isBadPostureRef.current = false;
       badFrameCountRef.current = 0;
@@ -1249,6 +1646,8 @@ function App() {
         gaze: null,
         noseX: null,
         noseY: null,
+        faceCenterX: null,
+        faceCenterY: null,
         faceWidth: null,
         shoulderAngle: null,
         leftIrisX: null,
@@ -1268,13 +1667,25 @@ function App() {
   }, [modelUrl, poseModelUrl]);
 
   return (
-    <main className="app-shell">
+    <main className={`app-shell ${shouldBlackoutScreen ? "app-shell--blackout" : ""}`}>
       <section className="hero">
-        <h1>姿勢カメラトラッカー</h1>
-        <p>
-          Windowsカメラ映像に、顔輪郭・視線方向・鼻先・肩位置をリアルタイム表示します。
-        </p>
-        <div className={`status ${ready ? "ok" : "warn"}`}>{status}</div>
+        <div className="hero-topline">
+          <div>
+            <h1>姿勢カメラトラッカー</h1>
+            <p>
+              Windowsカメラ映像に、顔輪郭・視線方向・鼻先・肩位置をリアルタイム表示します。
+            </p>
+            <div className={`status ${ready ? "ok" : "warn"}`}>{status}</div>
+          </div>
+
+          <button
+            type="button"
+            className="pairing-launch"
+            onClick={() => setIsPairingDialogOpen(true)}
+          >
+            モバイル連携
+          </button>
+        </div>
       </section>
 
       <section className="workbench">
@@ -1283,6 +1694,8 @@ function App() {
           <p className="panel-note">
             スライダーは左=緩い、右=厳しい。各項目を個別に調整できます。
           </p>
+
+
 
           <button type="button" onClick={registerCurrentPosture}>
             現在の姿勢を登録
@@ -1432,7 +1845,7 @@ function App() {
             <div className="criterion-meta">
               <span>設定 {criteria.baselineAdapt}</span>
               <span>追従率 {baselineAdaptRate.toFixed(4)}</span>
-              <span>既定 {BASELINE_ADAPT_RATE_DEFAULT.toFixed(4)}</span>
+              <span>既定 {BASELINE_ADAPT_RATE_CENTER.toFixed(4)}</span>
             </div>
           </label>
 
@@ -1451,7 +1864,28 @@ function App() {
           <video ref={videoRef} className="camera" playsInline muted />
           <canvas ref={canvasRef} className="overlay" />
 
-          {isBadPosture && <div className="posture-alert show">姿勢が悪い</div>}
+          <div
+            className={`posture-alert ${isBadPosture ? "show" : "hide"}`}
+            role="status"
+            aria-live="polite"
+          >
+            姿勢が悪いです
+          </div>
+
+          <section className="display-mode-switch" aria-label="姿勢アラート表示モード">
+            <span>姿勢アラート</span>
+            <label className="mode-toggle" htmlFor="alert-display-mode">
+              <input
+                id="alert-display-mode"
+                type="checkbox"
+                checked={alertDisplayMode === "blackout"}
+                onChange={(event) => {
+                  setAlertDisplayMode(event.currentTarget.checked ? "blackout" : "debug");
+                }}
+              />
+              <span>{alertDisplayMode === "blackout" ? "実運用(画面を黒化)" : "デバッグ(メッセージのみ)"}</span>
+            </label>
+          </section>
 
           <div className="legend">
             <span className="item face">顔輪郭</span>
@@ -1461,6 +1895,19 @@ function App() {
           </div>
         </section>
       </section>
+
+      {shouldBlackoutScreen ? (
+        <section className="blackout-stage" aria-live="polite">
+          <div className="blackout-copy">
+            <h1>姿勢が悪いです</h1>
+            <p>デバッグ表示に切り替えると映像を確認できます。</p>
+          </div>
+        </section>
+      ) : null}
+
+      {isPairingDialogOpen ? (
+        <PairingDialog onClose={() => setIsPairingDialogOpen(false)} />
+      ) : null}
     </main>
   );
 }
