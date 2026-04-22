@@ -26,10 +26,25 @@ export function PairingDialog({ onClose }: PairingDialogProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
 
+  useEffect(() => {
+    if (copyState === "idle") {
+      return;
+    }
+
+    // フィードバック表示を一定時間後に自動でクリアする。
+    const timeoutId = window.setTimeout(() => {
+      setCopyState("idle");
+    }, 2000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [copyState]);
+
   async function copyLink() {
     if (!pairingLink) {
       return;
     }
+
+    setCopyState("idle");
 
     try {
       await navigator.clipboard.writeText(pairingLink);

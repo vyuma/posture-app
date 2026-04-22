@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import {
   getDesktopPairingStatus,
@@ -31,15 +31,16 @@ const readPairingSnapshot = () =>
 
 export function usePairingState() {
   const [state, setState] = useState<PairingState>(defaultState);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    let active = true;
+    isMountedRef.current = true;
 
     async function loadInitialState() {
       try {
         const [pairingInfo, status] = await readPairingSnapshot();
 
-        if (!active) {
+        if (!isMountedRef.current) {
           return;
         }
 
@@ -50,7 +51,7 @@ export function usePairingState() {
           error: null,
         });
       } catch (error) {
-        if (!active) {
+        if (!isMountedRef.current) {
           return;
         }
 
@@ -71,7 +72,7 @@ export function usePairingState() {
       try {
         const status = await getDesktopPairingStatus();
 
-        if (!active) {
+        if (!isMountedRef.current) {
           return;
         }
 
@@ -81,7 +82,7 @@ export function usePairingState() {
           error: null,
         }));
       } catch (error) {
-        if (!active) {
+        if (!isMountedRef.current) {
           return;
         }
 
@@ -96,7 +97,7 @@ export function usePairingState() {
     }, POLL_INTERVAL_MS);
 
     return () => {
-      active = false;
+      isMountedRef.current = false;
       window.clearInterval(intervalId);
     };
   }, []);
@@ -107,6 +108,10 @@ export function usePairingState() {
       try {
         const [pairingInfo, status] = await readPairingSnapshot();
 
+        if (!isMountedRef.current) {
+          return;
+        }
+
         setState({
           pairingInfo,
           status,
@@ -114,6 +119,10 @@ export function usePairingState() {
           error: null,
         });
       } catch (error) {
+        if (!isMountedRef.current) {
+          return;
+        }
+
         setState((prev) => ({
           ...prev,
           isLoading: false,
