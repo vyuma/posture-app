@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Security: never track accidentally saved GitHub tokens/keys
+github_pat_*
+
+CAT_OVERLAY_IMPLEMENTATION_PLAN.md
