@@ -17,6 +17,7 @@
 body {
   margin: 0;
   overflow: hidden;
+  background: #020617;
 }
 
 #root {
@@ -30,6 +31,42 @@ body {
   grid-template-rows: auto minmax(0, 1fr);
   gap: 12px;
   overflow: hidden;
+}
+
+.display-mode-switch {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2300;
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(15, 28, 46, 0.16);
+  box-shadow: 0 10px 24px rgba(15, 28, 46, 0.2);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #0f1c2e;
+}
+
+.mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.mode-toggle input {
+  margin: 0;
+}
+
+
+
+.app-shell--blackout {
+  padding: 0;
+  grid-template-rows: 1fr;
+  background: #000000;
 }
 
 .workbench {
@@ -48,6 +85,44 @@ body {
   box-shadow: 0 8px 20px rgba(15, 28, 46, 0.08);
   max-height: 100%;
   overflow: auto;
+}
+
+.connection-card {
+  margin: 10px 0 14px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+.connection-card h3 {
+  margin: 0 0 6px;
+  font-size: 0.92rem;
+}
+
+.connection-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.qr-preview {
+  width: 100%;
+  aspect-ratio: 1;
+  margin-top: 10px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+}
+
+.qr-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .control-panel h2 {
@@ -109,6 +184,32 @@ body {
   color: #31435f;
 }
 
+/* ヒーローセクション上部のレイアウト（タイトル + モバイル連携ボタン） */
+.hero-topline {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+/* モバイル連携ボタンのスタイル */
+.pairing-launch {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: #0f766e;
+  color: #f8fafc;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 8px 18px rgba(15, 118, 110, 0.22);
+}
+
+.pairing-launch:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .status {
   margin-top: 8px;
   width: fit-content;
@@ -138,6 +239,63 @@ body {
   overflow: hidden;
   border: 1px solid rgba(15, 28, 46, 0.2);
   box-shadow: 0 18px 36px rgba(9, 20, 38, 0.35);
+}
+
+.blackout-stage {
+  position: fixed;
+  inset: 0;
+  background: #000000;
+  overflow: hidden;
+  z-index: 2000;
+}
+
+.blackout-copy {
+  position: absolute;
+  left: 20px;
+  bottom: 20px;
+  max-width: min(560px, calc(100vw - 84px));
+  color: #e2e8f0;
+}
+
+.blackout-copy h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.5rem);
+  letter-spacing: 0.02em;
+}
+
+.blackout-copy p {
+  margin: 8px 0 0;
+  color: #94a3b8;
+}
+
+.blackout-panel {
+  position: absolute;
+  inset: 80px 18px 18px;
+  max-width: 420px;
+  max-height: calc(100vh - 98px);
+  overflow: auto;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
+}
+
+.blackout-panel .control-panel {
+  max-height: none;
+  border: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+.blackout-stage .control-panel {
+  margin: 0;
+}
+
+.blackout-stage .control-panel button {
+  width: 100%;
+}
+
+.blackout-stage .connection-actions button {
+  width: auto;
 }
 
 .camera,
@@ -173,7 +331,7 @@ body {
 .posture-alert {
   position: absolute;
   top: 14px;
-  right: 14px;
+  left: 14px;
   padding: 8px 12px;
   border-radius: 10px;
   font-weight: 700;
@@ -247,4 +405,44 @@ body {
   .hero h1 {
     font-size: 1.25rem;
   }
+
+  .hero-topline {
+    flex-direction: column;
+  }
+
+  .pairing-launch {
+    width: 100%;
+  }
+
+  .blackout-stage {
+    height: 100vh;
+    min-height: 100vh;
+  }
+
+  .blackout-panel {
+    left: 12px;
+    right: 12px;
+    inset: 72px 12px 12px;
+    max-width: none;
+  }
+
+  .blackout-copy {
+    left: 12px;
+    bottom: 12px;
+    max-width: calc(100vw - 36px);
+  }
+}
+
+.connection-success {
+  width: 100%;
+  aspect-ratio: 1;
+  margin-top: 10px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: #dcfce7;
+  border: 2px solid #22c55e;
+  color: #166534;
+  font-weight: 700;
+  font-size: 1rem;
 }
