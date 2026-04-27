@@ -641,6 +641,17 @@ function App() {
     let mounted = true;
 
     const startCamera = async () => {
+      if (
+        typeof navigator === "undefined" ||
+        !navigator.mediaDevices ||
+        typeof navigator.mediaDevices.getUserMedia !== "function"
+      ) {
+        throw new Error(
+          "この環境ではカメラ API (navigator.mediaDevices) が利用できません。" +
+            "macOS で Tauri 起動中の場合は tauri.conf.json の bundle.macOS.infoPlist に " +
+            "NSCameraUsageDescription を追加し、`bun run tauri dev` 経由で起動してください。",
+        );
+      }
       try {
         return await navigator.mediaDevices.getUserMedia({
           video: {
@@ -1608,6 +1619,9 @@ function App() {
 
         animationRef.current = requestAnimationFrame(drawFrame);
       } catch (error) {
+        if (!mounted && error instanceof Error && error.name === "AbortError") {
+          return;
+        }
         const errorMessage =
           error instanceof Error ? `${error.name}: ${error.message}` : String(error);
         setStatus(
