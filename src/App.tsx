@@ -7,16 +7,14 @@ import {
   PoseLandmarker,
 } from "@mediapipe/tasks-vision";
 import { PairingDialog } from "./features/pairing";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import "./App.css";
+import appNameImage from "./assets/app-name.png";
 import {
   buildPairingUrl,
   getPairingStatus,
   getPrimaryIpv4,
   getSavedPhoneIp,
   sendPostureSignal,
-  sendVibrationSignal,
-  setBlackoutWindow,
   startPairingServer,
   stopPairingServer,
 } from "./lib/desktopBridge";
@@ -79,13 +77,10 @@ const CALIBRATED_NOSE_BASE_THRESHOLD = 0.0652;
 const CALIBRATED_FACE_SIZE_BASE_THRESHOLD = 0.12;
 const CALIBRATED_SHOULDER_BASE_THRESHOLD = 0.0272;
 const BASELINE_ADAPT_RATE_CENTER = 0.02;
-const TEST_VIBRATION_INTERVAL_MS = 1400;
 
 // Slider span: 0 => center*0.2, 100 => center*1.8
 const SLIDER_RANGE_RATIO = 0.8;
 const TRACKING_INTERVAL_MS = 50;
-
-type AlertDisplayMode = "blackout" | "debug";
 
 type VisionModels = {
   faceLandmarker: FaceLandmarker;
@@ -110,14 +105,6 @@ type CriteriaSettings = {
 type DragState = {
   key: keyof CriteriaSettings;
   startValue: number;
-};
-
-const CRITERION_LABEL: Record<keyof CriteriaSettings, string> = {
-  gaze: "目線",
-  nose: "鼻の位置",
-  faceSize: "顔の大きさ",
-  shoulder: "肩の傾き",
-  baselineAdapt: "追従速度",
 };
 
 type RegisteredPosture = {
@@ -243,26 +230,18 @@ function App() {
   });
   const isBadPostureRef = useRef(false);
   const lastBroadcastedPostureRef = useRef<boolean | null>(null);
-  const vibrationTestIntervalRef = useRef<number | null>(null);
   const badFrameCountRef = useRef(0);
   const goodFrameCountRef = useRef(0);
   const lastInferenceAtRef = useRef(0);
 
   const [status, setStatus] = useState("カメラを初期化しています...");
   const [ready, setReady] = useState(false);
-  const [alertDisplayMode, setAlertDisplayMode] =
-    useState<AlertDisplayMode>("debug");
   const [deviceIp, setDeviceIp] = useState<string | null>(null);
-  const [phoneIp, setPhoneIp] = useState("");
-  const [savedPhoneIp, setSavedPhoneIp] = useState<string | null>(null);
   const [pairingToken, setPairingToken] = useState<string | null>(null);
   const [qrPayload, setQrPayload] = useState("取得中...");
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [isPairingServerRunning, setIsPairingServerRunning] = useState(false);
   // 実接続状態はバックエンドのペアリング状態で追跡する
   const [isWebSocketConnected, setIsWebSocketConnected] = useState(false);
-  const [isVibrationTestRunning, setIsVibrationTestRunning] = useState(false);
-  const isRestartingPairingRef = useRef(false);
   const [isPairingDialogOpen, setIsPairingDialogOpen] = useState(false);
   const [criteria, setCriteria] = useState<CriteriaSettings>(DEFAULT_CRITERIA);
   const [metrics, setMetrics] = useState<Metrics>({
@@ -367,76 +346,6 @@ function App() {
     exportDebugLog("register_posture", next);
   };
 
-  const clearVibrationTestInterval = () => {
-    if (vibrationTestIntervalRef.current !== null) {
-      window.clearInterval(vibrationTestIntervalRef.current);
-      vibrationTestIntervalRef.current = null;
-    }
-  };
-
-  const stopVibrationTest = async (silent = false) => {
-    clearVibrationTestInterval();
-    setIsVibrationTestRunning(false);
-    await sendPostureSignal(false);
-    if (!silent) {
-      setStatus("バイブ信号テスト送信を停止しました。");
-    }
-  };
-
-  const handleSendVibrationSignal = async () => {
-    if (isVibrationTestRunning) {
-      await stopVibrationTest();
-      return;
-    }
-
-    const targetIp = phoneIp.trim() || undefined;
-    const success = await sendVibrationSignal(targetIp);
-    if (!success) {
-      setStatus("バイブ信号送信に失敗しました。");
-      return;
-    }
-
-    vibrationTestIntervalRef.current = window.setInterval(() => {
-      void sendVibrationSignal(targetIp);
-    }, TEST_VIBRATION_INTERVAL_MS);
-    setIsVibrationTestRunning(true);
-    setStatus("バイブ信号テスト送信を開始しました。停止ボタンで終了できます。");
-  };
-
-  const ensurePairingHostRunning = async () => {
-    const pairingUrl = await startPairingServer();
-    if (pairingUrl) {
-      setQrPayload(pairingUrl);
-    }
-
-    const pairingStatus = await getPairingStatus();
-    setPairingToken(pairingStatus.pairingToken ?? null);
-    setIsPairingServerRunning(pairingStatus.running);
-  };
-
-  const resetToPairingMode = async (message: string) => {
-    if (isRestartingPairingRef.current) {
-      return;
-    }
-
-    isRestartingPairingRef.current = true;
-    try {
-      setIsWebSocketConnected(false);
-      setSavedPhoneIp(null);
-      await ensurePairingHostRunning();
-      setStatus(message);
-    } finally {
-      isRestartingPairingRef.current = false;
-    }
-  };
-
-  const handleDisconnectPhone = async () => {
-    await stopVibrationTest(true);
-    await resetToPairingMode(
-      "スマホ接続を解除しました。QRを再表示して接続待機に戻ります。",
-    );
-  };
-
   const modelUrl = useMemo(
     () =>
       "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
@@ -453,9 +362,6 @@ function App() {
     () => getBaselineAdaptRateFromSlider(criteria.baselineAdapt),
     [criteria.baselineAdapt],
   );
-  const shouldBlackoutScreen =
-    isBadPosture && alertDisplayMode === "blackout";
-
   useEffect(() => {
     criteriaRef.current = criteria;
   }, [criteria]);
@@ -476,11 +382,7 @@ function App() {
 
       setDeviceIp(primaryIpv4);
       setPairingToken(pairingStatus.pairingToken ?? null);
-      const initialPhoneIp = pairingStatus.pairedPhoneIp ?? persistedPhoneIp;
-      if (initialPhoneIp) {
-        setPhoneIp(initialPhoneIp);
-        setSavedPhoneIp(initialPhoneIp);
-      }
+      void persistedPhoneIp;
 
       // アプリ起動時に自動でペアリングサーバーを開始
       if (!pairingStatus.running) {
@@ -538,7 +440,6 @@ function App() {
       }
 
       if (!nextConnected) {
-        setSavedPhoneIp(null);
         return;
       }
 
@@ -546,8 +447,6 @@ function App() {
         return;
       }
 
-      setPhoneIp(pairingStatus.pairedPhoneIp);
-      setSavedPhoneIp(pairingStatus.pairedPhoneIp);
       setStatus(`スマホを自動ペアリングしました: ${pairingStatus.pairedPhoneIp}`);
     };
 
@@ -593,46 +492,23 @@ function App() {
       setQrPayload(payload);
     }
 
-    let mounted = true;
-
     const updateQr = async () => {
-      const nextQrDataUrl = await generateQrDataUrl(payload);
-      if (mounted) {
-        setQrDataUrl(nextQrDataUrl);
-      }
+      await generateQrDataUrl(payload);
     };
 
     void updateQr();
-
-    return () => {
-      mounted = false;
-    };
   }, [deviceIp, pairingToken, qrPayload]);
 
   useEffect(() => {
-    void setBlackoutWindow(shouldBlackoutScreen);
-
-    // タスクバーも含めて画面全体を覆うためにフルスクリーンを制御する
-    const appWindow = getCurrentWindow();
-    void appWindow.setFullscreen(shouldBlackoutScreen);
-
     if (lastBroadcastedPostureRef.current !== isBadPosture) {
       lastBroadcastedPostureRef.current = isBadPosture;
       void sendPostureSignal(isBadPosture);
     }
-  }, [isBadPosture, shouldBlackoutScreen]);
-
-  useEffect(() => {
-    if (!isWebSocketConnected && isVibrationTestRunning) {
-      void stopVibrationTest(true);
-    }
-  }, [isWebSocketConnected, isVibrationTestRunning]);
+  }, [isBadPosture]);
 
   useEffect(() => {
     return () => {
-      clearVibrationTestInterval();
       void sendPostureSignal(false);
-      void setBlackoutWindow(false);
       void stopPairingServer();
     };
   }, []);
@@ -1501,16 +1377,6 @@ function App() {
             }
 
             if (activeDrag) {
-              ctx.font = "600 15px 'Segoe UI', 'Noto Sans', sans-serif";
-              ctx.fillStyle = "rgba(15, 23, 42, 0.78)";
-              ctx.fillRect(14, 14, 265, 34);
-              ctx.fillStyle = "#f8fafc";
-              ctx.fillText(
-                `調整中: ${CRITERION_LABEL[activeDrag.key]} の良姿勢判定範囲`,
-                24,
-                36,
-              );
-
               if (activeDrag.key === "baselineAdapt") {
                 const guideWidth = 260;
                 const barHeight = 14;
@@ -1544,11 +1410,7 @@ function App() {
               }
             }
 
-            if (!renderedRangeGuide) {
-              ctx.font = "600 13px 'Segoe UI', 'Noto Sans', sans-serif";
-              ctx.fillStyle = "rgba(248, 250, 252, 0.95)";
-              ctx.fillText("顔または肩が映ると判定範囲を表示します", 22, 58);
-            }
+            void renderedRangeGuide;
 
             ctx.restore();
 
@@ -1681,11 +1543,15 @@ function App() {
   }, [modelUrl, poseModelUrl]);
 
   return (
-    <main className={`app-shell ${shouldBlackoutScreen ? "app-shell--blackout" : ""}`}>
+    <main className="app-shell">
       <section className="hero">
         <div className="hero-topline">
           <div>
-            <h1>姿勢カメラトラッカー</h1>
+            <img
+              className="app-name-image"
+              src={appNameImage}
+              alt="姿勢カメラトラッカー"
+            />
             <p>
               Windowsカメラ映像に、顔輪郭・視線方向・鼻先・肩位置をリアルタイム表示します。
             </p>
@@ -1878,28 +1744,11 @@ function App() {
           <video ref={videoRef} className="camera" playsInline muted />
           <canvas ref={canvasRef} className="overlay" />
 
-          <div
-            className={`posture-alert ${isBadPosture ? "show" : "hide"}`}
-            role="status"
-            aria-live="polite"
-          >
-            姿勢が悪いです
-          </div>
-
-          <section className="display-mode-switch" aria-label="姿勢アラート表示モード">
-            <span>姿勢アラート</span>
-            <label className="mode-toggle" htmlFor="alert-display-mode">
-              <input
-                id="alert-display-mode"
-                type="checkbox"
-                checked={alertDisplayMode === "blackout"}
-                onChange={(event) => {
-                  setAlertDisplayMode(event.currentTarget.checked ? "blackout" : "debug");
-                }}
-              />
-              <span>{alertDisplayMode === "blackout" ? "実運用(画面を黒化)" : "デバッグ(メッセージのみ)"}</span>
-            </label>
-          </section>
+          {isBadPosture ? (
+            <div className="posture-alert" role="status" aria-live="polite">
+              姿勢が悪い
+            </div>
+          ) : null}
 
           <div className="legend">
             <span className="item face">顔輪郭</span>
@@ -1909,15 +1758,6 @@ function App() {
           </div>
         </section>
       </section>
-
-      {shouldBlackoutScreen ? (
-        <section className="blackout-stage" aria-live="polite">
-          <div className="blackout-copy">
-            <h1>姿勢が悪いです</h1>
-            <p>デバッグ表示に切り替えると映像を確認できます。</p>
-          </div>
-        </section>
-      ) : null}
 
       {isPairingDialogOpen ? (
         <PairingDialog onClose={() => setIsPairingDialogOpen(false)} />

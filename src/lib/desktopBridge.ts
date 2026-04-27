@@ -37,14 +37,6 @@ export async function savePhoneIp(phoneIp: string) {
   }
 }
 
-export async function setBlackoutWindow(active: boolean) {
-  try {
-    await invoke("set_blackout_window", { active });
-  } catch {
-    // Tauri以外では何もしない。将来のバック実装に差し替える前提。
-  }
-}
-
 export async function getPairingStatus(): Promise<PairingStatus> {
   try {
     return await invoke<PairingStatus>("get_pairing_status");

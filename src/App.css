@@ -33,42 +33,6 @@ body {
   overflow: hidden;
 }
 
-.display-mode-switch {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  z-index: 2300;
-  display: grid;
-  gap: 6px;
-  padding: 10px 12px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(15, 28, 46, 0.16);
-  box-shadow: 0 10px 24px rgba(15, 28, 46, 0.2);
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: #0f1c2e;
-}
-
-.mode-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 600;
-}
-
-.mode-toggle input {
-  margin: 0;
-}
-
-
-
-.app-shell--blackout {
-  padding: 0;
-  grid-template-rows: 1fr;
-  background: #000000;
-}
-
 .workbench {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
@@ -173,6 +137,14 @@ body {
   box-shadow: 0 10px 24px rgba(15, 28, 46, 0.1);
 }
 
+.app-name-image {
+  display: block;
+  height: clamp(32px, 3.2vw, 48px);
+  width: auto;
+  max-width: min(520px, 100%);
+  object-fit: contain;
+}
+
 .hero h1 {
   margin: 0;
   font-size: 1.6rem;
@@ -241,63 +213,6 @@ body {
   box-shadow: 0 18px 36px rgba(9, 20, 38, 0.35);
 }
 
-.blackout-stage {
-  position: fixed;
-  inset: 0;
-  background: #000000;
-  overflow: hidden;
-  z-index: 2000;
-}
-
-.blackout-copy {
-  position: absolute;
-  left: 20px;
-  bottom: 20px;
-  max-width: min(560px, calc(100vw - 84px));
-  color: #e2e8f0;
-}
-
-.blackout-copy h1 {
-  margin: 0;
-  font-size: clamp(1.6rem, 3vw, 2.5rem);
-  letter-spacing: 0.02em;
-}
-
-.blackout-copy p {
-  margin: 8px 0 0;
-  color: #94a3b8;
-}
-
-.blackout-panel {
-  position: absolute;
-  inset: 80px 18px 18px;
-  max-width: 420px;
-  max-height: calc(100vh - 98px);
-  overflow: auto;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
-}
-
-.blackout-panel .control-panel {
-  max-height: none;
-  border: none;
-  box-shadow: none;
-  background: transparent;
-}
-
-.blackout-stage .control-panel {
-  margin: 0;
-}
-
-.blackout-stage .control-panel button {
-  width: 100%;
-}
-
-.blackout-stage .connection-actions button {
-  width: auto;
-}
-
 .camera,
 .overlay {
   position: absolute;
@@ -330,24 +245,18 @@ body {
 
 .posture-alert {
   position: absolute;
-  top: 14px;
-  left: 14px;
+  top: 8px;
+  right: 8px;
+  left: auto;
+  z-index: 2200;
   padding: 8px 12px;
   border-radius: 10px;
   font-weight: 700;
   font-size: 0.92rem;
   transition: opacity 0.2s ease;
-}
-
-.posture-alert.show {
   background: rgba(255, 255, 255, 0.92);
   color: #b91c1c;
   border: 3px solid #ef4444;
-  opacity: 1;
-}
-
-.posture-alert.hide {
-  opacity: 0;
 }
 
 .item {
@@ -412,24 +321,6 @@ body {
 
   .pairing-launch {
     width: 100%;
-  }
-
-  .blackout-stage {
-    height: 100vh;
-    min-height: 100vh;
-  }
-
-  .blackout-panel {
-    left: 12px;
-    right: 12px;
-    inset: 72px 12px 12px;
-    max-width: none;
-  }
-
-  .blackout-copy {
-    left: 12px;
-    bottom: 12px;
-    max-width: calc(100vw - 36px);
   }
 }
 
