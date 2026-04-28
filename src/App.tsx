@@ -210,6 +210,8 @@ function App() {
   const lastUiUpdateRef = useRef(0);
   const lastRuntimeErrorAtRef = useRef(0);
   const criteriaRef = useRef<CriteriaSettings>(DEFAULT_CRITERIA);
+  const pendingCriteriaRef = useRef<CriteriaSettings>(DEFAULT_CRITERIA);
+  const criteriaStateUpdateTimerRef = useRef<number | null>(null);
   const dragStateRef = useRef<DragState | null>(null);
   const registeredPostureRef = useRef<RegisteredPosture | null>(null);
   const livePostureSampleRef = useRef<LivePostureSample>({
@@ -258,13 +260,28 @@ function App() {
 
   usePostureRecoverySound(isBadPosture);
 
+  const flushCriteriaState = () => {
+    if (criteriaStateUpdateTimerRef.current !== null) {
+      window.clearTimeout(criteriaStateUpdateTimerRef.current);
+      criteriaStateUpdateTimerRef.current = null;
+    }
+    setCriteria(pendingCriteriaRef.current);
+  };
+
   const updateCriterion = (key: keyof CriteriaSettings, value: number) => {
     const clamped = Math.max(0, Math.min(100, value));
-    setCriteria((prev) => {
-      const next = { ...prev, [key]: clamped };
-      criteriaRef.current = next;
-      return next;
-    });
+    const next = { ...criteriaRef.current, [key]: clamped };
+    criteriaRef.current = next;
+    pendingCriteriaRef.current = next;
+
+    if (criteriaStateUpdateTimerRef.current !== null) {
+      return;
+    }
+
+    criteriaStateUpdateTimerRef.current = window.setTimeout(() => {
+      criteriaStateUpdateTimerRef.current = null;
+      setCriteria(pendingCriteriaRef.current);
+    }, 33);
   };
 
   const startSliderDrag = (key: keyof CriteriaSettings) => {
@@ -276,6 +293,7 @@ function App() {
 
   const endSliderDrag = () => {
     dragStateRef.current = null;
+    flushCriteriaState();
   };
 
   const exportDebugLog = (reason: string, overridePosture?: RegisteredPosture | null) => {
@@ -367,6 +385,7 @@ function App() {
   );
   useEffect(() => {
     criteriaRef.current = criteria;
+    pendingCriteriaRef.current = criteria;
   }, [criteria]);
 
   useEffect(() => {
@@ -1542,6 +1561,11 @@ function App() {
       modelsRef.current?.faceLandmarker.close();
       modelsRef.current?.poseLandmarker.close();
       modelsRef.current = null;
+
+      if (criteriaStateUpdateTimerRef.current !== null) {
+        window.clearTimeout(criteriaStateUpdateTimerRef.current);
+        criteriaStateUpdateTimerRef.current = null;
+      }
     };
   }, [modelUrl, poseModelUrl]);
 
