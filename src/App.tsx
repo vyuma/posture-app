@@ -7,6 +7,7 @@ import {
   PoseLandmarker,
 } from "@mediapipe/tasks-vision";
 import { PairingDialog } from "./features/pairing";
+import { usePostureRecoverySound } from "./features/posture-recovery";
 import "./App.css";
 import appNameImage from "./assets/app-name.png";
 import {
@@ -254,6 +255,8 @@ function App() {
   const [registeredPosture, setRegisteredPosture] =
     useState<RegisteredPosture | null>(null);
   const [lastLog, setLastLog] = useState("");
+
+  usePostureRecoverySound(isBadPosture);
 
   const updateCriterion = (key: keyof CriteriaSettings, value: number) => {
     const clamped = Math.max(0, Math.min(100, value));
