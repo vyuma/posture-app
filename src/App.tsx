@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   DrawingUtils,
   FaceLandmarker,
@@ -14,6 +14,7 @@ import {
   playRecoverySound,
   primeRecoverySound,
 } from "./features/sound/services/recoverySound";
+import { usePostureTransitionEffects } from "./features/posture/hooks/usePostureTransitionEffects";
 import {
   loadSoundSettings,
   saveSoundSettings,
@@ -240,11 +241,9 @@ function App() {
     rightShoulderY: null,
   });
   const isBadPostureRef = useRef(false);
-  const lastSignaledPostureRef = useRef<boolean | null>(null);
   const badFrameCountRef = useRef(0);
   const goodFrameCountRef = useRef(0);
   const lastInferenceAtRef = useRef(0);
-  const prevBadPostureRef = useRef<boolean | null>(null);
 
   const [status, setStatus] = useState("カメラを初期化しています...");
   const [ready, setReady] = useState(false);
@@ -265,21 +264,23 @@ function App() {
     loadSoundSettings(),
   );
 
-  useEffect(() => {
-    if (lastSignaledPostureRef.current === null) {
-      lastSignaledPostureRef.current = isBadPosture;
-      return;
-    }
-
-    if (lastSignaledPostureRef.current === isBadPosture) {
-      return;
-    }
-
-    lastSignaledPostureRef.current = isBadPosture;
-    void emitPostureSignal(isBadPosture).catch(() => {
+  const handlePostureChanged = useCallback(async (isBad: boolean) => {
+    try {
+      await emitPostureSignal(isBad);
+    } catch {
       // Pairing can be inactive; posture detection should continue even if signaling fails.
-    });
-  }, [isBadPosture]);
+    }
+  }, []);
+
+  const handlePostureRecovered = useCallback(async () => {
+    await playRecoverySound();
+  }, []);
+
+  usePostureTransitionEffects({
+    isBadPosture,
+    onPostureChanged: handlePostureChanged,
+    onRecovered: handlePostureRecovered,
+  });
 
   useEffect(() => {
     configureRecoverySound({
@@ -289,19 +290,6 @@ function App() {
     });
     saveSoundSettings(soundSettings);
   }, [soundSettings]);
-
-  useEffect(() => {
-    if (prevBadPostureRef.current === null) {
-      prevBadPostureRef.current = isBadPosture;
-      return;
-    }
-
-    const wasBad = prevBadPostureRef.current;
-    if (wasBad && !isBadPosture) {
-      void playRecoverySound();
-    }
-    prevBadPostureRef.current = isBadPosture;
-  }, [isBadPosture]);
 
   const updateCriterion = (key: keyof CriteriaSettings, value: number) => {
     const clamped = Math.max(0, Math.min(100, value));
