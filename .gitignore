@@ -23,6 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 
+# Security: never track accidentally saved GitHub tokens/keys
+github_pat_*
 
 CAT_OVERLAY_IMPLEMENTATION_PLAN.md
 POSTURE_RECOVERY_SOUND_PLAN.md

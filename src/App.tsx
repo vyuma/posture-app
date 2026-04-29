@@ -20,6 +20,7 @@ import {
   saveSoundSettings,
 } from "./features/sound/services/soundSettingsStorage";
 import type { SoundSettings } from "./features/sound/types/soundSettings";
+import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
 
 const FACE_OUTLINE = [
@@ -241,6 +242,7 @@ function App() {
     rightShoulderY: null,
   });
   const isBadPostureRef = useRef(false);
+  const lastOverlaySignalRef = useRef(false);
   const badFrameCountRef = useRef(0);
   const goodFrameCountRef = useRef(0);
   const lastInferenceAtRef = useRef(0);
@@ -396,6 +398,19 @@ function App() {
   useEffect(() => {
     criteriaRef.current = criteria;
   }, [criteria]);
+
+  useEffect(() => {
+    if (lastOverlaySignalRef.current === isBadPosture) {
+      return;
+    }
+
+    lastOverlaySignalRef.current = isBadPosture;
+    void invoke("overlay_on_posture_change", {
+      isBad: isBadPosture,
+    }).catch(() => {
+      // Overlay is optional and should not block posture tracking.
+    });
+  }, [isBadPosture]);
 
   useEffect(() => {
     let mounted = true;

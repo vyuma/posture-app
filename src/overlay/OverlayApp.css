@@ -1,0 +1,40 @@
+:root,
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+}
+
+body {
+  pointer-events: none;
+  background: transparent !important;
+}
+
+.overlay-shell {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  pointer-events: none;
+}
+
+.overlay-animation {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+}
+
+.overlay-animation svg,
+.overlay-animation canvas {
+  width: 100% !important;
+  height: 100% !important;
+  background: transparent !important;
+}
