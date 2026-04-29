@@ -116,6 +116,13 @@ body {
   align-items: flex-start;
 }
 
+.hero-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .pairing-launch {
   border: 0;
   border-radius: 999px;
@@ -126,6 +133,11 @@ body {
   cursor: pointer;
   white-space: nowrap;
   box-shadow: 0 8px 18px rgba(15, 118, 110, 0.22);
+}
+
+.pairing-launch.secondary {
+  background: #334155;
+  box-shadow: 0 8px 18px rgba(51, 65, 85, 0.25);
 }
 
 .status {

@@ -8,6 +8,17 @@ import {
 } from "@mediapipe/tasks-vision";
 import { PairingDialog } from "./features/pairing";
 import { emitPostureSignal } from "./features/pairing/services/desktopBridge";
+import { SoundSettingsDialog } from "./features/sound/components/SoundSettingsDialog";
+import {
+  configureRecoverySound,
+  playRecoverySound,
+  primeRecoverySound,
+} from "./features/sound/services/recoverySound";
+import {
+  loadSoundSettings,
+  saveSoundSettings,
+} from "./features/sound/services/soundSettingsStorage";
+import type { SoundSettings } from "./features/sound/types/soundSettings";
 import "./App.css";
 
 const FACE_OUTLINE = [
@@ -233,6 +244,7 @@ function App() {
   const badFrameCountRef = useRef(0);
   const goodFrameCountRef = useRef(0);
   const lastInferenceAtRef = useRef(0);
+  const prevBadPostureRef = useRef<boolean | null>(null);
 
   const [status, setStatus] = useState("カメラを初期化しています...");
   const [ready, setReady] = useState(false);
@@ -248,6 +260,10 @@ function App() {
     useState<RegisteredPosture | null>(null);
   const [lastLog, setLastLog] = useState("");
   const [isPairingDialogOpen, setIsPairingDialogOpen] = useState(false);
+  const [isSoundDialogOpen, setIsSoundDialogOpen] = useState(false);
+  const [soundSettings, setSoundSettings] = useState<SoundSettings>(() =>
+    loadSoundSettings(),
+  );
 
   useEffect(() => {
     if (lastSignaledPostureRef.current === null) {
@@ -263,6 +279,28 @@ function App() {
     void emitPostureSignal(isBadPosture).catch(() => {
       // Pairing can be inactive; posture detection should continue even if signaling fails.
     });
+  }, [isBadPosture]);
+
+  useEffect(() => {
+    configureRecoverySound({
+      enabled: soundSettings.enabled,
+      src: soundSettings.selectedSound,
+      volume: soundSettings.volume,
+    });
+    saveSoundSettings(soundSettings);
+  }, [soundSettings]);
+
+  useEffect(() => {
+    if (prevBadPostureRef.current === null) {
+      prevBadPostureRef.current = isBadPosture;
+      return;
+    }
+
+    const wasBad = prevBadPostureRef.current;
+    if (wasBad && !isBadPosture) {
+      void playRecoverySound();
+    }
+    prevBadPostureRef.current = isBadPosture;
   }, [isBadPosture]);
 
   const updateCriterion = (key: keyof CriteriaSettings, value: number) => {
@@ -305,6 +343,7 @@ function App() {
   };
 
   const registerCurrentPosture = () => {
+    void primeRecoverySound();
     const sample = livePostureSampleRef.current;
 
     if (
@@ -1299,13 +1338,25 @@ function App() {
             <div className={`status ${ready ? "ok" : "warn"}`}>{status}</div>
           </div>
 
-          <button
-            type="button"
-            className="pairing-launch"
-            onClick={() => setIsPairingDialogOpen(true)}
-          >
-            モバイル連携
-          </button>
+          <div className="hero-actions">
+            <button
+              type="button"
+              className="pairing-launch"
+              onClick={() => setIsPairingDialogOpen(true)}
+            >
+              モバイル連携
+            </button>
+            <button
+              type="button"
+              className="pairing-launch secondary"
+              onClick={() => {
+                void primeRecoverySound();
+                setIsSoundDialogOpen(true);
+              }}
+            >
+              サウンド設定
+            </button>
+          </div>
         </div>
       </section>
 
@@ -1496,6 +1547,17 @@ function App() {
 
       {isPairingDialogOpen ? (
         <PairingDialog onClose={() => setIsPairingDialogOpen(false)} />
+      ) : null}
+      {isSoundDialogOpen ? (
+        <SoundSettingsDialog
+          settings={soundSettings}
+          onChange={setSoundSettings}
+          onClose={() => setIsSoundDialogOpen(false)}
+          onPreview={() => {
+            void primeRecoverySound();
+            void playRecoverySound();
+          }}
+        />
       ) : null}
     </main>
   );

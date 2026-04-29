@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "PATH=\"$HOME/.cargo/bin:$PATH\" tauri"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.34",
