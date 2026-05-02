@@ -47,6 +47,19 @@ export function PostureControlPanel({
         <span>f3: {snapshot.features ? snapshot.features.f3.toFixed(4) : "-"}</span>
         <span>f4: {snapshot.features ? snapshot.features.f4.toFixed(4) : "-"}</span>
         <span>f5: {snapshot.features ? snapshot.features.f5.toFixed(4) : "-"}</span>
+        <span>
+          頭幅比(耳/肩):{" "}
+          {snapshot.headWidthRatio !== null
+            ? snapshot.headWidthRatio.toFixed(4)
+            : "-"}
+        </span>
+        <span>
+          頭幅倍率:{" "}
+          {snapshot.headWidthScale !== null
+            ? `${snapshot.headWidthScale.toFixed(3)}x`
+            : "-"}
+        </span>
+        <span>頭幅加点: +{snapshot.headWidthScoreBoost.toFixed(3)}</span>
       </div>
     </aside>
   );

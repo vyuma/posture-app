@@ -32,6 +32,9 @@ const DEFAULT_SNAPSHOT: RuntimeSnapshot = {
   baselineReady: false,
   usingWorldLandmarks: false,
   features: null,
+  headWidthRatio: null,
+  headWidthScale: null,
+  headWidthScoreBoost: 0,
   trackingMode: "foreground",
   trackingIntervalMs: TRACKING_INTERVAL_MS,
 };
@@ -318,6 +321,9 @@ export function usePostureTracking() {
             baselineReady: result.baselineReady,
             usingWorldLandmarks: result.usingWorldLandmarks,
             features: result.features,
+            headWidthRatio: result.eval.headWidthRatio,
+            headWidthScale: result.eval.headWidthScale,
+            headWidthScoreBoost: result.eval.headWidthScoreBoost,
             trackingMode,
             trackingIntervalMs,
           });

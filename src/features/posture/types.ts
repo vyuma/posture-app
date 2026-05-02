@@ -17,6 +17,9 @@ export type RuntimeSnapshot = {
   baselineReady: boolean;
   usingWorldLandmarks: boolean;
   features: PostureFeatures | null;
+  headWidthRatio: number | null;
+  headWidthScale: number | null;
+  headWidthScoreBoost: number;
   trackingMode: TrackingMode;
   trackingIntervalMs: number;
 };
