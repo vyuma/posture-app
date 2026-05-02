@@ -1,6 +1,8 @@
 export const TRACKING_INTERVAL_MS = 50;
+export const BACKGROUND_TRACKING_INTERVAL_MS = 220;
 export const UI_UPDATE_INTERVAL_MS = 120;
 export const RUNTIME_ERROR_STATUS_INTERVAL_MS = 1200;
+export const BACKGROUND_ALERT_COOLDOWN_MS = 20_000;
 
 export const POSE_MODEL_URL =
   "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task";

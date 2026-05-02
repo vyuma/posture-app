@@ -6,6 +6,8 @@ import {
 } from "@mediapipe/tasks-vision";
 
 import {
+  BACKGROUND_ALERT_COOLDOWN_MS,
+  BACKGROUND_TRACKING_INTERVAL_MS,
   POSE_MODEL_URL,
   RUNTIME_ERROR_STATUS_INTERVAL_MS,
   TRACKING_INTERVAL_MS,
@@ -18,7 +20,7 @@ import {
   evaluatePostureFrame,
 } from "../engine";
 import { drawPoseOverlay } from "../services/drawPoseOverlay";
-import type { RuntimeSnapshot } from "../types";
+import type { RuntimeSnapshot, TrackingMode } from "../types";
 
 const DEFAULT_SNAPSHOT: RuntimeSnapshot = {
   postureState: "hold",
@@ -30,17 +32,45 @@ const DEFAULT_SNAPSHOT: RuntimeSnapshot = {
   baselineReady: false,
   usingWorldLandmarks: false,
   features: null,
+  trackingMode: "foreground",
+  trackingIntervalMs: TRACKING_INTERVAL_MS,
 };
+
+const isWindowBackgrounded = () => {
+  if (typeof document === "undefined") {
+    return false;
+  }
+
+  if (document.visibilityState !== "visible") {
+    return true;
+  }
+
+  if (typeof document.hasFocus === "function") {
+    return !document.hasFocus();
+  }
+
+  return false;
+};
+
+const getTrackingMode = (): TrackingMode =>
+  isWindowBackgrounded() ? "background" : "foreground";
+
+const getTrackingIntervalMs = () =>
+  getTrackingMode() === "background"
+    ? BACKGROUND_TRACKING_INTERVAL_MS
+    : TRACKING_INTERVAL_MS;
 
 export function usePostureTracking() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animationRef = useRef<number | null>(null);
+  const trackingTimerRef = useRef<number | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const poseLandmarkerRef = useRef<PoseLandmarker | null>(null);
   const lastInferenceAtRef = useRef(0);
   const lastUiUpdateAtRef = useRef(0);
   const lastRuntimeErrorAtRef = useRef(0);
+  const lastBackgroundAlertAtRef = useRef(0);
+  const trackingModeRef = useRef<TrackingMode>("foreground");
   const engineStateRef = useRef(createPostureEngineState());
   const isBadPostureRef = useRef(false);
 
@@ -48,6 +78,15 @@ export function usePostureTracking() {
   const [status, setStatus] = useState("カメラとPoseモデルを初期化しています...");
   const [isBadPosture, setIsBadPosture] = useState(false);
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot>(DEFAULT_SNAPSHOT);
+
+  const clearTrackingTimer = useCallback(() => {
+    if (trackingTimerRef.current === null) {
+      return;
+    }
+
+    window.clearTimeout(trackingTimerRef.current);
+    trackingTimerRef.current = null;
+  }, []);
 
   const resetPostureEngine = useCallback(() => {
     engineStateRef.current = createPostureEngineState();
@@ -63,6 +102,11 @@ export function usePostureTracking() {
 
   useEffect(() => {
     let mounted = true;
+
+    const scheduleNext = (delayMs: number, callback: () => void) => {
+      clearTrackingTimer();
+      trackingTimerRef.current = window.setTimeout(callback, Math.max(0, delayMs));
+    };
 
     const startCamera = async () => {
       if (
@@ -122,6 +166,180 @@ export function usePostureTracking() {
       }
     };
 
+    const maybeResumeVideo = async (video: HTMLVideoElement) => {
+      if (!video.paused) {
+        return;
+      }
+
+      try {
+        await video.play();
+      } catch {
+        // ウィンドウ遷移中の一時停止は次ループで再試行する。
+      }
+    };
+
+    const maybeNotifyBackgroundBadPosture = (now: number) => {
+      if (!isWindowBackgrounded() || typeof Notification === "undefined") {
+        return;
+      }
+
+      if (Notification.permission !== "granted") {
+        return;
+      }
+
+      if (now - lastBackgroundAlertAtRef.current < BACKGROUND_ALERT_COOLDOWN_MS) {
+        return;
+      }
+
+      lastBackgroundAlertAtRef.current = now;
+
+      try {
+        new Notification("姿勢が悪いです", {
+          body: "作業姿勢を戻してください。",
+          tag: "posture-bad",
+          silent: false,
+        });
+      } catch {
+        // 通知 API を使えない環境では無視する。
+      }
+    };
+
+    const updateTrackingStatus = (nextMode: TrackingMode) => {
+      if (trackingModeRef.current === nextMode) {
+        return;
+      }
+
+      trackingModeRef.current = nextMode;
+      setStatus(
+        nextMode === "background"
+          ? "バックグラウンド追跡中（省電力モード）"
+          : "posture.md 仕様で姿勢を追跡中です。",
+      );
+    };
+
+    const trackOnce = async () => {
+      if (!mounted) {
+        return;
+      }
+
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const poseModel = poseLandmarkerRef.current;
+
+      if (!video || !canvas || !poseModel) {
+        scheduleNext(100, () => {
+          void trackOnce();
+        });
+        return;
+      }
+
+      const trackingMode = getTrackingMode();
+      const trackingIntervalMs = getTrackingIntervalMs();
+      updateTrackingStatus(trackingMode);
+
+      await maybeResumeVideo(video);
+
+      if (video.readyState < 2) {
+        scheduleNext(120, () => {
+          void trackOnce();
+        });
+        return;
+      }
+
+      const now = performance.now();
+      const elapsedSinceLastInference = now - lastInferenceAtRef.current;
+      if (elapsedSinceLastInference < trackingIntervalMs) {
+        scheduleNext(trackingIntervalMs - elapsedSinceLastInference, () => {
+          void trackOnce();
+        });
+        return;
+      }
+      lastInferenceAtRef.current = now;
+
+      if (
+        canvas.width !== video.videoWidth ||
+        canvas.height !== video.videoHeight
+      ) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+      }
+
+      try {
+        const poseResult = poseModel.detectForVideo(video, now);
+        const imageLandmarks: NormalizedLandmark[] | null =
+          poseResult.landmarks.length > 0 ? poseResult.landmarks[0] : null;
+        const worldLandmarks =
+          poseResult.worldLandmarks.length > 0
+            ? poseResult.worldLandmarks[0]
+            : null;
+
+        const { state, result } = evaluatePostureFrame(
+          engineStateRef.current,
+          now,
+          imageLandmarks,
+          worldLandmarks,
+        );
+        engineStateRef.current = state;
+
+        if (result.postureState !== "hold") {
+          const nextBad = result.postureState === "bad";
+          if (nextBad !== isBadPostureRef.current) {
+            isBadPostureRef.current = nextBad;
+            setIsBadPosture(nextBad);
+
+            if (nextBad) {
+              maybeNotifyBackgroundBadPosture(now);
+            }
+          }
+        }
+
+        if (typeof document === "undefined" || document.visibilityState === "visible") {
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPoseOverlay(ctx, canvas, imageLandmarks);
+          }
+        }
+
+        const uiUpdateIntervalMs =
+          trackingMode === "background"
+            ? Math.max(UI_UPDATE_INTERVAL_MS, 600)
+            : UI_UPDATE_INTERVAL_MS;
+
+        if (now - lastUiUpdateAtRef.current >= uiUpdateIntervalMs) {
+          lastUiUpdateAtRef.current = now;
+          setSnapshot({
+            postureState: result.postureState,
+            qualityOk: result.eval.qualityOk,
+            view: result.eval.view,
+            score: result.eval.score,
+            candidateBad: result.eval.candidateBad,
+            warmupRemainingMs: result.warmupRemainingMs,
+            baselineReady: result.baselineReady,
+            usingWorldLandmarks: result.usingWorldLandmarks,
+            features: result.features,
+            trackingMode,
+            trackingIntervalMs,
+          });
+        }
+      } catch (runtimeError) {
+        if (now - lastRuntimeErrorAtRef.current > RUNTIME_ERROR_STATUS_INTERVAL_MS) {
+          lastRuntimeErrorAtRef.current = now;
+          setStatus(
+            `追跡中に一時エラーが発生しました（自動復旧）: ${
+              runtimeError instanceof Error
+                ? runtimeError.message
+                : String(runtimeError)
+            }`,
+          );
+        }
+      }
+
+      scheduleNext(getTrackingIntervalMs(), () => {
+        void trackOnce();
+      });
+    };
+
     const init = async () => {
       try {
         if (!videoRef.current || !canvasRef.current) {
@@ -144,101 +362,18 @@ export function usePostureTracking() {
         setReady(true);
         setStatus("posture.md 仕様で姿勢を追跡中です。");
 
-        const drawFrame = () => {
-          const video = videoRef.current;
-          const canvas = canvasRef.current;
-          const poseModel = poseLandmarkerRef.current;
+        if (
+          typeof Notification !== "undefined" &&
+          Notification.permission === "default"
+        ) {
+          void Notification.requestPermission().catch(() => {
+            // 許可ダイアログを表示できない環境では無視する。
+          });
+        }
 
-          if (!video || !canvas || !poseModel) {
-            return;
-          }
-
-          if (video.readyState < 2) {
-            animationRef.current = requestAnimationFrame(drawFrame);
-            return;
-          }
-
-          const now = performance.now();
-          if (now - lastInferenceAtRef.current < TRACKING_INTERVAL_MS) {
-            animationRef.current = requestAnimationFrame(drawFrame);
-            return;
-          }
-          lastInferenceAtRef.current = now;
-
-          if (
-            canvas.width !== video.videoWidth ||
-            canvas.height !== video.videoHeight
-          ) {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-          }
-
-          const ctx = canvas.getContext("2d");
-          if (!ctx) {
-            animationRef.current = requestAnimationFrame(drawFrame);
-            return;
-          }
-
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-          try {
-            const poseResult = poseModel.detectForVideo(video, now);
-            const imageLandmarks: NormalizedLandmark[] | null =
-              poseResult.landmarks.length > 0 ? poseResult.landmarks[0] : null;
-            const worldLandmarks =
-              poseResult.worldLandmarks.length > 0
-                ? poseResult.worldLandmarks[0]
-                : null;
-
-            const { state, result } = evaluatePostureFrame(
-              engineStateRef.current,
-              now,
-              imageLandmarks,
-              worldLandmarks,
-            );
-            engineStateRef.current = state;
-
-            if (result.postureState !== "hold") {
-              const nextBad = result.postureState === "bad";
-              if (nextBad !== isBadPostureRef.current) {
-                isBadPostureRef.current = nextBad;
-                setIsBadPosture(nextBad);
-              }
-            }
-
-            drawPoseOverlay(ctx, canvas, imageLandmarks);
-
-            if (now - lastUiUpdateAtRef.current >= UI_UPDATE_INTERVAL_MS) {
-              lastUiUpdateAtRef.current = now;
-              setSnapshot({
-                postureState: result.postureState,
-                qualityOk: result.eval.qualityOk,
-                view: result.eval.view,
-                score: result.eval.score,
-                candidateBad: result.eval.candidateBad,
-                warmupRemainingMs: result.warmupRemainingMs,
-                baselineReady: result.baselineReady,
-                usingWorldLandmarks: result.usingWorldLandmarks,
-                features: result.features,
-              });
-            }
-          } catch (runtimeError) {
-            if (now - lastRuntimeErrorAtRef.current > RUNTIME_ERROR_STATUS_INTERVAL_MS) {
-              lastRuntimeErrorAtRef.current = now;
-              setStatus(
-                `追跡中に一時エラーが発生しました（自動復旧）: ${
-                  runtimeError instanceof Error
-                    ? runtimeError.message
-                    : String(runtimeError)
-                }`,
-              );
-            }
-          }
-
-          animationRef.current = requestAnimationFrame(drawFrame);
-        };
-
-        animationRef.current = requestAnimationFrame(drawFrame);
+        scheduleNext(0, () => {
+          void trackOnce();
+        });
       } catch (error) {
         if (!mounted && error instanceof Error && error.name === "AbortError") {
           return;
@@ -254,10 +389,7 @@ export function usePostureTracking() {
 
     return () => {
       mounted = false;
-
-      if (animationRef.current !== null) {
-        cancelAnimationFrame(animationRef.current);
-      }
+      clearTrackingTimer();
 
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
@@ -268,8 +400,9 @@ export function usePostureTracking() {
       lastInferenceAtRef.current = 0;
       lastUiUpdateAtRef.current = 0;
       lastRuntimeErrorAtRef.current = 0;
+      lastBackgroundAlertAtRef.current = 0;
     };
-  }, []);
+  }, [clearTrackingTimer]);
 
   return {
     videoRef,

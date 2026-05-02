@@ -32,6 +32,13 @@ export function PostureControlPanel({
         <span>
           座標ソース: {snapshot.usingWorldLandmarks ? "world優先" : "image fallback"}
         </span>
+        <span>
+          追跡モード:{" "}
+          {snapshot.trackingMode === "background"
+            ? "BACKGROUND"
+            : "FOREGROUND"}
+        </span>
+        <span>推論周期: {snapshot.trackingIntervalMs}ms</span>
       </div>
 
       <div className="criterion-meta" style={{ marginTop: 10 }}>

@@ -118,7 +118,7 @@ export const POSTURE_SPEC = {
   warmupMs: 5000,
   emaAlpha: 0.2,
   badDurationMs: 2_000,
-  recoverDurationMs: 1_000,
+  recoverDurationMs: 500,
   scoreThresholdBad: 1.6,
   scoreThresholdGood: 1.2,
   shoulderDropEnterMs: 400,
