@@ -4,5 +4,7 @@
 <dict>
     <key>NSCameraUsageDescription</key>
     <string>姿勢推定のためにカメラ映像を使用します。</string>
+    <key>NSAppSleepDisabled</key>
+    <true/>
 </dict>
 </plist>

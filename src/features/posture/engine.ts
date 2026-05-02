@@ -17,6 +17,9 @@ export type PostureEval = {
   candidateBad: boolean;
   qualityOk: boolean;
   view: ViewClass;
+  headWidthRatio: number | null;
+  headWidthScale: number | null;
+  headWidthScoreBoost: number;
 };
 
 type FeatureKey = keyof PostureFeatures;
@@ -69,6 +72,8 @@ type ExtractFeatureResult = {
 type ScoreResult = {
   scoreRaw: number;
   scoreEma: number;
+  headWidthScale: number | null;
+  headWidthScoreBoost: number;
 };
 
 export type PostureFrameResult = {
@@ -83,7 +88,9 @@ export type PostureFrameResult = {
 export type PostureEngineState = {
   warmupStartMs: number | null;
   warmupSamples: Record<FeatureKey, number[]>;
+  headWidthWarmupSamples: number[];
   baseline: BaselineStats | null;
+  baselineHeadWidthRatio: number | null;
   emaScore: number | null;
   candidateBadState: boolean;
   shoulderEstablished: boolean;
@@ -118,7 +125,7 @@ export const POSTURE_SPEC = {
   warmupMs: 5000,
   emaAlpha: 0.2,
   badDurationMs: 2_000,
-  recoverDurationMs: 1_000,
+  recoverDurationMs: 500,
   scoreThresholdBad: 1.6,
   scoreThresholdGood: 1.2,
   shoulderDropEnterMs: 400,
@@ -126,6 +133,12 @@ export const POSTURE_SPEC = {
   viewThresholds: {
     frontEarToShoulderRatioMin: 0.55,
     sideEarToShoulderRatioMax: 0.35,
+  },
+  headWidthBoost: {
+    triggerScale: 1.3,
+    fullScale: 1.6,
+    maxScoreBoost: 0.35,
+    baselineFloor: 0.25,
   },
   madFloor: {
     f1: 0.02,
@@ -169,7 +182,9 @@ export function createPostureEngineState(): PostureEngineState {
       f4: [],
       f5: [],
     },
+    headWidthWarmupSamples: [],
     baseline: null,
+    baselineHeadWidthRatio: null,
     emaScore: null,
     candidateBadState: false,
     shoulderEstablished: false,
@@ -263,10 +278,7 @@ function extractFeaturesFromSelection(
 }
 
 export function classifyView(points: ExtractedPoints): ViewClass {
-  const shoulderSpan = distance2D(points.SL, points.SR);
-  const earSpan = distance2D(points.EL, points.ER);
-  const shoulderSafe = Math.max(shoulderSpan, POSTURE_SPEC.minShoulderSpan);
-  const ratio = earSpan / shoulderSafe;
+  const ratio = getEarToShoulderRatio(points);
 
   if (!isFiniteNumber(ratio)) {
     return "unknown";
@@ -288,14 +300,22 @@ export function computeScore(
   view: ViewClass,
   baseline: BaselineStats,
   previousEmaScore: number | null,
+  headWidthRatio: number,
+  baselineHeadWidthRatio: number | null,
 ): ScoreResult {
   const weights = POSTURE_SPEC.weights[view];
   const normalized = normalizeFeatures(features, baseline);
+  const headWidthScale = computeHeadWidthScale(
+    headWidthRatio,
+    baselineHeadWidthRatio,
+  );
+  const headWidthScoreBoost = computeHeadWidthScoreBoost(view, headWidthScale);
 
   let scoreRaw = 0;
   for (const key of FEATURE_KEYS) {
     scoreRaw += weights[key] * normalized[key];
   }
+  scoreRaw += headWidthScoreBoost;
 
   const alpha = POSTURE_SPEC.emaAlpha;
   const scoreEma =
@@ -306,6 +326,8 @@ export function computeScore(
   return {
     scoreRaw,
     scoreEma,
+    headWidthScale,
+    headWidthScoreBoost,
   };
 }
 
@@ -397,6 +419,9 @@ export function evaluatePostureFrame(
           candidateBad: next.shoulderDropActive || next.candidateBadState,
           qualityOk: false,
           view: "unknown",
+          headWidthRatio: null,
+          headWidthScale: null,
+          headWidthScoreBoost: 0,
         },
         features: null,
         postureState: next.postureState,
@@ -408,14 +433,18 @@ export function evaluatePostureFrame(
   }
 
   const view = classifyView(extracted.points);
+  const headWidthRatio = getEarToShoulderRatio(extracted.points);
 
   if (!next.baseline) {
-    next = pushWarmupSample(next, extracted.features);
+    next = pushWarmupSample(next, extracted.features, headWidthRatio);
 
     if (nowMs - initializedStartMs >= POSTURE_SPEC.warmupMs) {
       next = {
         ...next,
         baseline: buildBaseline(next.warmupSamples),
+        baselineHeadWidthRatio: buildHeadWidthBaseline(
+          next.headWidthWarmupSamples,
+        ),
       };
     }
   }
@@ -433,6 +462,9 @@ export function evaluatePostureFrame(
           candidateBad: next.shoulderDropActive || next.candidateBadState,
           qualityOk: false,
           view,
+          headWidthRatio: headWidthRatio,
+          headWidthScale: null,
+          headWidthScoreBoost: 0,
         },
         features: extracted.features,
         postureState: next.postureState,
@@ -448,6 +480,8 @@ export function evaluatePostureFrame(
     view,
     next.baseline,
     next.emaScore,
+    headWidthRatio,
+    next.baselineHeadWidthRatio,
   );
   const nextCandidateBad = resolveCandidateBadState(
     next.candidateBadState,
@@ -474,6 +508,9 @@ export function evaluatePostureFrame(
         candidateBad: mergedCandidateBad,
         qualityOk: true,
         view,
+        headWidthRatio,
+        headWidthScale: scoreResult.headWidthScale,
+        headWidthScoreBoost: scoreResult.headWidthScoreBoost,
       },
       features: extracted.features,
       postureState: next.postureState,
@@ -491,6 +528,7 @@ function remainingWarmupMs(startMs: number, nowMs: number) {
 function pushWarmupSample(
   state: PostureEngineState,
   features: PostureFeatures,
+  headWidthRatio: number,
 ): PostureEngineState {
   const nextSamples: PostureEngineState["warmupSamples"] = {
     f1: [...state.warmupSamples.f1, features.f1],
@@ -499,11 +537,24 @@ function pushWarmupSample(
     f4: [...state.warmupSamples.f4, features.f4],
     f5: [...state.warmupSamples.f5, features.f5],
   };
+  const nextHeadWidthSamples = isFiniteNumber(headWidthRatio) && headWidthRatio > 0
+    ? [...state.headWidthWarmupSamples, headWidthRatio]
+    : state.headWidthWarmupSamples;
 
   return {
     ...state,
     warmupSamples: nextSamples,
+    headWidthWarmupSamples: nextHeadWidthSamples,
   };
+}
+
+function buildHeadWidthBaseline(samples: number[]) {
+  const usable = samples.filter((value) => isFiniteNumber(value) && value > 0);
+  if (usable.length === 0) {
+    return null;
+  }
+
+  return median(usable);
 }
 
 function buildBaseline(
@@ -537,6 +588,54 @@ function normalizeFeatures(
     f4: Math.abs(features.f4 - baseline.f4.median) / baseline.f4.scale,
     f5: Math.abs(features.f5 - baseline.f5.median) / baseline.f5.scale,
   };
+}
+
+function getEarToShoulderRatio(points: ExtractedPoints) {
+  const shoulderSpan = distance2D(points.SL, points.SR);
+  const earSpan = distance2D(points.EL, points.ER);
+  const shoulderSafe = Math.max(shoulderSpan, POSTURE_SPEC.minShoulderSpan);
+  return earSpan / shoulderSafe;
+}
+
+function computeHeadWidthScale(
+  headWidthRatio: number,
+  baselineHeadWidthRatio: number | null,
+) {
+  if (
+    baselineHeadWidthRatio === null ||
+    baselineHeadWidthRatio < POSTURE_SPEC.headWidthBoost.baselineFloor ||
+    !isFiniteNumber(headWidthRatio)
+  ) {
+    return null;
+  }
+
+  const scale = headWidthRatio / baselineHeadWidthRatio;
+  return isFiniteNumber(scale) ? scale : null;
+}
+
+function computeHeadWidthScoreBoost(
+  view: ViewClass,
+  headWidthScale: number | null,
+) {
+  if (view === "side") {
+    return 0;
+  }
+
+  if (headWidthScale === null) {
+    return 0;
+  }
+
+  const { triggerScale, fullScale, maxScoreBoost } = POSTURE_SPEC.headWidthBoost;
+  if (headWidthScale <= triggerScale) {
+    return 0;
+  }
+
+  const progress = clamp(
+    (headWidthScale - triggerScale) / Math.max(1e-6, fullScale - triggerScale),
+    0,
+    1,
+  );
+  return maxScoreBoost * progress;
 }
 
 function areBothShouldersUsable(selected: LandmarkSelection) {

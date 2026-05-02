@@ -5,6 +5,7 @@ import type {
 } from "./engine";
 
 export type AlertDisplayMode = "blackout" | "debug";
+export type TrackingMode = "foreground" | "background";
 
 export type RuntimeSnapshot = {
   postureState: PostureState;
@@ -16,4 +17,9 @@ export type RuntimeSnapshot = {
   baselineReady: boolean;
   usingWorldLandmarks: boolean;
   features: PostureFeatures | null;
+  headWidthRatio: number | null;
+  headWidthScale: number | null;
+  headWidthScoreBoost: number;
+  trackingMode: TrackingMode;
+  trackingIntervalMs: number;
 };
