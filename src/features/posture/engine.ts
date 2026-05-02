@@ -1,7 +1,6 @@
 import type { Landmark, NormalizedLandmark } from "@mediapipe/tasks-vision";
 
 export type ViewClass = "front" | "side" | "unknown";
-export type YawGateState = "front" | "turn_mild" | "turn_strong";
 
 export type PostureFeatures = {
   f1: number;
@@ -18,9 +17,6 @@ export type PostureEval = {
   candidateBad: boolean;
   qualityOk: boolean;
   view: ViewClass;
-  yawGate: YawGateState;
-  yawProxy: number;
-  headScale: number;
 };
 
 type FeatureKey = keyof PostureFeatures;
@@ -68,7 +64,6 @@ type ExtractFeatureResult = {
   features: PostureFeatures | null;
   points: ExtractedPoints | null;
   usingWorldLandmarks: boolean;
-  yawProxyRaw: number | null;
 };
 
 type ScoreResult = {
@@ -91,8 +86,6 @@ export type PostureEngineState = {
   baseline: BaselineStats | null;
   emaScore: number | null;
   candidateBadState: boolean;
-  yawGateState: YawGateState;
-  yawProxyEma: number;
   shoulderEstablished: boolean;
   shoulderDropActive: boolean;
   shoulderMissingAccumMs: number;
@@ -128,15 +121,6 @@ export const POSTURE_SPEC = {
   recoverDurationMs: 1_000,
   scoreThresholdBad: 1.6,
   scoreThresholdGood: 1.2,
-  yawProxyAlpha: 0.3,
-  yawProxyGain: 1.2,
-  yawEarSpanWeight: 0.9,
-  yawMildEnter: 0.16,
-  yawMildExit: 0.11,
-  yawStrongEnter: 0.3,
-  yawStrongExit: 0.22,
-  yawHeadScaleMild: 0.35,
-  yawHeadScaleStrong: 0,
   shoulderDropEnterMs: 400,
   shoulderDropExitMs: 500,
   viewThresholds: {
@@ -188,8 +172,6 @@ export function createPostureEngineState(): PostureEngineState {
     baseline: null,
     emaScore: null,
     candidateBadState: false,
-    yawGateState: "front",
-    yawProxyEma: 0,
     shoulderEstablished: false,
     shoulderDropActive: false,
     shoulderMissingAccumMs: 0,
@@ -224,7 +206,6 @@ function extractFeaturesFromSelection(
       features: null,
       points: null,
       usingWorldLandmarks,
-      yawProxyRaw: null,
     };
   }
 
@@ -240,11 +221,8 @@ function extractFeaturesFromSelection(
       features: null,
       points,
       usingWorldLandmarks,
-      yawProxyRaw: null,
     };
   }
-
-  const yawProxyRaw = estimateYawProxy(points, shoulderSpan);
 
   const torsoAxis = buildTorsoAxis(selected, SM);
   if (!torsoAxis) {
@@ -253,7 +231,6 @@ function extractFeaturesFromSelection(
       features: null,
       points,
       usingWorldLandmarks,
-      yawProxyRaw,
     };
   }
 
@@ -274,7 +251,6 @@ function extractFeaturesFromSelection(
       features: null,
       points,
       usingWorldLandmarks,
-      yawProxyRaw,
     };
   }
 
@@ -283,7 +259,6 @@ function extractFeaturesFromSelection(
     features: { f1, f2, f3, f4, f5 },
     points,
     usingWorldLandmarks,
-    yawProxyRaw,
   };
 }
 
@@ -313,17 +288,13 @@ export function computeScore(
   view: ViewClass,
   baseline: BaselineStats,
   previousEmaScore: number | null,
-  headScale: number,
 ): ScoreResult {
   const weights = POSTURE_SPEC.weights[view];
   const normalized = normalizeFeatures(features, baseline);
 
   let scoreRaw = 0;
   for (const key of FEATURE_KEYS) {
-    const scaledWeight = isHeadFeature(key)
-      ? weights[key] * headScale
-      : weights[key];
-    scoreRaw += scaledWeight * normalized[key];
+    scoreRaw += weights[key] * normalized[key];
   }
 
   const alpha = POSTURE_SPEC.emaAlpha;
@@ -426,9 +397,6 @@ export function evaluatePostureFrame(
           candidateBad: next.shoulderDropActive || next.candidateBadState,
           qualityOk: false,
           view: "unknown",
-          yawGate: next.yawGateState,
-          yawProxy: next.yawProxyEma,
-          headScale: yawHeadScaleFromGate(next.yawGateState),
         },
         features: null,
         postureState: next.postureState,
@@ -440,18 +408,6 @@ export function evaluatePostureFrame(
   }
 
   const view = classifyView(extracted.points);
-  const nextYawProxy = smoothValue(
-    next.yawProxyEma,
-    extracted.yawProxyRaw ?? next.yawProxyEma,
-    POSTURE_SPEC.yawProxyAlpha,
-  );
-  const nextYawGate = resolveYawGateState(next.yawGateState, nextYawProxy);
-  next = {
-    ...next,
-    yawProxyEma: nextYawProxy,
-    yawGateState: nextYawGate,
-  };
-  const headScale = yawHeadScaleFromGate(nextYawGate);
 
   if (!next.baseline) {
     next = pushWarmupSample(next, extracted.features);
@@ -477,9 +433,6 @@ export function evaluatePostureFrame(
           candidateBad: next.shoulderDropActive || next.candidateBadState,
           qualityOk: false,
           view,
-          yawGate: nextYawGate,
-          yawProxy: nextYawProxy,
-          headScale,
         },
         features: extracted.features,
         postureState: next.postureState,
@@ -490,38 +443,11 @@ export function evaluatePostureFrame(
     };
   }
 
-  if (nextYawGate === "turn_strong") {
-    next = updatePostureState(next, false, false, nowMs);
-    if (next.shoulderDropActive) {
-      next = forceBadState(next, nowMs);
-    }
-    return {
-      state: next,
-      result: {
-        eval: {
-          score: next.emaScore ?? 0,
-          candidateBad: next.shoulderDropActive || next.candidateBadState,
-          qualityOk: false,
-          view,
-          yawGate: nextYawGate,
-          yawProxy: nextYawProxy,
-          headScale,
-        },
-        features: extracted.features,
-        postureState: next.postureState,
-        warmupRemainingMs: remainingWarmupMs(initializedStartMs, nowMs),
-        baselineReady: true,
-        usingWorldLandmarks: extracted.usingWorldLandmarks,
-      },
-    };
-  }
-
   const scoreResult = computeScore(
     extracted.features,
     view,
     next.baseline,
     next.emaScore,
-    headScale,
   );
   const nextCandidateBad = resolveCandidateBadState(
     next.candidateBadState,
@@ -548,9 +474,6 @@ export function evaluatePostureFrame(
         candidateBad: mergedCandidateBad,
         qualityOk: true,
         view,
-        yawGate: nextYawGate,
-        yawProxy: nextYawProxy,
-        headScale,
       },
       features: extracted.features,
       postureState: next.postureState,
@@ -614,87 +537,6 @@ function normalizeFeatures(
     f4: Math.abs(features.f4 - baseline.f4.median) / baseline.f4.scale,
     f5: Math.abs(features.f5 - baseline.f5.median) / baseline.f5.scale,
   };
-}
-
-function isHeadFeature(key: FeatureKey) {
-  return key === "f1" || key === "f2" || key === "f4";
-}
-
-function estimateYawProxy(points: ExtractedPoints, shoulderSpan: number) {
-  const shoulderSafe = Math.max(shoulderSpan, POSTURE_SPEC.minShoulderSpan);
-  const shoulderMidpoint = midpoint(points.SL, points.SR);
-  const noseOffset = Math.abs(points.N.x - shoulderMidpoint.x) / shoulderSafe;
-  const earVisibilityGap = Math.abs(points.EL.visibility - points.ER.visibility);
-  const leftNoseEar = distance2D(points.N, points.EL);
-  const rightNoseEar = distance2D(points.N, points.ER);
-  const earAsymmetry =
-    Math.abs(leftNoseEar - rightNoseEar) / shoulderSafe;
-  const earSpan = distance2D(points.EL, points.ER);
-  const earSpanRatio = earSpan / shoulderSafe;
-  const turnRange = Math.max(
-    POSTURE_SPEC.viewThresholds.frontEarToShoulderRatioMin -
-      POSTURE_SPEC.viewThresholds.sideEarToShoulderRatioMax,
-    0.01,
-  );
-  const earSpanCollapse = clamp(
-    (POSTURE_SPEC.viewThresholds.frontEarToShoulderRatioMin - earSpanRatio) /
-      turnRange,
-    0,
-    1.5,
-  );
-
-  const weighted = Math.max(
-    earVisibilityGap * 1.4,
-    earAsymmetry * 1.2,
-    noseOffset,
-    earSpanCollapse * POSTURE_SPEC.yawEarSpanWeight,
-  );
-
-  return clamp(weighted * POSTURE_SPEC.yawProxyGain, 0, 2);
-}
-
-function smoothValue(previous: number, current: number, alpha: number) {
-  return alpha * current + (1 - alpha) * previous;
-}
-
-function resolveYawGateState(previous: YawGateState, yawProxy: number): YawGateState {
-  if (previous === "turn_strong") {
-    if (yawProxy >= POSTURE_SPEC.yawStrongExit) {
-      return "turn_strong";
-    }
-    if (yawProxy >= POSTURE_SPEC.yawMildEnter) {
-      return "turn_mild";
-    }
-    return "front";
-  }
-
-  if (previous === "turn_mild") {
-    if (yawProxy >= POSTURE_SPEC.yawStrongEnter) {
-      return "turn_strong";
-    }
-    if (yawProxy >= POSTURE_SPEC.yawMildExit) {
-      return "turn_mild";
-    }
-    return "front";
-  }
-
-  if (yawProxy >= POSTURE_SPEC.yawStrongEnter) {
-    return "turn_strong";
-  }
-  if (yawProxy >= POSTURE_SPEC.yawMildEnter) {
-    return "turn_mild";
-  }
-  return "front";
-}
-
-function yawHeadScaleFromGate(gate: YawGateState) {
-  if (gate === "turn_strong") {
-    return POSTURE_SPEC.yawHeadScaleStrong;
-  }
-  if (gate === "turn_mild") {
-    return POSTURE_SPEC.yawHeadScaleMild;
-  }
-  return 1;
 }
 
 function areBothShouldersUsable(selected: LandmarkSelection) {

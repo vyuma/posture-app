@@ -27,9 +27,6 @@ export function PostureControlPanel({
         <span>視点: {snapshot.view}</span>
         <span>スコア: {snapshot.score.toFixed(3)}</span>
         <span>bad候補: {snapshot.candidateBad ? "YES" : "NO"}</span>
-        <span>yawゲート: {snapshot.yawGate}</span>
-        <span>yaw指標: {snapshot.yawProxy.toFixed(3)}</span>
-        <span>head係数: {snapshot.headScale.toFixed(2)}</span>
         <span>baseline: {snapshot.baselineReady ? "READY" : "WARMUP"}</span>
         <span>warmup残り時間: {Math.ceil(snapshot.warmupRemainingMs / 1000)}s</span>
         <span>
