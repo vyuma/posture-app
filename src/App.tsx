@@ -9,7 +9,7 @@ import {
   type AlertDisplayMode,
   usePostureTracking,
 } from "./features/posture";
-import { sendPostureSignal, setBlackoutWindow } from "./lib/desktopBridge";
+import { sendPostureSignal } from "./lib/desktopBridge";
 
 function App() {
   const {
@@ -32,8 +32,6 @@ function App() {
     isBadPosture && alertDisplayMode === "blackout";
 
   useEffect(() => {
-    void setBlackoutWindow(shouldBlackoutScreen);
-
     try {
       const appWindow = getCurrentWindow();
       void appWindow.setFullscreen(shouldBlackoutScreen);
@@ -43,14 +41,17 @@ function App() {
 
     if (lastBroadcastedPostureRef.current !== isBadPosture) {
       lastBroadcastedPostureRef.current = isBadPosture;
-      void sendPostureSignal(isBadPosture);
+      void sendPostureSignal(isBadPosture).catch(() => {
+        // Tauriコンテキスト外では posture signal を送信できないため無視する。
+      });
     }
   }, [isBadPosture, shouldBlackoutScreen]);
 
   useEffect(() => {
     return () => {
-      void sendPostureSignal(false);
-      void setBlackoutWindow(false);
+      void sendPostureSignal(false).catch(() => {
+        // Tauriコンテキスト外では posture signal を送信できないため無視する。
+      });
 
       try {
         const appWindow = getCurrentWindow();

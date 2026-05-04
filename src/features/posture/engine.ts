@@ -8,7 +8,7 @@ export type PostureFeatures = {
   torsoTiltDeg: number;
   neckAngleDeg: number;
   earShoulderAsymmetryRatio: number;
-  headForwardAngleDeg: number;
+  headForwardAngleDeg: number | null;
 };
 
 export type PostureState = "good" | "bad" | "hold";
@@ -56,11 +56,14 @@ export type PostureExperimentMetrics = {
 };
 
 type FeatureKey = keyof PostureFeatures;
+type BodyTurnSource = "world" | "image";
+type FeatureReliabilityMap = Record<FeatureKey, number>;
 
 type FeatureStats = {
   median: number;
   mad: number;
   scale: number;
+  sampleCount: number;
 };
 
 type BaselineStats = Record<FeatureKey, FeatureStats>;
@@ -98,16 +101,20 @@ type PickedPoint = {
 type ExtractFeatureResult = {
   qualityOk: boolean;
   features: PostureFeatures | null;
-  points: ExtractedPoints | null;
+  points2d: ExtractedPoints | null;
+  points3d: ExtractedPoints | null;
   usingWorldLandmarks: boolean;
 };
 
 type ScoreResult = {
-  scoreRaw: number;
   scoreEma: number;
   headWidthScale: number | null;
   headWidthScoreBoost: number;
+  confidence: number;
+  usableFeatureCount: number;
 };
+
+type NormalizedFeatureMap = Record<FeatureKey, number | null>;
 
 export type PostureFrameResult = {
   eval: PostureEval;
@@ -174,17 +181,28 @@ export const POSTURE_SPEC = {
   visibilityThreshold: 0.5,
   minShoulderSpan: 0.01,
   warmupMs: 5000,
-  emaAlpha: 0.2,
+  emaAlphaMin: 0.05,
+  emaAlphaMax: 0.2,
   badDurationMs: 2_000,
   recoverDurationMs: 500,
   scoreThresholdBad: 1.6,
   scoreThresholdGood: 1.2,
+  scoreZClamp: 3.5,
+  minUsableFeatureCount: 3,
+  lowConfidenceThreshold: 0.5,
+  lowConfidenceBadThresholdBoost: 0.15,
   shoulderDropEnterMs: 400,
   shoulderDropExitMs: 500,
+  sourceReliability: {
+    world: 1,
+    image: 0.85,
+  },
+  torsoVerticalFallbackReliability: 0.75,
   turnThresholds: {
     shoulderZDiffRatio: 0.25, // 肩幅に対する肩のZ軸(奥行き)の差の比率
     shoulderXAsymmetry: 0.35, // 鼻と肩の左右非対称比率
     headYawRatio: 0.55,        // 鼻と耳の非対称比率 (首の回転)
+    headYawRatioSevere: 0.35,  // これ未満は「過度な首回転」とみなしてBad候補に含める
   },
   headWidthBoost: {
     triggerScale: 1.3,
@@ -192,6 +210,7 @@ export const POSTURE_SPEC = {
     maxScoreBoost: 0.35,
     baselineFloor: 0.25,
   },
+  headForwardMinSamples: 12,
   madFloor: {
     headLateralOffsetRatio: 0.02,
     earShoulderDistanceRatio: 0.02,
@@ -216,14 +235,6 @@ export const POSTURE_SPEC = {
       neckAngleDeg: 0.1,
       earShoulderAsymmetryRatio: 0.00, // 側面では非対称性が無意味なため0に設定
       headForwardAngleDeg: 0.26, // 非対称性の重み(0.05)をストレートネックに移動
-    },
-    unknown: {
-      headLateralOffsetRatio: 0.22,
-      earShoulderDistanceRatio: 0.15,
-      torsoTiltDeg: 0.15,
-      neckAngleDeg: 0.12,
-      earShoulderAsymmetryRatio: 0.12,
-      headForwardAngleDeg: 0.24,
     },
   } as const,
 };
@@ -257,32 +268,25 @@ export function createPostureEngineState(): PostureEngineState {
   };
 }
 
-export function extractFeatures(
-  landmarks: NormalizedLandmark[] | null,
-  worldLandmarks: Landmark[] | null,
-): ExtractFeatureResult {
-  const selected = pickLandmarkSet(landmarks, worldLandmarks);
-  return extractFeaturesFromSelection(selected);
-}
-
 function extractFeaturesFromSelection(
-  selected: LandmarkSelection,
+  selected2d: LandmarkSelection,
+  selected3d: LandmarkSelection,
 ): ExtractFeatureResult {
-  const usingWorldLandmarks = Object.values(selected).some(
-    (item) => item !== null && item.source === "world",
-  );
+  const points2d = buildCorePoints(selected2d);
+  const points3d = buildCorePoints(selected3d);
+  const usingWorldLandmarks = points3d !== null;
 
-  if (!hasRequiredCorePoints(selected)) {
+  if (!points2d) {
     return {
       qualityOk: false,
       features: null,
-      points: null,
+      points2d: null,
+      points3d,
       usingWorldLandmarks,
     };
   }
 
-  const points = buildCorePoints(selected);
-  const { N, EL, ER, SL, SR } = points;
+  const { N, EL, ER, SL, SR } = points2d;
   const SM = midpoint(SL, SR);
   const EM = midpoint(EL, ER);
 
@@ -291,28 +295,27 @@ function extractFeaturesFromSelection(
     return {
       qualityOk: false,
       features: null,
-      points,
+      points2d,
+      points3d,
       usingWorldLandmarks,
     };
   }
 
-  const torsoAxis = buildTorsoAxis(selected, SM);
-  if (!torsoAxis) {
-    return {
-      qualityOk: false,
-      features: null,
-      points,
-      usingWorldLandmarks,
-    };
-  }
-
+  const torsoAxis = buildTorsoAxis(selected2d, SM, "image");
   const horizontalAxis = { x: -torsoAxis.y, y: torsoAxis.x };
 
   const headLateralOffsetRatio =
     dot2D(subtract2D(N, SM), horizontalAxis) / shoulderSpan;
   const earShoulderDistanceRatio = distance2D(EM, SM) / shoulderSpan;
   const torsoTiltDeg = angleDegBetween2D(torsoAxis, { x: 0, y: -1 });
-  const neckAngle3d = computeNeckAngle3D(selected, N, EM, SM);
+  const neckAngle3d = points3d
+    ? computeNeckAngle3D(
+        selected3d,
+        points3d.N,
+        midpoint(points3d.EL, points3d.ER),
+        midpoint(points3d.SL, points3d.SR),
+      )
+    : null;
   const neckAngle2dFallback =
     neckAngle3d === null ? computeNeckAngle2D(N, EM, torsoAxis) : null;
   const neckAngleDeg = neckAngle3d ?? neckAngle2dFallback;
@@ -320,31 +323,48 @@ function extractFeaturesFromSelection(
   const rightEarShoulder = distance2D(ER, SR);
   const earShoulderAsymmetryRatio =
     Math.abs(leftEarShoulder - rightEarShoulder) / shoulderSpan;
-  const headForwardAngleDeg = computeHeadForwardAngle3D(selected, EM, SM);
+  const headForwardAngleDeg = points3d
+    ? computeHeadForwardAngle3D(
+        selected3d,
+        midpoint(points3d.EL, points3d.ER),
+        midpoint(points3d.SL, points3d.SR),
+      )
+    : null;
 
   if (neckAngleDeg === null) {
     return {
       qualityOk: false,
       features: null,
-      points,
+      points2d,
+      points3d,
       usingWorldLandmarks,
     };
   }
 
-  const featureValues = [
+  const requiredFeatureValues = [
     headLateralOffsetRatio,
     earShoulderDistanceRatio,
     torsoTiltDeg,
     neckAngleDeg,
     earShoulderAsymmetryRatio,
-    headForwardAngleDeg,
   ];
 
-  if (!featureValues.every(isFiniteNumber)) {
+  if (!requiredFeatureValues.every(isFiniteNumber)) {
     return {
       qualityOk: false,
       features: null,
-      points,
+      points2d,
+      points3d,
+      usingWorldLandmarks,
+    };
+  }
+
+  if (headForwardAngleDeg !== null && !isFiniteNumber(headForwardAngleDeg)) {
+    return {
+      qualityOk: false,
+      features: null,
+      points2d,
+      points3d,
       usingWorldLandmarks,
     };
   }
@@ -359,30 +379,30 @@ function extractFeaturesFromSelection(
       earShoulderAsymmetryRatio,
       headForwardAngleDeg,
     },
-    points,
+    points2d,
+    points3d,
     usingWorldLandmarks,
   };
 }
 
-export function getHeadYawRatio(points: ExtractedPoints): number {
+function getHeadYawRatio(points: ExtractedPoints): number | null {
   const distL = Math.abs(points.N.x - points.EL.x);
   const distR = Math.abs(points.N.x - points.ER.x);
   const min = Math.min(distL, distR);
   const max = Math.max(distL, distR);
-  
-  if (max < 1e-6) return 0;
+
+  if (max < 1e-6) return null;
   return min / max;
 }
 
-export function checkHeadTurn(points: ExtractedPoints): boolean {
-  return getHeadYawRatio(points) < POSTURE_SPEC.turnThresholds.headYawRatio;
-}
-
-export function checkBodyTurn(points: ExtractedPoints, usingWorldLandmarks: boolean): boolean {
+function checkBodyTurn(
+  points: ExtractedPoints,
+  source: BodyTurnSource,
+): boolean {
   const shoulderSpan = distance2D(points.SL, points.SR);
   if (shoulderSpan < POSTURE_SPEC.minShoulderSpan) return true;
 
-  if (usingWorldLandmarks) {
+  if (source === "world") {
     const zDiff = Math.abs(points.SL.z - points.SR.z);
     return (zDiff / shoulderSpan) > POSTURE_SPEC.turnThresholds.shoulderZDiffRatio;
   } else {
@@ -396,31 +416,36 @@ export function checkBodyTurn(points: ExtractedPoints, usingWorldLandmarks: bool
   }
 }
 
-export function classifyView(points: ExtractedPoints, usingWorldLandmarks: boolean): ViewClass {
-  if (checkBodyTurn(points, usingWorldLandmarks)) {
+function classifyView(
+  points: ExtractedPoints,
+  source: BodyTurnSource,
+): ViewClass {
+  if (checkBodyTurn(points, source)) {
     return "side";
   }
   return "front";
 }
 
-export function computeScore(
+function computeScore(
   features: PostureFeatures,
   view: ViewClass,
   baseline: BaselineStats,
   previousEmaScore: number | null,
   headWidthRatio: number,
   baselineHeadWidthRatio: number | null,
-  isHeadTurned: boolean
+  isHeadTurned: boolean,
+  featureReliability: FeatureReliabilityMap,
 ): ScoreResult {
-  const weights: Record<FeatureKey, number> = { ...POSTURE_SPEC.weights[view] };
+  const weightProfile = view === "side" ? "side" : "front";
+  const weights: Record<FeatureKey, number> = { ...POSTURE_SPEC.weights[weightProfile] };
 
   if (view === "side" || isHeadTurned) {
-    // 首を回した時や側面の場合、首の角度(neckAngleDeg)の重みをfront時の半分に縮小
-    const halfFrontNeckWeight = POSTURE_SPEC.weights.front.neckAngleDeg / 2;
+    const halfFrontNeckWeight = POSTURE_SPEC.weights.front.neckAngleDeg * 0.6;
     const diff = weights.neckAngleDeg - halfFrontNeckWeight;
     
     weights.neckAngleDeg = halfFrontNeckWeight;
     weights.headForwardAngleDeg += diff; // 残りの重みはストレートネック角度に合算
+    weights.headLateralOffsetRatio *= 0.8;
   }
 
   const normalized = normalizeFeatures(features, baseline);
@@ -430,31 +455,59 @@ export function computeScore(
   );
   const headWidthScoreBoost = computeHeadWidthScoreBoost(view, headWidthScale);
 
-  let scoreRaw = 0;
+  let weightedScore = 0;
+  let totalWeight = 0;
+  let confidenceWeight = 0;
+  let usableFeatureCount = 0;
+  const totalBaseWeight = FEATURE_KEYS.reduce((sum, key) => sum + weights[key], 0);
+
   for (const key of FEATURE_KEYS) {
-    scoreRaw += weights[key] * normalized[key];
+    const reliability = clamp(featureReliability[key] ?? 0, 0, 1);
+    const effectiveWeight = weights[key] * reliability;
+    confidenceWeight += effectiveWeight;
+
+    const normalizedValue = normalized[key];
+    if (normalizedValue === null || effectiveWeight <= 1e-6) {
+      continue;
+    }
+
+    const clampedZ = clamp(normalizedValue, 0, POSTURE_SPEC.scoreZClamp);
+    weightedScore += effectiveWeight * clampedZ;
+    totalWeight += effectiveWeight;
+    usableFeatureCount += 1;
   }
+
+  const confidence =
+    totalBaseWeight > 1e-6 ? clamp(confidenceWeight / totalBaseWeight, 0, 1) : 0;
+  const scoreBase = totalWeight > 1e-6 ? weightedScore / totalWeight : 0;
+  let scoreRaw = scoreBase;
   scoreRaw += headWidthScoreBoost;
 
-  const alpha = POSTURE_SPEC.emaAlpha;
+  const alpha = lerp(
+    POSTURE_SPEC.emaAlphaMin,
+    POSTURE_SPEC.emaAlphaMax,
+    confidence,
+  );
   const scoreEma =
     previousEmaScore === null
       ? scoreRaw
       : alpha * scoreRaw + (1 - alpha) * previousEmaScore;
 
   return {
-    scoreRaw,
     scoreEma,
     headWidthScale,
     headWidthScoreBoost,
+    confidence,
+    usableFeatureCount,
   };
 }
 
-export function updatePostureState(
+function updatePostureState(
   previous: PostureEngineState,
   qualityOk: boolean,
   candidateBad: boolean,
   nowMs: number,
+  allowTransition = true,
 ): PostureEngineState {
   const deltaMs =
     previous.lastTsMs === null
@@ -465,6 +518,16 @@ export function updatePostureState(
     return {
       ...previous,
       postureState: "hold",
+      lastTsMs: nowMs,
+    };
+  }
+
+  if (!allowTransition) {
+    return {
+      ...previous,
+      postureState: previous.stableState,
+      badAccumMs: 0,
+      goodAccumMs: 0,
       lastTsMs: nowMs,
     };
   }
@@ -516,8 +579,18 @@ export function evaluatePostureFrame(
 ): { state: PostureEngineState; result: PostureFrameResult } {
   const initializedStartMs = previous.warmupStartMs ?? nowMs;
   const selected = pickLandmarkSet(landmarks, worldLandmarks);
+  const selected2d = pickLandmarkSetFromSource(
+    landmarks,
+    worldLandmarks,
+    "image",
+  );
+  const selected3d = pickLandmarkSetFromSource(
+    landmarks,
+    worldLandmarks,
+    "world",
+  );
   const shouldersVisible = areBothShouldersUsable(selected);
-  const extracted = extractFeaturesFromSelection(selected);
+  const extracted = extractFeaturesFromSelection(selected2d, selected3d);
   const experiment = computePostureExperiment(selected, extracted);
 
   let next: PostureEngineState = {
@@ -526,7 +599,7 @@ export function evaluatePostureFrame(
   };
   next = updateShoulderDropMonitor(next, shouldersVisible, nowMs);
 
-  if (!extracted.qualityOk || !extracted.features || !extracted.points) {
+  if (!extracted.qualityOk || !extracted.features || !extracted.points2d) {
     next = updatePostureState(next, false, false, nowMs);
     if (next.shoulderDropActive) {
       next = forceBadState(next, nowMs);
@@ -555,10 +628,17 @@ export function evaluatePostureFrame(
     };
   }
 
-  const view = classifyView(extracted.points, extracted.usingWorldLandmarks);
-  const headYawRatio = getHeadYawRatio(extracted.points);
-  const isHeadTurned = headYawRatio < POSTURE_SPEC.turnThresholds.headYawRatio;
-  const headWidthRatio = getEarToShoulderRatio(extracted.points);
+  const viewPoints = extracted.points3d ?? extracted.points2d;
+  const viewSource: BodyTurnSource = extracted.points3d ? "world" : "image";
+  const view = classifyView(viewPoints, viewSource);
+  const headYawRatio = getHeadYawRatio(extracted.points2d);
+  const isHeadTurned =
+    headYawRatio !== null &&
+    headYawRatio < POSTURE_SPEC.turnThresholds.headYawRatio;
+  const isHeadTurnedSevere =
+    headYawRatio !== null &&
+    headYawRatio < POSTURE_SPEC.turnThresholds.headYawRatioSevere;
+  const headWidthRatio = getEarToShoulderRatio(extracted.points2d);
 
   if (!next.baseline) {
     next = pushWarmupSample(next, extracted.features, headWidthRatio);
@@ -610,13 +690,19 @@ export function evaluatePostureFrame(
     next.emaScore,
     headWidthRatio,
     next.baselineHeadWidthRatio,
-    isHeadTurned
+    isHeadTurned,
+    computeFeatureReliability(selected2d, selected3d, extracted.features),
   );
   const nextCandidateBad = resolveCandidateBadState(
     next.candidateBadState,
     scoreResult.scoreEma,
+    scoreResult.confidence,
   );
-  const mergedCandidateBad = next.shoulderDropActive || nextCandidateBad;
+  const mergedCandidateBad =
+    next.shoulderDropActive || isHeadTurnedSevere || nextCandidateBad;
+  const transitionEligible =
+    isHeadTurnedSevere ||
+    scoreResult.usableFeatureCount >= POSTURE_SPEC.minUsableFeatureCount;
 
   next = {
     ...next,
@@ -624,7 +710,13 @@ export function evaluatePostureFrame(
     candidateBadState: nextCandidateBad,
   };
 
-  next = updatePostureState(next, true, mergedCandidateBad, nowMs);
+  next = updatePostureState(
+    next,
+    true,
+    mergedCandidateBad,
+    nowMs,
+    transitionEligible,
+  );
   if (next.shoulderDropActive) {
     next = forceBadState(next, nowMs);
   }
@@ -685,7 +777,9 @@ function pushWarmupSample(
     ],
     headForwardAngleDeg: [
       ...state.warmupSamples.headForwardAngleDeg,
-      features.headForwardAngleDeg,
+      ...(features.headForwardAngleDeg === null
+        ? []
+        : [features.headForwardAngleDeg]),
     ],
   };
   const nextHeadWidthSamples = isFiniteNumber(headWidthRatio) && headWidthRatio > 0
@@ -722,6 +816,7 @@ function buildBaseline(
       median: center,
       mad,
       scale: Math.max(mad, POSTURE_SPEC.madFloor[key]),
+      sampleCount: list.length,
     };
   }
 
@@ -731,7 +826,7 @@ function buildBaseline(
 function normalizeFeatures(
   features: PostureFeatures,
   baseline: BaselineStats,
-): PostureFeatures {
+): NormalizedFeatureMap {
   return {
     headLateralOffsetRatio:
       Math.abs(
@@ -754,11 +849,112 @@ function normalizeFeatures(
         features.earShoulderAsymmetryRatio -
           baseline.earShoulderAsymmetryRatio.median,
       ) / baseline.earShoulderAsymmetryRatio.scale,
-    headForwardAngleDeg:
-      Math.max(0,
-        features.headForwardAngleDeg - baseline.headForwardAngleDeg.median,
-      ) / baseline.headForwardAngleDeg.scale,
+    headForwardAngleDeg: normalizeHeadForwardAngle(
+      features.headForwardAngleDeg,
+      baseline.headForwardAngleDeg,
+    ),
   };
+}
+
+function normalizeHeadForwardAngle(
+  value: number | null,
+  stats: FeatureStats,
+) {
+  if (
+    value === null ||
+    stats.sampleCount < POSTURE_SPEC.headForwardMinSamples
+  ) {
+    return null;
+  }
+
+  return Math.max(0, value - stats.median) / stats.scale;
+}
+
+function computeFeatureReliability(
+  selected2d: LandmarkSelection,
+  selected3d: LandmarkSelection,
+  features: PostureFeatures,
+): FeatureReliabilityMap {
+  const imageReliability = POSTURE_SPEC.sourceReliability.image;
+  const worldReliability = POSTURE_SPEC.sourceReliability.world;
+
+  const shoulders2dVisibility = minUsableVisibility(
+    [selected2d.SL, selected2d.SR],
+    "image",
+  );
+  const hips2dVisibility = minUsableVisibility(
+    [selected2d.HL, selected2d.HR],
+    "image",
+  );
+  const core2dVisibility = minUsableVisibility(
+    [selected2d.N, selected2d.EL, selected2d.ER, selected2d.SL, selected2d.SR],
+    "image",
+  );
+  const earShoulder2dVisibility = minUsableVisibility(
+    [selected2d.EL, selected2d.ER, selected2d.SL, selected2d.SR],
+    "image",
+  );
+  const noseShoulder2dVisibility = minUsableVisibility(
+    [selected2d.N, selected2d.SL, selected2d.SR],
+    "image",
+  );
+
+  const torsoFallbackFactor =
+    hips2dVisibility > 0 ? 1 : POSTURE_SPEC.torsoVerticalFallbackReliability;
+  const torsoAxis2dVisibility =
+    hips2dVisibility > 0
+      ? Math.min(shoulders2dVisibility, hips2dVisibility)
+      : shoulders2dVisibility;
+
+  const hasWorldCore = areCorePointsFromWorld(selected3d);
+  const worldCoreVisibility = minUsableVisibility(
+    [selected3d.N, selected3d.EL, selected3d.ER, selected3d.SL, selected3d.SR],
+    "world",
+  );
+  const worldEarShoulderVisibility = minUsableVisibility(
+    [selected3d.EL, selected3d.ER, selected3d.SL, selected3d.SR],
+    "world",
+  );
+
+  const neckAngleReliability = hasWorldCore
+    ? worldReliability * worldCoreVisibility
+    : imageReliability * core2dVisibility * torsoFallbackFactor;
+  const headForwardReliability =
+    features.headForwardAngleDeg === null
+      ? 0
+      : worldReliability * worldEarShoulderVisibility;
+
+  return {
+    headLateralOffsetRatio:
+      imageReliability * noseShoulder2dVisibility * torsoFallbackFactor,
+    earShoulderDistanceRatio: imageReliability * earShoulder2dVisibility,
+    torsoTiltDeg:
+      imageReliability * torsoAxis2dVisibility * torsoFallbackFactor,
+    neckAngleDeg: neckAngleReliability,
+    earShoulderAsymmetryRatio: imageReliability * earShoulder2dVisibility,
+    headForwardAngleDeg: headForwardReliability,
+  };
+}
+
+function minUsableVisibility(
+  points: (PickedPoint | null)[],
+  source?: BodyTurnSource,
+) {
+  let minVisibility = 1;
+
+  for (const point of points) {
+    if (!isUsablePoint(point)) {
+      return 0;
+    }
+
+    if (source && point.source !== source) {
+      return 0;
+    }
+
+    minVisibility = Math.min(minVisibility, clamp(point.point.visibility, 0, 1));
+  }
+
+  return minVisibility;
 }
 
 function getEarToShoulderRatio(points: ExtractedPoints) {
@@ -893,6 +1089,22 @@ function pickLandmarkSet(
   };
 }
 
+function pickLandmarkSetFromSource(
+  landmarks: NormalizedLandmark[] | null,
+  worldLandmarks: Landmark[] | null,
+  source: BodyTurnSource,
+): LandmarkSelection {
+  return {
+    N: pickPoint(LANDMARK.NOSE, landmarks, worldLandmarks, source),
+    EL: pickPoint(LANDMARK.LEFT_EAR, landmarks, worldLandmarks, source),
+    ER: pickPoint(LANDMARK.RIGHT_EAR, landmarks, worldLandmarks, source),
+    SL: pickPoint(LANDMARK.LEFT_SHOULDER, landmarks, worldLandmarks, source),
+    SR: pickPoint(LANDMARK.RIGHT_SHOULDER, landmarks, worldLandmarks, source),
+    HL: pickPoint(LANDMARK.LEFT_HIP, landmarks, worldLandmarks, source),
+    HR: pickPoint(LANDMARK.RIGHT_HIP, landmarks, worldLandmarks, source),
+  };
+}
+
 function hasRequiredCorePoints(selected: LandmarkSelection) {
   return (
     isUsablePoint(selected.N) &&
@@ -903,7 +1115,11 @@ function hasRequiredCorePoints(selected: LandmarkSelection) {
   );
 }
 
-function buildCorePoints(selected: LandmarkSelection): ExtractedPoints {
+function buildCorePoints(selected: LandmarkSelection): ExtractedPoints | null {
+  if (!hasRequiredCorePoints(selected)) {
+    return null;
+  }
+
   return {
     N: selected.N!.point,
     EL: selected.EL!.point,
@@ -916,8 +1132,11 @@ function buildCorePoints(selected: LandmarkSelection): ExtractedPoints {
 function buildTorsoAxis(
   selected: LandmarkSelection,
   shoulderMidpoint: Point3,
+  source: BodyTurnSource,
 ) {
-  const hipsUsable = isUsablePoint(selected.HL) && isUsablePoint(selected.HR);
+  const hipsUsable =
+    isSourceUsablePoint(selected.HL, source) &&
+    isSourceUsablePoint(selected.HR, source);
   if (!hipsUsable) {
     return VERTICAL_AXIS;
   }
@@ -964,14 +1183,12 @@ function computeHeadForwardAngle3D(
   shoulderMidpoint: Point3,
 ) {
   if (!areCorePointsFromWorld(selected)) {
-    return 0;
+    return null;
   }
 
-  return (
-    angleDegBetweenProjectedYZ(
-      subtract3D(earMidpoint, shoulderMidpoint),
-      VERTICAL_AXIS_3D,
-    ) ?? 0
+  return angleDegBetweenProjectedYZ(
+    subtract3D(earMidpoint, shoulderMidpoint),
+    VERTICAL_AXIS_3D,
   );
 }
 
@@ -984,24 +1201,24 @@ function computePostureExperiment(
     extracted.qualityOk,
   );
 
-  if (!extracted.qualityOk || !extracted.features || !extracted.points) {
+  if (!extracted.qualityOk || !extracted.features || !extracted.points2d) {
     return {
       ...EMPTY_EXPERIMENT,
       sourceQuality,
     };
   }
 
-  const { N, EL, ER, SL, SR } = extracted.points;
-  const SM = midpoint(SL, SR);
-  const EM = midpoint(EL, ER);
-
-  if (!areCorePointsFromWorld(selected)) {
+  if (!extracted.points3d || !areCorePointsFromWorld(selected)) {
     return {
       ...EMPTY_EXPERIMENT,
       neckAngle2dFallback: extracted.features.neckAngleDeg,
       sourceQuality,
     };
   }
+
+  const { N, EL, ER, SL, SR } = extracted.points3d;
+  const SM = midpoint(SL, SR);
+  const EM = midpoint(EL, ER);
 
   const hipsFromWorld =
     isWorldUsablePoint(selected.HL) && isWorldUsablePoint(selected.HR);
@@ -1071,6 +1288,10 @@ function isWorldUsablePoint(item: PickedPoint | null) {
   return isUsablePoint(item) && item!.source === "world";
 }
 
+function isSourceUsablePoint(item: PickedPoint | null, source: BodyTurnSource) {
+  return isUsablePoint(item) && item!.source === source;
+}
+
 function toExperimentProxyPoint(point: Point3): PostureExperimentProxyPoint {
   return {
     y: point.y,
@@ -1079,7 +1300,7 @@ function toExperimentProxyPoint(point: Point3): PostureExperimentProxyPoint {
   };
 }
 
-function isUsablePoint(item: PickedPoint | null) {
+function isUsablePoint(item: PickedPoint | null): item is PickedPoint {
   return item !== null && item.point.visibility >= POSTURE_SPEC.visibilityThreshold;
 }
 
@@ -1087,33 +1308,43 @@ function pickPoint(
   index: number,
   landmarks: NormalizedLandmark[] | null,
   worldLandmarks: Landmark[] | null,
+  preferredSource?: BodyTurnSource,
 ): PickedPoint | null {
-  const worldPoint = worldLandmarks?.[index];
-  if (worldPoint && isFinitePoint(worldPoint)) {
+  const toPickedPoint = (
+    source: BodyTurnSource,
+    point: Landmark | NormalizedLandmark | null | undefined,
+  ): PickedPoint | null => {
+    if (!point || !isFinitePoint(point)) {
+      return null;
+    }
+
     return {
       point: {
-        x: worldPoint.x,
-        y: worldPoint.y,
-        z: worldPoint.z,
-        visibility: worldPoint.visibility,
+        x: point.x,
+        y: point.y,
+        z: point.z,
+        visibility: point.visibility,
       },
-      source: "world",
+      source,
     };
+  };
+
+  const worldPicked = toPickedPoint("world", worldLandmarks?.[index]);
+  const imagePicked = toPickedPoint("image", landmarks?.[index]);
+
+  if (preferredSource === "world") {
+    return worldPicked;
+  }
+  if (preferredSource === "image") {
+    return imagePicked;
   }
 
-  const imagePoint = landmarks?.[index];
-  if (imagePoint && isFinitePoint(imagePoint)) {
-    return {
-      point: {
-        x: imagePoint.x,
-        y: imagePoint.y,
-        z: imagePoint.z,
-        visibility: imagePoint.visibility,
-      },
-      source: "image",
-    };
+  if (worldPicked) {
+    return worldPicked;
   }
-
+  if (imagePicked) {
+    return imagePicked;
+  }
   return null;
 }
 
@@ -1217,6 +1448,10 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
+function lerp(min: number, max: number, t: number) {
+  return min + (max - min) * clamp(t, 0, 1);
+}
+
 function isFiniteNumber(value: number) {
   return Number.isFinite(value);
 }
@@ -1234,10 +1469,20 @@ function isFinitePoint(point: { x: number; y: number; z: number; visibility: num
   );
 }
 
-function resolveCandidateBadState(previous: boolean, scoreEma: number) {
+function resolveCandidateBadState(
+  previous: boolean,
+  scoreEma: number,
+  confidence: number,
+) {
+  const badThreshold =
+    confidence < POSTURE_SPEC.lowConfidenceThreshold
+      ? POSTURE_SPEC.scoreThresholdBad +
+        POSTURE_SPEC.lowConfidenceBadThresholdBoost
+      : POSTURE_SPEC.scoreThresholdBad;
+
   if (previous) {
     return scoreEma >= POSTURE_SPEC.scoreThresholdGood;
   }
 
-  return scoreEma >= POSTURE_SPEC.scoreThresholdBad;
+  return scoreEma >= badThreshold;
 }

@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from "react";
 
 import { usePairingState } from "../hooks/usePairingState";
 import { emitPostureSignal } from "../services/desktopBridge";
-import { buildPairingLink, buildPairingQrImageUrl } from "../services/pairingLink";
+import { buildPairingLink } from "../services/pairingLink";
+import { generateQrDataUrl } from "../../../lib/qrcode";
 import "./PairingDialog.css";
 
 type PairingDialogProps = {
@@ -15,11 +16,11 @@ export function PairingDialog({ onClose }: PairingDialogProps) {
   const [copyState, setCopyState] = useState<"idle" | "done" | "error">("idle");
   // バイブテストの動作状態（idle=未送信, running=連続送信中, error=エラー発生）
   const [vibeState, setVibeState] = useState<"idle" | "running" | "error">("idle");
+  const [qrImageUrl, setQrImageUrl] = useState("");
   // バイブ連続送信用のインターバルIDを保持するref
   const vibeIntervalRef = useRef<number | null>(null);
 
   const pairingLink = buildPairingLink(pairingInfo);
-  const qrImageUrl = buildPairingQrImageUrl(pairingLink);
 
   // Escapeキーでダイアログを閉じるキーボードハンドラ
   useEffect(() => {
@@ -55,6 +56,33 @@ export function PairingDialog({ onClose }: PairingDialogProps) {
       }
     };
   }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    if (!pairingLink) {
+      setQrImageUrl("");
+      return () => {
+        active = false;
+      };
+    }
+
+    void generateQrDataUrl(pairingLink)
+      .then((dataUrl) => {
+        if (active) {
+          setQrImageUrl(dataUrl);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setQrImageUrl("");
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [pairingLink]);
 
   // ペアリングアドレスをクリップボードにコピーする
   async function copyLink() {

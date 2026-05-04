@@ -6,12 +6,6 @@ use commands::pairing_commands::{
 };
 use pairing::{start_pairing_server, PairingStateHandle};
 
-// Tauri コマンドの登録エントリです。
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
-
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let pairing_state = PairingStateHandle::new();
@@ -20,10 +14,8 @@ pub fn run() {
         .expect("failed to start desktop pairing server");
 
     tauri::Builder::default()
-        .plugin(tauri_plugin_opener::init())
         .manage(pairing_state)
         .invoke_handler(tauri::generate_handler![
-            greet,
             get_pairing_info,
             get_pairing_status,
             emit_posture_signal

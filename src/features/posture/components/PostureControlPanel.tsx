@@ -124,8 +124,12 @@ export function PostureControlPanel({
   );
 }
 
-function formatFeature(value: number | undefined, digits: number, suffix = "") {
-  if (value === undefined) {
+function formatFeature(
+  value: number | null | undefined,
+  digits: number,
+  suffix = "",
+) {
+  if (value === undefined || value === null) {
     return "-";
   }
 
@@ -238,7 +242,7 @@ function buildChartPoints(
   return samples
     .filter((sample) => sample[key] !== null)
     .map((sample) => {
-      const value = sample[key] ?? 0;
+      const value = sample[key] as number;
       const x = CHART_PADDING + ((sample.timestampMs - minTs) / (maxTs - minTs)) * width;
       const y =
         CHART_HEIGHT -
