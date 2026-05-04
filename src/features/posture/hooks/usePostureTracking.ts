@@ -15,12 +15,15 @@ import {
   VISION_WASM_URL,
 } from "../constants";
 import {
-  POSTURE_SPEC,
   createPostureEngineState,
   evaluatePostureFrame,
 } from "../engine";
+import {
+  EMPTY_POSTURE_EXPERIMENT,
+  POSTURE_SPEC,
+} from "../engine.spec";
 import { drawPoseOverlay } from "../services/drawPoseOverlay";
-import type { PostureExperimentMetrics } from "../engine";
+import type { PostureExperimentMetrics } from "../engine.types";
 import type {
   PostureExperimentSample,
   RuntimeSnapshot,
@@ -29,15 +32,6 @@ import type {
 
 const EXPERIMENT_HISTORY_LIMIT = 600;
 const EXPERIMENT_SMOOTHING_WINDOW = 8;
-
-const DEFAULT_EXPERIMENT: PostureExperimentMetrics = {
-  neckAngle2dFallback: null,
-  neckAngle3d: null,
-  noseShoulderZDelta: null,
-  headForwardAngleDeg: null,
-  sourceQuality: "insufficient",
-  proxy: null,
-};
 
 const DEFAULT_SNAPSHOT: RuntimeSnapshot = {
   postureState: "hold",
@@ -56,7 +50,7 @@ const DEFAULT_SNAPSHOT: RuntimeSnapshot = {
   headWidthScoreBoost: 0,
   trackingMode: "foreground",
   trackingIntervalMs: TRACKING_INTERVAL_MS,
-  experiment: DEFAULT_EXPERIMENT,
+  experiment: EMPTY_POSTURE_EXPERIMENT,
 };
 
 type ExperimentNumericKey =
@@ -357,7 +351,7 @@ export function usePostureTracking() {
       setStatus(
         nextMode === "background"
           ? "バックグラウンド追跡中（省電力モード）"
-          : "posture.md 仕様で姿勢を追跡中です。",
+          : "姿勢を追跡中です。",
       );
     };
 
@@ -500,7 +494,7 @@ export function usePostureTracking() {
         }
       }
 
-      scheduleNext(getTrackingIntervalMs(), () => {
+      scheduleNext(trackingIntervalMs, () => {
         void trackOnce();
       });
     };
@@ -525,7 +519,7 @@ export function usePostureTracking() {
         }
 
         setReady(true);
-        setStatus("posture.md 仕様で姿勢を追跡中です。");
+        setStatus("姿勢を追跡中です。");
 
         if (
           typeof Notification !== "undefined" &&

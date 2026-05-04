@@ -1,7 +1,9 @@
 import { DrawingUtils, NormalizedLandmark } from "@mediapipe/tasks-vision";
 
 import { POSE_OVERLAY_LANDMARK } from "../constants";
-import type { PostureExperimentMetrics } from "../engine";
+import type { PostureExperimentMetrics } from "../engine.types";
+import { normalizeAngle } from "../utils/angles";
+import { clamp, normalizeVector2D } from "../utils/math";
 
 export function drawPoseOverlay(
   ctx: CanvasRenderingContext2D,
@@ -79,9 +81,7 @@ export function drawPoseOverlay(
     ctx.lineTo(nose.x * canvas.width, nose.y * canvas.height);
     ctx.stroke();
     ctx.restore();
-  }
 
-  if (nose && earMidpoint) {
     const center = {
       x: earMidpoint.x * canvas.width,
       y: earMidpoint.y * canvas.height,
@@ -97,7 +97,7 @@ export function drawPoseOverlay(
             y: (shoulderMidpoint.y - hipMidpoint.y) * canvas.height,
           }
         : { x: 0, y: -1 };
-    const torsoUnit = normalize(torsoVector);
+    const torsoUnit = normalizeVector2D(torsoVector);
 
     if (torsoUnit) {
       const referenceLength = Math.max(52, Math.min(canvas.width, canvas.height) * 0.16);
@@ -192,22 +192,6 @@ export function drawPoseOverlay(
   }
 }
 
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
-}
-
-function normalize(vector: { x: number; y: number }) {
-  const length = Math.hypot(vector.x, vector.y);
-  if (!Number.isFinite(length) || length < 1e-6) {
-    return null;
-  }
-
-  return {
-    x: vector.x / length,
-    y: vector.y / length,
-  };
-}
-
 function drawAngleWedge(
   ctx: CanvasRenderingContext2D,
   center: { x: number; y: number },
@@ -233,17 +217,6 @@ function drawAngleWedge(
   ctx.arc(center.x, center.y, radius, startAngle, arcEnd, anticlockwise);
   ctx.stroke();
   ctx.restore();
-}
-
-function normalizeAngle(angle: number) {
-  let next = angle;
-  while (next > Math.PI) {
-    next -= Math.PI * 2;
-  }
-  while (next < -Math.PI) {
-    next += Math.PI * 2;
-  }
-  return next;
 }
 
 function toRgba(hex: string, alpha: number) {

@@ -3,7 +3,7 @@ import type {
   PostureFeatures,
   PostureState,
   ViewClass,
-} from "./engine";
+} from "./engine.types";
 
 export type AlertDisplayMode = "blackout" | "debug";
 export type TrackingMode = "foreground" | "background";

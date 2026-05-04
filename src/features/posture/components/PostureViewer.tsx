@@ -1,6 +1,6 @@
 import type { RefObject } from "react";
 
-import type { PostureExperimentMetrics } from "../engine";
+import type { PostureExperimentMetrics } from "../engine.types";
 import type { AlertDisplayMode } from "../types";
 
 type PostureViewerProps = {

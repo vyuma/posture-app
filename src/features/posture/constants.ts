@@ -9,7 +9,7 @@ export const POSE_MODEL_URL =
 export const VISION_WASM_URL =
   "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm";
 
-export const POSE_OVERLAY_LANDMARK = {
+export const POSE_LANDMARK_INDEX = {
   NOSE: 0,
   LEFT_EAR: 7,
   RIGHT_EAR: 8,
@@ -18,3 +18,5 @@ export const POSE_OVERLAY_LANDMARK = {
   LEFT_HIP: 23,
   RIGHT_HIP: 24,
 } as const;
+
+export const POSE_OVERLAY_LANDMARK = POSE_LANDMARK_INDEX;

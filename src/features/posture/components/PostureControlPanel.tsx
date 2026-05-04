@@ -1,6 +1,8 @@
-import { POSTURE_SPEC } from "../engine";
-import type { PostureExperimentMetrics } from "../engine";
+import { POSTURE_SPEC } from "../engine.spec";
+import type { PostureExperimentMetrics } from "../engine.types";
 import type { PostureExperimentSample, RuntimeSnapshot } from "../types";
+import { normalizeAngle } from "../utils/angles";
+import { normalizeVector2D } from "../utils/math";
 
 type PostureControlPanelProps = {
   snapshot: RuntimeSnapshot;
@@ -298,7 +300,7 @@ function SideViewProxy({
   const torsoReference = hip
     ? extendPoint(
         ear,
-        normalizeVector({
+        normalizeVector2D({
           x: shoulder.x - hip.x,
           y: shoulder.y - hip.y,
         }),
@@ -379,18 +381,6 @@ function SideViewProxy({
   );
 }
 
-function normalizeVector(vector: { x: number; y: number }) {
-  const length = Math.hypot(vector.x, vector.y);
-  if (!Number.isFinite(length) || length < 1e-6) {
-    return null;
-  }
-
-  return {
-    x: vector.x / length,
-    y: vector.y / length,
-  };
-}
-
 function extendPoint(
   origin: { x: number; y: number },
   unit: { x: number; y: number } | null,
@@ -430,15 +420,4 @@ function describeAngleWedge(
     `A ${radius} ${radius} 0 0 ${sweepFlag} ${end.x.toFixed(2)} ${end.y.toFixed(2)}`,
     "Z",
   ].join(" ");
-}
-
-function normalizeAngle(angle: number) {
-  let next = angle;
-  while (next > Math.PI) {
-    next -= Math.PI * 2;
-  }
-  while (next < -Math.PI) {
-    next += Math.PI * 2;
-  }
-  return next;
 }
