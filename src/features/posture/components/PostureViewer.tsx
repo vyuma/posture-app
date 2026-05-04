@@ -1,5 +1,6 @@
 import type { RefObject } from "react";
 
+import type { PostureExperimentMetrics } from "../engine";
 import type { AlertDisplayMode } from "../types";
 
 type PostureViewerProps = {
@@ -7,6 +8,7 @@ type PostureViewerProps = {
   canvasRef: RefObject<HTMLCanvasElement | null>;
   isBadPosture: boolean;
   alertDisplayMode: AlertDisplayMode;
+  experiment: PostureExperimentMetrics;
   onAlertDisplayModeChange: (mode: AlertDisplayMode) => void;
 };
 
@@ -15,6 +17,7 @@ export function PostureViewer({
   canvasRef,
   isBadPosture,
   alertDisplayMode,
+  experiment,
   onAlertDisplayModeChange,
 }: PostureViewerProps) {
   return (
@@ -51,6 +54,20 @@ export function PostureViewer({
         </label>
       </section>
 
+      <section className="angle-readout" aria-label="Neck angle signal">
+        <div>
+          <span>Neck 3D</span>
+          <strong>{formatAngle(experiment.neckAngle3d)}</strong>
+        </div>
+        {experiment.neckAngle2dFallback !== null ? (
+          <div>
+            <span>2D fallback</span>
+            <strong>{formatAngle(experiment.neckAngle2dFallback)}</strong>
+          </div>
+        ) : null}
+        <small>{formatExperimentStatus(experiment)}</small>
+      </section>
+
       <div className="legend">
         <span className="item nose">Nose</span>
         <span className="item face">Ears</span>
@@ -59,4 +76,32 @@ export function PostureViewer({
       </div>
     </section>
   );
+}
+
+function formatAngle(value: number | null) {
+  return value === null ? "-" : `${value.toFixed(1)} deg`;
+}
+
+function formatExperimentStatus(experiment: PostureExperimentMetrics) {
+  if (experiment.sourceQuality === "vertical-fallback") {
+    return "world Z angle active, vertical axis fallback";
+  }
+
+  if (experiment.neckAngle3d !== null) {
+    return "world Z angle active";
+  }
+
+  if (experiment.sourceQuality === "missing-hips") {
+    return "waiting for world hip landmarks";
+  }
+
+  if (experiment.sourceQuality === "world") {
+    return "waiting for stable 3D vector";
+  }
+
+  if (experiment.neckAngle2dFallback !== null) {
+    return "2D fallback active";
+  }
+
+  return "waiting for world landmarks";
 }

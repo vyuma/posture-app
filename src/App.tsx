@@ -19,6 +19,7 @@ function App() {
     status,
     isBadPosture,
     snapshot,
+    experimentHistory,
     resetPostureEngine,
   } = usePostureTracking();
 
@@ -80,13 +81,18 @@ function App() {
       </section>
 
       <section className="workbench">
-        <PostureControlPanel snapshot={snapshot} onReset={resetPostureEngine} />
+        <PostureControlPanel
+          snapshot={snapshot}
+          experimentHistory={experimentHistory}
+          onReset={resetPostureEngine}
+        />
 
         <PostureViewer
           videoRef={videoRef}
           canvasRef={canvasRef}
           isBadPosture={isBadPosture}
           alertDisplayMode={alertDisplayMode}
+          experiment={snapshot.experiment}
           onAlertDisplayModeChange={setAlertDisplayMode}
         />
       </section>

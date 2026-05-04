@@ -50,6 +50,47 @@ body {
   color: #0f1c2e;
 }
 
+.angle-readout {
+  position: absolute;
+  right: 14px;
+  top: 104px;
+  z-index: 2200;
+  width: 180px;
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(7, 13, 25, 0.78);
+  border: 1px solid rgba(226, 232, 240, 0.18);
+  color: #e2e8f0;
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.28);
+}
+
+.angle-readout div {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+  font-size: 0.73rem;
+  font-weight: 700;
+}
+
+.angle-readout span {
+  color: #cbd5e1;
+}
+
+.angle-readout strong {
+  font-size: 0.82rem;
+  color: #f8fafc;
+  white-space: nowrap;
+}
+
+.angle-readout small {
+  color: #94a3b8;
+  font-size: 0.67rem;
+  font-weight: 700;
+}
+
 .mode-toggle {
   display: flex;
   align-items: center;
@@ -136,33 +177,177 @@ body {
   color: #334155;
 }
 
-.criterion {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 10px;
-  font-size: 0.86rem;
-  font-weight: 600;
-}
-
-.criterion input[type="range"] {
-  width: 100%;
-}
-
-.axis-note {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.72rem;
-  color: #475569;
-  font-weight: 500;
-}
-
 .criterion-meta {
   display: grid;
   gap: 2px;
   font-size: 0.74rem;
   color: #334155;
   font-weight: 500;
+}
+
+.experiment-section {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(15, 23, 42, 0.12);
+}
+
+.experiment-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.experiment-heading h3 {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.experiment-metrics {
+  display: grid;
+  gap: 3px;
+  margin-top: 8px;
+  font-size: 0.73rem;
+  color: #334155;
+  font-weight: 600;
+}
+
+.experiment-chart {
+  margin-top: 10px;
+}
+
+.experiment-chart svg,
+.side-proxy svg {
+  width: 100%;
+  display: block;
+}
+
+.experiment-chart svg {
+  height: 104px;
+  background: rgba(248, 250, 252, 0.78);
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 8px;
+}
+
+.experiment-chart-axis {
+  stroke: rgba(71, 85, 105, 0.42);
+  stroke-width: 1;
+}
+
+.experiment-line {
+  fill: none;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  stroke-width: 2.4;
+}
+
+.experiment-line-2d {
+  stroke: #2563eb;
+}
+
+.experiment-line-3d {
+  stroke: #ef4444;
+}
+
+.experiment-legend {
+  display: flex;
+  gap: 10px;
+  margin-top: 5px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+.experiment-key::before {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  height: 3px;
+  margin-right: 5px;
+  vertical-align: middle;
+  border-radius: 999px;
+}
+
+.experiment-key-2d::before {
+  background: #2563eb;
+}
+
+.experiment-key-3d::before {
+  background: #ef4444;
+}
+
+.side-proxy {
+  position: relative;
+  margin-top: 10px;
+  min-height: 120px;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(15, 23, 42, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.side-proxy-empty {
+  min-height: 86px;
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.side-proxy-bone {
+  stroke: #475569;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.side-proxy-neck-alignment {
+  stroke: #020617;
+}
+
+.side-proxy-reference {
+  stroke: rgba(239, 68, 68, 0.78);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-dasharray: 5 4;
+}
+
+.side-proxy-angle {
+  fill: rgba(239, 68, 68, 0.2);
+  stroke: rgba(239, 68, 68, 0.95);
+  stroke-width: 2;
+}
+
+.side-proxy-head-forward-angle {
+  fill: rgba(37, 99, 235, 0.18);
+  stroke: rgba(37, 99, 235, 0.95);
+  stroke-width: 2;
+}
+
+.side-proxy-head-forward-reference {
+  stroke: rgba(37, 99, 235, 0.78);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-dasharray: 4 4;
+}
+
+.side-proxy-neck {
+  stroke: #ef4444;
+}
+
+.side-proxy-nose {
+  fill: #ef4444;
+}
+
+.side-proxy-ear {
+  fill: #60a5fa;
+}
+
+.side-proxy-shoulder {
+  fill: #f97316;
+}
+
+.side-proxy-hip {
+  fill: #22c55e;
 }
 
 .hero {
@@ -266,24 +451,6 @@ body {
 .blackout-copy p {
   margin: 8px 0 0;
   color: #94a3b8;
-}
-
-.blackout-panel {
-  position: absolute;
-  inset: 80px 18px 18px;
-  max-width: 420px;
-  max-height: calc(100vh - 98px);
-  overflow: auto;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.45);
-}
-
-.blackout-panel .control-panel {
-  max-height: none;
-  border: none;
-  box-shadow: none;
-  background: transparent;
 }
 
 .blackout-stage .control-panel {
@@ -414,16 +581,22 @@ body {
     width: 100%;
   }
 
+  .display-mode-switch {
+    top: 10px;
+    right: 10px;
+    max-width: calc(100% - 20px);
+  }
+
+  .angle-readout {
+    left: 10px;
+    right: auto;
+    top: 10px;
+    width: min(178px, calc(100% - 20px));
+  }
+
   .blackout-stage {
     height: 100vh;
     min-height: 100vh;
-  }
-
-  .blackout-panel {
-    left: 12px;
-    right: 12px;
-    inset: 72px 12px 12px;
-    max-width: none;
   }
 
   .blackout-copy {
