@@ -56,7 +56,6 @@ const DEFAULT_SNAPSHOT: RuntimeSnapshot = {
 type ExperimentNumericKey =
   | "neckAngle2dFallback"
   | "neckAngle3d"
-  | "noseShoulderZDelta"
   | "headForwardAngleDeg";
 
 function appendLimited<T>(items: T[], item: T, limit: number) {
@@ -140,11 +139,6 @@ function smoothExperimentMetrics(
   return {
     neckAngle2dFallback,
     neckAngle3d,
-    noseShoulderZDelta: smoothNullableMetric(
-      current,
-      frames,
-      "noseShoulderZDelta",
-    ),
     headForwardAngleDeg: smoothNullableMetric(
       current,
       frames,
@@ -190,7 +184,16 @@ const getTrackingIntervalMs = () =>
     ? BACKGROUND_TRACKING_INTERVAL_MS
     : TRACKING_INTERVAL_MS;
 
-export function usePostureTracking() {
+const IDLE_STATUS = "測定開始を待機しています。";
+const INIT_STATUS = "カメラとPoseモデルを初期化しています...";
+
+type UsePostureTrackingOptions = {
+  enabled?: boolean;
+  overlayEnabled?: boolean;
+};
+
+export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
+  const { enabled = true, overlayEnabled = true } = options;
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const trackingTimerRef = useRef<number | null>(null);
@@ -201,13 +204,14 @@ export function usePostureTracking() {
   const lastRuntimeErrorAtRef = useRef(0);
   const lastBackgroundAlertAtRef = useRef(0);
   const trackingModeRef = useRef<TrackingMode>("foreground");
+  const overlayEnabledRef = useRef(overlayEnabled);
   const engineStateRef = useRef(createPostureEngineState());
   const experimentHistoryRef = useRef<PostureExperimentSample[]>([]);
   const experimentSmoothingRef = useRef<PostureExperimentMetrics[]>([]);
   const isBadPostureRef = useRef(false);
 
   const [ready, setReady] = useState(false);
-  const [status, setStatus] = useState("カメラとPoseモデルを初期化しています...");
+  const [status, setStatus] = useState(enabled ? INIT_STATUS : IDLE_STATUS);
   const [isBadPosture, setIsBadPosture] = useState(false);
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot>(DEFAULT_SNAPSHOT);
   const [experimentHistory, setExperimentHistory] = useState<
@@ -239,7 +243,54 @@ export function usePostureTracking() {
   }, [isBadPosture]);
 
   useEffect(() => {
+    overlayEnabledRef.current = overlayEnabled;
+  }, [overlayEnabled]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    const stream = streamRef.current;
+
+    if (!video || !stream || video.srcObject === stream) {
+      return;
+    }
+
+    video.srcObject = stream;
+    void video.play().catch(() => {
+      // ビデオ要素の差し替え直後は再生が失敗することがあるため無視する。
+    });
+  });
+
+  useEffect(() => {
+    if (!enabled) {
+      clearTrackingTimer();
+
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+
+      poseLandmarkerRef.current?.close();
+      poseLandmarkerRef.current = null;
+      lastInferenceAtRef.current = 0;
+      lastUiUpdateAtRef.current = 0;
+      lastRuntimeErrorAtRef.current = 0;
+      lastBackgroundAlertAtRef.current = 0;
+      trackingModeRef.current = "foreground";
+      engineStateRef.current = createPostureEngineState();
+      experimentHistoryRef.current = [];
+      experimentSmoothingRef.current = [];
+      isBadPostureRef.current = false;
+      setReady(false);
+      setIsBadPosture(false);
+      setSnapshot(DEFAULT_SNAPSHOT);
+      setExperimentHistory([]);
+      setStatus(IDLE_STATUS);
+      return;
+    }
+
     let mounted = true;
+    setReady(false);
+    setStatus(INIT_STATUS);
 
     const scheduleNext = (delayMs: number, callback: () => void) => {
       clearTrackingTimer();
@@ -449,7 +500,9 @@ export function usePostureTracking() {
           const ctx = canvas.getContext("2d");
           if (ctx) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawPoseOverlay(ctx, canvas, imageLandmarks, experiment);
+            if (overlayEnabledRef.current) {
+              drawPoseOverlay(ctx, canvas, imageLandmarks);
+            }
           }
         }
 
@@ -552,6 +605,7 @@ export function usePostureTracking() {
 
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
       }
 
       poseLandmarkerRef.current?.close();
@@ -563,7 +617,7 @@ export function usePostureTracking() {
       experimentHistoryRef.current = [];
       experimentSmoothingRef.current = [];
     };
-  }, [clearTrackingTimer]);
+  }, [clearTrackingTimer, enabled]);
 
   return {
     videoRef,

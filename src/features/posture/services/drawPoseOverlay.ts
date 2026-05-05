@@ -1,15 +1,13 @@
 import { DrawingUtils, NormalizedLandmark } from "@mediapipe/tasks-vision";
 
 import { POSE_OVERLAY_LANDMARK } from "../constants";
-import type { PostureExperimentMetrics } from "../engine.types";
 import { normalizeAngle } from "../utils/angles";
-import { clamp, normalizeVector2D } from "../utils/math";
+import { normalizeVector2D } from "../utils/math";
 
 export function drawPoseOverlay(
   ctx: CanvasRenderingContext2D,
   canvas: HTMLCanvasElement,
   landmarks: NormalizedLandmark[] | null,
-  experiment: PostureExperimentMetrics | null = null,
 ) {
   if (!landmarks || landmarks.length === 0) {
     return;
@@ -124,34 +122,6 @@ export function drawPoseOverlay(
         "#2563eb",
       );
     }
-  }
-
-  if (nose && earMidpoint && experiment?.noseShoulderZDelta != null) {
-    const zShiftPx = clamp(
-      experiment.noseShoulderZDelta * canvas.width * 0.8,
-      -180,
-      180,
-    );
-    const intensity = clamp(Math.abs(zShiftPx) / 140, 0.25, 1);
-    const startX = earMidpoint.x * canvas.width;
-    const startY = earMidpoint.y * canvas.height;
-    const endX = nose.x * canvas.width + zShiftPx;
-    const endY = nose.y * canvas.height;
-
-    ctx.save();
-    ctx.lineCap = "round";
-    ctx.strokeStyle = `rgba(239, 68, 68, ${intensity})`;
-    ctx.lineWidth = 4 + intensity * 3;
-    ctx.beginPath();
-    ctx.moveTo(startX, startY);
-    ctx.lineTo(endX, endY);
-    ctx.stroke();
-
-    ctx.fillStyle = `rgba(239, 68, 68, ${intensity})`;
-    ctx.beginPath();
-    ctx.arc(endX, endY, 5 + intensity * 3, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
   }
 
   if (nose) {

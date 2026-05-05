@@ -12,7 +12,6 @@ export const FEATURE_KEYS: FeatureKey[] = [
 export const EMPTY_POSTURE_EXPERIMENT: PostureExperimentMetrics = {
   neckAngle2dFallback: null,
   neckAngle3d: null,
-  noseShoulderZDelta: null,
   headForwardAngleDeg: null,
   sourceQuality: "insufficient",
   proxy: null,

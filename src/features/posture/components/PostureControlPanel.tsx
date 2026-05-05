@@ -27,7 +27,7 @@ export function PostureControlPanel({
     <aside className="control-panel">
       <h2>姿勢エンジン</h2>
       <p className="panel-note">
-        ウォームアップ {POSTURE_SPEC.warmupMs / 1000}s · Bad確定 {POSTURE_SPEC.badDurationMs / 1000}s · 回復 {POSTURE_SPEC.recoverDurationMs / 1000}s
+        ウォームアップ {POSTURE_SPEC.warmupMs / 1000}s · 不良判定 {POSTURE_SPEC.badDurationMs / 1000}s · 回復 {POSTURE_SPEC.recoverDurationMs / 1000}s
       </p>
 
       <button type="button" onClick={onReset}>
@@ -36,24 +36,24 @@ export function PostureControlPanel({
 
       <div className="criterion-meta" style={{ marginTop: 10 }}>
         <span>状態: {snapshot.postureState}</span>
-        <span>品質: {snapshot.qualityOk ? "OK" : "HOLD"}</span>
+        <span>品質: {snapshot.qualityOk ? "良好" : "保留"}</span>
         <span>視点: {snapshot.view}</span>
         <span>スコア: {snapshot.score.toFixed(3)}</span>
-        <span>首の回転(HeadTurn): {snapshot.isHeadTurned ? "YES" : "NO"}</span>
+        <span>首の回転: {snapshot.isHeadTurned ? "あり" : "なし"}</span>
         <span>
-          首の回転比率(Yaw Ratio): {snapshot.headYawRatio != null ? snapshot.headYawRatio.toFixed(3) : "-"}
+          首の回転比率: {snapshot.headYawRatio != null ? snapshot.headYawRatio.toFixed(3) : "-"}
         </span>
-        <span>bad候補: {snapshot.candidateBad ? "YES" : "NO"}</span>
-        <span>baseline: {snapshot.baselineReady ? "READY" : "WARMUP"}</span>
-        <span>warmup残り時間: {Math.ceil(snapshot.warmupRemainingMs / 1000)}s</span>
+        <span>不良候補: {snapshot.candidateBad ? "あり" : "なし"}</span>
+        <span>基準線: {snapshot.baselineReady ? "学習完了" : "学習中"}</span>
+        <span>ウォームアップ残り: {Math.ceil(snapshot.warmupRemainingMs / 1000)}s</span>
         <span>
-          座標ソース: {snapshot.usingWorldLandmarks ? "world優先" : "image fallback"}
+          座標ソース: {snapshot.usingWorldLandmarks ? "ワールド優先" : "画像フォールバック"}
         </span>
         <span>
           追跡モード:{" "}
           {snapshot.trackingMode === "background"
-            ? "BACKGROUND"
-            : "FOREGROUND"}
+            ? "バックグラウンド"
+            : "フォアグラウンド"}
         </span>
         <span>推論周期: {snapshot.trackingIntervalMs}ms</span>
       </div>
@@ -68,10 +68,10 @@ export function PostureControlPanel({
           {formatFeature(snapshot.features?.earShoulderDistanceRatio, 4)}
         </span>
         <span>
-          体幹傾き: {formatFeature(snapshot.features?.torsoTiltDeg, 2, "deg")}
+          体幹傾き: {formatFeature(snapshot.features?.torsoTiltDeg, 2, "°")}
         </span>
         <span>
-          首角度: {formatFeature(snapshot.features?.neckAngleDeg, 2, "deg")}
+          首角度: {formatFeature(snapshot.features?.neckAngleDeg, 2, "°")}
         </span>
         <span>
           耳-肩左右差:{" "}
@@ -79,7 +79,7 @@ export function PostureControlPanel({
         </span>
         <span>
           頭部前傾角:{" "}
-          {formatFeature(snapshot.features?.headForwardAngleDeg, 2, "deg")}
+          {formatFeature(snapshot.features?.headForwardAngleDeg, 2, "°")}
         </span>
         <span>
           頭幅比(耳/肩):{" "}
@@ -96,27 +96,27 @@ export function PostureControlPanel({
         <span>頭幅加点: +{snapshot.headWidthScoreBoost.toFixed(3)}</span>
       </div>
 
-      <section className="experiment-section" aria-label="Neck Angle Signal">
+      <section className="experiment-section" aria-label="首角度シグナル">
         <div className="experiment-heading">
-          <h3>Neck Angle Signal</h3>
+          <h3>首角度シグナル</h3>
         </div>
 
         <div className="experiment-metrics">
           <span>
-            3D首角度: {formatMetric(snapshot.experiment.neckAngle3d, 2, "deg")}
+            3D首角度: {formatMetric(snapshot.experiment.neckAngle3d, 2, "°")}
           </span>
           <span>
-            2D fallback:{" "}
-            {formatMetric(snapshot.experiment.neckAngle2dFallback, 2, "deg")}
+            2Dフォールバック:{" "}
+            {formatMetric(snapshot.experiment.neckAngle2dFallback, 2, "°")}
           </span>
           <span>
             頭部前傾角:{" "}
-            {formatMetric(snapshot.experiment.headForwardAngleDeg, 2, "deg")}
+            {formatMetric(snapshot.experiment.headForwardAngleDeg, 2, "°")}
           </span>
           <span>
-            sourceQuality: {formatSourceQuality(snapshot.experiment.sourceQuality)}
+            ソース品質: {formatSourceQuality(snapshot.experiment.sourceQuality)}
           </span>
-          <span>samples: {experimentHistory.length}</span>
+          <span>サンプル数: {experimentHistory.length}</span>
         </div>
 
         <ExperimentChart samples={experimentHistory} />
@@ -151,17 +151,17 @@ function formatSourceQuality(
 ) {
   switch (sourceQuality) {
     case "world":
-      return "world";
+      return "ワールド";
     case "missing-hips":
-      return "world/no hips";
+      return "ワールド/腰なし";
     case "vertical-fallback":
-      return "world/vertical axis";
+      return "ワールド/鉛直軸フォールバック";
     case "mixed":
-      return "mixed";
+      return "混在";
     case "image":
-      return "image fallback";
+      return "画像フォールバック";
     case "insufficient":
-      return "insufficient";
+      return "不足";
   }
 }
 
@@ -194,7 +194,7 @@ function ExperimentChart({ samples }: { samples: PostureExperimentSample[] }) {
   );
 
   return (
-    <div className="experiment-chart" aria-label="Neck angle chart">
+    <div className="experiment-chart" aria-label="首角度チャート">
       <svg viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`} role="img">
         <line
           className="experiment-chart-axis"
@@ -225,7 +225,7 @@ function ExperimentChart({ samples }: { samples: PostureExperimentSample[] }) {
       </svg>
       <div className="experiment-legend">
         <span className="experiment-key experiment-key-3d">3D</span>
-        <span className="experiment-key experiment-key-2d">2D fallback</span>
+        <span className="experiment-key experiment-key-2d">2Dフォールバック</span>
       </div>
     </div>
   );
@@ -262,7 +262,7 @@ function SideViewProxy({
 }) {
   const proxy = experiment.proxy;
   if (!proxy) {
-    return <div className="side-proxy side-proxy-empty">World Z unavailable</div>;
+    return <div className="side-proxy side-proxy-empty">ワールドZが利用できません</div>;
   }
 
   const availablePoints = [
@@ -329,7 +329,7 @@ function SideViewProxy({
   );
 
   return (
-    <div className="side-proxy" aria-label="Side-view proxy">
+    <div className="side-proxy" aria-label="側面プロキシ">
       <svg viewBox="0 0 160 120" role="img">
         {anglePath ? <path className="side-proxy-angle" d={anglePath} /> : null}
         <path className="side-proxy-head-forward-angle" d={headForwardAnglePath} />

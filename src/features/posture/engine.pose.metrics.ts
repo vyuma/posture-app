@@ -8,7 +8,6 @@ import type {
   PostureExperimentProxyPoint,
   PostureExperimentSourceQuality,
 } from "./engine.types";
-import { isFiniteNumber } from "./utils/math";
 import {
   angleDegBetween2D,
   angleDegBetweenProjectedYZ,
@@ -111,7 +110,6 @@ export function computePostureExperiment(
   return {
     neckAngle2dFallback,
     neckAngle3d,
-    noseShoulderZDelta: finiteOrNull(N.z - SM.z),
     headForwardAngleDeg: extracted.features.headForwardAngleDeg,
     sourceQuality: hipsFromWorld ? sourceQuality : "vertical-fallback",
     proxy: {
@@ -163,8 +161,4 @@ function toExperimentProxyPoint(point: Point3): PostureExperimentProxyPoint {
     z: point.z,
     visibility: point.visibility,
   };
-}
-
-function finiteOrNull(value: number) {
-  return isFiniteNumber(value) ? value : null;
 }

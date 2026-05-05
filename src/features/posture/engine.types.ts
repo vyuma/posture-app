@@ -47,7 +47,6 @@ export type PostureExperimentProxy = {
 export type PostureExperimentMetrics = {
   neckAngle2dFallback: number | null;
   neckAngle3d: number | null;
-  noseShoulderZDelta: number | null;
   headForwardAngleDeg: number | null;
   sourceQuality: PostureExperimentSourceQuality;
   proxy: PostureExperimentProxy | null;

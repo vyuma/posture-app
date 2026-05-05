@@ -8,8 +8,10 @@ type PostureViewerProps = {
   canvasRef: RefObject<HTMLCanvasElement | null>;
   isBadPosture: boolean;
   alertDisplayMode: AlertDisplayMode;
+  isOverlayEnabled: boolean;
   experiment: PostureExperimentMetrics;
   onAlertDisplayModeChange: (mode: AlertDisplayMode) => void;
+  onOverlayEnabledChange: (enabled: boolean) => void;
 };
 
 export function PostureViewer({
@@ -17,8 +19,10 @@ export function PostureViewer({
   canvasRef,
   isBadPosture,
   alertDisplayMode,
+  isOverlayEnabled,
   experiment,
   onAlertDisplayModeChange,
+  onOverlayEnabledChange,
 }: PostureViewerProps) {
   return (
     <section className="viewer">
@@ -52,16 +56,27 @@ export function PostureViewer({
               : "デバッグ(メッセージのみ)"}
           </span>
         </label>
+        <label className="mode-toggle" htmlFor="overlay-enabled">
+          <input
+            id="overlay-enabled"
+            type="checkbox"
+            checked={isOverlayEnabled}
+            onChange={(event) => {
+              onOverlayEnabledChange(event.currentTarget.checked);
+            }}
+          />
+          <span>オーバーレイ {isOverlayEnabled ? "ON" : "OFF"}</span>
+        </label>
       </section>
 
-      <section className="angle-readout" aria-label="Neck angle signal">
+      <section className="angle-readout" aria-label="首角度シグナル">
         <div>
-          <span>Neck 3D</span>
+          <span>首角度 3D</span>
           <strong>{formatAngle(experiment.neckAngle3d)}</strong>
         </div>
         {experiment.neckAngle2dFallback !== null ? (
           <div>
-            <span>2D fallback</span>
+            <span>2Dフォールバック</span>
             <strong>{formatAngle(experiment.neckAngle2dFallback)}</strong>
           </div>
         ) : null}
@@ -69,39 +84,39 @@ export function PostureViewer({
       </section>
 
       <div className="legend">
-        <span className="item nose">Nose</span>
-        <span className="item face">Ears</span>
-        <span className="item shoulder">Shoulders</span>
-        <span className="item gaze">Hips</span>
+        <span className="item nose">鼻</span>
+        <span className="item face">耳</span>
+        <span className="item shoulder">肩</span>
+        <span className="item gaze">腰</span>
       </div>
     </section>
   );
 }
 
 function formatAngle(value: number | null) {
-  return value === null ? "-" : `${value.toFixed(1)} deg`;
+  return value === null ? "-" : `${value.toFixed(1)}°`;
 }
 
 function formatExperimentStatus(experiment: PostureExperimentMetrics) {
   if (experiment.sourceQuality === "vertical-fallback") {
-    return "world Z angle active, vertical axis fallback";
+    return "ワールドZ角度を使用中（鉛直軸フォールバック）";
   }
 
   if (experiment.neckAngle3d !== null) {
-    return "world Z angle active";
+    return "ワールドZ角度を使用中";
   }
 
   if (experiment.sourceQuality === "missing-hips") {
-    return "waiting for world hip landmarks";
+    return "ワールド座標の腰ランドマーク待機中";
   }
 
   if (experiment.sourceQuality === "world") {
-    return "waiting for stable 3D vector";
+    return "安定した3Dベクトルを待機中";
   }
 
   if (experiment.neckAngle2dFallback !== null) {
-    return "2D fallback active";
+    return "2Dフォールバックを使用中";
   }
 
-  return "waiting for world landmarks";
+  return "ワールドランドマークを待機中";
 }
