@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_レイヤー_1" data-name="レイヤー 1" xmlns="http://www.w3.org/2000/svg" width="144.59mm" height="126.99mm" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 409.86 359.96">
+  <defs>
+    <style>
+      .cls-1, .cls-2, .cls-3, .cls-4, .cls-5 {
+        fill: none;
+      }
+
+      .cls-6 {
+        filter: url(#drop-shadow-9);
+      }
+
+      .cls-7 {
+        filter: url(#drop-shadow-8);
+      }
+
+      .cls-2 {
+        stroke: #fff;
+        stroke-miterlimit: 10;
+        stroke-width: 3.09px;
+      }
+
+      .cls-2, .cls-3, .cls-4, .cls-5 {
+        stroke-linecap: round;
+      }
+
+      .cls-2, .cls-5 {
+        fill-rule: evenodd;
+      }
+
+      .cls-8 {
+        clip-path: url(#clippath-1);
+      }
+
+      .cls-9 {
+        fill: #fff;
+      }
+
+      .cls-3 {
+        stroke-width: 77.14px;
+      }
+
+      .cls-3, .cls-4 {
+        stroke: #f78000;
+      }
+
+      .cls-3, .cls-4, .cls-5 {
+        stroke-linejoin: round;
+      }
+
+      .cls-4 {
+        stroke-width: 58.7px;
+      }
+
+      .cls-5 {
+        stroke: #727272;
+        stroke-width: 2.19px;
+      }
+
+      .cls-10 {
+        clip-path: url(#clippath);
+      }
+    </style>
+    <clipPath id="clippath">
+      <rect class="cls-1" y="34.53" width="409.86" height="325.87"/>
+    </clipPath>
+    <filter id="drop-shadow-8" x="137.27" y="49.35" width="162.96" height="812.88" filterUnits="userSpaceOnUse">
+      <feOffset dx="7.61" dy="7.61"/>
+      <feGaussianBlur result="blur" stdDeviation="7.61"/>
+      <feFlood flood-color="#000" flood-opacity=".35"/>
+      <feComposite in2="blur" operator="in"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+    <clipPath id="clippath-1">
+      <rect class="cls-1" x="34.5" y="-438.74" width="312.1" height="241.93" transform="translate(381.09 -635.54) rotate(180)"/>
+    </clipPath>
+    <filter id="drop-shadow-9" x="133.58" y="-424.46" width="181.2" height="584.64" filterUnits="userSpaceOnUse">
+      <feOffset dx="5.79" dy="5.79"/>
+      <feGaussianBlur result="blur-2" stdDeviation="5.79"/>
+      <feFlood flood-color="#000" flood-opacity=".35"/>
+      <feComposite in2="blur-2" operator="in"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <g>
+    <polyline class="cls-5" points="134.88 98.43 141.83 96.42 137.18 106.37 144.13 104.35"/>
+    <polyline class="cls-5" points="120.68 95.47 127.62 93.45 122.98 103.4 129.92 101.39"/>
+    <polyline class="cls-5" points="106.47 93.45 113.41 91.44 108.77 101.39 115.72 99.38"/>
+    <g class="cls-10">
+      <g>
+        <g class="cls-7">
+          <path class="cls-3" d="M230.94,792.81v-370.05s0-61.98,0-61.98v-53.27s0-59.24,0-59.24v-67.44c0-30.77-14.77-59.67-39.71-77.69h0"/>
+        </g>
+        <rect class="cls-9" x="192.49" y="267.84" width="76.9" height="17.05"/>
+        <rect class="cls-9" x="192.49" y="210.63" width="76.9" height="17.05"/>
+        <rect class="cls-9" x="192.49" y="325.06" width="76.9" height="17.05"/>
+        <path class="cls-2" d="M162.01,98.43c2.16,2.52,4.36,2.96,5.93,2.96,1.32,0,4.1,0,5.93-2.96"/>
+        <path class="cls-2" d="M186.63,98.43c2.16,2.52,4.36,2.96,5.93,2.96,1.32,0,4.1,0,5.93-2.96"/>
+      </g>
+    </g>
+  </g>
+  <g class="cls-8">
+    <g class="cls-6">
+      <path class="cls-4" d="M174.61,107.55V-174.01s0-47.16,0-47.16v-40.53s0-45.07,0-45.07c0,0,1.49-4.6,3.57-11.63,11.07-37.44,44.87-63.59,83.89-64.91h0"/>
+    </g>
+  </g>
+</svg>

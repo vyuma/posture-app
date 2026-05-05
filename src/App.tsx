@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import { useCallback, useEffect, useState } from "react";
 
 import "./App.css";
@@ -24,11 +25,25 @@ import type { SoundSettings } from "./features/sound/types/soundSettings";
 import { sendPostureSignal } from "./lib/desktopBridge";
 
 type StartupPhase = "intro" | "calibrating" | "active";
+type OverlayMode = "hidden" | "good" | "bad" | "paused";
+type OverlayStatePayload = {
+  mode: OverlayMode;
+  userHidden: boolean;
+  offsetX: number;
+  offsetY: number;
+};
+
+const CHARACTER_OVERLAY_STORAGE_KEY = "posture.overlay.characterVisible.v1";
+const OVERLAY_OFFSET_STORAGE_KEY = "posture.overlay.positionOffset.v1";
 
 function App() {
   const [startupPhase, setStartupPhase] = useState<StartupPhase>("intro");
   const [isStartPending, setIsStartPending] = useState(false);
   const [isOverlayEnabled, setIsOverlayEnabled] = useState(true);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isCharacterOverlayEnabled, setIsCharacterOverlayEnabled] = useState(() =>
+    loadCharacterOverlayEnabled(),
+  );
   const [permissionPopupMessage, setPermissionPopupMessage] = useState<
     string | null
   >(null);
@@ -45,6 +60,7 @@ function App() {
   } = usePostureTracking({
     enabled: trackingEnabled,
     overlayEnabled: isOverlayEnabled,
+    paused: isPaused,
   });
 
   const [isPairingDialogOpen, setIsPairingDialogOpen] = useState(false);
@@ -54,7 +70,7 @@ function App() {
   );
 
   const isActiveSession = startupPhase === "active";
-  const effectiveBadPosture = isActiveSession && isBadPosture;
+  const effectiveBadPosture = isActiveSession && !isPaused && isBadPosture;
 
   const warmupRemainingMs = Math.max(0, snapshot.warmupRemainingMs);
   const warmupSeconds = Math.max(0, Math.ceil(warmupRemainingMs / 1000));
@@ -121,6 +137,7 @@ function App() {
         }
       }
 
+      setIsPaused(false);
       setStartupPhase("calibrating");
       void primeRecoverySound();
     } finally {
@@ -129,21 +146,108 @@ function App() {
   };
 
   const handlePostureChanged = useCallback(async (isBad: boolean) => {
-    await Promise.allSettled([
-      sendPostureSignal(isBad),
-      invoke("overlay_on_posture_change", { isBad }),
-    ]);
+    await Promise.allSettled([sendPostureSignal(isBad)]);
   }, []);
 
   const handlePostureRecovered = useCallback(async () => {
+    if (isPaused) {
+      return;
+    }
+
     await playRecoverySound();
-  }, []);
+  }, [isPaused]);
 
   usePostureTransitionEffects({
     isBadPosture: effectiveBadPosture,
     onPostureChanged: handlePostureChanged,
     onRecovered: handlePostureRecovered,
   });
+
+  useEffect(() => {
+    let disposed = false;
+
+    const applyOverlayState = (state: OverlayStatePayload) => {
+      if (!disposed) {
+        const visible = !state.userHidden;
+        setIsCharacterOverlayEnabled(visible);
+        saveCharacterOverlayEnabled(visible);
+      }
+    };
+
+    void invoke<OverlayStatePayload>("overlay_get_state")
+      .then(applyOverlayState)
+      .catch(() => {
+        // Browser preview cannot reach Tauri commands.
+      });
+
+    const unlistenPromise = listen<OverlayStatePayload>(
+      "overlay:state",
+      ({ payload }) => {
+        applyOverlayState(payload);
+      },
+    );
+
+    return () => {
+      disposed = true;
+      void unlistenPromise.then((unlisten) => unlisten());
+    };
+  }, []);
+
+  useEffect(() => {
+    const mode: OverlayMode = isActiveSession
+      ? isPaused
+        ? "paused"
+        : isBadPosture
+          ? "bad"
+          : "good"
+      : "hidden";
+
+    const syncOverlay = async () => {
+      if (!isCharacterOverlayEnabled) {
+        saveCharacterOverlayEnabled(false);
+        await invoke("overlay_hide_character").catch(() => {});
+        await invoke("overlay_set_mode", { mode }).catch(() => {});
+        return;
+      }
+
+      saveCharacterOverlayEnabled(true);
+
+      if (mode === "hidden") {
+        await invoke("overlay_set_mode", { mode }).catch(() => {});
+        await invoke("overlay_show_character").catch(() => {});
+        return;
+      }
+
+      await invoke("overlay_show_character").catch(() => {});
+      await invoke("overlay_set_mode", { mode }).catch(() => {});
+    };
+
+    void syncOverlay();
+  }, [isActiveSession, isBadPosture, isCharacterOverlayEnabled, isPaused]);
+
+  const handleShowCharacterOverlay = useCallback(() => {
+    setIsCharacterOverlayEnabled(true);
+  }, []);
+
+  const handleResetCharacterPosition = useCallback(() => {
+    try {
+      window.localStorage.removeItem(OVERLAY_OFFSET_STORAGE_KEY);
+    } catch {
+      // Ignore storage failures in browser preview.
+    }
+
+    void invoke("overlay_reset_position_offset").catch(() => {
+      // Browser preview cannot reach Tauri commands.
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!isPaused) {
+      return;
+    }
+
+    void Promise.allSettled([sendPostureSignal(false)]);
+  }, [isPaused]);
 
   useEffect(() => {
     if (startupPhase !== "calibrating") {
@@ -191,7 +295,7 @@ function App() {
     return () => {
       void Promise.allSettled([
         sendPostureSignal(false),
-        invoke("overlay_on_posture_change", { isBad: false }),
+        invoke("overlay_set_mode", { mode: "hidden" }),
       ]);
     };
   }, []);
@@ -273,6 +377,29 @@ function App() {
             <div className="hero-actions">
               <button
                 type="button"
+                className={`pause-launch ${isPaused ? "active" : ""}`}
+                onClick={() => setIsPaused((current) => !current)}
+              >
+                {isPaused ? "再開" : "一時停止"}
+              </button>
+              {!isCharacterOverlayEnabled ? (
+                <button
+                  type="button"
+                  className="character-launch"
+                  onClick={handleShowCharacterOverlay}
+                >
+                  キャラを表示
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className="character-reset-launch"
+                onClick={handleResetCharacterPosition}
+              >
+                位置リセット
+              </button>
+              <button
+                type="button"
                 className="pairing-launch"
                 onClick={() => setIsPairingDialogOpen(true)}
               >
@@ -301,8 +428,10 @@ function App() {
             canvasRef={canvasRef}
             isBadPosture={effectiveBadPosture}
             isOverlayEnabled={isOverlayEnabled}
+            isCharacterOverlayEnabled={isCharacterOverlayEnabled}
             experiment={snapshot.experiment}
             onOverlayEnabledChange={setIsOverlayEnabled}
+            onCharacterOverlayEnabledChange={setIsCharacterOverlayEnabled}
           />
         </section>
 
@@ -324,6 +453,25 @@ function App() {
       {permissionPopup}
     </>
   );
+}
+
+function loadCharacterOverlayEnabled() {
+  try {
+    return window.localStorage.getItem(CHARACTER_OVERLAY_STORAGE_KEY) !== "false";
+  } catch {
+    return true;
+  }
+}
+
+function saveCharacterOverlayEnabled(enabled: boolean) {
+  try {
+    window.localStorage.setItem(
+      CHARACTER_OVERLAY_STORAGE_KEY,
+      enabled ? "true" : "false",
+    );
+  } catch {
+    // Ignore storage failures in restricted WebViews.
+  }
 }
 
 export default App;

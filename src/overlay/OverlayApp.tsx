@@ -1,195 +1,306 @@
-import { useEffect, useRef } from "react";
+import { type PointerEvent, useEffect, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
-import lottie, { type AnimationItem } from "lottie-web";
 
-type OverlayPhase = "hidden" | "entering" | "idle" | "exiting";
+type OverlayMode = "hidden" | "good" | "bad" | "paused";
 
-type OverlayPhasePayload = {
-  phase: OverlayPhase;
+type OverlayStatePayload = {
+  mode: OverlayMode;
+  userHidden: boolean;
+  offsetX: number;
+  offsetY: number;
 };
 
-const ENTER_END = 30;
-const IDLE_START = 30;
-const IDLE_END = 77;
-const DEFAULT_PHASE: OverlayPhase = "hidden";
-const ANIMATION_JSON_PATH = "/model/le-petit-chat-cat-noir.json";
+const DEFAULT_STATE: OverlayStatePayload = {
+  mode: "hidden",
+  userHidden: false,
+  offsetX: 0,
+  offsetY: 0,
+};
+
+const CHARACTER_SRC: Record<Exclude<OverlayMode, "hidden">, string> = {
+  good: "/model/なつく.svg",
+  bad: "/model/不機嫌.svg",
+  paused: "/model/眠る.svg",
+};
+
+const BAD_SINK_MAX_PX = 78;
+const BAD_SINK_PX_PER_SECOND = 8;
+const OVERLAY_OFFSET_STORAGE_KEY = "posture.overlay.positionOffset.v1";
+const OFFSET_LIMIT_PX = 520;
+
+type PositionOffset = {
+  x: number;
+  y: number;
+};
+
+type DragState = {
+  pointerId: number;
+  startClientX: number;
+  startClientY: number;
+  startOffset: PositionOffset;
+};
 
 export function OverlayApp() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const animationRef = useRef<AnimationItem | null>(null);
-  const currentPhaseRef = useRef<OverlayPhase>(DEFAULT_PHASE);
-  const appliedPhaseRef = useRef<OverlayPhase>(DEFAULT_PHASE);
-  const totalFramesRef = useRef<number>(120);
-  const frameRateRef = useRef<number>(25);
-  const completionFallbackRef = useRef<number | null>(null);
+  const [overlayState, setOverlayState] =
+    useState<OverlayStatePayload>(DEFAULT_STATE);
+  const [badSinkPx, setBadSinkPx] = useState(0);
+  const [positionOffset, setPositionOffset] = useState<PositionOffset>(() =>
+    loadStoredPositionOffset(),
+  );
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStateRef = useRef<DragState | null>(null);
+  const positionOffsetRef = useRef(positionOffset);
+
+  useEffect(() => {
+    positionOffsetRef.current = positionOffset;
+  }, [positionOffset]);
 
   useEffect(() => {
     let disposed = false;
 
-    async function boot() {
-      if (!containerRef.current) {
-        return;
+    const applyState = (state: OverlayStatePayload) => {
+      if (!disposed) {
+        setOverlayState(state);
       }
+    };
 
-      const response = await fetch(ANIMATION_JSON_PATH);
-      const animationData = await response.json();
-
-      if (disposed || !containerRef.current) {
-        return;
-      }
-
-      const animation = lottie.loadAnimation({
-        container: containerRef.current,
-        renderer: "svg",
-        loop: false,
-        autoplay: false,
-        animationData,
-        rendererSettings: {
-          preserveAspectRatio: "xMidYMax slice",
-        },
+    void invoke<OverlayStatePayload>("overlay_get_state")
+      .then((state) => {
+        applyState(state);
+        const storedOffset = loadStoredPositionOffset();
+        setPositionOffset(storedOffset);
+        void syncPositionOffset(storedOffset).catch(() => {
+          // Browser preview cannot reach native position commands.
+        });
+      })
+      .catch(() => {
+        // The overlay can still render once the next state event arrives.
       });
 
-      animationRef.current = animation;
-      totalFramesRef.current = Math.max(1, Math.floor(animation.getDuration(true)));
-      frameRateRef.current =
-        typeof animationData?.fr === "number" && animationData.fr > 0
-          ? animationData.fr
-          : 25;
-      animation.setSpeed(1);
-      animation.setSubframe(true);
-
-      animation.addEventListener("complete", () => {
-        const phase = currentPhaseRef.current;
-
-        if (phase === "idle") {
-          playIdleSegment();
-          return;
-        }
-
-        if (phase === "entering") {
-          void invoke("overlay_on_animation_complete", { phase }).catch(() => {
-            // Keep overlay resilient even if command bridge is temporarily unavailable.
-          });
-        }
-      });
-
-      const initialPhase = await invoke<string>("overlay_get_phase").catch(
-        () => DEFAULT_PHASE,
-      );
-      playPhase(initialPhase as OverlayPhase);
-    }
-
-    void boot();
-
-    const unlistenPromise = listen<OverlayPhasePayload>(
-      "overlay:phase",
+    const unlistenPromise = listen<OverlayStatePayload>(
+      "overlay:state",
       ({ payload }) => {
-        playPhase(payload.phase);
+        applyState(payload);
+        const nextOffset = { x: payload.offsetX, y: payload.offsetY };
+        setPositionOffset(nextOffset);
+        storePositionOffset(nextOffset);
       },
     );
 
     const syncIntervalId = window.setInterval(() => {
-      void invoke<string>("overlay_get_phase")
-        .then((phase) => {
-          const normalized = phase as OverlayPhase;
-          if (normalized !== appliedPhaseRef.current) {
-            playPhase(normalized);
-          }
-        })
+      void invoke<OverlayStatePayload>("overlay_get_state")
+        .then(applyState)
         .catch(() => {
-          // Ignore intermittent sync errors.
+          // Ignore intermittent bridge errors.
         });
-    }, 900);
+    }, 1200);
 
     return () => {
       disposed = true;
-      if (completionFallbackRef.current !== null) {
-        window.clearTimeout(completionFallbackRef.current);
-        completionFallbackRef.current = null;
-      }
       window.clearInterval(syncIntervalId);
-      animationRef.current?.destroy();
-      animationRef.current = null;
       void unlistenPromise.then((unlisten) => unlisten());
     };
   }, []);
 
-  const playIdleSegment = () => {
-    const animation = animationRef.current;
-    if (!animation) {
+  useEffect(() => {
+    if (overlayState.mode !== "bad") {
+      setBadSinkPx(0);
       return;
     }
 
-    animation.loop = false;
-    animation.playSegments([IDLE_START, IDLE_END], true);
+    const badStartedAt = performance.now();
+    setBadSinkPx(0);
+
+    const intervalId = window.setInterval(() => {
+      const elapsedSeconds = (performance.now() - badStartedAt) / 1000;
+      setBadSinkPx(
+        Math.min(BAD_SINK_MAX_PX, elapsedSeconds * BAD_SINK_PX_PER_SECOND),
+      );
+    }, 120);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [overlayState.mode]);
+
+  const displayMode: Exclude<OverlayMode, "hidden"> | null =
+    overlayState.mode === "hidden" || overlayState.userHidden
+      ? null
+      : overlayState.mode;
+
+  const handleHide = () => {
+    void invoke("overlay_hide_character").catch(() => {
+      // Keep the hover menu responsive even if the native bridge is unavailable.
+    });
   };
 
-  const playPhase = (phase: OverlayPhase) => {
-    const animation = animationRef.current;
-    if (!animation) {
+  const handleOpenApp = () => {
+    void invoke("overlay_open_main_window").catch(() => {
+      // The character overlay should never crash from a failed focus request.
+    });
+  };
+
+  const handleCharacterPointerDown = (
+    event: PointerEvent<HTMLDivElement>,
+  ) => {
+    if (event.button !== 0) {
       return;
     }
 
-    if (completionFallbackRef.current !== null) {
-      window.clearTimeout(completionFallbackRef.current);
-      completionFallbackRef.current = null;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragStateRef.current = {
+      pointerId: event.pointerId,
+      startClientX: event.clientX,
+      startClientY: event.clientY,
+      startOffset: positionOffsetRef.current,
+    };
+    setIsDragging(true);
+  };
+
+  const handleCharacterPointerMove = (
+    event: PointerEvent<HTMLDivElement>,
+  ) => {
+    const dragState = dragStateRef.current;
+    if (!dragState || dragState.pointerId !== event.pointerId) {
+      return;
     }
 
-    currentPhaseRef.current = phase;
-    appliedPhaseRef.current = phase;
-    animation.stop();
-    const scheduleCompleteFallback = (
-      phaseForFallback: "entering" | "exiting",
-      startFrame: number,
-      endFrame: number,
-    ) => {
-      const frameDistance = Math.max(1, Math.abs(endFrame - startFrame));
-      const timeoutMs =
-        Math.ceil((frameDistance / Math.max(frameRateRef.current, 1)) * 1000) + 180;
+    const nextOffset = clampPositionOffset({
+      x: dragState.startOffset.x + event.clientX - dragState.startClientX,
+      y: dragState.startOffset.y + event.clientY - dragState.startClientY,
+    });
 
-      completionFallbackRef.current = window.setTimeout(() => {
-        if (currentPhaseRef.current !== phaseForFallback) {
-          return;
-        }
-        void invoke("overlay_on_animation_complete", {
-          phase: phaseForFallback,
-        }).catch(() => {
-          // Keep overlay resilient even if command bridge is temporarily unavailable.
-        });
-      }, timeoutMs);
-    };
+    setPositionOffset(nextOffset);
+    storePositionOffset(nextOffset);
+    void syncPositionOffset(nextOffset).catch(() => {
+      // Ignore transient native bridge failures while dragging.
+    });
+  };
 
-    switch (phase) {
-      case "hidden":
-        animation.setDirection(1);
-        animation.goToAndStop(0, true);
-        break;
-      case "entering":
-        animation.setDirection(1);
-        animation.loop = false;
-        animation.playSegments([0, ENTER_END], true);
-        scheduleCompleteFallback("entering", 0, ENTER_END);
-        break;
-      case "idle":
-        animation.setDirection(1);
-        playIdleSegment();
-        break;
-      case "exiting":
-        animation.setDirection(-1);
-        animation.loop = false;
-        animation.goToAndStop(ENTER_END, true);
-        animation.playSegments([ENTER_END, 0], true);
-        scheduleCompleteFallback("exiting", ENTER_END, 0);
-        break;
-      default:
-        break;
+  const handleCharacterPointerEnd = (
+    event: PointerEvent<HTMLDivElement>,
+  ) => {
+    const dragState = dragStateRef.current;
+    if (!dragState || dragState.pointerId !== event.pointerId) {
+      return;
+    }
+
+    dragStateRef.current = null;
+    setIsDragging(false);
+
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
     }
   };
 
   return (
-    <main className="overlay-shell" aria-hidden="true">
-      <div ref={containerRef} className="overlay-animation" />
+    <main
+      className={`overlay-shell ${displayMode ? `overlay-shell--${displayMode}` : "overlay-shell--hidden"}`}
+      aria-hidden={!displayMode}
+    >
+      {displayMode ? (
+        <>
+          <div className="overlay-actions" aria-label="キャラクター操作">
+            <button
+              type="button"
+              className="overlay-action"
+              aria-label="非表示"
+              title="非表示"
+              onClick={handleHide}
+            >
+              <EyeOffIcon />
+            </button>
+            <button
+              type="button"
+              className="overlay-action"
+              aria-label="アプリを開く"
+              title="アプリを開く"
+              onClick={handleOpenApp}
+            >
+              <OpenIcon />
+            </button>
+          </div>
+          <div
+            className={`overlay-character ${isDragging ? "overlay-character--dragging" : ""}`}
+            style={{ transform: `translate(-50%, ${badSinkPx}px)` }}
+            onPointerDown={handleCharacterPointerDown}
+            onPointerMove={handleCharacterPointerMove}
+            onPointerUp={handleCharacterPointerEnd}
+            onPointerCancel={handleCharacterPointerEnd}
+          >
+            <img
+              src={CHARACTER_SRC[displayMode]}
+              alt=""
+              draggable={false}
+            />
+          </div>
+        </>
+      ) : null}
     </main>
+  );
+}
+
+function loadStoredPositionOffset(): PositionOffset {
+  try {
+    const raw = window.localStorage.getItem(OVERLAY_OFFSET_STORAGE_KEY);
+    if (!raw) {
+      return { x: 0, y: 0 };
+    }
+
+    const parsed = JSON.parse(raw) as Partial<PositionOffset>;
+    return clampPositionOffset({
+      x: typeof parsed.x === "number" ? parsed.x : 0,
+      y: typeof parsed.y === "number" ? parsed.y : 0,
+    });
+  } catch {
+    return { x: 0, y: 0 };
+  }
+}
+
+function storePositionOffset(offset: PositionOffset) {
+  try {
+    window.localStorage.setItem(
+      OVERLAY_OFFSET_STORAGE_KEY,
+      JSON.stringify(offset),
+    );
+  } catch {
+    // Ignore storage failures in restricted WebViews.
+  }
+}
+
+function clampPositionOffset(offset: PositionOffset): PositionOffset {
+  return {
+    x: Math.max(-OFFSET_LIMIT_PX, Math.min(OFFSET_LIMIT_PX, Math.round(offset.x))),
+    y: Math.max(-OFFSET_LIMIT_PX, Math.min(OFFSET_LIMIT_PX, Math.round(offset.y))),
+  };
+}
+
+async function syncPositionOffset(offset: PositionOffset) {
+  await invoke("overlay_set_position_offset", {
+    offsetX: offset.x,
+    offsetY: offset.y,
+  });
+}
+
+function EyeOffIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 3l18 18" />
+      <path d="M10.7 10.7a1.8 1.8 0 0 0 2.6 2.6" />
+      <path d="M8.4 5.6A10.2 10.2 0 0 1 12 5c5.2 0 8.7 4.4 9.7 6.1a1.7 1.7 0 0 1 0 1.8 14.1 14.1 0 0 1-2.1 2.6" />
+      <path d="M6.2 7.1a14.2 14.2 0 0 0-3.9 4 1.7 1.7 0 0 0 0 1.8C3.3 14.6 6.8 19 12 19a10.4 10.4 0 0 0 4.8-1.2" />
+    </svg>
+  );
+}
+
+function OpenIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M9 5H5v14h14v-4" />
+      <path d="M13 5h6v6" />
+      <path d="M11 13 19 5" />
+    </svg>
   );
 }

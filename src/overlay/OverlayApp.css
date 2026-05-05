@@ -11,30 +11,164 @@ body,
 }
 
 body {
-  pointer-events: none;
   background: transparent !important;
+  font-family: "SF Pro", "Segoe UI", sans-serif;
+}
+
+button {
+  font: inherit;
 }
 
 .overlay-shell {
+  position: relative;
   width: 100%;
   height: 100%;
+  overflow: hidden;
+  background: transparent;
+  pointer-events: auto;
+}
+
+.overlay-shell--hidden {
+  pointer-events: none;
+}
+
+.overlay-actions {
+  position: absolute;
+  top: 52px;
+  left: 50%;
+  z-index: 4;
   display: flex;
-  align-items: center;
-  justify-content: flex-start;
+  gap: 14px;
+  transform: translateX(-50%) translateY(8px);
+  opacity: 0;
   pointer-events: none;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
 }
 
-.overlay-animation {
+.overlay-shell:hover .overlay-actions,
+.overlay-actions:focus-within {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.overlay-action {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  border-radius: 50%;
+  color: rgba(24, 32, 48, 0.78);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.28)),
+    rgba(215, 226, 244, 0.56);
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.12),
+    inset 0 1px 1px rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: blur(18px) saturate(135%);
+  backdrop-filter: blur(18px) saturate(135%);
+  cursor: pointer;
+}
+
+.overlay-action:hover,
+.overlay-action:focus-visible {
+  color: #0f172a;
+  outline: none;
+  transform: translateY(-1px);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.42)),
+    rgba(224, 235, 252, 0.7);
+}
+
+.overlay-action svg {
+  width: 25px;
+  height: 25px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.overlay-character {
+  position: absolute;
+  left: 50%;
+  bottom: -34px;
+  z-index: 2;
+  width: 184px;
+  transform-origin: 50% 100%;
+  transition: transform 0.44s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform;
+  cursor: grab;
+  touch-action: none;
+}
+
+.overlay-character--dragging {
+  cursor: grabbing;
+  transition: none;
+}
+
+.overlay-character img {
+  display: block;
   width: 100%;
-  height: 100%;
+  height: auto;
+  user-select: none;
   pointer-events: none;
-  transform: rotate(-90deg);
-  transform-origin: 50% 50%;
+  filter: drop-shadow(10px 12px 14px rgba(0, 0, 0, 0.22));
 }
 
-.overlay-animation svg,
-.overlay-animation canvas {
-  width: 100% !important;
-  height: 100% !important;
-  background: transparent !important;
+.overlay-shell--good .overlay-character {
+  animation: character-rise 0.42s ease both, character-breathe 2.8s ease-in-out 0.42s infinite;
+}
+
+.overlay-shell--bad .overlay-character {
+  animation: character-worry 1.4s ease-in-out infinite;
+}
+
+.overlay-shell--paused .overlay-character {
+  animation: character-sleep 3.2s ease-in-out infinite;
+}
+
+@keyframes character-rise {
+  from {
+    opacity: 0;
+    translate: 0 34px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes character-breathe {
+  0%,
+  100% {
+    scale: 1;
+  }
+  50% {
+    scale: 1.015;
+  }
+}
+
+@keyframes character-worry {
+  0%,
+  100% {
+    rotate: -1deg;
+  }
+  50% {
+    rotate: 1deg;
+  }
+}
+
+@keyframes character-sleep {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 5px;
+  }
 }

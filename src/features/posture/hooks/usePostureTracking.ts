@@ -190,10 +190,11 @@ const INIT_STATUS = "カメラとPoseモデルを初期化しています...";
 type UsePostureTrackingOptions = {
   enabled?: boolean;
   overlayEnabled?: boolean;
+  paused?: boolean;
 };
 
 export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
-  const { enabled = true, overlayEnabled = true } = options;
+  const { enabled = true, overlayEnabled = true, paused = false } = options;
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const trackingTimerRef = useRef<number | null>(null);
@@ -205,6 +206,7 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
   const lastBackgroundAlertAtRef = useRef(0);
   const trackingModeRef = useRef<TrackingMode>("foreground");
   const overlayEnabledRef = useRef(overlayEnabled);
+  const pausedRef = useRef(paused);
   const engineStateRef = useRef(createPostureEngineState());
   const experimentHistoryRef = useRef<PostureExperimentSample[]>([]);
   const experimentSmoothingRef = useRef<PostureExperimentMetrics[]>([]);
@@ -245,6 +247,25 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
   useEffect(() => {
     overlayEnabledRef.current = overlayEnabled;
   }, [overlayEnabled]);
+
+  useEffect(() => {
+    pausedRef.current = paused;
+
+    if (!enabled) {
+      return;
+    }
+
+    if (paused) {
+      isBadPostureRef.current = false;
+      setIsBadPosture(false);
+      setStatus("一時停止中です。");
+      return;
+    }
+
+    if (ready) {
+      setStatus("姿勢を追跡中です。");
+    }
+  }, [enabled, paused, ready]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -425,6 +446,25 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
       const trackingMode = getTrackingMode();
       const trackingIntervalMs = getTrackingIntervalMs();
       updateTrackingStatus(trackingMode);
+
+      if (pausedRef.current) {
+        setStatus("一時停止中です。");
+
+        if (isBadPostureRef.current) {
+          isBadPostureRef.current = false;
+          setIsBadPosture(false);
+        }
+
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        scheduleNext(250, () => {
+          void trackOnce();
+        });
+        return;
+      }
 
       await maybeResumeVideo(video);
 

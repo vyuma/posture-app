@@ -1,31 +1,48 @@
 use std::sync::{Arc, Mutex};
 
+use serde::Serialize;
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum OverlayPhase {
+pub enum OverlayMode {
     Hidden,
-    Entering,
-    Idle,
-    Exiting,
+    Good,
+    Bad,
+    Paused,
 }
 
-impl OverlayPhase {
+impl OverlayMode {
     pub fn as_str(self) -> &'static str {
         match self {
             Self::Hidden => "hidden",
-            Self::Entering => "entering",
-            Self::Idle => "idle",
-            Self::Exiting => "exiting",
+            Self::Good => "good",
+            Self::Bad => "bad",
+            Self::Paused => "paused",
         }
     }
 
     pub fn from_str(value: &str) -> Option<Self> {
         match value {
             "hidden" => Some(Self::Hidden),
-            "entering" => Some(Self::Entering),
-            "idle" => Some(Self::Idle),
-            "exiting" => Some(Self::Exiting),
+            "good" => Some(Self::Good),
+            "bad" => Some(Self::Bad),
+            "paused" => Some(Self::Paused),
             _ => None,
         }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct OverlayStateSnapshot {
+    pub mode: &'static str,
+    pub user_hidden: bool,
+    pub offset_x: i32,
+    pub offset_y: i32,
+}
+
+impl OverlayStateSnapshot {
+    pub fn is_visible(self) -> bool {
+        self.mode != OverlayMode::Hidden.as_str() && !self.user_hidden
     }
 }
 
@@ -36,82 +53,54 @@ pub struct OverlayStateHandle {
 
 #[derive(Clone, Copy, Debug)]
 struct OverlayState {
-    phase: OverlayPhase,
-    is_bad_posture: bool,
+    mode: OverlayMode,
+    user_hidden: bool,
+    offset_x: i32,
+    offset_y: i32,
 }
 
 impl OverlayStateHandle {
     pub fn new() -> Self {
         Self {
             inner: Arc::new(Mutex::new(OverlayState {
-                phase: OverlayPhase::Hidden,
-                is_bad_posture: false,
+                mode: OverlayMode::Hidden,
+                user_hidden: false,
+                offset_x: 0,
+                offset_y: 0,
             })),
         }
     }
 
-    pub fn phase_name(&self) -> &'static str {
+    pub fn snapshot(&self) -> OverlayStateSnapshot {
         let state = self.inner.lock().expect("overlay state poisoned");
-        state.phase.as_str()
+        Self::to_snapshot(*state)
     }
 
-    pub fn transition_for_posture(&self, is_bad_posture: bool) -> Option<OverlayPhase> {
+    pub fn set_mode(&self, mode: OverlayMode) -> OverlayStateSnapshot {
         let mut state = self.inner.lock().expect("overlay state poisoned");
-
-        if is_bad_posture {
-            if state.is_bad_posture {
-                return None;
-            }
-
-            state.is_bad_posture = true;
-            state.phase = OverlayPhase::Entering;
-            return Some(OverlayPhase::Entering);
-        }
-
-        if !state.is_bad_posture {
-            return None;
-        }
-
-        state.is_bad_posture = false;
-        state.phase = OverlayPhase::Exiting;
-        Some(OverlayPhase::Exiting)
+        state.mode = mode;
+        Self::to_snapshot(*state)
     }
 
-    pub fn transition_for_animation_complete(
-        &self,
-        completed_phase: OverlayPhase,
-    ) -> Option<OverlayPhase> {
+    pub fn set_user_hidden(&self, user_hidden: bool) -> OverlayStateSnapshot {
         let mut state = self.inner.lock().expect("overlay state poisoned");
-
-        match completed_phase {
-            OverlayPhase::Entering => {
-                if state.phase != OverlayPhase::Entering {
-                    return None;
-                }
-
-                if state.is_bad_posture {
-                    state.phase = OverlayPhase::Idle;
-                    Some(OverlayPhase::Idle)
-                } else {
-                    state.phase = OverlayPhase::Exiting;
-                    Some(OverlayPhase::Exiting)
-                }
-            }
-            OverlayPhase::Exiting => {
-                if state.phase != OverlayPhase::Exiting {
-                    return None;
-                }
-
-                if state.is_bad_posture {
-                    state.phase = OverlayPhase::Entering;
-                    Some(OverlayPhase::Entering)
-                } else {
-                    state.phase = OverlayPhase::Hidden;
-                    Some(OverlayPhase::Hidden)
-                }
-            }
-            OverlayPhase::Idle | OverlayPhase::Hidden => None,
-        }
+        state.user_hidden = user_hidden;
+        Self::to_snapshot(*state)
     }
 
+    pub fn set_position_offset(&self, offset_x: i32, offset_y: i32) -> OverlayStateSnapshot {
+        let mut state = self.inner.lock().expect("overlay state poisoned");
+        state.offset_x = offset_x;
+        state.offset_y = offset_y;
+        Self::to_snapshot(*state)
+    }
+
+    fn to_snapshot(state: OverlayState) -> OverlayStateSnapshot {
+        OverlayStateSnapshot {
+            mode: state.mode.as_str(),
+            user_hidden: state.user_hidden,
+            offset_x: state.offset_x,
+            offset_y: state.offset_y,
+        }
+    }
 }

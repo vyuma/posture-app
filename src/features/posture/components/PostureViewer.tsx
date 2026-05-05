@@ -7,8 +7,10 @@ type PostureViewerProps = {
   canvasRef: RefObject<HTMLCanvasElement | null>;
   isBadPosture: boolean;
   isOverlayEnabled: boolean;
+  isCharacterOverlayEnabled: boolean;
   experiment: PostureExperimentMetrics;
   onOverlayEnabledChange: (enabled: boolean) => void;
+  onCharacterOverlayEnabledChange: (enabled: boolean) => void;
 };
 
 export function PostureViewer({
@@ -16,8 +18,10 @@ export function PostureViewer({
   canvasRef,
   isBadPosture,
   isOverlayEnabled,
+  isCharacterOverlayEnabled,
   experiment,
   onOverlayEnabledChange,
+  onCharacterOverlayEnabledChange,
 }: PostureViewerProps) {
   return (
     <section className="viewer">
@@ -44,6 +48,19 @@ export function PostureViewer({
             }}
           />
           <span>オーバーレイ {isOverlayEnabled ? "ON" : "OFF"}</span>
+        </label>
+        <label className="mode-toggle" htmlFor="character-overlay-enabled">
+          <input
+            id="character-overlay-enabled"
+            type="checkbox"
+            checked={isCharacterOverlayEnabled}
+            onChange={(event) => {
+              onCharacterOverlayEnabledChange(event.currentTarget.checked);
+            }}
+          />
+          <span>
+            デスクトップキャラ {isCharacterOverlayEnabled ? "ON" : "OFF"}
+          </span>
         </label>
       </section>
 

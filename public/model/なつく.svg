@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="144.59mm" height="126.99mm" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 409.86 359.96">
+  <defs>
+    <style>
+      .cls-1, .cls-2 {
+        fill: none;
+      }
+
+      .cls-3 {
+        filter: url(#drop-shadow-8);
+      }
+
+      .cls-4 {
+        fill: #e598b7;
+      }
+
+      .cls-5 {
+        fill: #e20707;
+        mix-blend-mode: multiply;
+        opacity: .45;
+      }
+
+      .cls-6 {
+        fill: #d3548e;
+      }
+
+      .cls-7 {
+        isolation: isolate;
+      }
+
+      .cls-8 {
+        fill: #fff;
+      }
+
+      .cls-9 {
+        fill: #505050;
+        stroke: #fff;
+        stroke-miterlimit: 10;
+        stroke-width: 2.3px;
+      }
+
+      .cls-2 {
+        stroke: #f78000;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 57.55px;
+      }
+
+      .cls-10 {
+        clip-path: url(#clippath);
+      }
+    </style>
+    <clipPath id="clippath">
+      <rect class="cls-1" x="14.32" y="38.82" width="364.92" height="318.93"/>
+    </clipPath>
+    <filter id="drop-shadow-8" x="133.54" y="96.59" width="121.68" height="606.24" filterUnits="userSpaceOnUse">
+      <feOffset dx="5.68" dy="5.68"/>
+      <feGaussianBlur result="blur" stdDeviation="5.68"/>
+      <feFlood flood-color="#000" flood-opacity=".35"/>
+      <feComposite in2="blur" operator="in"/>
+      <feComposite in="SourceGraphic"/>
+    </filter>
+  </defs>
+  <g class="cls-7">
+    <g id="_レイヤー_1" data-name="レイヤー 1">
+      <circle class="cls-5" cx="181.51" cy="140.4" r="4.1"/>
+      <circle class="cls-5" cx="149.7" cy="140.4" r="4.1"/>
+      <ellipse class="cls-4" cx="125.12" cy="128.08" rx="5.45" ry="9.37" transform="translate(-51.99 154.4) rotate(-54.12)"/>
+      <ellipse class="cls-4" cx="128.82" cy="125.47" rx="5.45" ry="9.37" transform="translate(-29.64 40.46) rotate(-16.03)"/>
+      <ellipse class="cls-6" cx="123.53" cy="146.09" rx="6.85" ry="3.98" transform="translate(-14.24 13.35) rotate(-5.85)"/>
+      <ellipse class="cls-6" cx="124.28" cy="142.86" rx="3.98" ry="6.85" transform="translate(-62.86 171.76) rotate(-57.76)"/>
+      <g class="cls-10">
+        <g>
+          <g class="cls-3">
+            <path class="cls-2" d="M203.49,651.31v-276.08s0-46.24,0-46.24v-39.74s0-44.2,0-44.2v-50.32c0-22.96-11.02-44.52-29.63-57.96h0"/>
+          </g>
+          <rect class="cls-8" x="174.81" y="259.65" width="57.37" height="12.72"/>
+          <rect class="cls-8" x="174.81" y="216.96" width="57.37" height="12.72"/>
+          <rect class="cls-8" x="174.81" y="302.34" width="57.37" height="12.72"/>
+          <rect class="cls-8" x="174.81" y="345.03" width="57.37" height="12.72"/>
+          <circle class="cls-9" cx="174.86" cy="133.25" r="4.42"/>
+          <circle class="cls-9" cx="156.49" cy="133.25" r="4.42"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

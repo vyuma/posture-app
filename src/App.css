@@ -503,6 +503,9 @@ body {
 }
 
 /* ヘッダーのアクションボタン共通スタイル */
+.pause-launch,
+.character-launch,
+.character-reset-launch,
 .pairing-launch,
 .sound-launch {
   border: 0;
@@ -511,6 +514,32 @@ body {
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
+}
+
+.pause-launch {
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1px solid rgba(15, 23, 42, 0.18);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+}
+
+.pause-launch.active {
+  background: #f59e0b;
+  color: #111827;
+  border-color: rgba(146, 64, 14, 0.28);
+}
+
+.character-launch {
+  background: #2563eb;
+  color: #f8fafc;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.2);
+}
+
+.character-reset-launch {
+  background: #f8fafc;
+  color: #334155;
+  border: 1px solid rgba(51, 65, 85, 0.18);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.1);
 }
 
 .pairing-launch {
@@ -525,6 +554,9 @@ body {
   box-shadow: 0 8px 18px rgba(51, 65, 85, 0.22);
 }
 
+.pause-launch:disabled,
+.character-launch:disabled,
+.character-reset-launch:disabled,
 .pairing-launch:disabled,
 .sound-launch:disabled {
   opacity: 0.5;
@@ -703,6 +735,9 @@ body {
     justify-content: stretch;
   }
 
+  .pause-launch,
+  .character-launch,
+  .character-reset-launch,
   .pairing-launch,
   .sound-launch {
     width: 100%;
