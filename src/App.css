@@ -266,14 +266,6 @@ body {
   margin: 0;
 }
 
-
-
-.app-shell--blackout {
-  padding: 0;
-  grid-template-rows: 1fr;
-  background: #000000;
-}
-
 .workbench {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
@@ -552,33 +544,6 @@ body {
   box-shadow: 0 18px 36px rgba(9, 20, 38, 0.35);
 }
 
-.blackout-stage {
-  position: fixed;
-  inset: 0;
-  background: #000000;
-  overflow: hidden;
-  z-index: 2000;
-}
-
-.blackout-copy {
-  position: absolute;
-  left: 20px;
-  bottom: 20px;
-  max-width: min(560px, calc(100vw - 84px));
-  color: #e2e8f0;
-}
-
-.blackout-copy h1 {
-  margin: 0;
-  font-size: clamp(1.6rem, 3vw, 2.5rem);
-  letter-spacing: 0.02em;
-}
-
-.blackout-copy p {
-  margin: 8px 0 0;
-  color: #94a3b8;
-}
-
 .camera,
 .overlay {
   position: absolute;
@@ -732,14 +697,4 @@ body {
     width: min(178px, calc(100% - 20px));
   }
 
-  .blackout-stage {
-    height: 100vh;
-    min-height: 100vh;
-  }
-
-  .blackout-copy {
-    left: 12px;
-    bottom: 12px;
-    max-width: calc(100vw - 36px);
-  }
 }

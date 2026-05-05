@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import "./App.css";
 import { PairingDialog } from "./features/pairing";
 import {
   PostureControlPanel,
   PostureViewer,
-  type AlertDisplayMode,
   usePostureTracking,
 } from "./features/posture";
 import { POSTURE_SPEC } from "./features/posture/engine.spec";
@@ -36,15 +34,11 @@ function App() {
     overlayEnabled: isOverlayEnabled,
   });
 
-  const [alertDisplayMode, setAlertDisplayMode] =
-    useState<AlertDisplayMode>("debug");
   const [isPairingDialogOpen, setIsPairingDialogOpen] = useState(false);
   const lastBroadcastedPostureRef = useRef<boolean | null>(null);
 
   const isActiveSession = startupPhase === "active";
   const effectiveBadPosture = isActiveSession && isBadPosture;
-  const shouldBlackoutScreen =
-    effectiveBadPosture && alertDisplayMode === "blackout";
 
   const warmupRemainingMs = Math.max(0, snapshot.warmupRemainingMs);
   const warmupSeconds = Math.max(0, Math.ceil(warmupRemainingMs / 1000));
@@ -151,33 +145,19 @@ function App() {
   }, [startupPhase, status]);
 
   useEffect(() => {
-    try {
-      const appWindow = getCurrentWindow();
-      void appWindow.setFullscreen(shouldBlackoutScreen);
-    } catch {
-      // Tauriコンテキスト外では fullscreen 制御を行わない。
-    }
-
     if (lastBroadcastedPostureRef.current !== effectiveBadPosture) {
       lastBroadcastedPostureRef.current = effectiveBadPosture;
       void sendPostureSignal(effectiveBadPosture).catch(() => {
         // Tauriコンテキスト外では posture signal を送信できないため無視する。
       });
     }
-  }, [effectiveBadPosture, shouldBlackoutScreen]);
+  }, [effectiveBadPosture]);
 
   useEffect(() => {
     return () => {
       void sendPostureSignal(false).catch(() => {
         // Tauriコンテキスト外では posture signal を送信できないため無視する。
       });
-
-      try {
-        const appWindow = getCurrentWindow();
-        void appWindow.setFullscreen(false);
-      } catch {
-        // Tauriコンテキスト外では fullscreen 制御を行わない。
-      }
     };
   }, []);
 
@@ -247,7 +227,7 @@ function App() {
 
   return (
     <>
-      <main className={`app-shell ${shouldBlackoutScreen ? "app-shell--blackout" : ""}`}>
+      <main className="app-shell">
         <section className="hero">
           <div className="hero-topline">
             <div>
@@ -276,22 +256,11 @@ function App() {
             videoRef={videoRef}
             canvasRef={canvasRef}
             isBadPosture={effectiveBadPosture}
-            alertDisplayMode={alertDisplayMode}
             isOverlayEnabled={isOverlayEnabled}
             experiment={snapshot.experiment}
-            onAlertDisplayModeChange={setAlertDisplayMode}
             onOverlayEnabledChange={setIsOverlayEnabled}
           />
         </section>
-
-        {shouldBlackoutScreen ? (
-          <section className="blackout-stage" aria-live="polite">
-            <div className="blackout-copy">
-              <h1>姿勢が悪いです</h1>
-              <p>デバッグモードに切り替えるとカメラ映像を確認できます。</p>
-            </div>
-          </section>
-        ) : null}
 
         {isPairingDialogOpen ? (
           <PairingDialog onClose={() => setIsPairingDialogOpen(false)} />

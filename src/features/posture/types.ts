@@ -5,7 +5,6 @@ import type {
   ViewClass,
 } from "./engine.types";
 
-export type AlertDisplayMode = "blackout" | "debug";
 export type TrackingMode = "foreground" | "background";
 
 export type PostureExperimentSample = {

@@ -1,4 +1,4 @@
 export { usePostureTracking } from "./hooks/usePostureTracking";
 export { PostureControlPanel } from "./components/PostureControlPanel";
 export { PostureViewer } from "./components/PostureViewer";
-export type { AlertDisplayMode, RuntimeSnapshot } from "./types";
+export type { RuntimeSnapshot } from "./types";

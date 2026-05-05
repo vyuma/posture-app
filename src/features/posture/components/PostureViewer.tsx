@@ -1,16 +1,13 @@
 import type { RefObject } from "react";
 
 import type { PostureExperimentMetrics } from "../engine.types";
-import type { AlertDisplayMode } from "../types";
 
 type PostureViewerProps = {
   videoRef: RefObject<HTMLVideoElement | null>;
   canvasRef: RefObject<HTMLCanvasElement | null>;
   isBadPosture: boolean;
-  alertDisplayMode: AlertDisplayMode;
   isOverlayEnabled: boolean;
   experiment: PostureExperimentMetrics;
-  onAlertDisplayModeChange: (mode: AlertDisplayMode) => void;
   onOverlayEnabledChange: (enabled: boolean) => void;
 };
 
@@ -18,10 +15,8 @@ export function PostureViewer({
   videoRef,
   canvasRef,
   isBadPosture,
-  alertDisplayMode,
   isOverlayEnabled,
   experiment,
-  onAlertDisplayModeChange,
   onOverlayEnabledChange,
 }: PostureViewerProps) {
   return (
@@ -37,25 +32,8 @@ export function PostureViewer({
         姿勢が悪いです
       </div>
 
-      <section className="display-mode-switch" aria-label="姿勢アラート表示モード">
-        <span>姿勢アラート</span>
-        <label className="mode-toggle" htmlFor="alert-display-mode">
-          <input
-            id="alert-display-mode"
-            type="checkbox"
-            checked={alertDisplayMode === "blackout"}
-            onChange={(event) => {
-              onAlertDisplayModeChange(
-                event.currentTarget.checked ? "blackout" : "debug",
-              );
-            }}
-          />
-          <span>
-            {alertDisplayMode === "blackout"
-              ? "運用(画面ブラックアウト)"
-              : "デバッグ(メッセージのみ)"}
-          </span>
-        </label>
+      <section className="display-mode-switch" aria-label="表示設定">
+        <span>表示設定</span>
         <label className="mode-toggle" htmlFor="overlay-enabled">
           <input
             id="overlay-enabled"
