@@ -1,16 +1,40 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import "./App.css";
-import { PairingDialog } from "./features/pairing";
+import { CHARACTER_CATALOG, getNextUnacquiredCharacter } from "./features/characters/characterCatalog";
 import {
-  PostureControlPanel,
-  PostureViewer,
-  usePostureTransitionEffects,
+  clearAcquiredCharacters,
+  loadAcquiredCharacters,
+  saveAcquiredCharacters,
+} from "./features/characters/characterStorage";
+import {
+  loadSelectedProfileCharacterId,
+  saveSelectedProfileCharacterId,
+} from "./features/characters/profileCharacterStorage";
+import type {
+  AcquiredCharacter,
+  CharacterDefinition,
+} from "./features/characters/types";
+import {
+  CodeReadScreen,
+  HomeScreen,
+  MeasuringScreen,
+  PostureRegisteredScreen,
+} from "./features/flow/components/FlowScreens";
+import type {
+  AppFlowPhase,
+  MeasurementResult,
+  MeasurementStats,
+  RewardRule,
+} from "./features/flow/types";
+import { usePairingState } from "./features/pairing";
+import { buildPairingLink } from "./features/pairing/services/pairingLink";
+import {
   usePostureTracking,
+  usePostureTransitionEffects,
 } from "./features/posture";
-import { POSTURE_SPEC } from "./features/posture/engine.spec";
 import { SoundSettingsDialog } from "./features/sound/components/SoundSettingsDialog";
 import {
   configureRecoverySound,
@@ -22,9 +46,9 @@ import {
   saveSoundSettings,
 } from "./features/sound/services/soundSettingsStorage";
 import type { SoundSettings } from "./features/sound/types/soundSettings";
+import { generateQrDataUrl } from "./lib/qrcode";
 import { sendPostureSignal } from "./lib/desktopBridge";
 
-type StartupPhase = "intro" | "calibrating" | "active";
 type OverlayMode = "hidden" | "good" | "bad" | "paused";
 type OverlayStatePayload = {
   mode: OverlayMode;
@@ -33,11 +57,25 @@ type OverlayStatePayload = {
   offsetY: number;
 };
 
+type MeasurementAccumulator = MeasurementStats & {
+  activeStartedAtMs: number | null;
+  lastSampleAtMs: number | null;
+};
+
 const CHARACTER_OVERLAY_STORAGE_KEY = "posture.overlay.characterVisible.v1";
 const OVERLAY_OFFSET_STORAGE_KEY = "posture.overlay.positionOffset.v1";
+const REWARD_RULE: RewardRule = {
+  minDurationMs: 0,
+  minGoodRatio: 0.5,
+};
+const EMPTY_MEASUREMENT_STATS: MeasurementStats = {
+  activeMeasurementMs: 0,
+  goodMs: 0,
+  goodRatio: 0,
+};
 
 function App() {
-  const [startupPhase, setStartupPhase] = useState<StartupPhase>("intro");
+  const [flowPhase, setFlowPhase] = useState<AppFlowPhase>("home");
   const [isStartPending, setIsStartPending] = useState(false);
   const [isOverlayEnabled, setIsOverlayEnabled] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
@@ -47,7 +85,29 @@ function App() {
   const [permissionPopupMessage, setPermissionPopupMessage] = useState<
     string | null
   >(null);
-  const trackingEnabled = startupPhase !== "intro";
+  const [acquiredCharacters, setAcquiredCharacters] = useState<
+    AcquiredCharacter[]
+  >(() => loadAcquiredCharacters());
+  const [selectedProfileCharacterId, setSelectedProfileCharacterId] = useState<
+    string | null
+  >(() => loadSelectedProfileCharacterId());
+  const [collectionResetTick, setCollectionResetTick] = useState(0);
+  const [measurementStats, setMeasurementStats] = useState<MeasurementStats>(
+    EMPTY_MEASUREMENT_STATS,
+  );
+  const [lastMeasurementResult, setLastMeasurementResult] =
+    useState<MeasurementResult | null>(null);
+  const [lastAcquiredCharacterId, setLastAcquiredCharacterId] = useState<
+    string | null
+  >(null);
+  const [qrImageDataUrl, setQrImageDataUrl] = useState("");
+  const [qrRegenerationTick, setQrRegenerationTick] = useState(0);
+  const [isSoundDialogOpen, setIsSoundDialogOpen] = useState(false);
+  const [soundSettings, setSoundSettings] = useState<SoundSettings>(() =>
+    loadSoundSettings(),
+  );
+
+  const trackingEnabled = flowPhase === "measuring";
   const {
     videoRef,
     canvasRef,
@@ -55,7 +115,6 @@ function App() {
     status,
     isBadPosture,
     snapshot,
-    experimentHistory,
     resetPostureEngine,
   } = usePostureTracking({
     enabled: trackingEnabled,
@@ -63,24 +122,173 @@ function App() {
     paused: isPaused,
   });
 
-  const [isPairingDialogOpen, setIsPairingDialogOpen] = useState(false);
-  const [isSoundDialogOpen, setIsSoundDialogOpen] = useState(false);
-  const [soundSettings, setSoundSettings] = useState<SoundSettings>(() =>
-    loadSoundSettings(),
-  );
+  const {
+    pairingInfo,
+    status: pairingStatus,
+    isLoading: isPairingLoading,
+    error: pairingError,
+    refresh: refreshPairing,
+  } = usePairingState();
 
-  const isActiveSession = startupPhase === "active";
-  const effectiveBadPosture = isActiveSession && !isPaused && isBadPosture;
-
-  const warmupRemainingMs = Math.max(0, snapshot.warmupRemainingMs);
-  const warmupSeconds = Math.max(0, Math.ceil(warmupRemainingMs / 1000));
-  const calibrationProgress = Math.min(
-    100,
-    Math.max(
-      0,
-      ((POSTURE_SPEC.warmupMs - warmupRemainingMs) / POSTURE_SPEC.warmupMs) * 100,
-    ),
+  const pairingLink = buildPairingLink(pairingInfo);
+  const isPaired = pairingStatus?.paired ?? false;
+  const acquiredCharacterIds = useMemo(
+    () => new Set(acquiredCharacters.map((character) => character.characterId)),
+    [acquiredCharacters],
   );
+  const nextCharacter = useMemo(
+    () => getNextUnacquiredCharacter(acquiredCharacterIds),
+    [acquiredCharacterIds],
+  );
+  const lastAcquiredCharacter = useMemo(
+    () =>
+      lastAcquiredCharacterId
+        ? CHARACTER_CATALOG.find(
+            (character) => character.id === lastAcquiredCharacterId,
+          ) ?? null
+        : null,
+    [lastAcquiredCharacterId],
+  );
+  const profileCharacter = useMemo(
+    () =>
+      getProfileCharacter(
+        acquiredCharacters,
+        acquiredCharacterIds,
+        selectedProfileCharacterId,
+      ),
+    [acquiredCharacterIds, acquiredCharacters, selectedProfileCharacterId],
+  );
+  const effectiveBadPosture =
+    trackingEnabled && snapshot.baselineReady && !isPaused && isBadPosture;
+
+  const measurementAccumulatorRef = useRef(createMeasurementAccumulator());
+  const measurementStartedAtRef = useRef<string | null>(null);
+  const latestSnapshotRef = useRef(snapshot);
+  const latestPausedRef = useRef(isPaused);
+  const previousPairedRef = useRef<boolean | null>(null);
+
+  useEffect(() => {
+    latestSnapshotRef.current = snapshot;
+  }, [snapshot]);
+
+  useEffect(() => {
+    latestPausedRef.current = isPaused;
+  }, [isPaused]);
+
+  useEffect(() => {
+    const nextProfileCharacter = getProfileCharacter(
+      acquiredCharacters,
+      acquiredCharacterIds,
+      selectedProfileCharacterId,
+    );
+    const nextProfileCharacterId =
+      nextProfileCharacter && acquiredCharacterIds.has(nextProfileCharacter.id)
+        ? nextProfileCharacter.id
+        : null;
+
+    if (selectedProfileCharacterId === nextProfileCharacterId) {
+      return;
+    }
+
+    setSelectedProfileCharacterId(nextProfileCharacterId);
+    saveSelectedProfileCharacterId(nextProfileCharacterId);
+  }, [acquiredCharacterIds, acquiredCharacters, selectedProfileCharacterId]);
+
+  useEffect(() => {
+    let disposed = false;
+    setQrImageDataUrl("");
+
+    if (!pairingLink) {
+      return () => {
+        disposed = true;
+      };
+    }
+
+    void generateQrDataUrl(pairingLink)
+      .then((dataUrl) => {
+        if (!disposed) {
+          setQrImageDataUrl(dataUrl);
+        }
+      })
+      .catch(() => {
+        if (!disposed) {
+          setQrImageDataUrl("");
+        }
+      });
+
+    return () => {
+      disposed = true;
+    };
+  }, [pairingLink, qrRegenerationTick]);
+
+  const handleRefreshPairing = useCallback(async () => {
+    await refreshPairing();
+    setQrRegenerationTick((current) => current + 1);
+  }, [refreshPairing]);
+
+  useEffect(() => {
+    const paired = pairingStatus?.paired ?? false;
+    const previousPaired = previousPairedRef.current;
+    previousPairedRef.current = paired;
+
+    if (previousPaired === null) {
+      return;
+    }
+
+    if (flowPhase === "home" && !previousPaired && paired) {
+      setFlowPhase("qrScanned");
+    }
+  }, [flowPhase, pairingStatus?.paired]);
+
+  const sampleMeasurementStats = useCallback((nowMs = performance.now()) => {
+    const latestSnapshot = latestSnapshotRef.current;
+    const accumulator = measurementAccumulatorRef.current;
+
+    if (!latestSnapshot.baselineReady || latestPausedRef.current) {
+      accumulator.lastSampleAtMs = null;
+      const nextStats = toMeasurementStats(accumulator);
+      setMeasurementStats(nextStats);
+      return nextStats;
+    }
+
+    if (accumulator.activeStartedAtMs === null) {
+      accumulator.activeStartedAtMs = nowMs;
+    }
+
+    if (accumulator.lastSampleAtMs === null) {
+      accumulator.lastSampleAtMs = nowMs;
+      const nextStats = toMeasurementStats(accumulator);
+      setMeasurementStats(nextStats);
+      return nextStats;
+    }
+
+    const deltaMs = Math.max(0, nowMs - accumulator.lastSampleAtMs);
+    accumulator.activeMeasurementMs += deltaMs;
+
+    if (latestSnapshot.postureState === "good") {
+      accumulator.goodMs += deltaMs;
+    }
+
+    accumulator.lastSampleAtMs = nowMs;
+
+    const nextStats = toMeasurementStats(accumulator);
+    setMeasurementStats(nextStats);
+    return nextStats;
+  }, []);
+
+  useEffect(() => {
+    if (flowPhase !== "measuring") {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      sampleMeasurementStats();
+    }, 250);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [flowPhase, sampleMeasurementStats]);
 
   const permissionPopup = permissionPopupMessage ? (
     <section className="permission-popup-backdrop" role="dialog" aria-modal="true">
@@ -137,25 +345,100 @@ function App() {
         }
       }
 
+      measurementAccumulatorRef.current = createMeasurementAccumulator();
+      measurementStartedAtRef.current = new Date().toISOString();
+      setMeasurementStats(EMPTY_MEASUREMENT_STATS);
+      setLastMeasurementResult(null);
+      setLastAcquiredCharacterId(null);
+      resetPostureEngine();
       setIsPaused(false);
-      setStartupPhase("calibrating");
+      setFlowPhase("measuring");
       void primeRecoverySound();
     } finally {
       setIsStartPending(false);
     }
   };
 
+  const handleFinishMeasurement = useCallback(() => {
+    const finalStats = sampleMeasurementStats();
+    const measurementId = `measurement-${Date.now()}`;
+    const endedAt = new Date().toISOString();
+    const rewardQualified =
+      finalStats.activeMeasurementMs >= REWARD_RULE.minDurationMs &&
+      finalStats.goodRatio >= REWARD_RULE.minGoodRatio;
+    let acquiredCharacterId: string | null = null;
+
+    if (rewardQualified) {
+      const nextRewardCharacter = getNextUnacquiredCharacter(
+        new Set(acquiredCharacters.map((character) => character.characterId)),
+      );
+
+      if (nextRewardCharacter) {
+        const nextAcquiredCharacters = [
+          ...acquiredCharacters,
+          {
+            characterId: nextRewardCharacter.id,
+            acquiredAt: endedAt,
+            measurementId,
+            activeMeasurementMs: finalStats.activeMeasurementMs,
+            goodMs: finalStats.goodMs,
+            goodRatio: finalStats.goodRatio,
+          },
+        ];
+        acquiredCharacterId = nextRewardCharacter.id;
+        setAcquiredCharacters(nextAcquiredCharacters);
+        saveAcquiredCharacters(nextAcquiredCharacters);
+      }
+    }
+
+    setLastMeasurementResult({
+      id: measurementId,
+      startedAt: measurementStartedAtRef.current ?? endedAt,
+      endedAt,
+      activeMeasurementMs: finalStats.activeMeasurementMs,
+      goodMs: finalStats.goodMs,
+      goodRatio: finalStats.goodRatio,
+      rewardQualified,
+      acquiredCharacterId,
+    });
+    setLastAcquiredCharacterId(acquiredCharacterId);
+    setIsPaused(false);
+    setFlowPhase("postureRegistered");
+  }, [acquiredCharacters, sampleMeasurementStats]);
+
+  const handleProfileCharacterSelect = useCallback(
+    (characterId: string) => {
+      if (!acquiredCharacterIds.has(characterId)) {
+        return;
+      }
+
+      setSelectedProfileCharacterId(characterId);
+      saveSelectedProfileCharacterId(characterId);
+    },
+    [acquiredCharacterIds],
+  );
+
+  const handleDebugClearAcquiredCharacters = useCallback(() => {
+    clearAcquiredCharacters();
+    saveAcquiredCharacters([]);
+    setAcquiredCharacters([]);
+    setLastAcquiredCharacterId(null);
+    setSelectedProfileCharacterId(null);
+    setCollectionResetTick((current) => current + 1);
+    saveSelectedProfileCharacterId(null);
+  }, []);
+
   const handlePostureChanged = useCallback(async (isBad: boolean) => {
     await Promise.allSettled([sendPostureSignal(isBad)]);
   }, []);
 
   const handlePostureRecovered = useCallback(async () => {
-    if (isPaused) {
+    if (latestPausedRef.current) {
       return;
     }
 
     await playRecoverySound();
-  }, [isPaused]);
+  }, []);
 
   usePostureTransitionEffects({
     isBadPosture: effectiveBadPosture,
@@ -194,13 +477,16 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const mode: OverlayMode = isActiveSession
-      ? isPaused
-        ? "paused"
-        : isBadPosture
-          ? "bad"
-          : "good"
-      : "hidden";
+    const mode: OverlayMode =
+      flowPhase === "measuring"
+        ? isPaused
+          ? "paused"
+          : snapshot.baselineReady
+            ? isBadPosture
+              ? "bad"
+              : "good"
+            : "hidden"
+        : "hidden";
 
     const syncOverlay = async () => {
       if (!isCharacterOverlayEnabled) {
@@ -223,7 +509,13 @@ function App() {
     };
 
     void syncOverlay();
-  }, [isActiveSession, isBadPosture, isCharacterOverlayEnabled, isPaused]);
+  }, [
+    flowPhase,
+    isBadPosture,
+    isCharacterOverlayEnabled,
+    isPaused,
+    snapshot.baselineReady,
+  ]);
 
   const handleShowCharacterOverlay = useCallback(() => {
     setIsCharacterOverlayEnabled(true);
@@ -250,19 +542,7 @@ function App() {
   }, [isPaused]);
 
   useEffect(() => {
-    if (startupPhase !== "calibrating") {
-      return;
-    }
-
-    if (!ready || !snapshot.baselineReady) {
-      return;
-    }
-
-    setStartupPhase("active");
-  }, [ready, snapshot.baselineReady, startupPhase]);
-
-  useEffect(() => {
-    if (startupPhase !== "calibrating") {
+    if (flowPhase !== "measuring") {
       return;
     }
 
@@ -279,8 +559,8 @@ function App() {
     setPermissionPopupMessage(
       "カメラ権限が無効のため測定を開始できませんでした。設定でカメラを許可してから再度開始してください。",
     );
-    setStartupPhase("intro");
-  }, [startupPhase, status]);
+    setFlowPhase("qrScanned");
+  }, [flowPhase, status]);
 
   useEffect(() => {
     configureRecoverySound({
@@ -300,159 +580,285 @@ function App() {
     };
   }, []);
 
-  if (startupPhase === "intro") {
-    return (
-      <>
-        <main className="startup-shell">
-          <section className="startup-card">
-            <h1>姿勢カメラトラッカー</h1>
-            <p className="startup-copy">
-              測定を始める前に、椅子に深く座り、画面の正面を向いてください。
-            </p>
-            <p className="startup-copy">
-              開始ボタンを押すとカメラ権限を確認し、5秒間で基準姿勢を学習します。
-            </p>
-            <button
-              type="button"
-              className="startup-start"
-              onClick={() => {
-                void handleStartMeasurement();
-              }}
-              disabled={isStartPending}
-            >
-              {isStartPending ? "確認中..." : "測定を開始"}
-            </button>
-          </section>
-        </main>
-        {permissionPopup}
-      </>
-    );
-  }
-
-  if (startupPhase === "calibrating") {
-    return (
-      <>
-        <main className="startup-shell startup-shell--calibrating">
-          <section className="startup-card startup-card--calibrating">
-            <h1>基準姿勢を測定中</h1>
-            <p className="startup-copy">
-              肩の力を抜き、正面を向いたままお待ちください。
-            </p>
-
-            <section className="calibration-viewer" aria-live="polite">
-              <video ref={videoRef} className="camera" playsInline muted />
-              <canvas ref={canvasRef} className="overlay" />
-              <div className="calibration-overlay">
-                <span className="calibration-state">
-                  {ready ? "測定中" : "カメラ準備中"}
-                </span>
-                <strong className="calibration-countdown">
-                  {ready ? `${warmupSeconds}s` : "--"}
-                </strong>
-                <p>カウントダウン終了後に本画面へ移動します。</p>
-                <div className="calibration-progress" aria-hidden="true">
-                  <span style={{ width: `${calibrationProgress}%` }} />
-                </div>
-              </div>
-            </section>
-
-            <div className={`status ${ready ? "ok" : "warn"}`}>{status}</div>
-          </section>
-        </main>
-        {permissionPopup}
-      </>
-    );
-  }
+  const screen = renderFlowScreen({
+    flowPhase,
+    qrImageDataUrl,
+    isPairingLoading,
+    pairingError,
+    isPaired,
+    deviceName: pairingStatus?.deviceName ?? null,
+    acquiredCharacters,
+    profileCharacter,
+    selectedProfileCharacterId,
+    collectionResetTick,
+    nextCharacter,
+    lastMeasurementResult,
+    lastAcquiredCharacter,
+    ready,
+    videoRef,
+    canvasRef,
+    status,
+    snapshot,
+    measurementStats,
+    effectiveBadPosture,
+    isPaused,
+    isOverlayEnabled,
+    isCharacterOverlayEnabled,
+    isStartPending,
+    onRefreshPairing: () => {
+      void handleRefreshPairing();
+    },
+    onContinueFromPaired: () => setFlowPhase("qrScanned"),
+    onProfileCharacterSelect: handleProfileCharacterSelect,
+    onDebugClearAcquiredCharacters: handleDebugClearAcquiredCharacters,
+    onStartMeasurement: () => {
+      void handleStartMeasurement();
+    },
+    onBackHome: () => setFlowPhase("home"),
+    onFinishMeasurement: handleFinishMeasurement,
+    onMeasureAgain: () => {
+      void handleStartMeasurement();
+    },
+    onPauseToggle: () => setIsPaused((current) => !current),
+    onOverlayEnabledChange: setIsOverlayEnabled,
+    onCharacterOverlayEnabledChange: setIsCharacterOverlayEnabled,
+    onShowCharacterOverlay: handleShowCharacterOverlay,
+    onResetCharacterPosition: handleResetCharacterPosition,
+    onOpenSoundSettings: () => setIsSoundDialogOpen(true),
+  });
 
   return (
     <>
-      <main className="app-shell">
-        <section className="hero">
-          <div className="hero-topline">
-            <div>
-              <h1>姿勢カメラトラッカー</h1>
-              <div className={`status ${ready ? "ok" : "warn"}`}>{status}</div>
-            </div>
-
-            <div className="hero-actions">
-              <button
-                type="button"
-                className={`pause-launch ${isPaused ? "active" : ""}`}
-                onClick={() => setIsPaused((current) => !current)}
-              >
-                {isPaused ? "再開" : "一時停止"}
-              </button>
-              {!isCharacterOverlayEnabled ? (
-                <button
-                  type="button"
-                  className="character-launch"
-                  onClick={handleShowCharacterOverlay}
-                >
-                  キャラを表示
-                </button>
-              ) : null}
-              <button
-                type="button"
-                className="character-reset-launch"
-                onClick={handleResetCharacterPosition}
-              >
-                位置リセット
-              </button>
-              <button
-                type="button"
-                className="pairing-launch"
-                onClick={() => setIsPairingDialogOpen(true)}
-              >
-                モバイル連携
-              </button>
-              <button
-                type="button"
-                className="sound-launch"
-                onClick={() => setIsSoundDialogOpen(true)}
-              >
-                サウンド設定
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <section className="workbench">
-          <PostureControlPanel
-            snapshot={snapshot}
-            experimentHistory={experimentHistory}
-            onReset={resetPostureEngine}
-          />
-
-          <PostureViewer
-            videoRef={videoRef}
-            canvasRef={canvasRef}
-            isBadPosture={effectiveBadPosture}
-            isOverlayEnabled={isOverlayEnabled}
-            isCharacterOverlayEnabled={isCharacterOverlayEnabled}
-            experiment={snapshot.experiment}
-            onOverlayEnabledChange={setIsOverlayEnabled}
-            onCharacterOverlayEnabledChange={setIsCharacterOverlayEnabled}
-          />
-        </section>
-
-        {isPairingDialogOpen ? (
-          <PairingDialog onClose={() => setIsPairingDialogOpen(false)} />
-        ) : null}
-        {isSoundDialogOpen ? (
-          <SoundSettingsDialog
-            settings={soundSettings}
-            onChange={setSoundSettings}
-            onClose={() => setIsSoundDialogOpen(false)}
-            onPreview={() => {
-              void primeRecoverySound();
-              void playRecoverySound();
-            }}
-          />
-        ) : null}
-      </main>
+      {screen}
+      {isSoundDialogOpen ? (
+        <SoundSettingsDialog
+          settings={soundSettings}
+          onChange={setSoundSettings}
+          onClose={() => setIsSoundDialogOpen(false)}
+          onPreview={() => {
+            void primeRecoverySound();
+            void playRecoverySound();
+          }}
+        />
+      ) : null}
       {permissionPopup}
     </>
   );
+}
+
+function renderFlowScreen({
+  flowPhase,
+  qrImageDataUrl,
+  isPairingLoading,
+  pairingError,
+  isPaired,
+  deviceName,
+  acquiredCharacters,
+  profileCharacter,
+  selectedProfileCharacterId,
+  collectionResetTick,
+  nextCharacter,
+  lastMeasurementResult,
+  lastAcquiredCharacter,
+  ready,
+  status,
+  videoRef,
+  canvasRef,
+  snapshot,
+  measurementStats,
+  effectiveBadPosture,
+  isPaused,
+  isOverlayEnabled,
+  isCharacterOverlayEnabled,
+  isStartPending,
+  onRefreshPairing,
+  onContinueFromPaired,
+  onProfileCharacterSelect,
+  onDebugClearAcquiredCharacters,
+  onStartMeasurement,
+  onBackHome,
+  onFinishMeasurement,
+  onMeasureAgain,
+  onPauseToggle,
+  onOverlayEnabledChange,
+  onCharacterOverlayEnabledChange,
+  onShowCharacterOverlay,
+  onResetCharacterPosition,
+  onOpenSoundSettings,
+}: {
+  flowPhase: AppFlowPhase;
+  qrImageDataUrl: string;
+  isPairingLoading: boolean;
+  pairingError: string | null;
+  isPaired: boolean;
+  deviceName: string | null;
+  acquiredCharacters: AcquiredCharacter[];
+  profileCharacter: CharacterDefinition | null;
+  selectedProfileCharacterId: string | null;
+  collectionResetTick: number;
+  nextCharacter: CharacterDefinition | null;
+  lastMeasurementResult: MeasurementResult | null;
+  lastAcquiredCharacter: CharacterDefinition | null;
+  ready: boolean;
+  status: string;
+  videoRef: ReturnType<typeof usePostureTracking>["videoRef"];
+  canvasRef: ReturnType<typeof usePostureTracking>["canvasRef"];
+  snapshot: ReturnType<typeof usePostureTracking>["snapshot"];
+  measurementStats: MeasurementStats;
+  effectiveBadPosture: boolean;
+  isPaused: boolean;
+  isOverlayEnabled: boolean;
+  isCharacterOverlayEnabled: boolean;
+  isStartPending: boolean;
+  onRefreshPairing: () => void;
+  onContinueFromPaired: () => void;
+  onProfileCharacterSelect: (characterId: string) => void;
+  onDebugClearAcquiredCharacters: () => void;
+  onStartMeasurement: () => void;
+  onBackHome: () => void;
+  onFinishMeasurement: () => void;
+  onMeasureAgain: () => void;
+  onPauseToggle: () => void;
+  onOverlayEnabledChange: (enabled: boolean) => void;
+  onCharacterOverlayEnabledChange: (enabled: boolean) => void;
+  onShowCharacterOverlay: () => void;
+  onResetCharacterPosition: () => void;
+  onOpenSoundSettings: () => void;
+}) {
+  switch (flowPhase) {
+    case "home":
+      return (
+        <HomeScreen
+          characters={CHARACTER_CATALOG}
+          acquiredCharacters={acquiredCharacters}
+          profileCharacter={profileCharacter}
+          selectedProfileCharacterId={selectedProfileCharacterId}
+          collectionResetTick={collectionResetTick}
+          qrImageDataUrl={qrImageDataUrl}
+          isPairingLoading={isPairingLoading}
+          pairingError={pairingError}
+          isPaired={isPaired}
+          deviceName={deviceName}
+          qrCharacter={nextCharacter}
+          onRefreshPairing={onRefreshPairing}
+          onContinueFromPaired={onContinueFromPaired}
+          onProfileCharacterSelect={onProfileCharacterSelect}
+          onDebugClearAcquiredCharacters={onDebugClearAcquiredCharacters}
+        />
+      );
+    case "qrScanned":
+      return (
+        <CodeReadScreen
+          nextCharacter={nextCharacter}
+          isStartPending={isStartPending}
+          onStartMeasurement={onStartMeasurement}
+          onBackHome={onBackHome}
+        />
+      );
+    case "measuring":
+      return (
+        <MeasuringScreen
+          videoRef={videoRef}
+          canvasRef={canvasRef}
+          ready={ready}
+          status={status}
+          snapshot={snapshot}
+          stats={measurementStats}
+          isBadPosture={effectiveBadPosture}
+          isPaused={isPaused}
+          isOverlayEnabled={isOverlayEnabled}
+          isCharacterOverlayEnabled={isCharacterOverlayEnabled}
+          onFinishMeasurement={onFinishMeasurement}
+          onPauseToggle={onPauseToggle}
+          onOverlayEnabledChange={onOverlayEnabledChange}
+          onCharacterOverlayEnabledChange={onCharacterOverlayEnabledChange}
+          onShowCharacterOverlay={onShowCharacterOverlay}
+          onResetCharacterPosition={onResetCharacterPosition}
+          onOpenSoundSettings={onOpenSoundSettings}
+        />
+      );
+    case "postureRegistered":
+      return lastMeasurementResult ? (
+        <PostureRegisteredScreen
+          result={lastMeasurementResult}
+          acquiredCharacter={lastAcquiredCharacter}
+          onBackHome={onBackHome}
+          onMeasureAgain={onMeasureAgain}
+        />
+      ) : (
+        <HomeScreen
+          characters={CHARACTER_CATALOG}
+          acquiredCharacters={acquiredCharacters}
+          profileCharacter={profileCharacter}
+          selectedProfileCharacterId={selectedProfileCharacterId}
+          collectionResetTick={collectionResetTick}
+          qrImageDataUrl={qrImageDataUrl}
+          isPairingLoading={isPairingLoading}
+          pairingError={pairingError}
+          isPaired={isPaired}
+          deviceName={deviceName}
+          qrCharacter={nextCharacter}
+          onRefreshPairing={onRefreshPairing}
+          onContinueFromPaired={onContinueFromPaired}
+          onProfileCharacterSelect={onProfileCharacterSelect}
+          onDebugClearAcquiredCharacters={onDebugClearAcquiredCharacters}
+        />
+      );
+  }
+}
+
+function getProfileCharacter(
+  acquiredCharacters: AcquiredCharacter[],
+  acquiredCharacterIds: Set<string>,
+  selectedProfileCharacterId: string | null,
+) {
+  const selectedCharacter =
+    selectedProfileCharacterId && acquiredCharacterIds.has(selectedProfileCharacterId)
+      ? findCharacterById(selectedProfileCharacterId)
+      : null;
+
+  if (selectedCharacter) {
+    return selectedCharacter;
+  }
+
+  for (const acquiredCharacter of acquiredCharacters) {
+    const character = findCharacterById(acquiredCharacter.characterId);
+
+    if (character) {
+      return character;
+    }
+  }
+
+  return CHARACTER_CATALOG[0] ?? null;
+}
+
+function findCharacterById(characterId: string) {
+  return (
+    CHARACTER_CATALOG.find((character) => character.id === characterId) ?? null
+  );
+}
+
+function createMeasurementAccumulator(): MeasurementAccumulator {
+  return {
+    activeStartedAtMs: null,
+    lastSampleAtMs: null,
+    ...EMPTY_MEASUREMENT_STATS,
+  };
+}
+
+function toMeasurementStats(
+  accumulator: MeasurementAccumulator,
+): MeasurementStats {
+  const goodRatio =
+    accumulator.activeMeasurementMs > 0
+      ? accumulator.goodMs / accumulator.activeMeasurementMs
+      : 0;
+
+  return {
+    activeMeasurementMs: accumulator.activeMeasurementMs,
+    goodMs: accumulator.goodMs,
+    goodRatio,
+  };
 }
 
 function loadCharacterOverlayEnabled() {

@@ -19,9 +19,9 @@ const DEFAULT_STATE: OverlayStatePayload = {
 };
 
 const CHARACTER_SRC: Record<Exclude<OverlayMode, "hidden">, string> = {
-  good: "/model/なつく.svg",
-  bad: "/model/不機嫌.svg",
-  paused: "/model/眠る.svg",
+  good: "/characters/anago/normal-nago/expressions/good.svg",
+  bad: "/characters/anago/normal-nago/expressions/bad.svg",
+  paused: "/characters/anago/normal-nago/expressions/paused.svg",
 };
 
 const BAD_SINK_MAX_PX = 78;
