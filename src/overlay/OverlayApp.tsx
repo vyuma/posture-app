@@ -13,7 +13,7 @@ const ENTER_END = 30;
 const IDLE_START = 30;
 const IDLE_END = 77;
 const DEFAULT_PHASE: OverlayPhase = "hidden";
-const ANIMATION_JSON_PATH = "/model/cat.json";
+const ANIMATION_JSON_PATH = "/model/le-petit-chat-cat-noir.json";
 
 export function OverlayApp() {
   const containerRef = useRef<HTMLDivElement>(null);
