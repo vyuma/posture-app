@@ -1,9 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { usePairingState } from "../hooks/usePairingState";
-import { emitPostureSignal } from "../services/desktopBridge";
-import { buildPairingLink } from "../services/pairingLink";
-import { generateQrDataUrl } from "../../../lib/qrcode";
+import { buildPairingLink, buildPairingQrImageUrl } from "../services/pairingLink";
 import "./PairingDialog.css";
 
 type PairingDialogProps = {
@@ -12,17 +10,11 @@ type PairingDialogProps = {
 
 export function PairingDialog({ onClose }: PairingDialogProps) {
   const { pairingInfo, status, isLoading, error, refresh } = usePairingState();
-  // コピーボタンのフィードバック状態
   const [copyState, setCopyState] = useState<"idle" | "done" | "error">("idle");
-  // バイブテストの動作状態（idle=未送信, running=連続送信中, error=エラー発生）
-  const [vibeState, setVibeState] = useState<"idle" | "running" | "error">("idle");
-  const [qrImageUrl, setQrImageUrl] = useState("");
-  // バイブ連続送信用のインターバルIDを保持するref
-  const vibeIntervalRef = useRef<number | null>(null);
 
   const pairingLink = buildPairingLink(pairingInfo);
+  const qrImageUrl = buildPairingQrImageUrl(pairingLink);
 
-  // Escapeキーでダイアログを閉じるキーボードハンドラ
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -34,12 +26,12 @@ export function PairingDialog({ onClose }: PairingDialogProps) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onClose]);
 
-  // コピー状態のフィードバック表示を一定時間後に自動クリアする
   useEffect(() => {
     if (copyState === "idle") {
       return;
     }
 
+    // フィードバック表示を一定時間後に自動でクリアする。
     const timeoutId = window.setTimeout(() => {
       setCopyState("idle");
     }, 2000);
@@ -47,44 +39,6 @@ export function PairingDialog({ onClose }: PairingDialogProps) {
     return () => window.clearTimeout(timeoutId);
   }, [copyState]);
 
-  // コンポーネントアンマウント時にバイブ連続送信を停止する
-  useEffect(() => {
-    return () => {
-      if (vibeIntervalRef.current !== null) {
-        window.clearInterval(vibeIntervalRef.current);
-        vibeIntervalRef.current = null;
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-
-    if (!pairingLink) {
-      setQrImageUrl("");
-      return () => {
-        active = false;
-      };
-    }
-
-    void generateQrDataUrl(pairingLink)
-      .then((dataUrl) => {
-        if (active) {
-          setQrImageUrl(dataUrl);
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setQrImageUrl("");
-        }
-      });
-
-    return () => {
-      active = false;
-    };
-  }, [pairingLink]);
-
-  // ペアリングアドレスをクリップボードにコピーする
   async function copyLink() {
     if (!pairingLink) {
       return;
@@ -97,55 +51,6 @@ export function PairingDialog({ onClose }: PairingDialogProps) {
       setCopyState("done");
     } catch {
       setCopyState("error");
-    }
-  }
-
-  // バイブテストを開始する（初回送信 + 連続送信を開始）
-  async function startVibeTest() {
-    // まず初回の送信を試みる
-    try {
-      await emitPostureSignal(true);
-    } catch {
-      setVibeState("error");
-      return;
-    }
-
-    // 初回成功したら連続送信状態に移行
-    setVibeState("running");
-
-    // 1秒ごとにバイブ信号を連続送信する
-    vibeIntervalRef.current = window.setInterval(async () => {
-      try {
-        await emitPostureSignal(true);
-      } catch {
-        // 送信失敗時は自動停止する
-        stopVibeTest();
-        setVibeState("error");
-      }
-    }, 1000);
-  }
-
-  // バイブテストを停止する
-  function stopVibeTest() {
-    if (vibeIntervalRef.current !== null) {
-      window.clearInterval(vibeIntervalRef.current);
-      vibeIntervalRef.current = null;
-    }
-
-    // 停止後に「姿勢良好」シグナルを送信してスマホ側のバイブを止める
-    void emitPostureSignal(false).catch(() => {
-      // 停止シグナル送信失敗は無視する
-    });
-
-    setVibeState("idle");
-  }
-
-  // バイブテストボタンの押下ハンドラ（トグル動作）
-  function handleVibeToggle() {
-    if (vibeState === "running") {
-      stopVibeTest();
-    } else {
-      void startVibeTest();
     }
   }
 
@@ -211,7 +116,6 @@ export function PairingDialog({ onClose }: PairingDialogProps) {
               />
             </label>
 
-            {/* アクションボタン行：更新 / アドレスをコピー / バイブテスト(トグル) */}
             <div className="pairing-actions">
               <button type="button" onClick={refresh}>
                 更新
@@ -219,25 +123,13 @@ export function PairingDialog({ onClose }: PairingDialogProps) {
               <button type="button" onClick={() => void copyLink()} disabled={!pairingLink}>
                 アドレスをコピー
               </button>
-              <button
-                type="button"
-                className={vibeState === "running" ? "pairing-vibe-stop" : "pairing-vibe-test"}
-                onClick={handleVibeToggle}
-              >
-                {vibeState === "running" ? "停止" : "バイブテスト"}
-              </button>
             </div>
 
-            {/* コピー結果のフィードバック */}
             {copyState === "done" ? (
               <p className="pairing-hint pairing-ok">ペアリングアドレスをコピーしました。</p>
             ) : null}
             {copyState === "error" ? (
               <p className="pairing-hint pairing-error">クリップボードへのコピーに失敗しました。</p>
-            ) : null}
-            {/* バイブテスト結果のフィードバック */}
-            {vibeState === "error" ? (
-              <p className="pairing-hint pairing-error">バイブテスト送信に失敗しました。スマホが接続されているか確認してください。</p>
             ) : null}
             {error ? <p className="pairing-hint pairing-error">{error}</p> : null}
           </div>
