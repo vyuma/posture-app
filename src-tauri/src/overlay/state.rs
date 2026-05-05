@@ -2,6 +2,8 @@ use std::sync::{Arc, Mutex};
 
 use serde::Serialize;
 
+const OFFSET_LIMIT_PX: i32 = 520;
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum OverlayMode {
     Hidden,
@@ -90,8 +92,8 @@ impl OverlayStateHandle {
 
     pub fn set_position_offset(&self, offset_x: i32, offset_y: i32) -> OverlayStateSnapshot {
         let mut state = self.inner.lock().expect("overlay state poisoned");
-        state.offset_x = offset_x;
-        state.offset_y = offset_y;
+        state.offset_x = clamp_position_offset(offset_x);
+        state.offset_y = clamp_position_offset(offset_y);
         Self::to_snapshot(*state)
     }
 
@@ -103,4 +105,8 @@ impl OverlayStateHandle {
             offset_y: state.offset_y,
         }
     }
+}
+
+fn clamp_position_offset(value: i32) -> i32 {
+    value.clamp(-OFFSET_LIMIT_PX, OFFSET_LIMIT_PX)
 }

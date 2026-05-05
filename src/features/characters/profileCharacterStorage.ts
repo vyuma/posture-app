@@ -1,9 +1,13 @@
+import { normalizeCharacterId } from "./characterIds";
+
 const PROFILE_CHARACTER_STORAGE_KEY = "posture.characters.profile.v1";
 
 export function loadSelectedProfileCharacterId(): string | null {
   try {
     const storedValue = window.localStorage.getItem(PROFILE_CHARACTER_STORAGE_KEY);
-    return storedValue && storedValue.length > 0 ? storedValue : null;
+    return storedValue && storedValue.length > 0
+      ? normalizeCharacterId(storedValue)
+      : null;
   } catch {
     return null;
   }

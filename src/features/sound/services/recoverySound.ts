@@ -5,6 +5,7 @@ type RecoverySoundConfig = {
 };
 
 let audio: HTMLAudioElement | null = null;
+const activePlaybackAudios = new Set<HTMLAudioElement>();
 let config: RecoverySoundConfig = {
   enabled: true,
   src: "/sounds/freesound_community-correct-2-46134.mp3",
@@ -25,6 +26,19 @@ function ensureAudioElement() {
   audio.volume = Math.max(0, Math.min(1, config.volume));
 
   return audio;
+}
+
+function createPlaybackAudioElement() {
+  const target = new Audio(config.src);
+  target.preload = "auto";
+  target.volume = Math.max(0, Math.min(1, config.volume));
+  const cleanup = () => {
+    activePlaybackAudios.delete(target);
+  };
+  target.addEventListener("ended", cleanup, { once: true });
+  target.addEventListener("error", cleanup, { once: true });
+  activePlaybackAudios.add(target);
+  return target;
 }
 
 export function configureRecoverySound(next: Partial<RecoverySoundConfig>) {
@@ -54,12 +68,15 @@ export async function playRecoverySound() {
     return;
   }
 
+  let target: HTMLAudioElement | null = null;
   try {
-    const target = ensureAudioElement();
-    target.pause();
-    target.currentTime = 0;
+    ensureAudioElement();
+    target = createPlaybackAudioElement();
     await target.play();
   } catch {
+    if (target) {
+      activePlaybackAudios.delete(target);
+    }
     // ignore play failures (autoplay policy, interruption)
   }
 }

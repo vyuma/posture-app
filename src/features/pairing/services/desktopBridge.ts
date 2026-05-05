@@ -16,6 +16,6 @@ export async function getDesktopPairingStatus(): Promise<DesktopPairingStatus> {
   return invoke<DesktopPairingStatus>("get_pairing_status");
 }
 
-export async function emitPostureSignal(isBad: boolean): Promise<void> {
+export async function sendPostureSignal(isBad: boolean): Promise<void> {
   await invoke("emit_posture_signal", { isBad });
 }

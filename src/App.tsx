@@ -29,8 +29,16 @@ import type {
   MeasurementStats,
   RewardRule,
 } from "./features/flow/types";
+import {
+  clearStoredPositionOffset,
+  loadCharacterOverlayEnabled,
+  saveCharacterOverlayEnabled,
+  type OverlayMode,
+  type OverlayStatePayload,
+} from "./features/overlay/overlayState";
 import { usePairingState } from "./features/pairing";
 import { buildPairingLink } from "./features/pairing/services/pairingLink";
+import { sendPostureSignal } from "./features/pairing/services/desktopBridge";
 import {
   usePostureTracking,
   usePostureTransitionEffects,
@@ -46,24 +54,12 @@ import {
   saveSoundSettings,
 } from "./features/sound/services/soundSettingsStorage";
 import type { SoundSettings } from "./features/sound/types/soundSettings";
-import { generateQrDataUrl } from "./lib/qrcode";
-import { sendPostureSignal } from "./lib/desktopBridge";
-
-type OverlayMode = "hidden" | "good" | "bad" | "paused";
-type OverlayStatePayload = {
-  mode: OverlayMode;
-  userHidden: boolean;
-  offsetX: number;
-  offsetY: number;
-};
+import { useQrDataUrl } from "./lib/useQrDataUrl";
 
 type MeasurementAccumulator = MeasurementStats & {
-  activeStartedAtMs: number | null;
   lastSampleAtMs: number | null;
 };
 
-const CHARACTER_OVERLAY_STORAGE_KEY = "posture.overlay.characterVisible.v1";
-const OVERLAY_OFFSET_STORAGE_KEY = "posture.overlay.positionOffset.v1";
 const REWARD_RULE: RewardRule = {
   minDurationMs: 0,
   minGoodRatio: 0.5,
@@ -100,7 +96,6 @@ function App() {
   const [lastAcquiredCharacterId, setLastAcquiredCharacterId] = useState<
     string | null
   >(null);
-  const [qrImageDataUrl, setQrImageDataUrl] = useState("");
   const [qrRegenerationTick, setQrRegenerationTick] = useState(0);
   const [isSoundDialogOpen, setIsSoundDialogOpen] = useState(false);
   const [soundSettings, setSoundSettings] = useState<SoundSettings>(() =>
@@ -131,6 +126,7 @@ function App() {
   } = usePairingState();
 
   const pairingLink = buildPairingLink(pairingInfo);
+  const qrImageDataUrl = useQrDataUrl(pairingLink, qrRegenerationTick);
   const isPaired = pairingStatus?.paired ?? false;
   const acquiredCharacterIds = useMemo(
     () => new Set(acquiredCharacters.map((character) => character.characterId)),
@@ -194,33 +190,6 @@ function App() {
     saveSelectedProfileCharacterId(nextProfileCharacterId);
   }, [acquiredCharacterIds, acquiredCharacters, selectedProfileCharacterId]);
 
-  useEffect(() => {
-    let disposed = false;
-    setQrImageDataUrl("");
-
-    if (!pairingLink) {
-      return () => {
-        disposed = true;
-      };
-    }
-
-    void generateQrDataUrl(pairingLink)
-      .then((dataUrl) => {
-        if (!disposed) {
-          setQrImageDataUrl(dataUrl);
-        }
-      })
-      .catch(() => {
-        if (!disposed) {
-          setQrImageDataUrl("");
-        }
-      });
-
-    return () => {
-      disposed = true;
-    };
-  }, [pairingLink, qrRegenerationTick]);
-
   const handleRefreshPairing = useCallback(async () => {
     await refreshPairing();
     setQrRegenerationTick((current) => current + 1);
@@ -249,10 +218,6 @@ function App() {
       const nextStats = toMeasurementStats(accumulator);
       setMeasurementStats(nextStats);
       return nextStats;
-    }
-
-    if (accumulator.activeStartedAtMs === null) {
-      accumulator.activeStartedAtMs = nowMs;
     }
 
     if (accumulator.lastSampleAtMs === null) {
@@ -429,7 +394,9 @@ function App() {
   }, []);
 
   const handlePostureChanged = useCallback(async (isBad: boolean) => {
-    await Promise.allSettled([sendPostureSignal(isBad)]);
+    await sendPostureSignal(isBad).catch(() => {
+      // Browser preview cannot reach the native pairing bridge.
+    });
   }, []);
 
   const handlePostureRecovered = useCallback(async () => {
@@ -522,12 +489,7 @@ function App() {
   }, []);
 
   const handleResetCharacterPosition = useCallback(() => {
-    try {
-      window.localStorage.removeItem(OVERLAY_OFFSET_STORAGE_KEY);
-    } catch {
-      // Ignore storage failures in browser preview.
-    }
-
+    clearStoredPositionOffset();
     void invoke("overlay_reset_position_offset").catch(() => {
       // Browser preview cannot reach Tauri commands.
     });
@@ -538,7 +500,9 @@ function App() {
       return;
     }
 
-    void Promise.allSettled([sendPostureSignal(false)]);
+    void sendPostureSignal(false).catch(() => {
+      // Browser preview cannot reach the native pairing bridge.
+    });
   }, [isPaused]);
 
   useEffect(() => {
@@ -740,8 +704,10 @@ function renderFlowScreen({
           isPaired={isPaired}
           deviceName={deviceName}
           qrCharacter={nextCharacter}
+          isStartPending={isStartPending}
           onRefreshPairing={onRefreshPairing}
           onContinueFromPaired={onContinueFromPaired}
+          onDebugStartMeasurement={onStartMeasurement}
           onProfileCharacterSelect={onProfileCharacterSelect}
           onDebugClearAcquiredCharacters={onDebugClearAcquiredCharacters}
         />
@@ -798,8 +764,10 @@ function renderFlowScreen({
           isPaired={isPaired}
           deviceName={deviceName}
           qrCharacter={nextCharacter}
+          isStartPending={isStartPending}
           onRefreshPairing={onRefreshPairing}
           onContinueFromPaired={onContinueFromPaired}
+          onDebugStartMeasurement={onMeasureAgain}
           onProfileCharacterSelect={onProfileCharacterSelect}
           onDebugClearAcquiredCharacters={onDebugClearAcquiredCharacters}
         />
@@ -840,7 +808,6 @@ function findCharacterById(characterId: string) {
 
 function createMeasurementAccumulator(): MeasurementAccumulator {
   return {
-    activeStartedAtMs: null,
     lastSampleAtMs: null,
     ...EMPTY_MEASUREMENT_STATS,
   };
@@ -859,25 +826,6 @@ function toMeasurementStats(
     goodMs: accumulator.goodMs,
     goodRatio,
   };
-}
-
-function loadCharacterOverlayEnabled() {
-  try {
-    return window.localStorage.getItem(CHARACTER_OVERLAY_STORAGE_KEY) !== "false";
-  } catch {
-    return true;
-  }
-}
-
-function saveCharacterOverlayEnabled(enabled: boolean) {
-  try {
-    window.localStorage.setItem(
-      CHARACTER_OVERLAY_STORAGE_KEY,
-      enabled ? "true" : "false",
-    );
-  } catch {
-    // Ignore storage failures in restricted WebViews.
-  }
 }
 
 export default App;

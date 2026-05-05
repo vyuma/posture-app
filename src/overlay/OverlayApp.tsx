@@ -2,21 +2,15 @@ import { type PointerEvent, useEffect, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 
-type OverlayMode = "hidden" | "good" | "bad" | "paused";
-
-type OverlayStatePayload = {
-  mode: OverlayMode;
-  userHidden: boolean;
-  offsetX: number;
-  offsetY: number;
-};
-
-const DEFAULT_STATE: OverlayStatePayload = {
-  mode: "hidden",
-  userHidden: false,
-  offsetX: 0,
-  offsetY: 0,
-};
+import {
+  clampPositionOffset,
+  DEFAULT_OVERLAY_STATE,
+  loadStoredPositionOffset,
+  storePositionOffset,
+  type OverlayMode,
+  type OverlayStatePayload,
+  type PositionOffset,
+} from "../features/overlay/overlayState";
 
 const CHARACTER_SRC: Record<Exclude<OverlayMode, "hidden">, string> = {
   good: "/characters/anago/normal-nago/expressions/good.svg",
@@ -26,13 +20,6 @@ const CHARACTER_SRC: Record<Exclude<OverlayMode, "hidden">, string> = {
 
 const BAD_SINK_MAX_PX = 78;
 const BAD_SINK_PX_PER_SECOND = 8;
-const OVERLAY_OFFSET_STORAGE_KEY = "posture.overlay.positionOffset.v1";
-const OFFSET_LIMIT_PX = 520;
-
-type PositionOffset = {
-  x: number;
-  y: number;
-};
 
 type DragState = {
   pointerId: number;
@@ -43,7 +30,7 @@ type DragState = {
 
 export function OverlayApp() {
   const [overlayState, setOverlayState] =
-    useState<OverlayStatePayload>(DEFAULT_STATE);
+    useState<OverlayStatePayload>(DEFAULT_OVERLAY_STATE);
   const [badSinkPx, setBadSinkPx] = useState(0);
   const [positionOffset, setPositionOffset] = useState<PositionOffset>(() =>
     loadStoredPositionOffset(),
@@ -240,41 +227,6 @@ export function OverlayApp() {
       ) : null}
     </main>
   );
-}
-
-function loadStoredPositionOffset(): PositionOffset {
-  try {
-    const raw = window.localStorage.getItem(OVERLAY_OFFSET_STORAGE_KEY);
-    if (!raw) {
-      return { x: 0, y: 0 };
-    }
-
-    const parsed = JSON.parse(raw) as Partial<PositionOffset>;
-    return clampPositionOffset({
-      x: typeof parsed.x === "number" ? parsed.x : 0,
-      y: typeof parsed.y === "number" ? parsed.y : 0,
-    });
-  } catch {
-    return { x: 0, y: 0 };
-  }
-}
-
-function storePositionOffset(offset: PositionOffset) {
-  try {
-    window.localStorage.setItem(
-      OVERLAY_OFFSET_STORAGE_KEY,
-      JSON.stringify(offset),
-    );
-  } catch {
-    // Ignore storage failures in restricted WebViews.
-  }
-}
-
-function clampPositionOffset(offset: PositionOffset): PositionOffset {
-  return {
-    x: Math.max(-OFFSET_LIMIT_PX, Math.min(OFFSET_LIMIT_PX, Math.round(offset.x))),
-    y: Math.max(-OFFSET_LIMIT_PX, Math.min(OFFSET_LIMIT_PX, Math.round(offset.y))),
-  };
 }
 
 async function syncPositionOffset(offset: PositionOffset) {

@@ -28,7 +28,13 @@ export function loadSoundSettings(): SoundSettings {
           ? parsed.selectedSound
           : DEFAULT_SOUND_SETTINGS.selectedSound,
       customSounds: Array.isArray(parsed.customSounds)
-        ? parsed.customSounds.filter((value): value is string => typeof value === "string")
+        ? Array.from(
+            new Set(
+              parsed.customSounds.filter(
+                (value): value is string => typeof value === "string",
+              ),
+            ),
+          ).slice(0, 10)
         : [],
     };
   } catch {
@@ -38,7 +44,13 @@ export function loadSoundSettings(): SoundSettings {
 
 export function saveSoundSettings(settings: SoundSettings) {
   try {
-    window.localStorage.setItem(SOUND_SETTINGS_STORAGE_KEY, JSON.stringify(settings));
+    window.localStorage.setItem(
+      SOUND_SETTINGS_STORAGE_KEY,
+      JSON.stringify({
+        ...settings,
+        customSounds: Array.from(new Set(settings.customSounds)).slice(0, 10),
+      }),
+    );
   } catch {
     // ignore storage failures
   }

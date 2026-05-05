@@ -1,12 +1,7 @@
 import type { AcquiredCharacter } from "./types";
+import { normalizeCharacterId } from "./characterIds";
 
 const ACQUIRED_CHARACTERS_STORAGE_KEY = "posture.characters.acquired.v1";
-const LEGACY_CHARACTER_ID_MAP: Record<string, string> = {
-  "shin-akao": "shin-anago",
-  "kuro-nyago": "kuro-anyago",
-  "hat-nyago": "hat-anago",
-  "oto-nyago": "oto-anago",
-};
 
 export function loadAcquiredCharacters(): AcquiredCharacter[] {
   try {
@@ -69,8 +64,7 @@ function normalizeAcquiredCharacter(
 ): AcquiredCharacter {
   return {
     ...character,
-    characterId:
-      LEGACY_CHARACTER_ID_MAP[character.characterId] ?? character.characterId,
+    characterId: normalizeCharacterId(character.characterId),
   };
 }
 

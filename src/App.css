@@ -835,6 +835,18 @@ button {
   box-shadow: none;
 }
 
+.home-single-debug-pill {
+  color: #7a5530;
+  background: rgba(255, 246, 214, 0.95);
+  border-color: rgba(255, 214, 128, 0.75);
+}
+
+.home-single-debug-pill:hover,
+.home-single-debug-pill:focus-visible {
+  color: #5e3d16;
+  background: #fff7d8;
+}
+
 .home-collection {
   position: relative;
   z-index: 2;

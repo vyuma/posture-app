@@ -22,8 +22,10 @@ type HomeScreenProps = {
   isPaired: boolean;
   deviceName: string | null;
   qrCharacter: CharacterDefinition | null;
+  isStartPending: boolean;
   onRefreshPairing: () => void;
   onContinueFromPaired: () => void;
+  onDebugStartMeasurement: () => void;
   onProfileCharacterSelect: (characterId: string) => void;
   onDebugClearAcquiredCharacters: () => void;
 };
@@ -63,7 +65,8 @@ type PostureRegisteredScreenProps = {
 };
 
 const COLLECTION_TOTAL_COUNT = 111;
-const SHOW_DEBUG_COLLECTION_CONTROLS = import.meta.env.DEV;
+const SHOW_DEBUG_FLOW_CONTROLS = import.meta.env.DEV;
+const SHOW_DEBUG_COLLECTION_CONTROLS = SHOW_DEBUG_FLOW_CONTROLS;
 
 export function HomeScreen(props: HomeScreenProps) {
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
@@ -360,8 +363,10 @@ function QrPanel({
   pairingError,
   isPaired,
   deviceName,
+  isStartPending,
   onRefreshPairing,
   onContinueFromPaired,
+  onDebugStartMeasurement,
 }: HomeScreenProps) {
   return (
     <div className="home-single-qr">
@@ -409,6 +414,16 @@ function QrPanel({
             onClick={onContinueFromPaired}
           >
             次へ
+          </button>
+        ) : null}
+        {SHOW_DEBUG_FLOW_CONTROLS ? (
+          <button
+            type="button"
+            className="secondary-pill home-single-debug-pill"
+            onClick={onDebugStartMeasurement}
+            disabled={isStartPending}
+          >
+            {isStartPending ? "DEBUG: 起動中..." : "DEBUG: 測定へ"}
           </button>
         ) : null}
       </div>

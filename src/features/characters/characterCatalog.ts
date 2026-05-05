@@ -70,28 +70,28 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
     personalityTags: ["音楽好き", "リズム感"],
   },
   {
-    id: "kiri-nago",
-    name: "キリナゴ",
+    id: "dot-nago",
+    name: "ドットナゴ",
     rarity: "rare",
-    story: "集中が深まるほど静かに近づいてくる、きりっとしたピンアナゴ。",
-    portraitSrc: "/characters/anago/kiri-nago/portrait.png",
+    story: "ドット模様と一緒に、集中のリズムを刻むピンアナゴ。",
+    portraitSrc: "/characters/anago/dot-nago/portrait.png",
     characterColor: {
       primary: "#d4aa20",
       soft: "#f1e9bf",
     },
-    personalityTags: ["きりっと", "集中型"],
+    personalityTags: ["ドット", "集中型"],
   },
   {
-    id: "broccoli",
-    name: "ブロッコリ",
+    id: "moja-anago",
+    name: "モジャアナゴ",
     rarity: "epic",
-    story: "良い姿勢を続ける人にだけ姿を見せる、少し不思議なピンアナゴ。",
-    portraitSrc: "/characters/anago/broccoli/portrait.png",
+    story: "良い姿勢を続ける人にだけ姿を見せる、もじゃもじゃ不思議なピンアナゴ。",
+    portraitSrc: "/characters/anago/moja-anago/portrait.png",
     characterColor: {
       primary: "#36a25d",
       soft: "#c9ead2",
     },
-    personalityTags: ["くせもの", "こだわり強い"],
+    personalityTags: ["もじゃもじゃ", "こだわり強い"],
   },
 ];
 
