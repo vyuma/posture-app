@@ -495,20 +495,38 @@ body {
   align-items: flex-start;
 }
 
-/* モバイル連携ボタンのスタイル */
-.pairing-launch {
+.hero-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* ヘッダーのアクションボタン共通スタイル */
+.pairing-launch,
+.sound-launch {
   border: 0;
   border-radius: 999px;
   padding: 10px 14px;
-  background: #0f766e;
-  color: #f8fafc;
   font-weight: 700;
   cursor: pointer;
   white-space: nowrap;
+}
+
+.pairing-launch {
+  background: #0f766e;
+  color: #f8fafc;
   box-shadow: 0 8px 18px rgba(15, 118, 110, 0.22);
 }
 
-.pairing-launch:disabled {
+.sound-launch {
+  background: #475569;
+  color: #f8fafc;
+  box-shadow: 0 8px 18px rgba(51, 65, 85, 0.22);
+}
+
+.pairing-launch:disabled,
+.sound-launch:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -680,7 +698,13 @@ body {
     flex-direction: column;
   }
 
-  .pairing-launch {
+  .hero-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .pairing-launch,
+  .sound-launch {
     width: 100%;
   }
 

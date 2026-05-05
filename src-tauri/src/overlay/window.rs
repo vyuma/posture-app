@@ -36,7 +36,6 @@ pub fn ensure_overlay_window(app: &AppHandle) -> Result<WebviewWindow, String> {
             .background_color(Color(0, 0, 0, 0))
             .inner_size(OVERLAY_WIDTH, OVERLAY_HEIGHT);
 
-    #[cfg(any(not(target_os = "macos"), feature = "macos-private-api"))]
     let builder = builder.transparent(true);
 
     let window = builder.build().map_err(|error| error.to_string())?;

@@ -1,13 +1,26 @@
-import { useEffect, useRef, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { useCallback, useEffect, useState } from "react";
 
 import "./App.css";
 import { PairingDialog } from "./features/pairing";
 import {
   PostureControlPanel,
   PostureViewer,
+  usePostureTransitionEffects,
   usePostureTracking,
 } from "./features/posture";
 import { POSTURE_SPEC } from "./features/posture/engine.spec";
+import { SoundSettingsDialog } from "./features/sound/components/SoundSettingsDialog";
+import {
+  configureRecoverySound,
+  playRecoverySound,
+  primeRecoverySound,
+} from "./features/sound/services/recoverySound";
+import {
+  loadSoundSettings,
+  saveSoundSettings,
+} from "./features/sound/services/soundSettingsStorage";
+import type { SoundSettings } from "./features/sound/types/soundSettings";
 import { sendPostureSignal } from "./lib/desktopBridge";
 
 type StartupPhase = "intro" | "calibrating" | "active";
@@ -35,7 +48,10 @@ function App() {
   });
 
   const [isPairingDialogOpen, setIsPairingDialogOpen] = useState(false);
-  const lastBroadcastedPostureRef = useRef<boolean | null>(null);
+  const [isSoundDialogOpen, setIsSoundDialogOpen] = useState(false);
+  const [soundSettings, setSoundSettings] = useState<SoundSettings>(() =>
+    loadSoundSettings(),
+  );
 
   const isActiveSession = startupPhase === "active";
   const effectiveBadPosture = isActiveSession && isBadPosture;
@@ -106,10 +122,28 @@ function App() {
       }
 
       setStartupPhase("calibrating");
+      void primeRecoverySound();
     } finally {
       setIsStartPending(false);
     }
   };
+
+  const handlePostureChanged = useCallback(async (isBad: boolean) => {
+    await Promise.allSettled([
+      sendPostureSignal(isBad),
+      invoke("overlay_on_posture_change", { isBad }),
+    ]);
+  }, []);
+
+  const handlePostureRecovered = useCallback(async () => {
+    await playRecoverySound();
+  }, []);
+
+  usePostureTransitionEffects({
+    isBadPosture: effectiveBadPosture,
+    onPostureChanged: handlePostureChanged,
+    onRecovered: handlePostureRecovered,
+  });
 
   useEffect(() => {
     if (startupPhase !== "calibrating") {
@@ -145,19 +179,20 @@ function App() {
   }, [startupPhase, status]);
 
   useEffect(() => {
-    if (lastBroadcastedPostureRef.current !== effectiveBadPosture) {
-      lastBroadcastedPostureRef.current = effectiveBadPosture;
-      void sendPostureSignal(effectiveBadPosture).catch(() => {
-        // Tauriコンテキスト外では posture signal を送信できないため無視する。
-      });
-    }
-  }, [effectiveBadPosture]);
+    configureRecoverySound({
+      enabled: soundSettings.enabled,
+      src: soundSettings.selectedSound,
+      volume: soundSettings.volume,
+    });
+    saveSoundSettings(soundSettings);
+  }, [soundSettings]);
 
   useEffect(() => {
     return () => {
-      void sendPostureSignal(false).catch(() => {
-        // Tauriコンテキスト外では posture signal を送信できないため無視する。
-      });
+      void Promise.allSettled([
+        sendPostureSignal(false),
+        invoke("overlay_on_posture_change", { isBad: false }),
+      ]);
     };
   }, []);
 
@@ -235,13 +270,22 @@ function App() {
               <div className={`status ${ready ? "ok" : "warn"}`}>{status}</div>
             </div>
 
-            <button
-              type="button"
-              className="pairing-launch"
-              onClick={() => setIsPairingDialogOpen(true)}
-            >
-              モバイル連携
-            </button>
+            <div className="hero-actions">
+              <button
+                type="button"
+                className="pairing-launch"
+                onClick={() => setIsPairingDialogOpen(true)}
+              >
+                モバイル連携
+              </button>
+              <button
+                type="button"
+                className="sound-launch"
+                onClick={() => setIsSoundDialogOpen(true)}
+              >
+                サウンド設定
+              </button>
+            </div>
           </div>
         </section>
 
@@ -264,6 +308,17 @@ function App() {
 
         {isPairingDialogOpen ? (
           <PairingDialog onClose={() => setIsPairingDialogOpen(false)} />
+        ) : null}
+        {isSoundDialogOpen ? (
+          <SoundSettingsDialog
+            settings={soundSettings}
+            onChange={setSoundSettings}
+            onClose={() => setIsSoundDialogOpen(false)}
+            onPreview={() => {
+              void primeRecoverySound();
+              void playRecoverySound();
+            }}
+          />
         ) : null}
       </main>
       {permissionPopup}
