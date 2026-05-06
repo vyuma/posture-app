@@ -1,0 +1,132 @@
+/* 測定画面（MeasuringScreen）：ヘッダー、レイアウト、メトリクス、進捗バー */
+
+.measuring-screen {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 12px;
+  padding: clamp(48px, 8vh, 78px) clamp(18px, 4vw, 48px) clamp(16px, 3vh, 30px);
+}
+
+.measure-header {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-end;
+}
+
+.measure-header h1 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(1.25rem, 2.4vw, 1.8rem);
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
+.measure-header p {
+  margin: 9px 0 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.measure-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.measure-layout {
+  width: min(1120px, 100%);
+  min-height: 0;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(220px, 24vw, 290px);
+  gap: 18px;
+}
+
+.measure-camera-panel {
+  min-width: 0;
+  min-height: 0;
+  padding: 10px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+}
+
+.measure-status-panel {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid rgba(45, 82, 96, 0.12);
+  box-shadow: 0 16px 32px rgba(23, 94, 113, 0.14);
+}
+
+.metric-tile {
+  display: grid;
+  gap: 4px;
+  padding: 13px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(45, 82, 96, 0.1);
+}
+
+.metric-tile span {
+  color: #5d737c;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.metric-tile strong {
+  color: #203b45;
+  font-size: 1.42rem;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.measure-progress {
+  height: 11px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(49, 81, 93, 0.12);
+}
+
+.measure-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #f05a63 0%, #3abb75 100%);
+  transition: width 0.25s ease;
+}
+
+.measure-tool-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 縦幅が狭いときのみ、ヘッダーとメトリクスを少し詰める（fluidの一部として） */
+@media (max-height: 640px) {
+  .measure-header h1 {
+    font-size: clamp(1.05rem, 2vw, 1.4rem);
+  }
+
+  .measure-header p {
+    margin-top: 4px;
+    font-size: 0.84rem;
+  }
+
+  .metric-tile {
+    padding: 9px 12px;
+  }
+
+  .metric-tile strong {
+    font-size: 1.15rem;
+  }
+}

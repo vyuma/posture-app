@@ -1,0 +1,212 @@
+/* QRコード読取後のフォーカス画面（CodeReadScreen） */
+
+.flow-screen--focus {
+  display: grid;
+  grid-template-rows: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  place-items: center;
+  padding: clamp(48px, 9vh, 74px) 24px 0;
+}
+
+.code-read-screen {
+  --code-read-screen-top: clamp(72px, 14vh, 140px);
+  --code-read-content-gap: clamp(28px, 5vh, 72px);
+  --code-read-copy-y: 16px;
+  --code-read-character-y: clamp(20px, 6vh, 60px);
+  --code-read-character-width: clamp(90px, 8.5vw, 118px);
+  --code-read-character-height: clamp(220px, calc(100dvh - 380px), 500px);
+  --code-read-character-scale: 1.35;
+  --code-read-character-image-y: clamp(60px, 18vh, 150px);
+  grid-template-rows: auto minmax(0, 1fr);
+  row-gap: var(--code-read-content-gap);
+  align-content: stretch;
+  padding: var(--code-read-screen-top) 24px 0;
+  font-family:
+    "SF Pro Display Bold",
+    "SF Pro Text Bold",
+    "SF Pro Display",
+    "SF Pro Text",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Noto Sans JP",
+    sans-serif;
+  font-weight: 700;
+  background:
+    linear-gradient(180deg, #22a6cf 0%, #7fc6c9 58%, #f2eccb 100%),
+    #22a6cf;
+}
+
+.code-read-screen .flow-brand {
+  top: 28px;
+  left: 66px;
+  width: clamp(104px, 8vw, 138px);
+}
+
+.focus-home-button {
+  position: absolute;
+  top: 30px;
+  right: 44px;
+  z-index: 7;
+  padding: 10px 16px;
+  color: rgba(255, 255, 255, 0.95);
+  background: rgba(35, 132, 161, 0.32);
+  border-color: rgba(255, 255, 255, 0.46);
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.focus-home-button:hover,
+.focus-home-button:focus-visible {
+  color: #1b8fb3;
+  background: #ffffff;
+  outline: none;
+}
+
+.focus-copy {
+  z-index: 2;
+  display: grid;
+  justify-items: center;
+  align-self: end;
+  max-width: 560px;
+  text-align: center;
+}
+
+.focus-copy h1 {
+  max-width: 500px;
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(1.2rem, 2.5vw, 1.62rem);
+  line-height: 1.55;
+  letter-spacing: 0;
+}
+
+.focus-copy p {
+  margin: 14px 0 22px;
+  color: rgba(255, 255, 255, 0.88);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.code-read-screen .focus-copy {
+  align-self: start;
+  max-width: 760px;
+  transform: translateY(var(--code-read-copy-y));
+}
+
+.code-read-screen .focus-copy h1 {
+  max-width: none;
+  font-size: clamp(1.7rem, 2.45vw, 2.25rem);
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.code-read-screen .focus-copy p {
+  margin: 24px 0 44px;
+  font-size: clamp(1rem, 1.45vw, 1.26rem);
+  font-weight: 700;
+}
+
+.code-read-screen .primary-pill {
+  min-width: clamp(220px, 30vw, 278px);
+  padding: clamp(12px, 2.4vh, 19px) clamp(22px, 4vw, 34px);
+  color: #159dcb;
+  font-size: clamp(1.05rem, 1.7vw, 1.55rem);
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.focus-character {
+  z-index: 1;
+  align-self: end;
+  display: grid;
+  justify-items: center;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 900;
+}
+
+.focus-character p {
+  margin: 0 0 10px;
+}
+
+.code-read-screen .focus-character {
+  align-self: end;
+  gap: 30px;
+  min-height: 0;
+  transform: translateY(var(--code-read-character-y));
+}
+
+.focus-character-callout {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(1.85rem, 2.9vw, 2.65rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.focus-character-callout::before,
+.focus-character-callout::after {
+  content: "";
+  width: 34px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+}
+
+.focus-character-callout::before {
+  transform: rotate(45deg);
+}
+
+.focus-character-callout::after {
+  transform: rotate(-45deg);
+}
+
+.focus-character small {
+  width: min(420px, calc(100vw - 48px));
+  margin: 12px 0 24px;
+  color: rgba(38, 65, 74, 0.74);
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.focus-character-image {
+  width: clamp(122px, 22vw, 172px);
+  height: clamp(250px, 38vh, 360px);
+  object-fit: contain;
+  object-position: bottom center;
+  filter: drop-shadow(12px 16px 16px rgba(51, 91, 94, 0.2));
+}
+
+.code-read-screen .focus-character-image {
+  width: var(--code-read-character-width);
+  height: var(--code-read-character-height);
+  filter: drop-shadow(16px 18px 12px rgba(40, 85, 87, 0.24));
+  transform: translateY(var(--code-read-character-image-y))
+    scale(var(--code-read-character-scale));
+  transform-origin: center bottom;
+}
+
+.character-empty {
+  border-radius: 999px 999px 0 0;
+  background: rgba(255, 255, 255, 0.28);
+}
+
+/* 縦幅が狭いとき：上部paddingとgapをコンパクトに */
+@media (max-height: 720px) {
+  .code-read-screen {
+    --code-read-screen-top: 96px;
+    --code-read-content-gap: clamp(24px, 4vh, 44px);
+    --code-read-copy-y: 0px;
+  }
+}
+
+@media (max-height: 620px) {
+  .code-read-screen {
+    --code-read-screen-top: 78px;
+    --code-read-content-gap: 20px;
+  }
+}

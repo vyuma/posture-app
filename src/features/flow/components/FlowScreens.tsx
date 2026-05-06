@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type RefObject } from "react";
+import { useCallback, useEffect, useState, type CSSProperties, type RefObject } from "react";
 
 import type {
   AcquiredCharacter,
@@ -15,6 +15,7 @@ type HomeScreenProps = {
   acquiredCharacters: AcquiredCharacter[];
   profileCharacter: CharacterDefinition | null;
   selectedProfileCharacterId: string | null;
+  favoriteCharacterIds: Set<string>;
   collectionResetTick: number;
   qrImageDataUrl: string;
   isPairingLoading: boolean;
@@ -27,7 +28,9 @@ type HomeScreenProps = {
   onContinueFromPaired: () => void;
   onDebugStartMeasurement: () => void;
   onProfileCharacterSelect: (characterId: string) => void;
+  onToggleFavoriteCharacter: (characterId: string) => void;
   onDebugClearAcquiredCharacters: () => void;
+  onDebugShowOnboarding: () => void;
 };
 
 type CodeReadScreenProps = {
@@ -66,13 +69,43 @@ type PostureRegisteredScreenProps = {
 
 const COLLECTION_TOTAL_COUNT = 111;
 const SHOW_DEBUG_FLOW_CONTROLS = import.meta.env.DEV;
+
+/* ─── カードチルトハンドラ（モジュールレベルで共有） ─── */
+
+/**
+ * Mouse position tracked and applied as CSS custom properties
+ * so the CSS tilt transform reads them without React re-renders.
+ */
+function onCardSlotMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+  const el = e.currentTarget;
+  const rect = el.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width;
+  const y = (e.clientY - rect.top) / rect.height;
+  el.style.setProperty("--tilt-x", `${(0.5 - y) * 14}deg`);
+  el.style.setProperty("--tilt-y", `${(x - 0.5) * 14}deg`);
+  el.style.setProperty("--tilt-lift", "-10px");
+  el.style.setProperty("--tilt-shine-x", `${x * 100}%`);
+  el.style.setProperty("--tilt-shine-y", `${y * 100}%`);
+}
+
+function onCardSlotMouseLeave(e: React.MouseEvent<HTMLDivElement>) {
+  const el = e.currentTarget;
+  el.style.setProperty("--tilt-x", "0deg");
+  el.style.setProperty("--tilt-y", "0deg");
+  el.style.setProperty("--tilt-lift", "0px");
+}
 const SHOW_DEBUG_COLLECTION_CONTROLS = SHOW_DEBUG_FLOW_CONTROLS;
+
+const DIALOG_CLOSE_DURATION_MS = 230;
 
 export function HomeScreen(props: HomeScreenProps) {
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false);
+  const [isProfileDialogClosing, setIsProfileDialogClosing] = useState(false);
   const [collectionDetailCharacterId, setCollectionDetailCharacterId] = useState<
     string | null
   >(null);
+  const [isCollectionDetailClosing, setIsCollectionDetailClosing] = useState(false);
+
   const acquiredCharactersById = new Map(
     props.acquiredCharacters.map((character) => [
       character.characterId,
@@ -89,6 +122,25 @@ export function HomeScreen(props: HomeScreenProps) {
     collectionDetailCharacterId !== null
       ? acquiredCharactersById.get(collectionDetailCharacterId) ?? null
       : null;
+
+  /* ダイアログを閉じる際：アニメーション終了後にアンマウントする */
+  const closeProfileDialog = useCallback(() => {
+    if (isProfileDialogClosing) return;
+    setIsProfileDialogClosing(true);
+    setTimeout(() => {
+      setIsProfileDialogOpen(false);
+      setIsProfileDialogClosing(false);
+    }, DIALOG_CLOSE_DURATION_MS);
+  }, [isProfileDialogClosing]);
+
+  const closeCollectionDetail = useCallback(() => {
+    if (isCollectionDetailClosing) return;
+    setIsCollectionDetailClosing(true);
+    setTimeout(() => {
+      setCollectionDetailCharacterId(null);
+      setIsCollectionDetailClosing(false);
+    }, DIALOG_CLOSE_DURATION_MS);
+  }, [isCollectionDetailClosing]);
 
   useEffect(() => {
     setCollectionDetailCharacterId(null);
@@ -108,6 +160,15 @@ export function HomeScreen(props: HomeScreenProps) {
           className="home-single-profile-character"
         />
       </button>
+      {SHOW_DEBUG_FLOW_CONTROLS ? (
+        <button
+          type="button"
+          className="home-single-debug-story"
+          onClick={props.onDebugShowOnboarding}
+        >
+          DEBUG: ストーリー
+        </button>
+      ) : null}
       <section className="home-single-hero">
         <div className="home-single-copy">
           <h1>
@@ -122,27 +183,31 @@ export function HomeScreen(props: HomeScreenProps) {
       <CharacterCollection
         characters={props.characters}
         acquiredCharacters={props.acquiredCharacters}
+        favoriteCharacterIds={props.favoriteCharacterIds}
         resetTick={props.collectionResetTick}
         onCharacterDetailOpen={setCollectionDetailCharacterId}
+        onToggleFavoriteCharacter={props.onToggleFavoriteCharacter}
         onDebugClearAcquiredCharacters={props.onDebugClearAcquiredCharacters}
       />
       {isProfileDialogOpen ? (
         <ProfileSelectionDialog
+          isClosing={isProfileDialogClosing}
           characters={props.characters}
           acquiredCharacters={props.acquiredCharacters}
           selectedProfileCharacterId={props.selectedProfileCharacterId}
           onSelect={(characterId) => {
             props.onProfileCharacterSelect(characterId);
-            setIsProfileDialogOpen(false);
+            closeProfileDialog();
           }}
-          onClose={() => setIsProfileDialogOpen(false)}
+          onClose={closeProfileDialog}
         />
       ) : null}
       {collectionDetailCharacter && collectionDetailAcquiredCharacter ? (
         <CollectionDetailDialog
+          isClosing={isCollectionDetailClosing}
           character={collectionDetailCharacter}
           acquiredCharacter={collectionDetailAcquiredCharacter}
-          onClose={() => setCollectionDetailCharacterId(null)}
+          onClose={closeCollectionDetail}
         />
       ) : null}
     </main>
@@ -360,13 +425,7 @@ function FlowBrand() {
 function QrPanel({
   qrImageDataUrl,
   isPairingLoading,
-  pairingError,
-  isPaired,
-  deviceName,
-  isStartPending,
-  onRefreshPairing,
   onContinueFromPaired,
-  onDebugStartMeasurement,
 }: HomeScreenProps) {
   return (
     <div className="home-single-qr">
@@ -394,39 +453,15 @@ function QrPanel({
           </div>
         )}
       </div>
-      <div className="home-single-qr-status">
-        <strong>{isPaired ? "読み取り済み" : "読み取り待機中"}</strong>
-        <span>{deviceName ?? "スマホでQRを読み取ってください"}</span>
-        {pairingError ? <small>{pairingError}</small> : null}
-      </div>
-      <div className="home-single-qr-actions">
+      {SHOW_DEBUG_FLOW_CONTROLS ? (
         <button
           type="button"
-          className="secondary-pill home-single-secondary-pill"
-          onClick={onRefreshPairing}
+          className="home-single-debug-skip"
+          onClick={onContinueFromPaired}
         >
-          更新
+          DEBUG: QRスキップ
         </button>
-        {isPaired ? (
-          <button
-            type="button"
-            className="primary-pill home-single-primary-pill"
-            onClick={onContinueFromPaired}
-          >
-            次へ
-          </button>
-        ) : null}
-        {SHOW_DEBUG_FLOW_CONTROLS ? (
-          <button
-            type="button"
-            className="secondary-pill home-single-debug-pill"
-            onClick={onDebugStartMeasurement}
-            disabled={isStartPending}
-          >
-            {isStartPending ? "DEBUG: 起動中..." : "DEBUG: 測定へ"}
-          </button>
-        ) : null}
-      </div>
+      ) : null}
     </div>
   );
 }
@@ -434,14 +469,18 @@ function QrPanel({
 function CharacterCollection({
   characters,
   acquiredCharacters,
+  favoriteCharacterIds,
   resetTick,
   onCharacterDetailOpen,
+  onToggleFavoriteCharacter,
   onDebugClearAcquiredCharacters,
 }: {
   characters: CharacterDefinition[];
   acquiredCharacters: AcquiredCharacter[];
+  favoriteCharacterIds: Set<string>;
   resetTick: number;
   onCharacterDetailOpen: (characterId: string) => void;
+  onToggleFavoriteCharacter: (characterId: string) => void;
   onDebugClearAcquiredCharacters: () => void;
 }) {
   const [debugResetMessage, setDebugResetMessage] = useState<string | null>(
@@ -451,16 +490,24 @@ function CharacterCollection({
   const acquiredCharactersById = new Map(
     acquiredCharacters.map((character) => [character.characterId, character]),
   );
-  const acquiredSlots = characters
-    .map((character, index) => ({
-      character,
-      acquiredCharacter: acquiredCharactersById.get(character.id) ?? null,
-      number: index + 1,
-    }))
-    .filter((slot) => slot.acquiredCharacter !== null);
-  const acquiredCount = Math.min(acquiredSlots.length, COLLECTION_TOTAL_COUNT);
-  const nextLockedNumber =
-    acquiredCount < COLLECTION_TOTAL_COUNT ? acquiredCount + 1 : null;
+  const collectionSlots = Array.from(
+    { length: COLLECTION_TOTAL_COUNT },
+    (_, index) => {
+      const character = characters[index] ?? null;
+
+      return {
+        character,
+        acquiredCharacter:
+          character !== null
+            ? acquiredCharactersById.get(character.id) ?? null
+            : null,
+        number: index + 1,
+      };
+    },
+  );
+  const acquiredCount = collectionSlots.filter(
+    (slot) => slot.acquiredCharacter !== null,
+  ).length;
 
   useEffect(() => {
     setDebugResetMessage(null);
@@ -529,59 +576,90 @@ function CharacterCollection({
         ) : null}
       </div>
       <div className="home-collection-grid">
-        {acquiredSlots.map(({ character }) => {
+        {collectionSlots.map(({ character, acquiredCharacter, number }, index) => {
+          /* スタッガー遅延：最初の数行だけ段階的に出現させ、それ以降はまとめて表示 */
+          const animDelayMs = Math.min(index * 28, 280);
+
+          if (character === null || acquiredCharacter === null) {
+            return (
+              <article
+                key={`locked-${number}`}
+                className="home-character-card is-locked"
+                aria-label={`未習得キャラクター ${formatCollectionNumber(number)}`}
+                style={{ "--card-anim-delay": `${animDelayMs}ms` } as CSSProperties}
+              >
+                <span className="home-locked-slot">
+                  {formatCollectionNumber(number)}
+                </span>
+              </article>
+            );
+          }
+
           const cardStyle = {
             "--home-character-color": character.characterColor.primary,
             "--home-character-soft-color": character.characterColor.soft,
+            "--card-anim-delay": `${animDelayMs}ms`,
           } as CSSProperties;
+          const isFavorite = favoriteCharacterIds.has(character.id);
 
           return (
-            <button
-              type="button"
+            <div
+              className="home-character-slot"
               key={character.id}
-              className="home-character-card is-acquired"
               style={cardStyle}
-              onClick={() => onCharacterDetailOpen(character.id)}
+              onMouseMove={onCardSlotMouseMove}
+              onMouseLeave={onCardSlotMouseLeave}
             >
-              <div className="home-character-preview">
-                <CharacterFigure character={character} className="home-card-character" />
-              </div>
-              <div className="home-character-body">
-                <h3 className="home-character-name">{character.name}</h3>
-                <div className="home-character-tags">
-                  {character.personalityTags.map((tag) => (
-                    <span className="home-tag" key={tag}>
-                      {tag}
-                    </span>
-                  ))}
+              <button
+                type="button"
+                className="home-character-card is-acquired"
+                onClick={() => onCharacterDetailOpen(character.id)}
+              >
+                <div className="home-character-preview">
+                  <CharacterFigure character={character} className="home-card-character" />
                 </div>
-              </div>
-              <span className="home-favorite-heart" aria-hidden="true">
-                ♥
-              </span>
-            </button>
+                <div className="home-character-body">
+                  <h3 className="home-character-name">{character.name}</h3>
+                  <div className="home-character-tags">
+                    {character.personalityTags.map((tag) => (
+                      <span className="home-tag" key={tag}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </button>
+              <button
+                type="button"
+                className={`home-favorite-heart ${isFavorite ? "is-active" : ""}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onToggleFavoriteCharacter(character.id);
+                }}
+                aria-pressed={isFavorite}
+                aria-label={
+                  isFavorite
+                    ? `${character.name}をお気に入りから外す`
+                    : `${character.name}をお気に入りに追加`
+                }
+              >
+                <span aria-hidden="true">{isFavorite ? "♥" : "♡"}</span>
+              </button>
+            </div>
           );
         })}
-        {nextLockedNumber !== null ? (
-          <article
-            className="home-character-card is-locked"
-            aria-label={`未習得キャラクター ${formatCollectionNumber(nextLockedNumber)}`}
-          >
-            <span className="home-locked-slot">
-              {formatCollectionNumber(nextLockedNumber)}
-            </span>
-          </article>
-        ) : null}
       </div>
     </section>
   );
 }
 
 function CollectionDetailDialog({
+  isClosing,
   character,
   acquiredCharacter,
   onClose,
 }: {
+  isClosing: boolean;
   character: CharacterDefinition;
   acquiredCharacter: AcquiredCharacter;
   onClose: () => void;
@@ -593,9 +671,9 @@ function CollectionDetailDialog({
 
   return (
     <section
-      className="collection-detail-backdrop"
+      className={`collection-detail-backdrop${isClosing ? " is-closing" : ""}`}
       role="presentation"
-      onMouseDown={onClose}
+      onMouseDown={isClosing ? undefined : onClose}
     >
       <div
         className="collection-detail-dialog"
@@ -661,12 +739,14 @@ function CollectionDetailDialog({
 }
 
 function ProfileSelectionDialog({
+  isClosing,
   characters,
   acquiredCharacters,
   selectedProfileCharacterId,
   onSelect,
   onClose,
 }: {
+  isClosing: boolean;
   characters: CharacterDefinition[];
   acquiredCharacters: AcquiredCharacter[];
   selectedProfileCharacterId: string | null;
@@ -679,7 +759,11 @@ function ProfileSelectionDialog({
   );
 
   return (
-    <section className="profile-dialog-backdrop" role="presentation" onMouseDown={onClose}>
+    <section
+      className={`profile-dialog-backdrop${isClosing ? " is-closing" : ""}`}
+      role="presentation"
+      onMouseDown={isClosing ? undefined : onClose}
+    >
       <div
         className="profile-dialog"
         role="dialog"

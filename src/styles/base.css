@@ -1,0 +1,205 @@
+/* グローバルリセット・タイポグラフィ・全画面共通シェル */
+
+:root {
+  font-family:
+    "SF Pro Display",
+    "SF Pro Text",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Noto Sans JP",
+    "Noto Sans",
+    sans-serif;
+  color: #1f3440;
+  background: #eef3ee;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+html {
+  background:
+    linear-gradient(
+      180deg,
+      transparent 0,
+      transparent 83.3333dvh,
+      #f4f4f4 83.3333dvh,
+      #f4f4f4 100%
+    ),
+    linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(
+      180deg,
+      transparent 0,
+      transparent 83.3333dvh,
+      #f4f4f4 83.3333dvh,
+      #f4f4f4 100%
+    ),
+    linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+/* 全flow画面の共通シェル：min-heightは置かず、利用可能な領域に合わせて伸縮させる */
+.flow-screen {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(32, 169, 209, 0.96) 0%, rgba(114, 196, 205, 0.88) 48%, rgba(239, 238, 202, 0.9) 100%),
+    #28a9cf;
+}
+
+.flow-brand {
+  position: absolute;
+  top: clamp(14px, 2.4vh, 22px);
+  left: clamp(18px, 3.5vw, 32px);
+  z-index: 6;
+  width: clamp(64px, 7vw, 118px);
+  line-height: 0;
+}
+
+.flow-brand-logo {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+}
+
+/* 共通ボタン（pill）バリアント */
+.primary-pill,
+.secondary-pill,
+.tool-pill {
+  border: 0;
+  border-radius: 999px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.primary-pill {
+  padding: 12px 22px;
+  color: #1b8fb3;
+  background: #ffffff;
+  box-shadow: 0 12px 28px rgba(13, 93, 117, 0.16);
+}
+
+.primary-pill:hover,
+.primary-pill:focus-visible {
+  color: #0a6f91;
+  transform: translateY(-1px);
+}
+
+.primary-pill:disabled,
+.secondary-pill:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.secondary-pill {
+  padding: 10px 16px;
+  color: #ffffff;
+  background: rgba(35, 132, 161, 0.48);
+  border: 1px solid rgba(255, 255, 255, 0.38);
+}
+
+.tool-pill {
+  padding: 9px 12px;
+  color: #2d5260;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(45, 82, 96, 0.14);
+}
+
+/* ステータスバッジ（measure画面で使用） */
+.status {
+  width: fit-content;
+  max-width: 100%;
+  padding: 7px 10px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.status.ok {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status.warn {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* カメラ権限ポップアップ（App.tsx） */
+.permission-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2600;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(2, 6, 23, 0.62);
+}
+
+.permission-popup {
+  width: min(520px, 100%);
+  padding: 20px 18px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.16);
+  box-shadow: 0 20px 42px rgba(2, 6, 23, 0.34);
+}
+
+.permission-popup h2 {
+  margin: 0;
+  font-size: 1.06rem;
+  color: #0f172a;
+}
+
+.permission-popup p {
+  margin: 10px 0 0;
+  color: #334155;
+  line-height: 1.5;
+  font-size: 0.92rem;
+}
+
+.permission-popup-close {
+  margin-top: 14px;
+  border: 0;
+  border-radius: 10px;
+  padding: 8px 12px;
+  background: #0f172a;
+  color: #f8fafc;
+  font-weight: 800;
+}
+

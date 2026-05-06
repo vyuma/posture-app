@@ -2,13 +2,18 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import "./App.css";
+import "./styles/index.css";
 import { CHARACTER_CATALOG, getNextUnacquiredCharacter } from "./features/characters/characterCatalog";
 import {
   clearAcquiredCharacters,
   loadAcquiredCharacters,
   saveAcquiredCharacters,
 } from "./features/characters/characterStorage";
+import {
+  loadFavoriteCharacterIds,
+  saveFavoriteCharacterIds,
+  toggleFavoriteCharacterId,
+} from "./features/characters/favoriteCharacterStorage";
 import {
   loadSelectedProfileCharacterId,
   saveSelectedProfileCharacterId,
@@ -29,6 +34,11 @@ import type {
   MeasurementStats,
   RewardRule,
 } from "./features/flow/types";
+import {
+  hasCompletedOnboardingStory,
+  OnboardingStoryScreen,
+  saveOnboardingStoryCompleted,
+} from "./features/onboarding";
 import {
   clearStoredPositionOffset,
   loadCharacterOverlayEnabled,
@@ -71,7 +81,9 @@ const EMPTY_MEASUREMENT_STATS: MeasurementStats = {
 };
 
 function App() {
-  const [flowPhase, setFlowPhase] = useState<AppFlowPhase>("home");
+  const [flowPhase, setFlowPhase] = useState<AppFlowPhase>(() =>
+    hasCompletedOnboardingStory() ? "home" : "onboarding",
+  );
   const [isStartPending, setIsStartPending] = useState(false);
   const [isOverlayEnabled, setIsOverlayEnabled] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
@@ -87,6 +99,9 @@ function App() {
   const [selectedProfileCharacterId, setSelectedProfileCharacterId] = useState<
     string | null
   >(() => loadSelectedProfileCharacterId());
+  const [favoriteCharacterIds, setFavoriteCharacterIds] = useState<Set<string>>(
+    () => loadFavoriteCharacterIds(),
+  );
   const [collectionResetTick, setCollectionResetTick] = useState(0);
   const [measurementStats, setMeasurementStats] = useState<MeasurementStats>(
     EMPTY_MEASUREMENT_STATS,
@@ -383,14 +398,36 @@ function App() {
     [acquiredCharacterIds],
   );
 
+  const handleToggleFavoriteCharacter = useCallback(
+    (characterId: string) => {
+      if (!acquiredCharacterIds.has(characterId)) {
+        return;
+      }
+
+      setFavoriteCharacterIds((current) => {
+        const next = toggleFavoriteCharacterId(current, characterId);
+        saveFavoriteCharacterIds(next);
+        return next;
+      });
+    },
+    [acquiredCharacterIds],
+  );
+
   const handleDebugClearAcquiredCharacters = useCallback(() => {
     clearAcquiredCharacters();
     saveAcquiredCharacters([]);
     setAcquiredCharacters([]);
     setLastAcquiredCharacterId(null);
     setSelectedProfileCharacterId(null);
+    setFavoriteCharacterIds(new Set());
+    saveFavoriteCharacterIds(new Set());
     setCollectionResetTick((current) => current + 1);
     saveSelectedProfileCharacterId(null);
+  }, []);
+
+  const handleCompleteOnboardingStory = useCallback(() => {
+    saveOnboardingStoryCompleted();
+    setFlowPhase("home");
   }, []);
 
   const handlePostureChanged = useCallback(async (isBad: boolean) => {
@@ -554,6 +591,7 @@ function App() {
     acquiredCharacters,
     profileCharacter,
     selectedProfileCharacterId,
+    favoriteCharacterIds,
     collectionResetTick,
     nextCharacter,
     lastMeasurementResult,
@@ -574,7 +612,10 @@ function App() {
     },
     onContinueFromPaired: () => setFlowPhase("qrScanned"),
     onProfileCharacterSelect: handleProfileCharacterSelect,
+    onToggleFavoriteCharacter: handleToggleFavoriteCharacter,
     onDebugClearAcquiredCharacters: handleDebugClearAcquiredCharacters,
+    onDebugShowOnboarding: () => setFlowPhase("onboarding"),
+    onCompleteOnboardingStory: handleCompleteOnboardingStory,
     onStartMeasurement: () => {
       void handleStartMeasurement();
     },
@@ -620,6 +661,7 @@ function renderFlowScreen({
   acquiredCharacters,
   profileCharacter,
   selectedProfileCharacterId,
+  favoriteCharacterIds,
   collectionResetTick,
   nextCharacter,
   lastMeasurementResult,
@@ -638,7 +680,10 @@ function renderFlowScreen({
   onRefreshPairing,
   onContinueFromPaired,
   onProfileCharacterSelect,
+  onToggleFavoriteCharacter,
   onDebugClearAcquiredCharacters,
+  onDebugShowOnboarding,
+  onCompleteOnboardingStory,
   onStartMeasurement,
   onBackHome,
   onFinishMeasurement,
@@ -659,6 +704,7 @@ function renderFlowScreen({
   acquiredCharacters: AcquiredCharacter[];
   profileCharacter: CharacterDefinition | null;
   selectedProfileCharacterId: string | null;
+  favoriteCharacterIds: Set<string>;
   collectionResetTick: number;
   nextCharacter: CharacterDefinition | null;
   lastMeasurementResult: MeasurementResult | null;
@@ -677,7 +723,10 @@ function renderFlowScreen({
   onRefreshPairing: () => void;
   onContinueFromPaired: () => void;
   onProfileCharacterSelect: (characterId: string) => void;
+  onToggleFavoriteCharacter: (characterId: string) => void;
   onDebugClearAcquiredCharacters: () => void;
+  onDebugShowOnboarding: () => void;
+  onCompleteOnboardingStory: () => void;
   onStartMeasurement: () => void;
   onBackHome: () => void;
   onFinishMeasurement: () => void;
@@ -690,6 +739,10 @@ function renderFlowScreen({
   onOpenSoundSettings: () => void;
 }) {
   switch (flowPhase) {
+    case "onboarding":
+      return (
+        <OnboardingStoryScreen onComplete={onCompleteOnboardingStory} />
+      );
     case "home":
       return (
         <HomeScreen
@@ -697,6 +750,7 @@ function renderFlowScreen({
           acquiredCharacters={acquiredCharacters}
           profileCharacter={profileCharacter}
           selectedProfileCharacterId={selectedProfileCharacterId}
+          favoriteCharacterIds={favoriteCharacterIds}
           collectionResetTick={collectionResetTick}
           qrImageDataUrl={qrImageDataUrl}
           isPairingLoading={isPairingLoading}
@@ -709,7 +763,9 @@ function renderFlowScreen({
           onContinueFromPaired={onContinueFromPaired}
           onDebugStartMeasurement={onStartMeasurement}
           onProfileCharacterSelect={onProfileCharacterSelect}
+          onToggleFavoriteCharacter={onToggleFavoriteCharacter}
           onDebugClearAcquiredCharacters={onDebugClearAcquiredCharacters}
+          onDebugShowOnboarding={onDebugShowOnboarding}
         />
       );
     case "qrScanned":
@@ -757,6 +813,7 @@ function renderFlowScreen({
           acquiredCharacters={acquiredCharacters}
           profileCharacter={profileCharacter}
           selectedProfileCharacterId={selectedProfileCharacterId}
+          favoriteCharacterIds={favoriteCharacterIds}
           collectionResetTick={collectionResetTick}
           qrImageDataUrl={qrImageDataUrl}
           isPairingLoading={isPairingLoading}
@@ -769,7 +826,9 @@ function renderFlowScreen({
           onContinueFromPaired={onContinueFromPaired}
           onDebugStartMeasurement={onMeasureAgain}
           onProfileCharacterSelect={onProfileCharacterSelect}
+          onToggleFavoriteCharacter={onToggleFavoriteCharacter}
           onDebugClearAcquiredCharacters={onDebugClearAcquiredCharacters}
+          onDebugShowOnboarding={onDebugShowOnboarding}
         />
       );
   }

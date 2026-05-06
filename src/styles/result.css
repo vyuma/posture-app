@@ -1,0 +1,50 @@
+/* 測定結果画面（PostureRegisteredScreen）とキャラクターの色調バリエーション */
+
+.result-screen {
+  grid-template-rows: minmax(0, 0.85fr) minmax(0, 1.15fr);
+}
+
+.result-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(130px, 1fr));
+  gap: 12px;
+  width: min(360px, 100%);
+  margin-bottom: 20px;
+}
+
+.result-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.result-character .focus-character-image {
+  height: clamp(180px, calc(100dvh - 320px), 340px);
+}
+
+/* キャラクターのトーン違い（color filter） */
+.tone-red {
+  filter: saturate(1.25) hue-rotate(-20deg);
+}
+
+.tone-charcoal {
+  filter: grayscale(0.82) brightness(0.48) contrast(1.35);
+}
+
+.tone-blue {
+  filter: hue-rotate(168deg) saturate(1.35) brightness(0.92);
+}
+
+.tone-ivory {
+  filter: grayscale(0.15) saturate(0.65) brightness(1.2);
+}
+
+.tone-green {
+  filter: hue-rotate(98deg) saturate(1.22) brightness(0.9);
+}
+
+.tone-yellow {
+  filter: hue-rotate(34deg) saturate(1.38) brightness(1.12);
+}
+

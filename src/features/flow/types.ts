@@ -1,4 +1,5 @@
 export type AppFlowPhase =
+  | "onboarding"
   | "home"
   | "qrScanned"
   | "measuring"

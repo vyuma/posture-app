@@ -1,0 +1,930 @@
+/* ホーム画面（home-single）：ヒーロー、QR、コレクション、プロフィール／詳細ダイアログ */
+
+/* ─── アニメーション定義 ─── */
+
+/* フェードアップ：下から浮き上がりながらフェードイン */
+@keyframes home-fade-up {
+  from {
+    opacity: 0;
+    translate: 0 22px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+/* フロート：キャラクターがふわふわと浮く */
+@keyframes home-float {
+  0%, 100% { translate: 0 0; }
+  50%       { translate: 0 -7px; }
+}
+
+/* ダイアログ出現：スケールアップしながらフェードイン */
+@keyframes home-dialog-scale-in {
+  from {
+    opacity: 0;
+    scale: 0.94;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+/* QRフレームのソフトグロー（スキャンを促す） */
+@keyframes home-qr-glow {
+  0%, 100% { box-shadow: 0 10px 18px rgba(44, 88, 98, 0.08); }
+  50%       { box-shadow: 0 10px 18px rgba(44, 88, 98, 0.08), 0 0 0 4px rgba(19, 162, 215, 0.22); }
+}
+
+/* ハートのポップ（お気に入り登録時） */
+@keyframes home-heart-pop {
+  0%   { scale: 1; }
+  40%  { scale: 1.4; }
+  70%  { scale: 0.88; }
+  100% { scale: 1; }
+}
+
+/* ダイアログ消去：スケールダウンしながらフェードアウト */
+@keyframes home-dialog-scale-out {
+  from { opacity: 1; scale: 1; }
+  to   { opacity: 0; scale: 0.94; }
+}
+
+/* バックドロップフェードアウト */
+@keyframes home-backdrop-fade-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* ロックカードのシマー（光の掃過） */
+@keyframes home-locked-shimmer {
+  from { transform: translateX(-180%); }
+  to   { transform: translateX(280%); }
+}
+
+.flow-screen.home-single {
+  --home-hero-height: 66.6667dvh;
+  --home-collection-peek-height: 33.3333dvh;
+
+  position: relative;
+  isolation: isolate;
+  height: 100dvh;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  background:
+    linear-gradient(
+      180deg,
+      transparent 0,
+      transparent 83.3333dvh,
+      #f4f4f4 83.3333dvh,
+      #f4f4f4 100%
+    ),
+    linear-gradient(180deg, #13a2d7 5%, #f2edcc 80%);
+}
+
+.home-single .flow-brand {
+  top: clamp(20px, 3vh, 30px);
+  left: clamp(20px, 5vw, 64px);
+  width: clamp(82px, 8vw, 142px);
+}
+
+/* ヒーローコピー：画面マウント時にフェードアップ */
+.home-single-copy {
+  animation: home-fade-up 0.55s ease both;
+}
+
+/* QRパネル：コピーより少し遅れてフェードアップ */
+.home-single-qr {
+  animation: home-fade-up 0.55s ease 0.18s both;
+}
+
+/* プロフィールキャラクターボタン */
+.home-single-profile {
+  position: absolute;
+  top: clamp(18px, 4vh, 34px);
+  right: clamp(18px, 6vw, 74px);
+  z-index: 5;
+  width: clamp(46px, 4vw, 56px);
+  height: clamp(46px, 4vw, 56px);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 999px;
+  border: 0;
+  padding: 0;
+  background: #f8f8f8;
+  box-shadow: 0 6px 16px rgba(12, 67, 84, 0.18);
+}
+
+.home-single-profile:hover,
+.home-single-profile:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 3px;
+}
+
+.home-single-profile-character {
+  width: 210px;
+  height: 210px;
+  object-fit: contain;
+  object-position: center bottom;
+  transform: translate(-70px, 13px);
+  /* ふわふわと浮くフロートアニメーション */
+  animation: home-float 3.4s ease-in-out infinite;
+}
+
+.home-single-debug-story {
+  position: absolute;
+  top: clamp(74px, 10vh, 98px);
+  right: clamp(18px, 6vw, 74px);
+  z-index: 5;
+  border: 1px solid rgba(95, 100, 104, 0.18);
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: #6a4242;
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.home-single-debug-story:hover,
+.home-single-debug-story:focus-visible {
+  color: #963232;
+  background: #ffffff;
+  border-color: rgba(150, 50, 50, 0.34);
+}
+
+/* プロフィール選択ダイアログ */
+.profile-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2500;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(16, 38, 46, 0.48);
+}
+
+/* バックドロップ：閉じる時にフェードアウト */
+.profile-dialog-backdrop.is-closing {
+  animation: home-backdrop-fade-out 0.22s ease forwards;
+}
+
+.profile-dialog {
+  width: min(760px, 100%);
+  max-height: min(720px, calc(100vh - 48px));
+  overflow: auto;
+  border-radius: 24px;
+  background: #f5f5f5;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 24px 54px rgba(18, 54, 65, 0.28);
+  /* ダイアログ出現アニメーション */
+  animation: home-dialog-scale-in 0.22s ease both;
+}
+
+/* 閉じる時：スケールダウンしながらフェードアウト */
+.profile-dialog-backdrop.is-closing .profile-dialog {
+  animation: home-dialog-scale-out 0.22s ease forwards;
+}
+
+.profile-dialog-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 22px 24px 14px;
+  background: rgba(245, 245, 245, 0.94);
+}
+
+.profile-dialog-header h2 {
+  margin: 0;
+  color: #555b60;
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+
+.profile-dialog-close {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: #565d64;
+  background: #ffffff;
+  font-size: 1.25rem;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 8px 18px rgba(63, 92, 96, 0.1);
+}
+
+.profile-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+  gap: 14px;
+  padding: 8px 24px 24px;
+}
+
+.profile-selection-item {
+  min-width: 0;
+  display: grid;
+  gap: 10px;
+  justify-items: stretch;
+  padding: 10px;
+  border-radius: 18px;
+  border: 2px solid transparent;
+  background: #ffffff;
+  text-align: left;
+  box-shadow: 0 8px 18px rgba(63, 92, 96, 0.08);
+}
+
+.profile-selection-item:hover,
+.profile-selection-item:focus-visible,
+.profile-selection-item.is-selected {
+  border-color: #f05a63;
+}
+
+.profile-selection-preview {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 14px;
+  background: var(--home-character-soft-color, #d1d1d1);
+}
+
+.profile-selection-character {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(8px 10px 8px rgba(23, 31, 41, 0.2));
+}
+
+.profile-selection-name {
+  min-width: 0;
+  overflow: hidden;
+  color: #101418;
+  font-size: 0.92rem;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-selection-empty {
+  margin: 0;
+  padding: 6px 24px 26px;
+  color: #737a80;
+  font-size: 0.95rem;
+  font-weight: 900;
+}
+
+/* ヒーロー領域（コピー＋QR）：横並びを維持してfluidにスケール */
+.home-single-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto;
+  gap: clamp(16px, 4vw, 88px);
+  align-items: center;
+  height: var(--home-hero-height);
+  min-height: 0;
+  padding: clamp(80px, 13dvh, 136px) clamp(20px, 6vw, 102px)
+    clamp(14px, 4dvh, 42px);
+}
+
+/* Figma基準：32px / lh 48 (= 1.5) @ 1512px幅 → 2.12% */
+.home-single-copy h1 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(1.35rem, 2.12vw, 2rem);
+  line-height: 1.5;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+/* Figma基準：20px / lh 24 @ 1512px幅 → 1.32% */
+.home-single-copy p {
+  margin: clamp(14px, 1.8vw, 26px) 0 0;
+  color: #ffffff;
+  font-size: clamp(0.88rem, 1.32vw, 1.25rem);
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.home-single-copy {
+  position: relative;
+  z-index: 3;
+}
+
+/* QR表示 */
+.home-single-qr {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: clamp(8px, 1.6dvh, 14px);
+  margin-top: clamp(0px, 2.8dvh, 28px);
+}
+
+.home-single-qr-stage {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  padding-bottom: clamp(8px, 2.4dvh, 24px);
+}
+
+.home-single-qr-frame {
+  position: relative;
+  z-index: 2;
+  width: clamp(180px, min(28vw, 36dvh), 308px);
+  aspect-ratio: 1;
+  overflow: visible;
+  border-radius: clamp(20px, 2.5vw, 28px);
+  background: #ffffff;
+  /* スキャンを促すソフトグローが周期的に光る */
+  animation: home-qr-glow 2.8s ease-in-out infinite;
+}
+
+.home-single-qr-core {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.home-single-qr-image,
+.home-single-qr-placeholder {
+  position: relative;
+  z-index: 3;
+  aspect-ratio: 1;
+  border-radius: clamp(20px, 4vw, 42px);
+  overflow: hidden;
+}
+
+.home-single-qr-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+.home-single-qr-placeholder {
+  width: clamp(180px, min(28vw, 36dvh), 308px);
+  display: grid;
+  place-items: center;
+  background: #e4e4e4;
+  padding: 14px;
+  color: #7a8c94;
+  font-size: 0.9rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.home-single-qr-anago {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 50%;
+  width: clamp(52px, 22%, 72px);
+  height: auto;
+  transform: translate(-30%, -4.5%);
+  display: block;
+  pointer-events: none;
+}
+
+.home-single-qr-character-badge {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  top: 50%;
+  width: clamp(52px, 5.6vw, 74px);
+  height: clamp(52px, 5.6vw, 74px);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 999px;
+  border: 3px solid #ececec;
+  background: #8d8d92;
+  transform: translate(-50%, -50%);
+}
+
+.home-single-qr-character-image {
+  width: 74%;
+  height: 74%;
+  object-fit: contain;
+  object-position: center;
+}
+
+/* デバッグ用：測定スキップボタン */
+.home-single-debug-skip {
+  position: relative;
+  z-index: 3;
+  border: 1px solid rgba(95, 100, 104, 0.18);
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: #6a4242;
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.home-single-debug-skip:hover,
+.home-single-debug-skip:focus-visible {
+  color: #963232;
+  background: #ffffff;
+  border-color: rgba(150, 50, 50, 0.34);
+}
+
+/* コレクション一覧 */
+.home-collection {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  min-height: var(--home-collection-peek-height);
+  margin-top: 0;
+  padding: clamp(24px, 4.2dvh, 42px) clamp(14px, 4vw, 62px)
+    clamp(26px, 6dvh, 54px);
+  border-radius: clamp(24px, 4vw, 36px) clamp(24px, 4vw, 36px) 0 0;
+  background: #f4f4f4;
+}
+
+/* Figma基準：コレクション ↔ カウントの視覚的gap ≒ 57px (1512px幅で3.77%) */
+.home-collection-heading {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  align-items: baseline;
+  gap: clamp(20px, 3.8vw, 57px);
+  margin-bottom: clamp(16px, 2.5vw, 28px);
+  /* ヒーローより遅れてフェードアップ */
+  animation: home-fade-up 0.5s ease 0.32s both;
+}
+
+/* Figma基準：32px @ 1512px幅 = 2.12% */
+.home-collection-heading h2 {
+  margin: 0;
+  color: #666666;
+  font-size: clamp(1.35rem, 2.12vw, 2rem);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+/* Figma基準：取得数は40px @ 1512px幅 = 2.65%、ブランドブルー #0c9fd6 */
+.home-collection-count {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+  color: #0c9fd6;
+  font-size: clamp(1.6rem, 2.65vw, 2.5rem);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+/* Figma基準： / 111 は24px @ 1512px幅 = 1.59% */
+.home-collection-count span {
+  color: #666666;
+  font-size: clamp(1.05rem, 1.59vw, 1.5rem);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.home-collection-debug-reset {
+  position: relative;
+  z-index: 5;
+  pointer-events: auto;
+  border: 1px solid rgba(95, 100, 104, 0.18);
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: #6a4242;
+  background: rgba(255, 255, 255, 0.68);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.home-collection-debug-reset:hover,
+.home-collection-debug-reset:focus-visible,
+.home-collection-debug-reset.is-confirming {
+  color: #963232;
+  background: #ffffff;
+  border-color: rgba(150, 50, 50, 0.34);
+}
+
+.home-collection-debug-message {
+  padding: 6px 10px;
+  border-radius: 999px;
+  color: #166534;
+  background: rgba(220, 252, 231, 0.9);
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+/* Figmaデザイン基準：カラム間隔は1512px幅で33px ≒ 2.18% */
+.home-collection-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(14px, 2.2vw, 33px);
+  justify-content: stretch;
+}
+
+/* キャラクターカード：スロットごとに遅延フェードアップ（--card-anim-delayをJSXで注入） */
+.home-character-slot,
+.home-character-card.is-locked {
+  animation: home-fade-up 0.42s ease var(--card-anim-delay, 0ms) both;
+}
+
+/* キャラクターカード（slotラッパで包んでハートボタンを重ねる） */
+/* 3Dチルト：--tilt-x / --tilt-y / --tilt-lift はJSのmousemoveハンドラで更新 */
+.home-character-slot {
+  position: relative;
+  display: grid;
+  /* container query unitsを使って、カード幅に応じてフォントなどをスケール */
+  container-type: inline-size;
+
+  /* チルト変数の初期値 */
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  --tilt-lift: 0px;
+  --tilt-shine-x: 50%;
+  --tilt-shine-y: 50%;
+
+  transform:
+    perspective(700px)
+    rotateX(var(--tilt-x))
+    rotateY(var(--tilt-y))
+    translateY(var(--tilt-lift));
+  transition:
+    transform 0.45s cubic-bezier(0.23, 1, 0.32, 1),
+    filter    0.45s cubic-bezier(0.23, 1, 0.32, 1);
+  filter: drop-shadow(0 10px 22px rgba(63, 92, 96, 0.1));
+  will-change: transform, filter;
+}
+
+/* ホバー時：シャドウを強化（ドロップシャドウはtransformと合成されて自然に見える） */
+.home-character-slot:has(.home-character-card.is-acquired:hover),
+.home-character-slot:has(.home-character-card.is-acquired:focus-visible) {
+  filter: drop-shadow(0 28px 42px rgba(63, 92, 96, 0.22));
+}
+
+.home-character-slot > .home-character-card {
+  width: 100%;
+}
+
+/* Figmaデザイン基準：300×417 (≈ 5:7)、border-radius 33px (カード幅の11%) */
+.home-character-card {
+  position: relative;
+  min-height: 0;
+  aspect-ratio: 300 / 417;
+  padding: 0;
+  border-radius: clamp(22px, 11cqw, 33px);
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 10px 22px rgba(63, 92, 96, 0.1);
+  text-align: left;
+}
+
+.home-character-card.is-acquired {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  overflow: hidden;
+}
+
+/* hover/focus時はoutlineのみ。lift＆影はJS mousemoveハンドラのチルトシステムが制御する */
+.home-character-card.is-acquired:hover,
+.home-character-card.is-acquired:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.82);
+  outline-offset: 3px;
+}
+
+/* マウス追跡による光沢（シャイン）オーバーレイ。
+   --tilt-shine-x / --tilt-shine-y はスロットのmousemoveハンドラで更新される */
+.home-character-card.is-acquired::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  border-radius: inherit;
+  background: radial-gradient(
+    circle at var(--tilt-shine-x, 50%) var(--tilt-shine-y, 50%),
+    rgba(255, 255, 255, 0.28) 0%,
+    rgba(255, 255, 255, 0) 65%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.home-character-slot:hover .home-character-card.is-acquired::after {
+  opacity: 1;
+}
+
+.home-character-card.is-locked {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: #989898;
+  background: #e4e4e4;
+  border-color: rgba(120, 124, 128, 0.18);
+  box-shadow:
+    inset 0 2px 6px rgba(74, 78, 82, 0.3),
+    0 10px 22px rgba(63, 92, 96, 0.06);
+}
+
+/* ロックカードのシマー：光がゆっくり横切る */
+.home-character-card.is-locked::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    108deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 70%
+  );
+  animation: home-locked-shimmer 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Figmaデザイン基準：プレビューはカード辺から13.18px (4.4%) inset、border-radius 26.36px (8.8%) */
+.home-character-preview {
+  position: relative;
+  aspect-ratio: 1;
+  margin: clamp(9px, 4.4cqw, 13px) clamp(9px, 4.4cqw, 13px) 0;
+  border-radius: clamp(18px, 8.8cqw, 26px);
+  background: var(--home-character-soft-color, #d1d1d1);
+  overflow: hidden;
+}
+
+.home-card-character {
+  --home-collection-character-scale: 3;
+  --home-collection-character-x: 0%;
+  --home-collection-character-y: 215%;
+  --home-collection-character-position: center bottom;
+
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+  object-position: var(--home-collection-character-position);
+  filter: drop-shadow(10px 12px 8px rgba(23, 31, 41, 0.28));
+  transform: translate(
+      var(--home-collection-character-x),
+      var(--home-collection-character-y)
+    )
+    scale(var(--home-collection-character-scale));
+  transform-origin: center bottom;
+}
+
+/* 本文：横paddingはカード幅の8%、上7%、下10%。狭いカードでは詰める */
+.home-character-body {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: clamp(12px, 6.7cqw, 20px);
+  min-width: 0;
+  padding: clamp(12px, 7cqw, 21px) clamp(12px, 8cqw, 24px) clamp(18px, 10cqw, 30px);
+}
+
+/* キャラ名：Figma基準 26.36px (8.79%)。
+   - 狭いカードでも溢れないようminを13px (0.82rem) まで下げる
+   - 右側はハートサイズに合わせて padding-right を確保 */
+.home-character-name {
+  margin: 0;
+  min-width: 0;
+  padding-right: clamp(44px, 24cqw, 80px);
+  color: #000000;
+  font-size: clamp(0.82rem, 8.8cqw, 1.7rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+/* タグ列：gapもfluid化して狭いカードで圧縮 */
+.home-character-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(5px, 2.7cqw, 8px);
+  min-width: 0;
+}
+
+/* タグ：Figma SF Pro Bold 12px (4%)、padding 横8px (2.67%) 縦6px (2%)。
+   狭いカードでもバランスが崩れないようpadding/フォント共にfluid化 */
+.home-tag {
+  padding: clamp(2px, 2cqw, 6px) clamp(5px, 2.7cqw, 8px);
+  border-radius: 999px;
+  color: var(--home-character-color, #53555a);
+  background: color-mix(in srgb, var(--home-character-color, #53555a) 20%, #ffffff);
+  font-size: clamp(0.6rem, 4cqw, 0.78rem);
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+/* ハート：キャラ名と同じ行の右端 (top 74.6%, right 5.9%)。
+   - サイズはカード幅の16% で、より視認性の高いサイズに
+   - 中のグリフ(♡/♥)もカード幅に合わせてスケール
+   - off/on いずれもFigmaの「お気に入り」赤で、形状のみで状態を区別 */
+.home-favorite-heart {
+  position: absolute;
+  top: 74.6%;
+  right: 5.9%;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: clamp(32px, 16cqw, 56px);
+  height: clamp(32px, 16cqw, 56px);
+  border: 0;
+  border-radius: 999px;
+  padding: 0;
+  background: transparent;
+  color: #ea4949;
+  font-size: clamp(1.5rem, 12cqw, 2.2rem);
+  line-height: 1;
+  transition:
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.home-favorite-heart:hover,
+.home-favorite-heart:focus-visible {
+  outline: none;
+  color: #d63d3d;
+  transform: scale(1.12);
+}
+
+/* 有効状態は色は同じで形状(♥)で表現。hoverのみ少し暗く */
+/* お気に入り追加時にポップアニメーションが走る（JSXでクラスを付け替え） */
+.home-favorite-heart.is-active {
+  color: #ea4949;
+  animation: home-heart-pop 0.35s ease both;
+}
+
+.home-favorite-heart.is-active:hover,
+.home-favorite-heart.is-active:focus-visible {
+  color: #d63d3d;
+}
+
+.home-locked-slot {
+  font-size: clamp(3.2rem, 5vw, 5.8rem);
+  font-weight: 900;
+  letter-spacing: 0.03em;
+}
+
+/* コレクション詳細ダイアログ */
+.collection-detail-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2500;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(16, 38, 46, 0.48);
+}
+
+/* バックドロップ：閉じる時にフェードアウト */
+.collection-detail-backdrop.is-closing {
+  animation: home-backdrop-fade-out 0.22s ease forwards;
+}
+
+.collection-detail-dialog {
+  width: min(820px, 100%);
+  max-height: min(760px, calc(100vh - 48px));
+  overflow: auto;
+  border-radius: 26px;
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 24px 54px rgba(18, 54, 65, 0.28);
+  /* ダイアログ出現アニメーション */
+  animation: home-dialog-scale-in 0.22s ease both;
+}
+
+/* 閉じる時：スケールダウンしながらフェードアウト */
+.collection-detail-backdrop.is-closing .collection-detail-dialog {
+  animation: home-dialog-scale-out 0.22s ease forwards;
+}
+
+.collection-detail-header {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 22px 24px 14px;
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.collection-detail-header h2 {
+  margin: 0;
+  color: #101418;
+  font-size: clamp(1.35rem, 2vw, 1.8rem);
+  font-weight: 900;
+}
+
+.collection-detail-close {
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  color: #565d64;
+  background: #f5f5f5;
+  font-size: 1.25rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.collection-detail-body {
+  display: grid;
+  grid-template-columns: minmax(180px, 280px) minmax(0, 1fr);
+  gap: 20px;
+  padding: 8px 24px 20px;
+}
+
+.collection-detail-preview {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 20px;
+  background: var(--home-character-soft-color, #d1d1d1);
+}
+
+.collection-detail-character {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(10px 12px 10px rgba(23, 31, 41, 0.24));
+}
+
+.collection-detail-info {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-content: start;
+}
+
+.collection-detail-stat {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: #f5f5f5;
+}
+
+.collection-detail-stat span {
+  color: #667078;
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.collection-detail-stat strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #172027;
+  font-size: 1.05rem;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collection-detail-section {
+  display: grid;
+  gap: 10px;
+  padding: 0 24px 18px;
+}
+
+.collection-detail-section h3 {
+  margin: 0;
+  color: #50575d;
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.collection-detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.collection-detail-story {
+  margin: 0;
+  padding: 0 24px 26px;
+  color: #43515a;
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.65;
+}
