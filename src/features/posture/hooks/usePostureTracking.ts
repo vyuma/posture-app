@@ -15,17 +15,30 @@ import {
   VISION_WASM_URL,
 } from "../constants";
 import {
-  POSTURE_SPEC,
   createPostureEngineState,
   evaluatePostureFrame,
 } from "../engine";
+import {
+  EMPTY_POSTURE_EXPERIMENT,
+  POSTURE_SPEC,
+} from "../engine.spec";
 import { drawPoseOverlay } from "../services/drawPoseOverlay";
-import type { RuntimeSnapshot, TrackingMode } from "../types";
+import type { PostureExperimentMetrics } from "../engine.types";
+import type {
+  PostureExperimentSample,
+  RuntimeSnapshot,
+  TrackingMode,
+} from "../types";
+
+const EXPERIMENT_HISTORY_LIMIT = 600;
+const EXPERIMENT_SMOOTHING_WINDOW = 8;
 
 const DEFAULT_SNAPSHOT: RuntimeSnapshot = {
   postureState: "hold",
   qualityOk: false,
   view: "unknown",
+  isHeadTurned: false,
+  headYawRatio: null,
   score: 0,
   candidateBad: false,
   warmupRemainingMs: POSTURE_SPEC.warmupMs,
@@ -37,7 +50,115 @@ const DEFAULT_SNAPSHOT: RuntimeSnapshot = {
   headWidthScoreBoost: 0,
   trackingMode: "foreground",
   trackingIntervalMs: TRACKING_INTERVAL_MS,
+  experiment: EMPTY_POSTURE_EXPERIMENT,
 };
+
+type ExperimentNumericKey =
+  | "neckAngle2dFallback"
+  | "neckAngle3d"
+  | "headForwardAngleDeg";
+
+function appendLimited<T>(items: T[], item: T, limit: number) {
+  const next = [...items, item];
+  return next.length > limit ? next.slice(next.length - limit) : next;
+}
+
+function average(values: number[]) {
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function smoothNullableMetric(
+  current: PostureExperimentMetrics,
+  frames: PostureExperimentMetrics[],
+  key: ExperimentNumericKey,
+) {
+  if (current[key] === null) {
+    return null;
+  }
+
+  const values = frames
+    .map((frame) => frame[key])
+    .filter((value): value is number => value !== null);
+
+  return values.length > 0 ? average(values) : current[key];
+}
+
+function smoothProxyPoint<
+  PointKey extends keyof NonNullable<PostureExperimentMetrics["proxy"]>,
+>(
+  current: NonNullable<PostureExperimentMetrics["proxy"]>[PointKey],
+  frames: PostureExperimentMetrics[],
+  key: PointKey,
+) {
+  if (current === null) {
+    return null;
+  }
+
+  const points = frames
+    .map((frame) => frame.proxy?.[key] ?? null)
+    .filter((point): point is NonNullable<typeof current> => point !== null);
+
+  if (points.length === 0) {
+    return current;
+  }
+
+  return {
+    y: average(points.map((point) => point.y)),
+    z: average(points.map((point) => point.z)),
+    visibility: Math.min(...points.map((point) => point.visibility)),
+  };
+}
+
+function smoothExperimentMetrics(
+  current: PostureExperimentMetrics,
+  frames: PostureExperimentMetrics[],
+): PostureExperimentMetrics {
+  const neckAngle2dFallback = smoothNullableMetric(
+    current,
+    frames,
+    "neckAngle2dFallback",
+  );
+  const neckAngle3d = smoothNullableMetric(current, frames, "neckAngle3d");
+  const proxy = current.proxy
+    ? {
+        nose: smoothProxyPoint(current.proxy.nose, frames, "nose")!,
+        earMidpoint: smoothProxyPoint(
+          current.proxy.earMidpoint,
+          frames,
+          "earMidpoint",
+        )!,
+        shoulderMidpoint: smoothProxyPoint(
+          current.proxy.shoulderMidpoint,
+          frames,
+          "shoulderMidpoint",
+        )!,
+        hipMidpoint: smoothProxyPoint(current.proxy.hipMidpoint, frames, "hipMidpoint"),
+      }
+    : null;
+
+  return {
+    neckAngle2dFallback,
+    neckAngle3d,
+    headForwardAngleDeg: smoothNullableMetric(
+      current,
+      frames,
+      "headForwardAngleDeg",
+    ),
+    sourceQuality: current.sourceQuality,
+    proxy,
+  };
+}
+
+function buildExperimentSample(
+  timestampMs: number,
+  experiment: PostureExperimentMetrics,
+): PostureExperimentSample {
+  return {
+    timestampMs,
+    neckAngle2dFallback: experiment.neckAngle2dFallback,
+    neckAngle3d: experiment.neckAngle3d,
+  };
+}
 
 const isWindowBackgrounded = () => {
   if (typeof document === "undefined") {
@@ -63,7 +184,16 @@ const getTrackingIntervalMs = () =>
     ? BACKGROUND_TRACKING_INTERVAL_MS
     : TRACKING_INTERVAL_MS;
 
-export function usePostureTracking() {
+const IDLE_STATUS = "測定開始を待機しています。";
+const INIT_STATUS = "カメラとPoseモデルを初期化しています...";
+
+type UsePostureTrackingOptions = {
+  enabled?: boolean;
+  overlayEnabled?: boolean;
+};
+
+export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
+  const { enabled = true, overlayEnabled = true } = options;
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const trackingTimerRef = useRef<number | null>(null);
@@ -74,13 +204,19 @@ export function usePostureTracking() {
   const lastRuntimeErrorAtRef = useRef(0);
   const lastBackgroundAlertAtRef = useRef(0);
   const trackingModeRef = useRef<TrackingMode>("foreground");
+  const overlayEnabledRef = useRef(overlayEnabled);
   const engineStateRef = useRef(createPostureEngineState());
+  const experimentHistoryRef = useRef<PostureExperimentSample[]>([]);
+  const experimentSmoothingRef = useRef<PostureExperimentMetrics[]>([]);
   const isBadPostureRef = useRef(false);
 
   const [ready, setReady] = useState(false);
-  const [status, setStatus] = useState("カメラとPoseモデルを初期化しています...");
+  const [status, setStatus] = useState(enabled ? INIT_STATUS : IDLE_STATUS);
   const [isBadPosture, setIsBadPosture] = useState(false);
   const [snapshot, setSnapshot] = useState<RuntimeSnapshot>(DEFAULT_SNAPSHOT);
+  const [experimentHistory, setExperimentHistory] = useState<
+    PostureExperimentSample[]
+  >([]);
 
   const clearTrackingTimer = useCallback(() => {
     if (trackingTimerRef.current === null) {
@@ -93,6 +229,9 @@ export function usePostureTracking() {
 
   const resetPostureEngine = useCallback(() => {
     engineStateRef.current = createPostureEngineState();
+    experimentHistoryRef.current = [];
+    experimentSmoothingRef.current = [];
+    setExperimentHistory([]);
     isBadPostureRef.current = false;
     setIsBadPosture(false);
     setSnapshot(DEFAULT_SNAPSHOT);
@@ -104,7 +243,54 @@ export function usePostureTracking() {
   }, [isBadPosture]);
 
   useEffect(() => {
+    overlayEnabledRef.current = overlayEnabled;
+  }, [overlayEnabled]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    const stream = streamRef.current;
+
+    if (!video || !stream || video.srcObject === stream) {
+      return;
+    }
+
+    video.srcObject = stream;
+    void video.play().catch(() => {
+      // ビデオ要素の差し替え直後は再生が失敗することがあるため無視する。
+    });
+  });
+
+  useEffect(() => {
+    if (!enabled) {
+      clearTrackingTimer();
+
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
+      }
+
+      poseLandmarkerRef.current?.close();
+      poseLandmarkerRef.current = null;
+      lastInferenceAtRef.current = 0;
+      lastUiUpdateAtRef.current = 0;
+      lastRuntimeErrorAtRef.current = 0;
+      lastBackgroundAlertAtRef.current = 0;
+      trackingModeRef.current = "foreground";
+      engineStateRef.current = createPostureEngineState();
+      experimentHistoryRef.current = [];
+      experimentSmoothingRef.current = [];
+      isBadPostureRef.current = false;
+      setReady(false);
+      setIsBadPosture(false);
+      setSnapshot(DEFAULT_SNAPSHOT);
+      setExperimentHistory([]);
+      setStatus(IDLE_STATUS);
+      return;
+    }
+
     let mounted = true;
+    setReady(false);
+    setStatus(INIT_STATUS);
 
     const scheduleNext = (delayMs: number, callback: () => void) => {
       clearTrackingTimer();
@@ -216,7 +402,7 @@ export function usePostureTracking() {
       setStatus(
         nextMode === "background"
           ? "バックグラウンド追跡中（省電力モード）"
-          : "posture.md 仕様で姿勢を追跡中です。",
+          : "姿勢を追跡中です。",
       );
     };
 
@@ -283,6 +469,20 @@ export function usePostureTracking() {
           worldLandmarks,
         );
         engineStateRef.current = state;
+        experimentSmoothingRef.current = appendLimited(
+          experimentSmoothingRef.current,
+          result.experiment,
+          EXPERIMENT_SMOOTHING_WINDOW,
+        );
+        const experiment = smoothExperimentMetrics(
+          result.experiment,
+          experimentSmoothingRef.current,
+        );
+        experimentHistoryRef.current = appendLimited(
+          experimentHistoryRef.current,
+          buildExperimentSample(now, experiment),
+          EXPERIMENT_HISTORY_LIMIT,
+        );
 
         if (result.postureState !== "hold") {
           const nextBad = result.postureState === "bad";
@@ -300,7 +500,9 @@ export function usePostureTracking() {
           const ctx = canvas.getContext("2d");
           if (ctx) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawPoseOverlay(ctx, canvas, imageLandmarks);
+            if (overlayEnabledRef.current) {
+              drawPoseOverlay(ctx, canvas, imageLandmarks);
+            }
           }
         }
 
@@ -315,6 +517,8 @@ export function usePostureTracking() {
             postureState: result.postureState,
             qualityOk: result.eval.qualityOk,
             view: result.eval.view,
+            isHeadTurned: result.eval.isHeadTurned,
+            headYawRatio: result.eval.headYawRatio,
             score: result.eval.score,
             candidateBad: result.eval.candidateBad,
             warmupRemainingMs: result.warmupRemainingMs,
@@ -326,7 +530,9 @@ export function usePostureTracking() {
             headWidthScoreBoost: result.eval.headWidthScoreBoost,
             trackingMode,
             trackingIntervalMs,
+            experiment,
           });
+          setExperimentHistory([...experimentHistoryRef.current]);
         }
       } catch (runtimeError) {
         if (now - lastRuntimeErrorAtRef.current > RUNTIME_ERROR_STATUS_INTERVAL_MS) {
@@ -341,7 +547,7 @@ export function usePostureTracking() {
         }
       }
 
-      scheduleNext(getTrackingIntervalMs(), () => {
+      scheduleNext(trackingIntervalMs, () => {
         void trackOnce();
       });
     };
@@ -366,7 +572,7 @@ export function usePostureTracking() {
         }
 
         setReady(true);
-        setStatus("posture.md 仕様で姿勢を追跡中です。");
+        setStatus("姿勢を追跡中です。");
 
         if (
           typeof Notification !== "undefined" &&
@@ -399,6 +605,7 @@ export function usePostureTracking() {
 
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = null;
       }
 
       poseLandmarkerRef.current?.close();
@@ -407,8 +614,10 @@ export function usePostureTracking() {
       lastUiUpdateAtRef.current = 0;
       lastRuntimeErrorAtRef.current = 0;
       lastBackgroundAlertAtRef.current = 0;
+      experimentHistoryRef.current = [];
+      experimentSmoothingRef.current = [];
     };
-  }, [clearTrackingTimer]);
+  }, [clearTrackingTimer, enabled]);
 
   return {
     videoRef,
@@ -417,6 +626,7 @@ export function usePostureTracking() {
     status,
     isBadPosture,
     snapshot,
+    experimentHistory,
     resetPostureEngine,
   };
 }

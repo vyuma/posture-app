@@ -1,5 +1,5 @@
-export { POSTURE_SPEC } from "./engine";
 export { usePostureTracking } from "./hooks/usePostureTracking";
+export { usePostureTransitionEffects } from "./hooks/usePostureTransitionEffects";
 export { PostureControlPanel } from "./components/PostureControlPanel";
 export { PostureViewer } from "./components/PostureViewer";
-export type { AlertDisplayMode, RuntimeSnapshot } from "./types";
+export type { RuntimeSnapshot } from "./types";

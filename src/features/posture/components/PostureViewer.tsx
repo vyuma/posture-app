@@ -1,21 +1,23 @@
 import type { RefObject } from "react";
 
-import type { AlertDisplayMode } from "../types";
+import type { PostureExperimentMetrics } from "../engine.types";
 
 type PostureViewerProps = {
   videoRef: RefObject<HTMLVideoElement | null>;
   canvasRef: RefObject<HTMLCanvasElement | null>;
   isBadPosture: boolean;
-  alertDisplayMode: AlertDisplayMode;
-  onAlertDisplayModeChange: (mode: AlertDisplayMode) => void;
+  isOverlayEnabled: boolean;
+  experiment: PostureExperimentMetrics;
+  onOverlayEnabledChange: (enabled: boolean) => void;
 };
 
 export function PostureViewer({
   videoRef,
   canvasRef,
   isBadPosture,
-  alertDisplayMode,
-  onAlertDisplayModeChange,
+  isOverlayEnabled,
+  experiment,
+  onOverlayEnabledChange,
 }: PostureViewerProps) {
   return (
     <section className="viewer">
@@ -30,33 +32,69 @@ export function PostureViewer({
         姿勢が悪いです
       </div>
 
-      <section className="display-mode-switch" aria-label="姿勢アラート表示モード">
-        <span>姿勢アラート</span>
-        <label className="mode-toggle" htmlFor="alert-display-mode">
+      <section className="display-mode-switch" aria-label="表示設定">
+        <span>表示設定</span>
+        <label className="mode-toggle" htmlFor="overlay-enabled">
           <input
-            id="alert-display-mode"
+            id="overlay-enabled"
             type="checkbox"
-            checked={alertDisplayMode === "blackout"}
+            checked={isOverlayEnabled}
             onChange={(event) => {
-              onAlertDisplayModeChange(
-                event.currentTarget.checked ? "blackout" : "debug",
-              );
+              onOverlayEnabledChange(event.currentTarget.checked);
             }}
           />
-          <span>
-            {alertDisplayMode === "blackout"
-              ? "運用(画面ブラックアウト)"
-              : "デバッグ(メッセージのみ)"}
-          </span>
+          <span>オーバーレイ {isOverlayEnabled ? "ON" : "OFF"}</span>
         </label>
       </section>
 
+      <section className="angle-readout" aria-label="首角度シグナル">
+        <div>
+          <span>首角度 3D</span>
+          <strong>{formatAngle(experiment.neckAngle3d)}</strong>
+        </div>
+        {experiment.neckAngle2dFallback !== null ? (
+          <div>
+            <span>2Dフォールバック</span>
+            <strong>{formatAngle(experiment.neckAngle2dFallback)}</strong>
+          </div>
+        ) : null}
+        <small>{formatExperimentStatus(experiment)}</small>
+      </section>
+
       <div className="legend">
-        <span className="item nose">Nose</span>
-        <span className="item face">Ears</span>
-        <span className="item shoulder">Shoulders</span>
-        <span className="item gaze">Hips</span>
+        <span className="item nose">鼻</span>
+        <span className="item face">耳</span>
+        <span className="item shoulder">肩</span>
+        <span className="item gaze">腰</span>
       </div>
     </section>
   );
+}
+
+function formatAngle(value: number | null) {
+  return value === null ? "-" : `${value.toFixed(1)}°`;
+}
+
+function formatExperimentStatus(experiment: PostureExperimentMetrics) {
+  if (experiment.sourceQuality === "vertical-fallback") {
+    return "ワールドZ角度を使用中（鉛直軸フォールバック）";
+  }
+
+  if (experiment.neckAngle3d !== null) {
+    return "ワールドZ角度を使用中";
+  }
+
+  if (experiment.sourceQuality === "missing-hips") {
+    return "ワールド座標の腰ランドマーク待機中";
+  }
+
+  if (experiment.sourceQuality === "world") {
+    return "安定した3Dベクトルを待機中";
+  }
+
+  if (experiment.neckAngle2dFallback !== null) {
+    return "2Dフォールバックを使用中";
+  }
+
+  return "ワールドランドマークを待機中";
 }

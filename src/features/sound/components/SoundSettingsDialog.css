@@ -1,0 +1,112 @@
+.sound-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.46);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  z-index: 35;
+}
+
+.sound-dialog {
+  width: min(560px, 100%);
+  max-height: min(88vh, 780px);
+  overflow: auto;
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.28);
+}
+
+.sound-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.sound-dialog-header h2 {
+  margin: 4px 0 0;
+  font-size: 1.35rem;
+}
+
+.sound-eyebrow {
+  margin: 0;
+  color: #0f766e;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sound-close {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: #e2e8f0;
+  color: #0f172a;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sound-body {
+  margin-top: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.sound-field {
+  display: grid;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.sound-field input[type="range"],
+.sound-field input[type="file"],
+.sound-field select {
+  width: 100%;
+}
+
+.sound-field select,
+.sound-field input[type="file"] {
+  border-radius: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.14);
+  background: #fff;
+  padding: 10px;
+  font: inherit;
+}
+
+.sound-toggle {
+  grid-template-columns: 1fr auto;
+  align-items: center;
+}
+
+.sound-toggle input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+}
+
+.sound-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.sound-actions button {
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: #0f172a;
+  color: #f8fafc;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sound-error {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #b91c1c;
+}

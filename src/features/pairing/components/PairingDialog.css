@@ -144,26 +144,6 @@
   cursor: not-allowed;
 }
 
-/* バイブテスト開始ボタン: ティール系の配色でアクションボタンと区別する */
-.pairing-vibe-test {
-  background: #0f766e !important;
-  color: #f0fdfa !important;
-}
-
-.pairing-vibe-test:hover:not(:disabled) {
-  background: #115e59 !important;
-}
-
-/* バイブテスト停止ボタン: 赤系の配色で停止アクションであることを明示する */
-.pairing-vibe-stop {
-  background: #b91c1c !important;
-  color: #fef2f2 !important;
-}
-
-.pairing-vibe-stop:hover:not(:disabled) {
-  background: #991b1b !important;
-}
-
 .pairing-hint {
   margin: 0;
   font-size: 0.82rem;
