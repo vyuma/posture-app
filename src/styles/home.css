@@ -140,11 +140,11 @@
 }
 
 .home-nav-profile-character {
-  width: 160px;
-  height: 160px;
+  width: 100px;
+  height: 100px;
   object-fit: contain;
   object-position: center bottom;
-  transform: translate(-52px, 10px);
+  transform: translate(-22px, 7px);
   animation: home-float 3.4s ease-in-out infinite;
 }
 
@@ -192,6 +192,7 @@
   gap: clamp(12px, 1.8dvh, 28px);
   flex-shrink: 0;
   animation: home-fade-up 0.55s ease 0.12s both;
+  margin-right: 170px; 
 }
 
 /* 白丸ピルボタン */
@@ -1699,13 +1700,13 @@
 }
 
 .collection-detail-dialog {
-  width: min(820px, 100%);
-  max-height: min(760px, calc(100vh - 48px));
+  width: min(860px, 100%);
+  max-height: min(780px, calc(100vh - 48px));
   overflow: auto;
-  border-radius: 26px;
-  background: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  box-shadow: 0 24px 54px rgba(18, 54, 65, 0.28);
+  border-radius: 30px;
+  background: linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  box-shadow: 0 26px 58px rgba(18, 54, 65, 0.34);
   /* ダイアログ出現アニメーション */
   animation: home-dialog-scale-in 0.22s ease both;
 }
@@ -1716,43 +1717,67 @@
 }
 
 .collection-detail-header {
-  position: sticky;
-  top: 0;
-  z-index: 2;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   gap: 12px;
-  padding: 22px 24px 14px;
-  background: rgba(255, 255, 255, 0.94);
+  padding: 26px 24px 14px;
 }
 
-.collection-detail-header h2 {
+.collection-detail-eyebrow {
   margin: 0;
-  color: #101418;
-  font-size: clamp(1.35rem, 2vw, 1.8rem);
-  font-weight: 900;
+  color: #ffffff;
+  font-size: clamp(0.92rem, 1.5vw, 1rem);
+  font-weight: 800;
+  text-shadow: 0 2px 10px rgba(0, 40, 60, 0.18);
 }
 
 .collection-detail-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
   width: 36px;
   height: 36px;
   border: 0;
   border-radius: 999px;
   display: grid;
   place-items: center;
-  color: #565d64;
-  background: #f5f5f5;
+  color: #1a2730;
+  background: rgba(255, 255, 255, 0.82);
   font-size: 1.25rem;
   font-weight: 900;
   line-height: 1;
+  box-shadow: 0 8px 16px rgba(18, 54, 65, 0.18);
 }
 
-.collection-detail-body {
+.collection-detail-card {
+  width: min(720px, calc(100% - 36px));
+  margin: 0 auto 20px;
   display: grid;
-  grid-template-columns: minmax(180px, 280px) minmax(0, 1fr);
-  gap: 20px;
-  padding: 8px 24px 20px;
+  grid-template-columns: minmax(200px, 38%) minmax(0, 1fr);
+  gap: clamp(16px, 3vw, 28px);
+  padding: clamp(18px, 2.8vw, 26px);
+  border-radius: clamp(22px, 3.5vw, 32px);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow:
+    0 20px 48px rgba(19, 100, 120, 0.16),
+    0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.collection-detail-col {
+  min-width: 0;
+}
+
+.collection-detail-col--character {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.collection-detail-col--stats {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .collection-detail-preview {
@@ -1765,18 +1790,24 @@
 }
 
 .collection-detail-character {
-  width: 100%;
-  height: 100%;
+  width: 94%;
+  height: 94%;
   object-fit: contain;
   object-position: center bottom;
   filter: drop-shadow(10px 12px 10px rgba(23, 31, 41, 0.24));
+}
+
+.collection-detail-name {
+  margin: 0;
+  font-size: clamp(1.05rem, 2.8vw, 1.35rem);
+  font-weight: 900;
+  color: #1a2730;
 }
 
 .collection-detail-info {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
-  align-content: start;
 }
 
 .collection-detail-stat {
@@ -1789,31 +1820,31 @@
 }
 
 .collection-detail-stat span {
-  color: #667078;
-  font-size: 0.75rem;
-  font-weight: 900;
+  color: #8896a4;
+  font-size: 0.78rem;
+  font-weight: 800;
 }
 
 .collection-detail-stat strong {
   min-width: 0;
   overflow: hidden;
-  color: #172027;
-  font-size: 1.05rem;
+  color: #27363f;
+  font-size: 0.98rem;
   font-weight: 900;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.collection-detail-section {
+.collection-detail-story-wrap {
   display: grid;
-  gap: 10px;
-  padding: 0 24px 18px;
+  gap: 8px;
+  padding: 2px 2px 0;
 }
 
-.collection-detail-section h3 {
+.collection-detail-story-wrap h3 {
   margin: 0;
-  color: #50575d;
-  font-size: 1rem;
+  color: #6b7580;
+  font-size: 0.8rem;
   font-weight: 900;
 }
 
@@ -1825,9 +1856,20 @@
 
 .collection-detail-story {
   margin: 0;
-  padding: 0 24px 26px;
+  padding: 0;
   color: #43515a;
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 800;
-  line-height: 1.65;
+  line-height: 1.55;
+}
+
+@media (max-width: 700px) {
+  .collection-detail-card {
+    grid-template-columns: 1fr;
+  }
+
+  .collection-detail-col--character {
+    max-width: 240px;
+    margin-inline: auto;
+  }
 }

@@ -82,6 +82,7 @@ type MeasuringScreenProps = {
 type PostureRegisteredScreenProps = {
   result: MeasurementResult;
   acquiredCharacter: CharacterDefinition | null;
+  fallbackCharacter: CharacterDefinition | null;
   onBackHome: () => void;
   onMeasureAgain: () => void;
 };
@@ -922,6 +923,7 @@ export function MeasuringScreen({
 export function PostureRegisteredScreen({
   result,
   acquiredCharacter,
+  fallbackCharacter: _fallbackCharacter,
   onBackHome,
   onMeasureAgain,
 }: PostureRegisteredScreenProps) {
@@ -933,10 +935,14 @@ export function PostureRegisteredScreen({
   const [shareBusy, setShareBusy] = useState(false);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
 
-  const personalityTags =
-    acquiredCharacter !== null && acquiredCharacter.personalityTags.length > 0
-      ? acquiredCharacter.personalityTags.slice(0, 2)
-      : (["?????", "?????"] as const);
+  const displayCharacter = wasSuccessful ? acquiredCharacter : null;
+  const personalityTags = wasSuccessful
+    ? (
+        displayCharacter !== null && displayCharacter.personalityTags.length > 0
+          ? displayCharacter.personalityTags.slice(0, 2)
+          : ["？？？？？", "？？？？？"]
+      )
+    : (["？？？？？", "？？？？？"] as const);
 
   /** キャラ primary / soft でアクセントを上書き（クラスのフォールバック値より優先） */
   const characterThemeVars = useMemo(() => {
@@ -954,7 +960,6 @@ export function PostureRegisteredScreen({
 
   const handleShareResult = useCallback(async () => {
     if (
-      !wasSuccessful ||
       shareCaptureRef.current === null ||
       shareBusy
     ) {
@@ -984,7 +989,7 @@ export function PostureRegisteredScreen({
     } finally {
       setShareBusy(false);
     }
-  }, [shareBusy, wasSuccessful]);
+  }, [shareBusy]);
 
   useEffect(() => {
     if (!wasSuccessful) {
@@ -1007,7 +1012,10 @@ export function PostureRegisteredScreen({
       <div ref={shareCaptureRef} className="result-registered-capture-root">
         <header className="result-registered-hero" aria-labelledby="registered-heading">
           <p className="result-registered-eyebrow">今日のチンアナゴ</p>
-          <h1 id="registered-heading" className="result-registered-title">
+          <h1
+            id="registered-heading"
+            className={`result-registered-title ${wasSuccessful ? "" : "is-fail"}`}
+          >
             {wasSuccessful ? "獲得" : "獲得ならず…"}
           </h1>
         </header>
@@ -1018,14 +1026,22 @@ export function PostureRegisteredScreen({
           aria-label="キャラクター"
         >
           <div className="result-registered-portrait">
-            <CharacterFigure
-              character={acquiredCharacter}
-              className="result-registered-figure"
-              expression={wasSuccessful ? "happy" : "bad"}
-            />
+            {wasSuccessful ? (
+              <CharacterFigure
+                character={displayCharacter}
+                className="result-registered-figure"
+              />
+            ) : (
+              <img
+                className="result-registered-figure result-registered-figure--qr-fail"
+                src="/logo/QRアナゴ.png"
+                alt=""
+                draggable={false}
+              />
+            )}
           </div>
           <p className="result-registered-name">
-            {acquiredCharacter?.name ?? "?????"}
+            {wasSuccessful ? displayCharacter?.name ?? "？？？？？" : "？？？？？"}
           </p>
           <ul className="result-registered-tags">
             {personalityTags.map((tag, index) => (
@@ -1044,16 +1060,10 @@ export function PostureRegisteredScreen({
             <button
               type="button"
               className={`result-registered-share ${shareBusy ? "is-busy" : ""}`}
-              aria-label={
-                wasSuccessful ? "結果を画像で共有" : "獲得時のみ共有できます"
-              }
-              title={
-                wasSuccessful
-                  ? "結果を画像で共有（または保存）します"
-                  : "獲得時のみ共有できます"
-              }
-              disabled={!wasSuccessful || shareBusy}
-              aria-disabled={!wasSuccessful}
+              aria-label="結果を画像で共有"
+              title="結果を画像で共有（または保存）します"
+              disabled={shareBusy}
+              aria-disabled={shareBusy}
               aria-busy={shareBusy}
               onClick={() => void handleShareResult()}
             >
@@ -1063,12 +1073,15 @@ export function PostureRegisteredScreen({
                 height={20}
                 fill="none"
                 stroke="currentColor"
-                strokeWidth={2}
+                strokeWidth={1.9}
+                strokeLinejoin="round"
                 strokeLinecap="round"
                 aria-hidden="true"
               >
-                <path d="M12 16V4m0 0 4 4m-4-4L8 8" />
-                <rect x="6" y="14" width={12} height={8} rx={2} ry={2} />
+                <circle cx="6.3" cy="12" r="2.15" />
+                <circle cx="17.7" cy="6.4" r="2.15" />
+                <circle cx="17.7" cy="17.6" r="2.15" />
+                <path d="M8.2 11.1 15.8 7.3M8.2 12.9l7.6 3.8" />
               </svg>
             </button>
           </div>
@@ -1630,7 +1643,37 @@ function CollectionDetailDialog({
   const dialogStyle = {
     "--home-character-color": character.characterColor.primary,
     "--home-character-soft-color": character.characterColor.soft,
+    "--result-timeline-good": character.characterColor.primary,
   } as CSSProperties;
+  const shareCaptureRef = useRef<HTMLDivElement>(null);
+  const [shareBusy, setShareBusy] = useState(false);
+  const [shareFeedback, setShareFeedback] = useState<string | null>(null);
+
+  const hasTimelineData =
+    (acquiredCharacter.postureTimeline?.length ?? 0) > 0 &&
+    (acquiredCharacter.activeMeasurementMs ?? 0) > 0;
+
+  const handleShareCollection = useCallback(async () => {
+    if (shareCaptureRef.current === null || shareBusy) {
+      return;
+    }
+    setShareBusy(true);
+    setShareFeedback(null);
+    try {
+      const outcome = await shareResultCapture(shareCaptureRef.current);
+      if (outcome === "downloaded") {
+        setShareFeedback("画像をダウンロードしました");
+      } else if (outcome === "copied") {
+        setShareFeedback("画像をクリップボードにコピーしました");
+      } else {
+        setShareFeedback(null);
+      }
+    } catch {
+      setShareFeedback("共有に失敗しました。もう一度お試しください。");
+    } finally {
+      setShareBusy(false);
+    }
+  }, [shareBusy]);
 
   return (
     <section
@@ -1647,7 +1690,7 @@ function CollectionDetailDialog({
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="collection-detail-header">
-          <h2 id="collection-detail-heading">{character.name}</h2>
+          <p className="collection-detail-eyebrow">今日のチンアナゴ</p>
           <button
             type="button"
             className="collection-detail-close"
@@ -1657,45 +1700,99 @@ function CollectionDetailDialog({
             ×
           </button>
         </div>
-        <div className="collection-detail-body">
-          <div className="collection-detail-preview">
-            <CharacterFigure
-              character={character}
-              className="collection-detail-character"
+        <article
+          ref={shareCaptureRef}
+          className="collection-detail-card"
+          aria-labelledby="collection-detail-heading"
+        >
+          <section
+            className="collection-detail-col collection-detail-col--character"
+            aria-label="キャラクター"
+          >
+            <div className="collection-detail-preview">
+              <CharacterFigure
+                character={character}
+                className="collection-detail-character"
+              />
+            </div>
+            <h2 id="collection-detail-heading" className="collection-detail-name">
+              {character.name}
+            </h2>
+            <div className="collection-detail-tags">
+              {character.personalityTags.map((tag) => (
+                <span className="home-tag" key={tag}>
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </section>
+          <section
+            className="collection-detail-col collection-detail-col--stats"
+            aria-label="統計とストーリー"
+          >
+            <div className="collection-detail-stats-header">
+              <button
+                type="button"
+                className={`result-registered-share ${shareBusy ? "is-busy" : ""}`}
+                aria-label="結果を画像で共有"
+                title="結果を画像で共有（または保存）します"
+                disabled={shareBusy}
+                aria-busy={shareBusy}
+                onClick={() => void handleShareCollection()}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width={20}
+                  height={20}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={1.9}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                  aria-hidden="true"
+                >
+                  <circle cx="6.3" cy="12" r="2.15" />
+                  <circle cx="17.7" cy="6.4" r="2.15" />
+                  <circle cx="17.7" cy="17.6" r="2.15" />
+                  <path d="M8.2 11.1 15.8 7.3M8.2 12.9l7.6 3.8" />
+                </svg>
+              </button>
+            </div>
+            <div className="collection-detail-info">
+              <div className="collection-detail-stat">
+                <span>習得日</span>
+                <strong>{formatAcquiredAt(acquiredCharacter.acquiredAt)}</strong>
+              </div>
+              <div className="collection-detail-stat">
+                <span>良い姿勢率</span>
+                <strong>{formatOptionalPercent(acquiredCharacter.goodRatio)}</strong>
+              </div>
+              <div className="collection-detail-stat">
+                <span>良い姿勢時間</span>
+                <strong>{formatOptionalDuration(acquiredCharacter.goodMs)}</strong>
+              </div>
+              <div className="collection-detail-stat">
+                <span>稼働時間</span>
+                <strong>
+                  {formatOptionalDuration(acquiredCharacter.activeMeasurementMs)}
+                </strong>
+              </div>
+            </div>
+            <PostureTimelineChart
+              segments={acquiredCharacter.postureTimeline ?? []}
+              totalMs={acquiredCharacter.activeMeasurementMs ?? 0}
+              variant={hasTimelineData ? "success" : "fail"}
+              className="collection-detail-timeline"
             />
-          </div>
-          <div className="collection-detail-info">
-            <div className="collection-detail-stat">
-              <span>習得日</span>
-              <strong>{formatAcquiredAt(acquiredCharacter.acquiredAt)}</strong>
+            <div className="collection-detail-story-wrap">
+              <h3>ストーリー</h3>
+              <p className="collection-detail-story">{character.story}</p>
             </div>
-            <div className="collection-detail-stat">
-              <span>良い姿勢時間</span>
-              <strong>{formatOptionalDuration(acquiredCharacter.goodMs)}</strong>
-            </div>
-            <div className="collection-detail-stat">
-              <span>稼働時間</span>
-              <strong>
-                {formatOptionalDuration(acquiredCharacter.activeMeasurementMs)}
-              </strong>
-            </div>
-            <div className="collection-detail-stat">
-              <span>良い姿勢率</span>
-              <strong>{formatOptionalPercent(acquiredCharacter.goodRatio)}</strong>
-            </div>
-          </div>
-        </div>
-        <div className="collection-detail-section">
-          <h3>性格</h3>
-          <div className="collection-detail-tags">
-            {character.personalityTags.map((tag) => (
-              <span className="home-tag" key={tag}>
-                {tag}
-              </span>
-            ))}
-          </div>
-        </div>
-        <p className="collection-detail-story">{character.story}</p>
+          </section>
+        </article>
+        <p className="collection-detail-share-feedback" role="status" aria-live="polite">
+          {shareFeedback ?? ""}
+        </p>
       </div>
     </section>
   );

@@ -849,6 +849,7 @@ function renderFlowScreen({
         <PostureRegisteredScreen
           result={lastMeasurementResult}
           acquiredCharacter={lastAcquiredCharacter}
+          fallbackCharacter={nextCharacter}
           onBackHome={onBackHome}
           onMeasureAgain={onMeasureAgain}
         />

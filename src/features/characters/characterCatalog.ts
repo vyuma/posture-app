@@ -1,10 +1,11 @@
 import type { CharacterDefinition, CharacterExpression } from "./types";
 
+/** 実ファイルは PNG（.svg は未配置のため 404 になる） */
 const NORMAL_NAGO_EXPRESSIONS = {
-  good: "/characters/anago/normal-nago/expressions/good.svg",
-  bad: "/characters/anago/normal-nago/expressions/bad.svg",
-  paused: "/characters/anago/normal-nago/expressions/paused.svg",
-  happy: "/characters/anago/normal-nago/expressions/happy.svg",
+  good: "/characters/anago/normal-nago/expressions/good.png",
+  bad: "/characters/anago/normal-nago/expressions/bad.png",
+  paused: "/characters/anago/normal-nago/expressions/paused.png",
+  happy: "/characters/anago/normal-nago/expressions/happy.png",
 } satisfies Partial<Record<CharacterExpression, string>>;
 
 export const CHARACTER_CATALOG: CharacterDefinition[] = [

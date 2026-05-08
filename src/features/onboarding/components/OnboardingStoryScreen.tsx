@@ -95,6 +95,19 @@ type RewardPageLayoutTuning = {
   characterRotateDeg: number;
 };
 
+type FinalPageLayoutTuning = {
+  rowTopPercent: number;
+  rowWidthVw: number;
+  rowMaxPx: number;
+  cardGapPx: number;
+  cardScale: number;
+  characterOffsetXPercent: number;
+  characterOffsetYPercent: number;
+  characterScale: number;
+  hoverLiftPx: number;
+  hoverScale: number;
+};
+
 function percent(value: number) {
   return `${value}%`;
 }
@@ -271,6 +284,30 @@ const REWARD_PAGE_LAYOUT_TUNING: RewardPageLayoutTuning = {
   characterRotateDeg: 0,
 };
 
+// 7 / 7 final page quick tuning:
+// edit only these numbers to move/resize the collection card row.
+const FINAL_PAGE_LAYOUT_TUNING: FinalPageLayoutTuning = {
+  rowTopPercent: 34,
+  rowWidthVw: 90,
+  rowMaxPx: 1780,
+  cardGapPx: 30,
+  cardScale: 1,
+  characterOffsetXPercent: 0,
+  characterOffsetYPercent: 70,
+  characterScale: 1.6,
+  hoverLiftPx: 18,
+  hoverScale: 1.045,
+};
+
+const FINAL_PAGE_CHARACTER_IDS: CharacterDefinition["id"][] = [
+  "shin-anago",
+  "oto-anago",
+  "kuro-anyago",
+  "dot-nago",
+  "moja-anago",
+  "hat-anago",
+];
+
 const STORY_SLIDES: StorySlide[] = [
   {
     id: "splash",
@@ -342,8 +379,13 @@ export function OnboardingStoryScreen({ onComplete }: OnboardingStoryScreenProps
   const isWarningStorySlide = currentSlide.variant === "warning";
   const isReturnStorySlide = currentSlide.variant === "return";
   const isRewardStorySlide = currentSlide.variant === "reward";
+  const isFinalStorySlide = currentSlide.variant === "final";
   const isSceneStorySlide =
-    isDockStorySlide || isWarningStorySlide || isReturnStorySlide || isRewardStorySlide;
+    isDockStorySlide ||
+    isWarningStorySlide ||
+    isReturnStorySlide ||
+    isRewardStorySlide ||
+    isFinalStorySlide;
   const isFinalSlide = slideIndex === STORY_SLIDES.length - 1;
   const featuredCharacters = useMemo(
     () => [
@@ -564,7 +606,7 @@ function StoryArtwork({
       return <RewardArtwork character={rewardCharacter} />;
     }
     case "final":
-      return <FinalArtwork />;
+      return <FinalArtwork characters={characters} />;
     case "message":
       return <DockStoryArtwork character={characters[3] ?? null} />;
     case "splash":
@@ -865,13 +907,69 @@ function RewardArtwork({
   );
 }
 
-function FinalArtwork() {
+function FinalArtwork({ characters }: { characters: CharacterDefinition[] }) {
+  const charactersById = new Map(
+    characters.map((character) => [character.id, character]),
+  );
+  const finalCharacters = FINAL_PAGE_CHARACTER_IDS.map(
+    (characterId) =>
+      charactersById.get(characterId) ??
+      CHARACTER_CATALOG.find((character) => character.id === characterId),
+  ).filter((character): character is CharacterDefinition => Boolean(character));
+  const rowStyle = {
+    "--final-card-row-top": percent(FINAL_PAGE_LAYOUT_TUNING.rowTopPercent),
+    "--final-card-strip-width": `min(${FINAL_PAGE_LAYOUT_TUNING.rowWidthVw}vw, ${FINAL_PAGE_LAYOUT_TUNING.rowMaxPx}px)`,
+    "--final-card-gap": px(FINAL_PAGE_LAYOUT_TUNING.cardGapPx),
+    "--final-card-scale": FINAL_PAGE_LAYOUT_TUNING.cardScale,
+    "--final-character-x": percent(
+      FINAL_PAGE_LAYOUT_TUNING.characterOffsetXPercent,
+    ),
+    "--final-character-y": percent(
+      FINAL_PAGE_LAYOUT_TUNING.characterOffsetYPercent,
+    ),
+    "--final-character-scale": FINAL_PAGE_LAYOUT_TUNING.characterScale,
+    "--final-card-hover-lift": px(FINAL_PAGE_LAYOUT_TUNING.hoverLiftPx),
+    "--final-card-hover-scale": FINAL_PAGE_LAYOUT_TUNING.hoverScale,
+  } as CSSProperties;
+
   return (
-    <div className="onboarding-final-artwork" aria-hidden="true">
-      <span className="onboarding-crown">♛</span>
-      <div className="onboarding-locked-row">
-        {Array.from({ length: 6 }, (_, index) => (
-          <span key={index}>?</span>
+    <div className="onboarding-final-artwork" style={rowStyle} aria-hidden="true">
+      <div className="onboarding-final-card-strip">
+        {finalCharacters.map((character, index) => (
+          <div
+            className="home-character-slot onboarding-final-card-slot"
+            key={character.id}
+            style={
+              {
+                "--card-anim-delay": `${index * 70}ms`,
+                "--home-character-color": character.characterColor.primary,
+                "--home-character-soft-color": character.characterColor.soft,
+              } as CSSProperties
+            }
+          >
+            <div className="home-character-card is-acquired onboarding-final-card">
+              <div className="home-character-preview onboarding-final-preview">
+                <img
+                  className="home-card-character onboarding-final-character"
+                  src={getCharacterImageSrc(character)}
+                  alt=""
+                  draggable={false}
+                />
+              </div>
+              <div className="home-character-body onboarding-final-card-body">
+                <h3 className="home-character-name onboarding-final-card-name">
+                  {character.name}
+                </h3>
+                <div className="home-character-tags">
+                  {character.personalityTags.map((tag) => (
+                    <span className="home-tag" key={tag}>
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         ))}
       </div>
     </div>

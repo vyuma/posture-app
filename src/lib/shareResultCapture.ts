@@ -17,6 +17,9 @@ export async function shareResultCapture(
     pixelRatio: 2,
     cacheBust: true,
     backgroundColor: "transparent",
+    // 型定義にはないがランタイムでは有効なオプション。画像が抜ける環境向けに CORS を有効化する。
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...( { useCORS: true } as any),
   });
 
   if (!blob) {

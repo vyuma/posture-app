@@ -22,11 +22,11 @@
 }
 
 .result-screen--accent-fail {
-  --result-stat-accent: #13a2d7;
+  --result-stat-accent: #8a9399;
   --result-share-icon: #8a9399;
   --result-meta-icon: #8a9399;
   --result-portrait-bg: #eceff1;
-  --result-timeline-good: #13a2d7;
+  --result-timeline-good: #8a9399;
   --result-timeline-bad: #d4dbe0;
 }
 
@@ -50,6 +50,21 @@
   line-height: 1.15;
 }
 
+.result-registered-title.is-fail {
+  animation: result-fail-title-fade-up 1.2s ease-out both;
+}
+
+@keyframes result-fail-title-fade-up {
+  from {
+    opacity: 0.74;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .result-registered-card {
   width: min(720px, 100%);
   display: grid;
@@ -63,6 +78,25 @@
     0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
+.result-screen--accent-fail .result-registered-card {
+  animation: result-fail-card-glow 2.4s ease-in-out infinite;
+}
+
+@keyframes result-fail-card-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 20px 48px rgba(19, 100, 120, 0.16),
+      0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+  50% {
+    box-shadow:
+      0 20px 52px rgba(19, 100, 120, 0.21),
+      0 0 0 8px rgba(255, 255, 255, 0.1),
+      0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+}
+
 .result-registered-col--character {
   display: flex;
   flex-direction: column;
@@ -70,7 +104,26 @@
   gap: 10px;
 }
 
+/*
+ * 獲得結果カード内の portrait（.result-registered-portrait）の見た目調整。
+ * ここまたは下のセレクタで同じ変数名を上書きすればよい（アプリを再ビルド不要）。
+ *
+ * - --result-portrait-img-width / height … 枠に対する幅・高さ（%, px, clamp 可）
+ * - --result-portrait-img-object-position … 画像の配置（contain 時のトリミング基準）
+ *   例: center center | center bottom | 50% 35%
+ * - --result-portrait-img-shift-x / shift-y … 微調整用の平行移動（px や %）
+ * - --result-portrait-img-scale … 一括拡縮（1 より大きくするとはみ出し、枠は overflow: hidden でクリップ）
+ * - --result-portrait-img-transform-origin … scale/移動の基準点（例: center bottom）
+ */
 .result-registered-portrait {
+  --result-portrait-img-width: 92%;
+  --result-portrait-img-height: 92%;
+  --result-portrait-img-object-position: center center;
+  --result-portrait-img-shift-x: 0px;
+  --result-portrait-img-shift-y: 0px;
+  --result-portrait-img-scale: 1.35;
+  --result-portrait-img-transform-origin: center center;
+
   aspect-ratio: 1 / 1;
   border-radius: clamp(14px, 2.5vw, 20px);
   background: var(--result-portrait-bg, #f0f4f8);
@@ -80,9 +133,37 @@
 }
 
 .result-registered-figure {
-  width: 92%;
-  height: 92%;
+  width: var(--result-portrait-img-width, 92%);
+  height: var(--result-portrait-img-height, 92%);
+  max-width: 100%;
+  max-height: 100%;
   object-fit: contain;
+  object-position: var(--result-portrait-img-object-position, center center);
+  transform-origin: var(--result-portrait-img-transform-origin, center center);
+  transform: translate(
+      var(--result-portrait-img-shift-x, 0px),
+      var(--result-portrait-img-shift-y, 0px)
+    )
+    scale(var(--result-portrait-img-scale, 1));
+}
+
+.result-registered-figure--qr-fail {
+  --result-fail-qr-width: 100%;
+  --result-fail-qr-height: 100%;
+  --result-fail-qr-shift-x: -10px;
+  --result-fail-qr-shift-y: -330px;
+  --result-fail-qr-scale: 3.5;
+
+  width: var(--result-fail-qr-width, 100%);
+  height: var(--result-fail-qr-height, 100%);
+  object-fit: contain;
+  object-position: center bottom;
+  transform: translate(
+      var(--result-fail-qr-shift-x, 0px),
+      var(--result-fail-qr-shift-y, 0px)
+    )
+    scale(var(--result-fail-qr-scale, 1.02));
+  filter: grayscale(1) saturate(0.15) brightness(0.9);
 }
 
 .result-registered-portrait .character-empty {
@@ -165,6 +246,7 @@
   display: flex;
   justify-content: flex-end;
   align-items: flex-start;
+  gap: 8px;
   min-height: 28px;
 }
 
@@ -172,16 +254,21 @@
   display: grid;
   place-items: center;
   padding: 6px;
-  border: 0;
+  border: 1px solid color-mix(in srgb, var(--result-share-icon, #888888) 24%, transparent);
   border-radius: 12px;
-  background: transparent;
+  background: color-mix(in srgb, var(--result-share-icon, #888888) 10%, #ffffff);
   color: var(--result-share-icon, #888888);
   cursor: pointer;
-  transition: opacity 0.14s ease;
+  transition:
+    opacity 0.14s ease,
+    transform 0.14s ease,
+    background 0.14s ease;
 }
 
 .result-registered-share:hover:not(:disabled) {
-  opacity: 0.84;
+  opacity: 0.92;
+  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--result-share-icon, #888888) 15%, #ffffff);
 }
 
 .result-registered-share:disabled,
@@ -204,6 +291,11 @@
   .result-registered-share.is-busy svg {
     animation: none;
   }
+
+  .result-screen--accent-fail .result-registered-card,
+  .result-registered-title.is-fail {
+    animation: none;
+  }
 }
 
 /* 共有結果のフィードバック（スクリーンリーダー用 aria-live と併用） */
@@ -221,14 +313,10 @@
   margin-top: clamp(10px, 2vh, 16px);
 }
 
-/* 共有用キャプチャ：背景グラデーション（画面と揃える） */
+/* 共有用キャプチャ：結果カードと同じ枠・背景をそのまま使う（余計なグラデーションカードは付けない） */
 .result-registered-capture-root {
   width: 100%;
   max-width: min(720px, 100%);
-  padding: clamp(14px, 2.8vw, 22px);
-  box-sizing: border-box;
-  border-radius: clamp(20px, 3.8vw, 30px);
-  background: linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
 }
 
 .result-registered-stat-grid {
