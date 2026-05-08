@@ -1,0 +1,120 @@
+import type { AcquiredCharacter } from "./types";
+import type { PostureTimelineSegment } from "../flow/types";
+import { normalizeCharacterId } from "./characterIds";
+
+const ACQUIRED_CHARACTERS_STORAGE_KEY = "posture.characters.acquired.v1";
+
+export function loadAcquiredCharacters(): AcquiredCharacter[] {
+  try {
+    const rawValue = window.localStorage.getItem(ACQUIRED_CHARACTERS_STORAGE_KEY);
+    if (!rawValue) {
+      return [];
+    }
+
+    const parsedValue: unknown = JSON.parse(rawValue);
+    if (!Array.isArray(parsedValue)) {
+      return [];
+    }
+
+    return dedupeAcquiredCharacters(
+      parsedValue.filter(isAcquiredCharacter).map(normalizeAcquiredCharacter),
+    );
+  } catch {
+    return [];
+  }
+}
+
+export function saveAcquiredCharacters(characters: AcquiredCharacter[]) {
+  try {
+    window.localStorage.setItem(
+      ACQUIRED_CHARACTERS_STORAGE_KEY,
+      JSON.stringify(characters),
+    );
+  } catch {
+    // Ignore storage failures in restricted WebViews.
+  }
+}
+
+export function clearAcquiredCharacters() {
+  try {
+    window.localStorage.removeItem(ACQUIRED_CHARACTERS_STORAGE_KEY);
+    window.localStorage.setItem(ACQUIRED_CHARACTERS_STORAGE_KEY, "[]");
+  } catch {
+    // Ignore storage failures in restricted WebViews.
+  }
+}
+
+function isAcquiredCharacter(value: unknown): value is AcquiredCharacter {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.characterId === "string" &&
+    typeof candidate.acquiredAt === "string" &&
+    typeof candidate.measurementId === "string" &&
+    isOptionalNumber(candidate.activeMeasurementMs) &&
+    isOptionalNumber(candidate.goodMs) &&
+    isOptionalNumber(candidate.goodRatio) &&
+    isOptionalPostureTimeline(candidate.postureTimeline)
+  );
+}
+
+function isOptionalPostureTimeline(
+  value: unknown,
+): value is PostureTimelineSegment[] | undefined {
+  if (value === undefined) {
+    return true;
+  }
+  if (!Array.isArray(value)) {
+    return false;
+  }
+  return value.every(isPostureTimelineSegment);
+}
+
+function isPostureTimelineSegment(
+  value: unknown,
+): value is PostureTimelineSegment {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+  const candidate = value as Record<string, unknown>;
+  return (
+    typeof candidate.startMs === "number" &&
+    typeof candidate.endMs === "number" &&
+    typeof candidate.isGood === "boolean"
+  );
+}
+
+function normalizeAcquiredCharacter(
+  character: AcquiredCharacter,
+): AcquiredCharacter {
+  const next: AcquiredCharacter = {
+    ...character,
+    characterId: normalizeCharacterId(character.characterId),
+  };
+  if (next.postureTimeline !== undefined) {
+    next.postureTimeline = next.postureTimeline.map((segment) => ({
+      ...segment,
+    }));
+  }
+  return next;
+}
+
+function dedupeAcquiredCharacters(characters: AcquiredCharacter[]) {
+  const seenCharacterIds = new Set<string>();
+
+  return characters.filter((character) => {
+    if (seenCharacterIds.has(character.characterId)) {
+      return false;
+    }
+
+    seenCharacterIds.add(character.characterId);
+    return true;
+  });
+}
+
+function isOptionalNumber(value: unknown) {
+  return value === undefined || typeof value === "number";
+}

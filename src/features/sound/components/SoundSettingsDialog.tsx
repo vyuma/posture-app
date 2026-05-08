@@ -18,6 +18,12 @@ function buildSoundLabel(path: string) {
   return fileName.replace(/\.mp3$|\.wav$/i, "");
 }
 
+function isSupportedAudioFile(file: File) {
+  const hasSupportedType = /audio\/(mpeg|wav|x-wav|mp3)/i.test(file.type);
+  const hasSupportedName = /\.(mp3|wav)$/i.test(file.name);
+  return hasSupportedType || hasSupportedName;
+}
+
 export function SoundSettingsDialog({
   settings,
   onChange,
@@ -51,8 +57,7 @@ export function SoundSettingsDialog({
       return;
     }
 
-    const isSupported = /audio\/(mpeg|wav|x-wav|mp3)/i.test(file.type);
-    if (!isSupported) {
+    if (!isSupportedAudioFile(file)) {
       setUploadError("mp3 または wav ファイルのみアップロードできます。");
       return;
     }
@@ -69,7 +74,9 @@ export function SoundSettingsDialog({
         throw new Error("invalid data url");
       }
 
-      const nextCustomSounds = [dataUrl, ...settings.customSounds].slice(0, 10);
+      const nextCustomSounds = Array.from(
+        new Set([dataUrl, ...settings.customSounds]),
+      ).slice(0, 10);
       onChange({
         ...settings,
         customSounds: nextCustomSounds,

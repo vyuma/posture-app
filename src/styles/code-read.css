@@ -1,0 +1,580 @@
+/* Figma Frame 53「3」（姿勢登録・398:1130）：1512×982 準拠、QRモーダルと同様 --pr-scale で等比 */
+
+.flow-screen.frame53-register-screen {
+  position: relative;
+  container-type: size;
+  container-name: frame53;
+
+  /* カード〜コントロール共通のスクショポイント (#13A2D7)。QR #34add5 とは別 */
+  --frame53-point: #13a2d7;
+  --frame53-volume-track-muted: #e8e8e8;
+
+  --pr-fr1-horizontal-inset: clamp(16px, 9.591vw, 145px);
+  --pr-fr1-block-top: clamp(72px, 15.274dvh, 150px);
+  --pr-fr1-block-bottom: clamp(48px, 15.377dvh, 151px);
+
+  /* デザイン幅1222×高681 のスケール用：パディング＋若干の余白（はみ出し防止） */
+  --frame53-scale-w-chrome: calc(2 * var(--pr-fr1-horizontal-inset) + 24px);
+  --frame53-scale-h-chrome: calc(
+    var(--pr-fr1-block-top) + var(--pr-fr1-block-bottom) + 24px
+  );
+
+  --pr-scale: max(
+    0.31,
+    min(
+      1,
+      calc((100vw - var(--frame53-scale-w-chrome)) / 1222px),
+      calc((100dvh - var(--frame53-scale-h-chrome)) / 681px)
+    )
+  );
+
+  padding: var(--pr-fr1-block-top) var(--pr-fr1-horizontal-inset)
+    var(--pr-fr1-block-bottom);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+  /* .flow-screen の overflow:hidden を上書きし、縦はみ出し時に操作に届くようにする */
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* ノード fills: #13a2d7 → #f2edcc */
+  background: linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
+}
+
+.frame53-register-screen .flow-brand {
+  position: absolute;
+  top: var(--flow-brand-offset-y);
+  left: var(--flow-brand-offset-x);
+  z-index: 2;
+  pointer-events: auto;
+}
+
+@supports (width: 1cqw) {
+  .flow-screen.frame53-register-screen {
+    /*
+     * cqw/cqh はこの要素のコンテンツボックス（パディング内側）基準。
+     * 100vw 側と同じ --frame53-scale-* を引くとパディングが二重になりスケールが極端に小さくなる。
+     */
+    --pr-scale: max(
+      0.31,
+      min(
+        1,
+        calc((100cqw - 24px) / 1222px),
+        calc((100cqh - 40px) / 681px)
+      )
+    );
+  }
+}
+
+.frame53-panels-wrap {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  width: min(calc(1222px * var(--pr-scale)), 100%);
+  min-height: 0;
+  gap: calc(41px * var(--pr-scale));
+}
+
+/* Frame 46 相当：500×681 白／角丸40／Figma y から算出したパディング */
+.frame53-left {
+  flex: 0 0 calc(500px * var(--pr-scale));
+  width: calc(500px * var(--pr-scale));
+  max-width: 100%;
+  height: calc(681px * var(--pr-scale));
+  min-height: calc(681px * var(--pr-scale));
+  box-sizing: border-box;
+  padding: calc(47px * var(--pr-scale)) calc(50px * var(--pr-scale))
+    calc(40px * var(--pr-scale));
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  background: #ffffff;
+  border-radius: calc(40px * var(--pr-scale));
+  overflow-x: hidden;
+  /* はみ出し時のみスクロール（通常はスクロールバー非表示に近い） */
+  overflow-y: auto;
+  /* 狭い幅スタック時は下のメディアで height:auto に切り替え */
+}
+
+.frame53-heading {
+  margin: 0 0 calc(32px * var(--pr-scale));
+  color: var(--frame53-point);
+  font-size: max(17px, calc(36px * var(--pr-scale)));
+  font-weight: 700;
+  line-height: calc(43 / 36);
+  letter-spacing: 0;
+}
+
+.frame53-led {
+  margin: 0 0 calc(64px * var(--pr-scale));
+  color: #666666;
+  font-size: max(13px, calc(20px * var(--pr-scale)));
+  font-weight: 700;
+  line-height: calc(24 / 20);
+}
+
+.frame53-rule {
+  margin: 0 0 calc(28px * var(--pr-scale));
+  width: min(calc(400px * var(--pr-scale)), 100%);
+  align-self: center;
+  border: 0;
+  border-top: 1px solid #f5f5f5;
+}
+
+.frame53-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(12px * var(--pr-scale));
+  margin-bottom: calc(32px * var(--pr-scale));
+}
+
+.frame53-row-label {
+  color: #666666;
+  font-size: max(12px, calc(20px * var(--pr-scale)));
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+/*
+ * スクショ：トグルは白地の行のみ（グレーカードはサウンド内パネルのみ）。
+ * スイッチ形状は QR Step2 と同じ 52×28・ノブ 24px*scale。
+ */
+.frame53-toggle-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(12px * var(--pr-scale));
+  margin-bottom: calc(24px * var(--pr-scale));
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.frame53-toggle-strip-label {
+  color: #666666;
+  font-size: max(12px, calc(20px * var(--pr-scale)));
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.frame53-toggle-strip-switch {
+  position: relative;
+  flex-shrink: 0;
+  width: calc(52px * var(--pr-scale));
+  height: calc(28px * var(--pr-scale));
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #c4c8cc;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.frame53-toggle-strip-switch.is-on {
+  background: var(--frame53-point);
+}
+
+.frame53-toggle-strip-switch:focus-visible {
+  outline: 2px solid var(--frame53-point);
+  outline-offset: calc(3px * var(--pr-scale));
+}
+
+.frame53-toggle-strip-switch-knob {
+  position: absolute;
+  top: 50%;
+  left: calc(3px * var(--pr-scale));
+  width: calc(22px * var(--pr-scale));
+  height: calc(22px * var(--pr-scale));
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  transform: translateY(-50%);
+  transition: transform 0.18s ease;
+  pointer-events: none;
+}
+
+.frame53-toggle-strip-switch.is-on .frame53-toggle-strip-switch-knob {
+  transform: translateY(-50%) translateX(calc(24px * var(--pr-scale)));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame53-toggle-strip-switch,
+  .frame53-toggle-strip-switch-knob {
+    transition: none;
+  }
+}
+
+/* picon:on 近似：64×64 タップ領域、ON=ポイント色／OFF=#d0d6da */
+.frame53-icon-switch {
+  position: relative;
+  flex-shrink: 0;
+  width: calc(64px * var(--pr-scale));
+  height: calc(64px * var(--pr-scale));
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(208, 214, 218, 0.85);
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.frame53-icon-switch.is-on {
+  background: var(--frame53-point);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 calc(6px * var(--pr-scale)) calc(14px * var(--pr-scale))
+      rgba(19, 162, 215, 0.26);
+}
+
+.frame53-icon-switch:focus-visible {
+  outline: 2px solid var(--frame53-point);
+  outline-offset: calc(4px * var(--pr-scale));
+}
+
+.frame53-icon-switch-knob-dot {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 28%;
+  height: 28%;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.14);
+}
+
+/* Frame 49：#f5f5f5 角丸16、音量＋効果音 */
+.frame53-sound-card {
+  align-self: center;
+  width: min(calc(400px * var(--pr-scale)), 100%);
+  margin-bottom: calc(24px * var(--pr-scale));
+  padding: calc(24px * var(--pr-scale)) calc(22px * var(--pr-scale));
+  box-sizing: border-box;
+  border-radius: calc(16px * var(--pr-scale));
+  background: #f5f5f5;
+}
+
+.frame53-sound-heading {
+  margin: 0 0 calc(14px * var(--pr-scale));
+  color: #666666;
+  font-size: max(13px, calc(16px * var(--pr-scale)));
+  font-weight: 700;
+}
+
+.frame53-volume-row {
+  display: flex;
+  align-items: center;
+  gap: calc(14px * var(--pr-scale));
+  margin-bottom: calc(20px * var(--pr-scale));
+}
+
+.frame53-volume-visible-label {
+  flex-shrink: 0;
+  margin: 0;
+  color: #666666;
+  font-size: max(13px, calc(16px * var(--pr-scale)));
+  font-weight: 700;
+}
+
+.frame53-volume-range {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: calc(28px * var(--pr-scale));
+  accent-color: var(--frame53-point);
+
+  appearance: none;
+  -webkit-appearance: none;
+
+  /*
+   * トラック塗り分け JS 側 --frame53-volume-pct と整合。
+   * WebKit は linear-gradient／Firefox は ::-moz-range-progress。
+   */
+  --frame53-vol-track-h: max(8px, calc(8px * var(--pr-scale)));
+  --frame53-vol-thumb-size: max(17px, calc(18px * var(--pr-scale)));
+}
+
+.frame53-volume-range::-webkit-slider-runnable-track {
+  height: var(--frame53-vol-track-h);
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--frame53-point) 0,
+    var(--frame53-point) var(--frame53-volume-pct, 0%),
+    var(--frame53-volume-track-muted) var(--frame53-volume-pct, 0%),
+    var(--frame53-volume-track-muted) 100%
+  );
+}
+
+.frame53-volume-range::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  width: var(--frame53-vol-thumb-size);
+  height: var(--frame53-vol-thumb-size);
+  margin-top: calc(
+    (
+        var(--frame53-vol-track-h, 8px) - var(--frame53-vol-thumb-size, 18px)
+      ) /
+      2 * 1
+  );
+  border-radius: 50%;
+  border: calc(2px * var(--pr-scale)) solid #ffffff;
+  background: var(--frame53-point);
+  box-shadow: 0 1px 5px rgba(19, 162, 215, 0.35);
+  cursor: pointer;
+}
+
+.frame53-volume-range::-moz-range-track {
+  height: var(--frame53-vol-track-h);
+  border-radius: 999px;
+  background: var(--frame53-volume-track-muted);
+}
+
+.frame53-volume-range::-moz-range-progress {
+  height: var(--frame53-vol-track-h);
+  border-radius: 999px;
+  background: var(--frame53-point);
+}
+
+.frame53-volume-range::-moz-range-thumb {
+  appearance: none;
+  box-sizing: border-box;
+  width: var(--frame53-vol-thumb-size);
+  height: var(--frame53-vol-thumb-size);
+  border-radius: 50%;
+  border: calc(2px * var(--pr-scale)) solid #ffffff;
+  background: var(--frame53-point);
+  box-shadow: 0 1px 5px rgba(19, 162, 215, 0.35);
+  cursor: pointer;
+}
+
+.frame53-volume-range:focus-visible {
+  outline: 2px solid var(--frame53-point);
+  outline-offset: calc(4px * var(--pr-scale));
+}
+
+.frame53-volume-range:focus-visible::-webkit-slider-thumb {
+  outline: none;
+}
+
+.frame53-muted .frame53-volume-range {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.frame53-muted .frame53-sfx-shell {
+  opacity: 0.45;
+}
+
+.frame53-sfx-label {
+  margin: 0 0 calc(10px * var(--pr-scale));
+  color: #666666;
+  font-size: max(13px, calc(16px * var(--pr-scale)));
+  font-weight: 700;
+}
+
+/* Frame 40：スクショ準拠・白フィールドひと続き／右にグレーの▼ */
+.frame53-sfx-shell {
+  background: transparent;
+  border-radius: calc(16px * var(--pr-scale));
+  padding: 0;
+}
+
+.frame53-sfx-select {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+
+  /*
+   * Chevron は data SVG。右側に余白を確保してネイティブ矢印と重ならないようにする。
+   */
+  appearance: none;
+  -webkit-appearance: none;
+
+  padding: calc(14px * var(--pr-scale)) calc(40px * var(--pr-scale))
+    calc(14px * var(--pr-scale)) calc(18px * var(--pr-scale));
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: calc(14px * var(--pr-scale));
+  background-color: #ffffff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath fill='%23666' d='M7 9 0 0h14z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right calc(16px * var(--pr-scale)) center;
+  background-size: calc(12px * var(--pr-scale)) auto;
+
+  color: #444444;
+  font-family: inherit;
+  font-size: max(12px, calc(20px * var(--pr-scale)));
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.frame53-sfx-select:focus-visible {
+  outline: 2px solid var(--frame53-point);
+  outline-offset: calc(3px * var(--pr-scale));
+}
+
+.frame53-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: calc(20px * var(--pr-scale));
+}
+
+.frame53-back {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  justify-content: center;
+  width: calc(44px * var(--pr-scale));
+  height: calc(44px * var(--pr-scale));
+  padding: 0;
+  margin: 0 calc(-4px * var(--pr-scale));
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #666666;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    color 0.18s ease;
+}
+
+.frame53-back:hover,
+.frame53-back:focus-visible {
+  background: rgba(19, 162, 215, 0.08);
+  color: var(--frame53-point);
+}
+
+.frame53-back-svg {
+  width: calc(24px * var(--pr-scale));
+  height: calc(24px * var(--pr-scale));
+  flex-shrink: 0;
+}
+
+/* Frame 35：QR「次へ」ボタン（.qr-modal-next-btn）に合わせたピル CTA */
+.frame53-primary {
+  align-self: stretch;
+  width: min(calc(400px * var(--pr-scale)), 100%);
+  margin-inline: auto;
+  min-height: calc(52px * var(--pr-scale));
+  height: calc(77px * var(--pr-scale));
+  border: 0;
+  border-radius: 999px;
+  background: #d3d3d3;
+  color: #ffffff;
+  font-size: max(14px, calc(24px * var(--pr-scale)));
+  font-weight: 700;
+  letter-spacing: 0;
+  cursor: not-allowed;
+  box-shadow: none;
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease;
+}
+
+.frame53-primary:not(:disabled) {
+  background: var(--frame53-point);
+  cursor: pointer;
+  box-shadow: 0 calc(8px * var(--pr-scale)) calc(24px * var(--pr-scale))
+    rgba(19, 162, 215, 0.34);
+}
+
+.frame53-primary:not(:disabled):hover,
+.frame53-primary:not(:disabled):focus-visible {
+  transform: translateY(-1px);
+}
+
+/* Frame 44：ライブカメラ（既定グレーの上に鏡映し映像／失敗時はテキスト） */
+.frame53-camera-panel {
+  position: relative;
+  flex: 0 0 calc(681px * var(--pr-scale));
+  width: calc(681px * var(--pr-scale));
+  max-width: 100%;
+  height: calc(681px * var(--pr-scale));
+  min-height: calc(681px * var(--pr-scale));
+  box-sizing: border-box;
+  border-radius: calc(40px * var(--pr-scale));
+  background: #a1a1a1;
+  padding: 0;
+  overflow: hidden;
+}
+
+.frame53-camera-video {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transform: scaleX(-1);
+  background: #8a8a8a;
+}
+
+.frame53-camera-overlay-text {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000000;
+  font-size: max(22px, calc(36px * var(--pr-scale)));
+  font-weight: 700;
+  line-height: calc(43 / 36);
+  text-align: center;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.frame53-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame53-primary:not(:disabled):hover,
+  .frame53-primary:not(:disabled):focus-visible {
+    transform: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .frame53-panels-wrap {
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: center;
+  }
+
+  .frame53-left {
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    align-self: center;
+    /* 内容に合わせて伸び、はみ出しはカード内スクロール（ページと二重にならないよう主要はここ） */
+    overflow-y: auto;
+  }
+
+  .frame53-camera-panel {
+    order: -1;
+    flex-basis: 100%;
+    width: 100%;
+    max-width: 100%;
+    min-height: unset;
+    height: clamp(260px, 42dvh, calc(681px * var(--pr-scale)));
+  }
+}

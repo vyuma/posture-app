@@ -7,8 +7,12 @@ type PostureViewerProps = {
   canvasRef: RefObject<HTMLCanvasElement | null>;
   isBadPosture: boolean;
   isOverlayEnabled: boolean;
+  isCharacterOverlayEnabled: boolean;
   experiment: PostureExperimentMetrics;
   onOverlayEnabledChange: (enabled: boolean) => void;
+  onCharacterOverlayEnabledChange: (enabled: boolean) => void;
+  /** Figma 測定画面：カメラとオーバーレイのみ（デバッグパネル非表示） */
+  variant?: "full" | "measurement";
 };
 
 export function PostureViewer({
@@ -16,57 +20,79 @@ export function PostureViewer({
   canvasRef,
   isBadPosture,
   isOverlayEnabled,
+  isCharacterOverlayEnabled,
   experiment,
   onOverlayEnabledChange,
+  onCharacterOverlayEnabledChange,
+  variant = "full",
 }: PostureViewerProps) {
+  const isMeasurement = variant === "measurement";
+
   return (
-    <section className="viewer">
+    <section className={`viewer ${isMeasurement ? "viewer--measurement" : ""}`}>
       <video ref={videoRef} className="camera" playsInline muted />
       <canvas ref={canvasRef} className="overlay" />
 
-      <div
-        className={`posture-alert ${isBadPosture ? "show" : "hide"}`}
-        role="status"
-        aria-live="polite"
-      >
-        姿勢が悪いです
-      </div>
-
-      <section className="display-mode-switch" aria-label="表示設定">
-        <span>表示設定</span>
-        <label className="mode-toggle" htmlFor="overlay-enabled">
-          <input
-            id="overlay-enabled"
-            type="checkbox"
-            checked={isOverlayEnabled}
-            onChange={(event) => {
-              onOverlayEnabledChange(event.currentTarget.checked);
-            }}
-          />
-          <span>オーバーレイ {isOverlayEnabled ? "ON" : "OFF"}</span>
-        </label>
-      </section>
-
-      <section className="angle-readout" aria-label="首角度シグナル">
-        <div>
-          <span>首角度 3D</span>
-          <strong>{formatAngle(experiment.neckAngle3d)}</strong>
-        </div>
-        {experiment.neckAngle2dFallback !== null ? (
-          <div>
-            <span>2Dフォールバック</span>
-            <strong>{formatAngle(experiment.neckAngle2dFallback)}</strong>
+      {isMeasurement ? null : (
+        <>
+          <div
+            className={`posture-alert ${isBadPosture ? "show" : "hide"}`}
+            role="status"
+            aria-live="polite"
+          >
+            姿勢が悪いです
           </div>
-        ) : null}
-        <small>{formatExperimentStatus(experiment)}</small>
-      </section>
 
-      <div className="legend">
-        <span className="item nose">鼻</span>
-        <span className="item face">耳</span>
-        <span className="item shoulder">肩</span>
-        <span className="item gaze">腰</span>
-      </div>
+          <section className="display-mode-switch" aria-label="表示設定">
+            <span>表示設定</span>
+            <label className="mode-toggle" htmlFor="overlay-enabled">
+              <input
+                id="overlay-enabled"
+                type="checkbox"
+                checked={isOverlayEnabled}
+                onChange={(event) => {
+                  onOverlayEnabledChange(event.currentTarget.checked);
+                }}
+              />
+              <span>オーバーレイ {isOverlayEnabled ? "ON" : "OFF"}</span>
+            </label>
+            <label className="mode-toggle" htmlFor="character-overlay-enabled">
+              <input
+                id="character-overlay-enabled"
+                type="checkbox"
+                checked={isCharacterOverlayEnabled}
+                onChange={(event) => {
+                  onCharacterOverlayEnabledChange(event.currentTarget.checked);
+                }}
+              />
+              <span>
+                デスクトップキャラ {isCharacterOverlayEnabled ? "ON" : "OFF"}
+              </span>
+            </label>
+          </section>
+
+          <section className="angle-readout" aria-label="首角度シグナル">
+            <div>
+              <span>首角度 3D</span>
+              <strong>{formatAngle(experiment.neckAngle3d)}</strong>
+            </div>
+            {experiment.neckAngle2dFallback !== null ? (
+              <div>
+                <span>2Dフォールバック</span>
+                <strong>{formatAngle(experiment.neckAngle2dFallback)}</strong>
+              </div>
+            ) : null}
+            <small>{formatExperimentStatus(experiment)}</small>
+          </section>
+
+          <div className="legend">
+            <span className="item nose">鼻</span>
+            <span className="item face">耳</span>
+            <span className="item shoulder">肩</span>
+            <span className="item gaze">腰</span>
+          </div>
+        </>
+      )}
     </section>
   );
 }

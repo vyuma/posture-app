@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 
+import { useQrDataUrl } from "../../../lib/useQrDataUrl";
 import { usePairingState } from "../hooks/usePairingState";
-import { buildPairingLink, buildPairingQrImageUrl } from "../services/pairingLink";
+import { buildPairingLink } from "../services/pairingLink";
 import "./PairingDialog.css";
 
 type PairingDialogProps = {
@@ -13,7 +14,7 @@ export function PairingDialog({ onClose }: PairingDialogProps) {
   const [copyState, setCopyState] = useState<"idle" | "done" | "error">("idle");
 
   const pairingLink = buildPairingLink(pairingInfo);
-  const qrImageUrl = buildPairingQrImageUrl(pairingLink);
+  const qrImageDataUrl = useQrDataUrl(pairingLink);
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -79,10 +80,10 @@ export function PairingDialog({ onClose }: PairingDialogProps) {
 
         <div className="pairing-dialog-body">
           <div className="pairing-qr-card">
-            {qrImageUrl ? (
+            {qrImageDataUrl ? (
               <img
                 className="pairing-qr-image"
-                src={qrImageUrl}
+                src={qrImageDataUrl}
                 alt="ペアリングQRコード"
               />
             ) : (

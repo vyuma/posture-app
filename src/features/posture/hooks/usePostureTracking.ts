@@ -165,15 +165,7 @@ const isWindowBackgrounded = () => {
     return false;
   }
 
-  if (document.visibilityState !== "visible") {
-    return true;
-  }
-
-  if (typeof document.hasFocus === "function") {
-    return !document.hasFocus();
-  }
-
-  return false;
+  return document.visibilityState !== "visible";
 };
 
 const getTrackingMode = (): TrackingMode =>
@@ -187,13 +179,18 @@ const getTrackingIntervalMs = () =>
 const IDLE_STATUS = "測定開始を待機しています。";
 const INIT_STATUS = "カメラとPoseモデルを初期化しています...";
 
+function stopMediaStream(stream: MediaStream | null) {
+  stream?.getTracks().forEach((track) => track.stop());
+}
+
 type UsePostureTrackingOptions = {
   enabled?: boolean;
   overlayEnabled?: boolean;
+  paused?: boolean;
 };
 
 export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
-  const { enabled = true, overlayEnabled = true } = options;
+  const { enabled = true, overlayEnabled = true, paused = false } = options;
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const trackingTimerRef = useRef<number | null>(null);
@@ -205,6 +202,7 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
   const lastBackgroundAlertAtRef = useRef(0);
   const trackingModeRef = useRef<TrackingMode>("foreground");
   const overlayEnabledRef = useRef(overlayEnabled);
+  const pausedRef = useRef(paused);
   const engineStateRef = useRef(createPostureEngineState());
   const experimentHistoryRef = useRef<PostureExperimentSample[]>([]);
   const experimentSmoothingRef = useRef<PostureExperimentMetrics[]>([]);
@@ -247,6 +245,25 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
   }, [overlayEnabled]);
 
   useEffect(() => {
+    pausedRef.current = paused;
+
+    if (!enabled) {
+      return;
+    }
+
+    if (paused) {
+      isBadPostureRef.current = false;
+      setIsBadPosture(false);
+      setStatus("一時停止中です。");
+      return;
+    }
+
+    if (ready) {
+      setStatus("姿勢を追跡中です。");
+    }
+  }, [enabled, paused, ready]);
+
+  useEffect(() => {
     const video = videoRef.current;
     const stream = streamRef.current;
 
@@ -263,11 +280,8 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
   useEffect(() => {
     if (!enabled) {
       clearTrackingTimer();
-
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-        streamRef.current = null;
-      }
+      stopMediaStream(streamRef.current);
+      streamRef.current = null;
 
       poseLandmarkerRef.current?.close();
       poseLandmarkerRef.current = null;
@@ -355,6 +369,30 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
       }
     };
 
+    const releaseLateInitResources = (
+      stream: MediaStream | null,
+      poseLandmarker: PoseLandmarker | null = null,
+    ) => {
+      if (streamRef.current === stream) {
+        streamRef.current = null;
+      }
+
+      stopMediaStream(stream);
+      poseLandmarker?.close();
+    };
+
+    const shouldAbortInit = (
+      stream: MediaStream | null,
+      poseLandmarker: PoseLandmarker | null = null,
+    ) => {
+      if (mounted) {
+        return false;
+      }
+
+      releaseLateInitResources(stream, poseLandmarker);
+      return true;
+    };
+
     const maybeResumeVideo = async (video: HTMLVideoElement) => {
       if (!video.paused) {
         return;
@@ -425,6 +463,25 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
       const trackingMode = getTrackingMode();
       const trackingIntervalMs = getTrackingIntervalMs();
       updateTrackingStatus(trackingMode);
+
+      if (pausedRef.current) {
+        setStatus("一時停止中です。");
+
+        if (isBadPostureRef.current) {
+          isBadPostureRef.current = false;
+          setIsBadPosture(false);
+        }
+
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        scheduleNext(250, () => {
+          void trackOnce();
+        });
+        return;
+      }
 
       await maybeResumeVideo(video);
 
@@ -553,23 +610,38 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
     };
 
     const init = async () => {
+      let initStream: MediaStream | null = null;
+      let initPoseLandmarker: PoseLandmarker | null = null;
+
       try {
         if (!videoRef.current || !canvasRef.current) {
           return;
         }
 
-        const stream = await startCamera();
-        streamRef.current = stream;
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-
-        const vision = await FilesetResolver.forVisionTasks(VISION_WASM_URL);
-        const poseLandmarker = await createPoseLandmarker(vision);
-        poseLandmarkerRef.current = poseLandmarker;
-
-        if (!mounted) {
+        initStream = await startCamera();
+        if (shouldAbortInit(initStream)) {
           return;
         }
+
+        streamRef.current = initStream;
+        videoRef.current.srcObject = initStream;
+        await videoRef.current.play();
+        if (shouldAbortInit(initStream)) {
+          return;
+        }
+
+        const vision = await FilesetResolver.forVisionTasks(VISION_WASM_URL);
+        if (shouldAbortInit(initStream)) {
+          return;
+        }
+
+        initPoseLandmarker = await createPoseLandmarker(vision);
+        if (shouldAbortInit(initStream, initPoseLandmarker)) {
+          return;
+        }
+
+        poseLandmarkerRef.current = initPoseLandmarker;
+        initPoseLandmarker = null;
 
         setReady(true);
         setStatus("姿勢を追跡中です。");
@@ -587,7 +659,8 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
           void trackOnce();
         });
       } catch (error) {
-        if (!mounted && error instanceof Error && error.name === "AbortError") {
+        if (!mounted) {
+          releaseLateInitResources(initStream, initPoseLandmarker);
           return;
         }
 
@@ -602,11 +675,8 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
     return () => {
       mounted = false;
       clearTrackingTimer();
-
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-        streamRef.current = null;
-      }
+      stopMediaStream(streamRef.current);
+      streamRef.current = null;
 
       poseLandmarkerRef.current?.close();
       poseLandmarkerRef.current = null;

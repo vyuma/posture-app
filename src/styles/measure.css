@@ -1,0 +1,517 @@
+/* 測定画面（MeasuringScreen）：Figma 4·5 に合わせた左カード＋カメラ。Frame53 コンポーネント用変数を供給 */
+.measuring-screen {
+  --frame53-point: #13a2d7;
+  --frame53-volume-track-muted: #e8e8e8;
+  --pr-scale: 0.52;
+
+  /* Frame 53 と同系：#13A2D7 → #F2EDCC */
+  background: linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 100dvh;
+  padding: clamp(52px, 9vh, 88px) clamp(16px, 3.2vw, 36px) clamp(20px, 4.5vh, 40px);
+  overflow-y: auto;
+}
+
+/* 旧レイアウト互換（未使用） */
+.measure-header {
+  width: min(1120px, 100%);
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-end;
+}
+
+.measure-header h1 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(1.25rem, 2.4vw, 1.8rem);
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
+.measure-header p {
+  margin: 9px 0 0;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.92rem;
+  font-weight: 800;
+}
+
+.measure-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.measure-layout {
+  flex: 0 1 auto;
+  /* 狭い窓はコンパクト、広い窓は vw に追従して拡大（上限あり） */
+  width: min(1180px, max(720px, 76vw), calc(100vw - 32px));
+  min-height: 0;
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(260px, 36%) minmax(0, 1fr);
+  gap: clamp(16px, 2.8vw, 32px);
+  align-items: stretch;
+}
+
+.measure-control-card {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.5vw, 16px);
+  min-width: 0;
+  padding: clamp(16px, 1.85vw, 22px);
+  border-radius: clamp(24px, 3.6vw, 34px);
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid rgba(45, 82, 96, 0.08);
+  box-shadow:
+    0 18px 44px rgba(19, 100, 130, 0.14),
+    0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.measure-control-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.measure-control-title {
+  margin: 0;
+  color: var(--frame53-point, #13a2d7);
+  font-size: clamp(1.2rem, 2.4vw, 1.65rem);
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.measure-control-icon-actions {
+  flex-shrink: 0;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.measure-icon-btn {
+  box-sizing: border-box;
+  width: 50px;
+  height: 50px;
+  padding: 0;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 2px solid rgba(239, 68, 68, 0.9);
+  background: rgba(255, 255, 255, 0.98);
+  color: #1f2937;
+  cursor: pointer;
+  transition:
+    transform 0.12s ease,
+    filter 0.12s ease;
+}
+
+.measure-icon-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.02);
+}
+
+.measure-icon-btn:disabled {
+  opacity: 0.42;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.measure-icon-btn.is-resume {
+  border-color: rgba(34, 197, 94, 0.9);
+}
+
+.measure-icon-btn--stop:not(:disabled) {
+  border-color: rgba(239, 68, 68, 0.95);
+  color: rgba(239, 68, 68, 0.95);
+}
+
+.measure-metrics-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  min-width: 0;
+}
+
+.measure-control-card .metric-tile {
+  background: #f5f5f7;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.measure-baseline-cta {
+  margin-top: 6px;
+  width: 100%;
+  padding: 14px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--frame53-point, #13a2d7);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(19, 162, 215, 0.28);
+  transition:
+    transform 0.14s ease,
+    filter 0.14s ease;
+}
+
+.measure-baseline-cta:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.measure-baseline-cta:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.measure-debug-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+  margin-top: 4px;
+  border-top: 1px dashed rgba(19, 100, 130, 0.18);
+}
+
+.measure-debug-tools-label {
+  flex: 1 1 100%;
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #6b7885;
+  letter-spacing: 0.04em;
+}
+
+.measure-debug-overlay-row {
+  flex: 1 1 100%;
+}
+
+.measure-camera-panel {
+  min-width: 0;
+  min-height: 0;
+  padding: clamp(5px, 0.85vw, 10px);
+  border-radius: clamp(26px, 4.2vw, 40px);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.measure-camera-panel .measure-camera-stack {
+  flex: 1;
+  min-height: 0;
+  border-radius: clamp(22px, 3.8vw, 38px);
+  overflow: hidden;
+  /* 背面グレーは viewer--measurement 側へ（二重レイヤーを避ける） */
+  background: transparent;
+}
+
+.measure-camera-panel .viewer,
+.measure-camera-panel video.camera {
+  background: transparent;
+}
+
+.measure-camera-panel--figma {
+  display: flex;
+  flex-direction: column;
+  min-height: clamp(200px, min(34vh, 28vw), 520px);
+}
+
+/* PostureViewer と暗幕オーバーレイを同じ枠に重ねるためのスタッキング */
+.measure-camera-stack {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+/*
+ * 測定左カード内 Frame49：登録画面と同クラスだが --pr-scale=0.52 のため音カードだけ極細になる。
+ * カード幅いっぱいにしてスライダー・セレクトを確保する。
+ */
+.measuring-screen .frame53-sound-card {
+  align-self: stretch;
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+}
+
+/* 悪い〜良い：Figma カメラ上のフロート帯（全幅ではなく左右に余白・角丸カプセル） */
+.measure-posture-gauge {
+  position: absolute;
+  top: clamp(10px, 2vmin, 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - clamp(24px, 6vw, 44px));
+  max-width: 100%;
+  z-index: 2500;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px clamp(14px, 3.2vw, 20px);
+  box-sizing: border-box;
+  pointer-events: none;
+  background: rgba(0, 0, 0, 0.48);
+  border-radius: 999px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.measure-posture-gauge--warmup .measure-posture-gauge-fill {
+  width: 0 !important;
+  opacity: 0.55;
+}
+
+.measure-posture-gauge-end,
+.measure-posture-gauge-end--bad,
+.measure-posture-gauge-end--good {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.98);
+  text-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.55),
+    0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+.measure-posture-gauge-track {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: clamp(14px, 2vmin, 18px);
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.06),
+    0 0 0 1px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.measure-posture-gauge-fill {
+  height: 100%;
+  max-width: 100%;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    #f2edcc 0%,
+    #a8e8d2 34%,
+    #5ac9e5 70%,
+    #13a2d7 100%
+  );
+  transition: width 0.35s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .measure-posture-gauge-fill {
+    transition: none;
+  }
+}
+
+/*
+ * 初期姿勢測定 (5秒) 用の半透明オーバーレイ + 円弧カウンター。
+ * カメラと PostureViewer 内の表示モード切替 (z-index:2300) より前面に出す。
+ */
+.warmup-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 2600;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 20px;
+  border-radius: inherit;
+  background: rgba(0, 0, 0, 0.5);
+  color: #ffffff;
+  pointer-events: auto;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.warmup-veil-inner {
+  position: relative;
+  width: clamp(120px, 22vmin, 220px);
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+}
+
+.warmup-veil-ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.warmup-veil-ring-track {
+  stroke: rgba(255, 255, 255, 0.22);
+  stroke-width: 6;
+}
+
+.warmup-veil-ring-progress {
+  stroke: #ffffff;
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition:
+    stroke-dashoffset 0.3s linear;
+}
+
+.warmup-veil-count {
+  position: relative;
+  font-size: clamp(2.4rem, 6vmin, 4rem);
+  font-weight: 800;
+  line-height: 1;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.warmup-veil-label {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: clamp(0.92rem, 1.6vmin, 1.05rem);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .warmup-veil-ring-progress {
+    transition: none;
+  }
+}
+
+.metric-tile {
+  display: grid;
+  gap: 4px;
+  padding: 13px 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(45, 82, 96, 0.1);
+}
+
+.metric-tile span {
+  color: #5d737c;
+  font-size: 0.76rem;
+  font-weight: 900;
+}
+
+.metric-tile strong {
+  color: #203b45;
+  font-size: 1.42rem;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.measure-tool-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* デスクトップキャラ用の配置ヒント再表示（overlay の cat_overlay へ emitTo） */
+.measure-tool-overlay-hint-debug {
+  font-size: 0.78rem;
+  opacity: 0.95;
+  transition:
+    transform 0.14s ease,
+    box-shadow 0.14s ease,
+    filter 0.14s ease;
+}
+
+.measure-tool-overlay-hint-debug:hover {
+  opacity: 1;
+}
+
+.measure-tool-overlay-hint-debug:active {
+  transform: scale(0.96);
+  filter: brightness(0.94);
+}
+
+.measure-placement-hint-emit-feedback {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.35;
+  animation: measure-hint-feedback-in 0.22s ease;
+}
+
+.measure-placement-hint-emit-feedback--ok {
+  color: #0f5132;
+  background: rgba(209, 250, 229, 0.95);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.measure-placement-hint-emit-feedback--fail {
+  color: #7f1d1d;
+  background: rgba(254, 226, 226, 0.95);
+  border: 1px solid rgba(248, 113, 113, 0.45);
+}
+
+@keyframes measure-hint-feedback-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .measure-tool-overlay-hint-debug {
+    transition: none;
+  }
+
+  .measure-tool-overlay-hint-debug:active {
+    transform: none;
+  }
+
+  .measure-placement-hint-emit-feedback {
+    animation: none;
+  }
+}
+
+/* 縦幅が狭いときは左カード内メトリクスを詰める */
+@media (max-height: 640px) {
+  .measure-control-title {
+    font-size: clamp(1.05rem, 2vw, 1.4rem);
+  }
+
+  .metric-tile {
+    padding: 9px 12px;
+  }
+
+  .metric-tile strong {
+    font-size: 1.15rem;
+  }
+}
+
+/* 単列：上＝カメラ、下＝操作（一覧性） */
+@media (max-width: 920px) {
+  .measure-layout {
+    grid-template-columns: 1fr;
+    grid-auto-rows: auto;
+    width: min(600px, max(360px, 88vw), calc(100vw - 24px));
+  }
+
+  .measure-camera-panel--figma {
+    order: -1;
+    min-height: min(40vh, 320px);
+  }
+
+  .measure-control-card {
+    order: 0;
+  }
+}

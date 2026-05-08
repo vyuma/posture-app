@@ -1,0 +1,1983 @@
+/* 初回ストーリー説明 */
+
+@keyframes onboarding-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* 前進スライド：右から入る */
+@keyframes onboarding-slide-forward {
+  from {
+    opacity: 0;
+    translate: 36px 0;
+    scale: 0.97;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+/* 後退スライド：左から入る */
+@keyframes onboarding-slide-backward {
+  from {
+    opacity: 0;
+    translate: -36px 0;
+    scale: 0.97;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+/* アートワーク前進：下から浮き上がり */
+@keyframes onboarding-art-forward {
+  from {
+    opacity: 0;
+    translate: 28px 22px;
+    scale: 0.96;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+/* アートワーク後退 */
+@keyframes onboarding-art-backward {
+  from {
+    opacity: 0;
+    translate: -28px 22px;
+    scale: 0.96;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@keyframes onboarding-card-in {
+  from {
+    opacity: 0;
+    translate: 0 18px;
+    scale: 0.98;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@keyframes onboarding-line-in {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes onboarding-character-pop {
+  from {
+    opacity: 0;
+    translate: 0 42px;
+    scale: 0.94;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@keyframes onboarding-float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -9px;
+  }
+}
+
+@keyframes onboarding-bubble-rise {
+  from {
+    opacity: 0;
+    translate: 0 18px;
+  }
+  15%,
+  80% {
+    opacity: 0.58;
+  }
+  to {
+    opacity: 0;
+    translate: 0 -86vh;
+  }
+}
+
+@keyframes onboarding-bubble-wobble {
+  0%,
+  100% {
+    transform: translateX(0) scale(1);
+  }
+  35% {
+    transform: translateX(-10px) scale(1.08);
+  }
+  70% {
+    transform: translateX(8px) scale(0.94);
+  }
+}
+
+@keyframes onboarding-dots-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+@keyframes onboarding-dot-active-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(65, 116, 133, 0.12),
+      0 0 0 0 rgba(255, 255, 255, 0);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1px rgba(65, 116, 133, 0.1),
+      0 0 0 7px rgba(255, 255, 255, 0.16);
+  }
+}
+
+@keyframes onboarding-vibe {
+  0%,
+  100% {
+    transform: rotate(-7deg);
+  }
+  50% {
+    transform: rotate(7deg);
+  }
+}
+
+@keyframes onboarding-logo-underwater-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-0.45deg) scale(1);
+  }
+  35% {
+    transform: translate3d(0, -8px, 0) rotate(0.35deg) scale(1.012);
+  }
+  70% {
+    transform: translate3d(0, 5px, 0) rotate(-0.15deg) scale(0.996);
+  }
+}
+
+@keyframes onboarding-logo-underwater-light {
+  0%,
+  100% {
+    filter:
+      drop-shadow(0 12px 19px rgba(48, 83, 96, 0.22))
+      drop-shadow(0 0 0 rgba(255, 255, 255, 0));
+    opacity: 0.96;
+  }
+  45% {
+    filter:
+      drop-shadow(0 16px 24px rgba(48, 83, 96, 0.2))
+      drop-shadow(0 0 18px rgba(255, 255, 255, 0.24));
+    opacity: 1;
+  }
+}
+
+@keyframes onboarding-return-rise {
+  0% {
+    opacity: 0;
+    translate: 0 var(--return-rise-start-y, 138%);
+    scale: 0.95;
+  }
+  58% {
+    opacity: 1;
+    translate: 0 -8%;
+    scale: 1.03;
+  }
+  76% {
+    opacity: 1;
+    translate: 0 3%;
+    scale: 0.995;
+  }
+  100% {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@keyframes onboarding-return-bob {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -8px;
+  }
+}
+
+@keyframes onboarding-return-ring {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.62);
+  }
+  20% {
+    opacity: 0.72;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.28);
+  }
+}
+
+@keyframes onboarding-return-glow {
+  0%,
+  100% {
+    opacity: 0.56;
+    transform: translateX(-50%) scale(0.96);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translateX(-50%) scale(1.05);
+  }
+}
+
+@keyframes onboarding-return-sparkle {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: scale(0.76) rotate(0deg);
+  }
+  45% {
+    opacity: 1;
+    transform: scale(1.16) rotate(22deg);
+  }
+}
+
+@keyframes onboarding-return-sound {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 8px) scale(0.86);
+  }
+  42% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+/* ネクストボタンのさりげないパルス */
+@keyframes onboarding-next-pulse {
+  0%, 100% { box-shadow: 0 12px 24px rgba(13, 93, 117, 0.18); }
+  50%       { box-shadow: 0 14px 30px rgba(13, 93, 117, 0.32); }
+}
+
+/* 警告キャラクターのゆらゆら */
+@keyframes warning-char-sway {
+  0%, 100% { rotate: -7deg; }
+  50%       { rotate: 3deg; translate: 0 -4px; }
+}
+
+/* 通知カードの揺れ（バイブ表現） */
+@keyframes notif-shake {
+  0%, 100% { translate: 0 0; }
+  20%       { translate: -4px 0; }
+  40%       { translate: 4px 0; }
+  60%       { translate: -3px 0; }
+  80%       { translate: 3px 0; }
+}
+
+/* 通知の波紋 */
+@keyframes notif-ripple {
+  0%   { opacity: 0.85; scale: 0.88; }
+  100% { opacity: 0;    scale: 1.28; }
+}
+
+/* 振動バー（transform-origin: bottomで根本から伸びる）*/
+@keyframes notif-vibe-bar {
+  from { transform: scaleY(0.3); opacity: 0.4; }
+  to   { transform: scaleY(1);   opacity: 1; }
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   スマホバイブ：2回バーストのダブルバズ
+   第1バズ: 10-24%  第2バズ: 30-40%  残り: 休止
+   各フレーム間はlinearで瞬発的な揺れを表現
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@keyframes onboarding-phone-vibrate {
+  0%,
+  10%,
+  25%,
+  29%,
+  41%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+    animation-timing-function: linear;
+  }
+  /* 第1バズ：強めの6フレーム */
+  12% {
+    transform: translate3d(-5.5px, 1.6px, 0) rotate(-1.5deg);
+    animation-timing-function: linear;
+  }
+  14% {
+    transform: translate3d(4.8px, -1.4px, 0) rotate(1.2deg);
+    animation-timing-function: linear;
+  }
+  16% {
+    transform: translate3d(-3.8px, 1.1px, 0) rotate(-0.9deg);
+    animation-timing-function: linear;
+  }
+  18% {
+    transform: translate3d(2.9px, -0.9px, 0) rotate(0.65deg);
+    animation-timing-function: linear;
+  }
+  20% {
+    transform: translate3d(-1.7px, 0.6px, 0) rotate(-0.38deg);
+    animation-timing-function: linear;
+  }
+  22% {
+    transform: translate3d(0.8px, -0.3px, 0) rotate(0.15deg);
+    animation-timing-function: linear;
+  }
+  /* 第2バズ：少し弱めの4フレーム */
+  31% {
+    transform: translate3d(-3.8px, 1.1px, 0) rotate(-1.05deg);
+    animation-timing-function: linear;
+  }
+  33% {
+    transform: translate3d(3.2px, -0.9px, 0) rotate(0.82deg);
+    animation-timing-function: linear;
+  }
+  36% {
+    transform: translate3d(-1.8px, 0.6px, 0) rotate(-0.44deg);
+    animation-timing-function: linear;
+  }
+  38% {
+    transform: translate3d(0.8px, -0.3px, 0) rotate(0.18deg);
+    animation-timing-function: linear;
+  }
+}
+
+/* ゴースト残像：バズのピーク時に分離して消える */
+@keyframes onboarding-phone-vibe-ghost {
+  0%,
+  10%,
+  27%,
+  100% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(1);
+    animation-timing-function: linear;
+  }
+  14% {
+    opacity: 0.22;
+    transform: translate3d(var(--phone-ghost-x), var(--phone-ghost-y), 0) scale(1.007);
+    animation-timing-function: linear;
+  }
+  20% {
+    opacity: 0.3;
+    transform: translate3d(calc(var(--phone-ghost-x) * 1.3), calc(var(--phone-ghost-y) * 1.3), 0) scale(1.012);
+    animation-timing-function: linear;
+  }
+  25% {
+    opacity: 0;
+    transform: translate3d(var(--phone-ghost-end-x), var(--phone-ghost-end-y), 0) scale(1.016);
+    animation-timing-function: linear;
+  }
+  /* 第2バズのゴースト */
+  29% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(1);
+    animation-timing-function: linear;
+  }
+  33% {
+    opacity: 0.2;
+    transform: translate3d(var(--phone-ghost-x), var(--phone-ghost-y), 0) scale(1.007);
+    animation-timing-function: linear;
+  }
+  38% {
+    opacity: 0.1;
+    transform: translate3d(var(--phone-ghost-end-x), var(--phone-ghost-end-y), 0) scale(1.011);
+    animation-timing-function: linear;
+  }
+  42% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+/* シグナルパルス：2バズに合わせて2回展開 */
+@keyframes onboarding-phone-signal-pulse {
+  0%,
+  10%,
+  28%,
+  29%,
+  50%,
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.68);
+  }
+  15% {
+    opacity: 0.3;
+  }
+  26% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.24);
+  }
+  /* 第2パルス */
+  34% {
+    opacity: 0.2;
+  }
+  48% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.18);
+  }
+}
+
+@keyframes onboarding-warning-overlay-sink {
+  0%,
+  14% {
+    translate: 0 0;
+  }
+  22% {
+    translate: 0 var(--warning-character-sink-anticipation);
+  }
+  30% {
+    translate: 0 calc(var(--warning-character-sink-step) * 0.36);
+  }
+  38% {
+    translate: 0 calc(var(--warning-character-sink-step) * 0.68);
+  }
+  46% {
+    translate: 0 calc(var(--warning-character-sink-step) * 0.96);
+  }
+  54% {
+    translate: 0 calc(var(--warning-character-sink-near-end) * 0.54);
+  }
+  62% {
+    translate: 0 calc(var(--warning-character-sink-near-end) * 0.72);
+  }
+  70% {
+    translate: 0 calc(var(--warning-character-sink-near-end) * 0.9);
+  }
+  78% {
+    translate: 0 var(--warning-character-sink-near-end);
+  }
+  86% {
+    translate: 0 calc(var(--warning-character-sink-distance) * 0.9);
+  }
+  94% {
+    translate: 0 calc(var(--warning-character-sink-distance) * 0.98);
+  }
+  100% {
+    translate: 0 var(--warning-character-sink-distance);
+  }
+}
+
+@keyframes onboarding-warning-character-worry-soft {
+  0%,
+  16% {
+    rotate: 0deg;
+  }
+  34% {
+    rotate: -0.65deg;
+  }
+  62% {
+    rotate: 0.65deg;
+  }
+  100% {
+    rotate: -0.4deg;
+  }
+}
+
+@keyframes onboarding-warning-sound-pop {
+  0%,
+  10% {
+    opacity: 0;
+    transform:
+      translate3d(-4px, 6px, 0)
+      scale(0.94)
+      rotate(var(--warning-sound-rotate));
+  }
+  18%,
+  40% {
+    opacity: 1;
+    transform:
+      translate3d(0, 0, 0)
+      scale(1)
+      rotate(var(--warning-sound-rotate));
+  }
+  68%,
+  100% {
+    opacity: 0;
+    transform:
+      translate3d(3px, -7px, 0)
+      scale(0.97)
+      rotate(var(--warning-sound-rotate));
+  }
+}
+
+.onboarding-screen {
+  --onboarding-main-logo-width: clamp(200px, 33vw, 360px);
+  --onboarding-page-pad-x: clamp(32px, 5vw, 88px);
+  --onboarding-stage-pad-top: clamp(84px, 13dvh, 132px);
+  --onboarding-stage-pad-bottom: clamp(64px, 10dvh, 104px);
+  --onboarding-scene-pad-top: clamp(118px, 21dvh, 260px);
+  --onboarding-scene-text-size: clamp(1.3rem, min(2.35vw, 4.8dvh), 2.85rem);
+  --onboarding-nav-bottom: clamp(8px, 1.8dvh, 18px);
+  --onboarding-side-button-top: 50%;
+
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  color: #1f3440;
+  background: linear-gradient(
+    180deg,
+    var(--app-home-gradient-start) 0%,
+    var(--app-home-gradient-start) 50%,
+    var(--app-home-gradient-end) 100%
+  );
+  animation: onboarding-fade-in 0.32s ease both;
+}
+
+.onboarding-screen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(circle at 18% 22%, rgba(255, 255, 255, 0), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 246, 218, 0.2));
+  pointer-events: none;
+}
+
+.onboarding-header {
+  position: absolute;
+  top: var(--flow-brand-offset-y);
+  left: var(--flow-brand-offset-x);
+  right: var(--onboarding-page-pad-x);
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.onboarding-logo {
+  width: var(--flow-brand-display-width);
+  height: auto;
+  filter: drop-shadow(0 8px 15px rgba(34, 81, 98, 0.16));
+  user-select: none;
+}
+
+.onboarding-skip,
+.onboarding-side-button {
+  border: 0;
+  border-radius: 999px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.onboarding-skip {
+  color: #456777;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+}
+
+.onboarding-skip {
+  padding: 9px 14px;
+  font-size: 0.82rem;
+}
+
+.onboarding-stage {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100dvh;
+  min-height: 0;
+  margin: 0;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  justify-items: center;
+  overflow: hidden;
+  padding: var(--onboarding-stage-pad-top) var(--onboarding-page-pad-x)
+    var(--onboarding-stage-pad-bottom);
+}
+
+.onboarding-stage:not(.onboarding-stage--splash) {
+  padding-top: var(--onboarding-stage-pad-top);
+}
+
+.onboarding-screen.is-story-intro .onboarding-stage {
+  grid-template-rows: auto 1fr;
+  padding: var(--onboarding-scene-pad-top) var(--onboarding-page-pad-x) 0;
+}
+
+.onboarding-stage::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: -1;
+  height: 44%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0),
+    rgba(255, 238, 197, 0.34)
+  );
+  pointer-events: none;
+}
+
+/* スライドコンテンツ（ステップ＋メッセージ）ラッパー */
+.onboarding-slide-content {
+  display: grid;
+  grid-template-rows: auto auto;
+  justify-items: center;
+  align-content: start;
+  gap: 0;
+  width: 100%;
+  padding: 0;
+}
+
+.onboarding-slide-content--forward {
+  animation: onboarding-slide-forward 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.onboarding-slide-content--backward {
+  animation: onboarding-slide-backward 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* アートワークラッパー：アートコンポーネントを包む */
+.onboarding-artwork-wrapper {
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  justify-items: center;
+  align-items: end;
+  overflow: visible;
+}
+
+.onboarding-artwork-wrapper--forward {
+  animation: onboarding-art-forward 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.06s both;
+}
+
+.onboarding-artwork-wrapper--backward {
+  animation: onboarding-art-backward 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) 0.06s both;
+}
+
+.onboarding-step {
+  margin: 0 0 clamp(10px, 2dvh, 16px);
+  padding: 6px 11px;
+  border-radius: 999px;
+  color: rgba(36, 83, 102, 0.78);
+  background: rgba(255, 255, 255, 0.42);
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  box-shadow: 0 8px 20px rgba(36, 83, 102, 0.08);
+  backdrop-filter: blur(8px);
+}
+
+/* 吹き出しメッセージボックス */
+.onboarding-message {
+  position: relative;
+  z-index: 3;
+  min-width: min(520px, 100%);
+  max-width: 640px;
+  padding: clamp(22px, 3.6dvh, 36px) clamp(26px, 5vw, 62px);
+  border-radius: clamp(18px, 2.4vw, 28px);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: rgba(244, 252, 255, 0.72);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.82),
+    0 18px 38px rgba(36, 83, 102, 0.14);
+  text-align: center;
+  backdrop-filter: blur(12px);
+}
+
+.onboarding-stage--splash .onboarding-message {
+  display: grid;
+  justify-items: center;
+  margin-top: 0;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.onboarding-message h1 {
+  margin: 0 0 clamp(12px, 2dvh, 18px);
+  color: #ffffff;
+  font-size: clamp(3.9rem, 13vw, 7.4rem);
+  line-height: 0.94;
+  font-weight: 900;
+  text-shadow: 0 9px 18px rgba(48, 83, 96, 0.24);
+}
+
+.onboarding-main-logo {
+  display: block;
+  width: var(--onboarding-main-logo-width);
+  max-width: calc(100vw - 80px);
+  margin-inline: auto;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 19px rgba(48, 83, 96, 0.22));
+  transform-origin: 50% 52%;
+  user-select: none;
+  will-change: transform, filter, opacity;
+  animation:
+    onboarding-logo-underwater-float 5.6s ease-in-out infinite,
+    onboarding-logo-underwater-light 4.2s ease-in-out infinite;
+}
+
+/* テキスト行ごとにスタッガーアニメーション */
+.onboarding-message p {
+  margin: 0;
+  color: #203844;
+  font-size: clamp(0.98rem, min(1.7vw, 3.1dvh), 1.28rem);
+  line-height: 1.85;
+  font-weight: 900;
+  letter-spacing: 0;
+  animation: onboarding-line-in 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) var(--line-delay, 0.14s) both;
+}
+
+.onboarding-screen.is-story-intro .onboarding-message {
+  min-width: 0;
+  max-width: min(760px, 100%);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.onboarding-screen.is-story-intro .onboarding-message p {
+  color: #ffffff;
+  font-size: clamp(1.32rem, min(2.35vw, 4.5dvh), 2.25rem);
+  line-height: 1.35;
+  font-weight: 900;
+  text-shadow: 0 4px 10px rgba(36, 83, 102, 0.18);
+}
+
+.onboarding-screen.is-story-intro .onboarding-message p + p {
+  margin-top: clamp(18px, 3dvh, 28px);
+}
+
+.onboarding-screen.is-scene-story .onboarding-header {
+  top: var(--flow-brand-offset-y);
+  left: var(--flow-brand-offset-x);
+  right: var(--onboarding-page-pad-x);
+}
+
+.onboarding-screen.is-scene-story .onboarding-logo {
+  width: var(--flow-brand-display-width);
+}
+
+.onboarding-stage--message,
+.onboarding-stage--warning,
+.onboarding-stage--return,
+.onboarding-stage--reward,
+.onboarding-stage--final {
+  grid-template-rows: auto 1fr;
+  padding: var(--onboarding-scene-pad-top) var(--onboarding-page-pad-x) 0;
+}
+
+.onboarding-stage--message .onboarding-slide-content,
+.onboarding-stage--warning .onboarding-slide-content,
+.onboarding-stage--return .onboarding-slide-content,
+.onboarding-stage--reward .onboarding-slide-content,
+.onboarding-stage--final .onboarding-slide-content {
+  position: relative;
+  z-index: 4;
+}
+
+.onboarding-stage--message .onboarding-message,
+.onboarding-stage--warning .onboarding-message,
+.onboarding-stage--return .onboarding-message,
+.onboarding-stage--reward .onboarding-message,
+.onboarding-stage--final .onboarding-message {
+  min-width: 0;
+  max-width: min(1160px, 100%);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.onboarding-stage--message .onboarding-message p,
+.onboarding-stage--warning .onboarding-message p,
+.onboarding-stage--return .onboarding-message p,
+.onboarding-stage--reward .onboarding-message p,
+.onboarding-stage--final .onboarding-message p {
+  color: #ffffff;
+  font-size: var(--onboarding-scene-text-size);
+  line-height: 1.35;
+  font-weight: 900;
+  text-shadow: 0 4px 10px rgba(36, 83, 102, 0.18);
+}
+
+.onboarding-stage--message .onboarding-message p + p,
+.onboarding-stage--warning .onboarding-message p + p,
+.onboarding-stage--return .onboarding-message p + p,
+.onboarding-stage--reward .onboarding-message p + p,
+.onboarding-stage--final .onboarding-message p + p {
+  margin-top: clamp(14px, min(3.4dvh, 2.2vw), 34px);
+}
+
+.onboarding-stage--message .onboarding-inline-next,
+.onboarding-stage--warning .onboarding-inline-next {
+  width: min(542px, calc(100vw - (var(--onboarding-page-pad-x) * 2)));
+  height: clamp(64px, 7dvh, 92px);
+  margin-top: clamp(52px, 7dvh, 82px);
+  color: var(--app-home-gradient-start);
+  font-size: clamp(1.2rem, 1.55vw, 2rem);
+  box-shadow: 0 14px 28px rgba(13, 93, 117, 0.12);
+}
+
+.onboarding-stage--splash .onboarding-message p {
+  color: #ffffff;
+  font-size: clamp(1rem, 2vw, 1.38rem);
+  line-height: 1.75;
+  text-shadow: 0 4px 10px rgba(38, 78, 92, 0.18);
+  animation: none;
+}
+
+.onboarding-sr-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.onboarding-character-lineup {
+  align-self: end;
+  position: relative;
+  width: min(980px, calc(100vw - (var(--onboarding-page-pad-x) * 2)));
+  height: clamp(220px, 46dvh, 360px);
+  overflow: visible;
+  pointer-events: none;
+}
+
+.onboarding-screen.is-story-intro .onboarding-character-lineup {
+  width: min(1050px, calc(100vw - (var(--onboarding-page-pad-x) * 2)));
+  height: clamp(220px, 36dvh, 360px);
+}
+
+.onboarding-lineup-character {
+  position: absolute;
+  height: auto;
+  max-height: 92%;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(9px 14px 11px rgba(27, 55, 67, 0.23));
+  transform:
+    translateX(-50%)
+    rotate(var(--character-rotate, 0deg))
+    scale(var(--character-scale, 1));
+  transform-origin: center bottom;
+  animation:
+    onboarding-character-pop 0.46s cubic-bezier(0.22, 1, 0.36, 1) var(--character-delay) both,
+    onboarding-float 3.1s ease-in-out calc(var(--character-delay) + 0.42s) infinite;
+}
+
+.onboarding-inline-next {
+  width: min(400px, calc(100vw - (var(--onboarding-page-pad-x) * 2)));
+  height: clamp(54px, 7dvh, 69px);
+  margin-top: clamp(42px, 6.6dvh, 64px);
+  border: 0;
+  border-radius: 999px;
+  color: var(--app-home-gradient-start);
+  background: #ffffff;
+  font-size: clamp(1.05rem, 1.65vw, 1.45rem);
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 12px 24px rgba(13, 93, 117, 0.12);
+}
+
+.onboarding-inline-next:hover,
+.onboarding-inline-next:focus-visible {
+  color: #0a8fc5;
+  transform: translateY(-1px);
+}
+
+.onboarding-splash-next {
+  width: min(520px, calc(100vw - (var(--onboarding-page-pad-x) * 2)));
+  height: clamp(56px, 7dvh, 72px);
+  margin-inline: auto;
+  margin-top: clamp(74px, 11dvh, 126px);
+  border: 0;
+  border-radius: 999px;
+  color: var(--app-home-gradient-start);
+  background: #ffffff;
+  font-size: clamp(1.1rem, 1.55vw, 1.42rem);
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 12px 24px rgba(13, 93, 117, 0.12);
+}
+
+.onboarding-splash-next:hover,
+.onboarding-splash-next:focus-visible {
+  color: #0a8fc5;
+  transform: translateY(-1px);
+}
+
+.onboarding-splash-character {
+  align-self: end;
+  width: clamp(62px, 12vw, 114px);
+  height: clamp(180px, 34dvh, 330px);
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(10px 16px 13px rgba(27, 55, 67, 0.22));
+  /* splashのアートワークラッパーアニメーションに重ねる */
+  animation: onboarding-float 3.1s ease-in-out 0.7s infinite;
+}
+
+.onboarding-dock-artwork {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.onboarding-dock-stage {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(18px, 4dvh, 52px);
+  z-index: 4;
+  width: clamp(640px, 83vw, 1696px);
+  aspect-ratio: 2538 / 211;
+  container-type: size;
+  transform: translateX(-50%);
+}
+
+.onboarding-dock-character-wrap {
+  --dock-character-left: 68%;
+  --dock-character-bottom: -108%;
+  --dock-character-width: 7.8%;
+  --dock-character-hide-bottom: 61%;
+  --dock-character-shadow-bleed: clamp(20px, 2vw, 30px);
+
+  position: absolute;
+  left: var(--dock-character-left);
+  bottom: var(--dock-character-bottom);
+  z-index: 2;
+  width: var(--dock-character-width);
+  transform:
+    translateX(-50%)
+    rotate(var(--dock-character-rotate, 0deg))
+    scale(var(--dock-character-scale, 1));
+  transform-origin: center bottom;
+  animation:
+    onboarding-character-pop 0.48s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both,
+    onboarding-float 3.3s ease-in-out 0.72s infinite;
+}
+
+.onboarding-dock-character-clip {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 367 / 1987;
+  clip-path: inset(
+    calc(var(--dock-character-shadow-bleed) * -1)
+    calc(var(--dock-character-shadow-bleed) * -1)
+    var(--dock-character-hide-bottom)
+    calc(var(--dock-character-shadow-bleed) * -1)
+  );
+}
+
+.onboarding-dock-character {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(10px 16px 13px rgba(27, 55, 67, 0.24));
+  user-select: none;
+}
+
+.onboarding-dock-image {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  user-select: none;
+}
+
+/* ── Warning Artwork（4ページ）：dock＋badキャラ＋バイブ端末 ── */
+
+.onboarding-warning-artwork {
+  --warning-side-gap: clamp(56px, 9vw, 168px);
+  --warning-phone-width: clamp(170px, min(18vw, 32dvh), 260px);
+  --warning-dock-width: clamp(300px, min(29vw, 52dvh), 430px);
+  --warning-phone-left: calc(
+    var(--warning-side-gap) + (var(--warning-phone-width) / 2)
+  );
+  --warning-phone-bottom: clamp(40px, 9dvh, 104px);
+  --warning-dock-left: calc(
+    100% - var(--warning-side-gap) - (var(--warning-dock-width) / 2)
+  );
+  --warning-dock-bottom: clamp(18px, 4.2dvh, 52px);
+  --warning-character-offset-x: clamp(10px, 1.2vw, 24px);
+  --warning-character-left: calc(
+    var(--warning-dock-left) + var(--warning-character-offset-x)
+  );
+  --warning-character-bottom: clamp(58px, 11dvh, 128px);
+  --warning-character-width: clamp(150px, min(15.5vw, 34dvh), 270px);
+  --warning-character-scale: 0.94;
+  --warning-character-sink-anticipation: -4%;
+  --warning-character-sink-step: 18%;
+  --warning-character-sink-near-end: 76%;
+  --warning-character-sink-distance: 110%;
+  --warning-character-sink-duration: 3.4s;
+  --warning-character-sink-delay: 0.7s;
+  --warning-character-shadow-bleed: clamp(24px, 2.4vw, 34px);
+  --warning-sound-top: 16px;
+  --warning-sound-right: -18%;
+  --warning-sound-size: clamp(1.1rem, min(4vw, 5dvh), 1.9rem);
+  --warning-sound-rotate: -20deg;
+  --warning-sound-delay: var(--warning-character-sink-delay);
+  --warning-sound-duration: 2.55s;
+
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.onboarding-warning-phone {
+  position: absolute;
+  left: var(--warning-phone-left);
+  bottom: var(--warning-phone-bottom);
+  z-index: 3;
+  width: var(--warning-phone-width);
+  transform:
+    translateX(-50%)
+    rotate(-0deg);
+  transform-origin: center center;
+}
+
+.onboarding-warning-phone::before,
+.onboarding-warning-phone::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: url("/phone.png") center / contain no-repeat;
+  filter: drop-shadow(14px 18px 10px rgba(37, 66, 68, 0.12));
+  pointer-events: none;
+  animation: onboarding-phone-vibe-ghost 2.2s linear 0.1s infinite;
+}
+
+.onboarding-warning-phone::before {
+  --phone-ghost-x: -14px;
+  --phone-ghost-y: 4px;
+  --phone-ghost-end-x: -10px;
+  --phone-ghost-end-y: 6px;
+}
+
+.onboarding-warning-phone::after {
+  --phone-ghost-x: 7px;
+  --phone-ghost-y: -3px;
+  --phone-ghost-end-x: 10px;
+  --phone-ghost-end-y: -5px;
+  animation-delay: 0.16s;
+}
+
+.onboarding-warning-phone-pulse {
+  position: absolute;
+  left: 50%;
+  top: 53%;
+  z-index: 2;
+  width: 34%;
+  aspect-ratio: 1;
+  border: 2px solid rgba(19, 162, 215, 0.38);
+  border-radius: 999px;
+  box-shadow: 0 0 14px rgba(19, 162, 215, 0.08);
+  transform: translate(-50%, -50%) scale(0.72);
+  opacity: 0;
+  pointer-events: none;
+  animation: onboarding-phone-signal-pulse 2.2s ease-out 0.1s infinite;
+}
+
+.onboarding-warning-phone-pulse--2 {
+  width: 45%;
+  border-color: rgba(19, 162, 215, 0.16);
+  /* 第2バズのタイミング（30%）に合わせてオフセット */
+  animation-delay: 0.56s;
+}
+
+.onboarding-warning-phone img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  filter: drop-shadow(18px 23px 15px rgba(37, 66, 68, 0.18));
+  animation: onboarding-phone-vibrate 2.2s linear 0.1s infinite;
+}
+
+.onboarding-warning-character-wrap {
+  position: absolute;
+  left: var(--warning-character-left);
+  bottom: var(--warning-character-bottom);
+  z-index: 2;
+  width: var(--warning-character-width);
+  transform: translateX(-50%) scale(var(--warning-character-scale));
+  transform-origin: center bottom;
+}
+
+.onboarding-warning-character-clip {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 704 / 1021;
+  clip-path: inset(
+    calc(var(--warning-character-shadow-bleed) * -1)
+    calc(var(--warning-character-shadow-bleed) * -1)
+    0
+    calc(var(--warning-character-shadow-bleed) * -1)
+  );
+}
+
+.onboarding-warning-character-sink {
+  position: absolute;
+  inset: 0;
+  transform-origin: center bottom;
+  animation:
+    onboarding-warning-overlay-sink var(--warning-character-sink-duration) cubic-bezier(0.32, 0, 0.18, 1) var(--warning-character-sink-delay) both,
+    onboarding-warning-character-worry-soft 1.5s ease-in-out var(--warning-character-sink-delay) 3 both;
+}
+
+.onboarding-warning-character {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  filter: drop-shadow(10px 15px 12px rgba(27, 55, 67, 0.22));
+}
+
+.onboarding-warning-sound {
+  position: absolute;
+  top: var(--warning-sound-top);
+  right: var(--warning-sound-right);
+  z-index: 4;
+  color: #ffffff;
+  font-size: var(--warning-sound-size);
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 4px 10px rgba(36, 83, 102, 0.16);
+  transform-origin: center;
+  animation: onboarding-warning-sound-pop var(--warning-sound-duration) ease var(--warning-sound-delay) both;
+}
+
+.onboarding-warning-dock {
+  position: absolute;
+  left: var(--warning-dock-left);
+  bottom: var(--warning-dock-bottom);
+  z-index: 4;
+  display: block;
+  width: var(--warning-dock-width);
+  height: auto;
+  transform: translateX(-50%);
+  user-select: none;
+}
+
+/* ── 共有ベース（return / reward / final） ── */
+.onboarding-return-artwork,
+.onboarding-reward-artwork,
+.onboarding-final-artwork {
+  position: relative;
+  align-self: stretch;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+.onboarding-return-artwork {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.onboarding-reward-artwork {
+  overflow: visible;
+  place-items: start center;
+}
+
+.onboarding-return-scene {
+  --return-character-left: 50%;
+  --return-character-bottom: 76.6%;
+  --return-character-width: 23.3%;
+  --return-compact-scale: 1;
+  --return-compact-drop: 0%;
+  --return-sound-compact-scale: 1;
+  --return-sound-compact-drop: 0px;
+
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  isolation: isolate;
+}
+
+.onboarding-return-dock-group {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(20px, 3.7dvh, 48px);
+  width: clamp(320px, 31vw, 450px);
+  aspect-ratio: 693 / 196;
+  transform: translateX(-50%);
+  container-type: size;
+  isolation: isolate;
+  overflow: visible;
+}
+
+.onboarding-return-dock {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 18px rgba(39, 72, 80, 0.2));
+  user-select: none;
+}
+
+.onboarding-return-character-wrap {
+  --return-character-hide-bottom: 10%;
+  --return-character-shadow-bleed: clamp(20px, 2vw, 30px);
+
+  position: absolute;
+  left: var(--return-character-left);
+  bottom: calc(var(--return-character-bottom) - var(--return-compact-drop));
+  z-index: 3;
+  width: var(--return-character-width);
+  transform:
+    translateX(-50%)
+    rotate(var(--return-character-rotate, 0deg))
+    scale(calc(var(--return-character-scale, 1) * var(--return-compact-scale, 1)));
+  transform-origin: center bottom;
+}
+
+.onboarding-return-character-clip {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 636 / 1021;
+  clip-path: inset(
+    calc(var(--return-character-shadow-bleed) * -1)
+    calc(var(--return-character-shadow-bleed) * -1)
+    var(--return-character-hide-bottom)
+    calc(var(--return-character-shadow-bleed) * -1)
+  );
+}
+
+.onboarding-return-character-motion {
+  position: relative;
+  animation: onboarding-return-rise 0.62s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.onboarding-return-character-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(8px 14px 10px rgba(24, 54, 64, 0.24));
+  user-select: none;
+}
+
+.onboarding-return-sound-text {
+  position: absolute;
+  left: 50%;
+  bottom: calc(
+    100% + var(--return-sound-gap-px, 10px) - var(--return-sound-compact-drop)
+  );
+  z-index: 6;
+  width: calc(var(--return-sound-width, 260%) * var(--return-sound-compact-scale, 1));
+  max-width: none;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(46, 86, 99, 0.2));
+  transform: translateX(-50%);
+  user-select: none;
+  animation: onboarding-return-sound var(--return-sound-duration, 920ms) ease-out var(--return-sound-delay, 120ms) both;
+}
+
+@media (max-height: 860px) {
+  .onboarding-stage--return {
+    padding-top: clamp(96px, 17dvh, 178px);
+  }
+
+  .onboarding-stage--return .onboarding-message p {
+    font-size: clamp(1.14rem, min(2.05vw, 3.9dvh), 2.24rem);
+  }
+
+  .onboarding-return-scene {
+    --return-compact-scale: 0.9;
+    --return-compact-drop: 8%;
+    --return-sound-compact-scale: 0.88;
+    --return-sound-compact-drop: 8px;
+  }
+}
+
+@media (max-height: 760px) {
+  .onboarding-stage--return {
+    padding-top: clamp(82px, 14dvh, 140px);
+  }
+
+  .onboarding-stage--return .onboarding-message p {
+    font-size: clamp(1rem, min(1.85vw, 3.35dvh), 1.92rem);
+  }
+
+  .onboarding-return-dock-group {
+    bottom: clamp(8px, 1.8dvh, 18px);
+  }
+
+  .onboarding-return-scene {
+    --return-compact-scale: 0.8;
+    --return-compact-drop: 16%;
+    --return-sound-compact-scale: 0.76;
+    --return-sound-compact-drop: 14px;
+  }
+}
+
+.onboarding-reward-artwork .onboarding-reward-home-slot {
+  --reward-card-compact-scale: 1;
+  --reward-card-compact-y: 0px;
+
+  position: absolute;
+  transform:
+    translate(-50%, var(--reward-card-compact-y))
+    rotate(var(--reward-card-rotate, 0deg))
+    scale(calc(var(--reward-card-scale, 1) * var(--reward-card-compact-scale, 1)))
+    perspective(700px)
+    rotateX(var(--tilt-x))
+    rotateY(var(--tilt-y))
+    translateY(var(--tilt-lift));
+  transform-origin: center top;
+}
+
+.onboarding-reward-artwork .onboarding-reward-home-slot:hover {
+  --tilt-lift: -8px;
+  filter: drop-shadow(0 30px 46px rgba(63, 92, 96, 0.24));
+}
+
+.onboarding-reward-artwork .onboarding-reward-home-card {
+  overflow: hidden;
+  cursor: default;
+}
+
+.onboarding-reward-artwork .onboarding-reward-home-card::before {
+  content: "";
+  position: absolute;
+  inset: -30% -60%;
+  z-index: 12;
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.54) 48%,
+    rgba(255, 255, 255, 0.16) 54%,
+    transparent 70%
+  );
+  opacity: 0;
+  transform:
+    translateX(-58%)
+    rotate(0deg);
+  pointer-events: none;
+}
+
+.onboarding-reward-artwork .onboarding-reward-home-slot:hover .onboarding-reward-home-card::before {
+  opacity: 1;
+  transform: translateX(58%);
+  transition:
+    transform 0.82s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.16s ease;
+}
+
+.onboarding-reward-new-badge {
+  position: absolute;
+  top: clamp(10px, 4.4cqw, 14px);
+  right: clamp(8px, 3.8cqw, 13px);
+  z-index: 14;
+  padding: clamp(4px, 1.8cqw, 6px) clamp(7px, 3cqw, 10px);
+  border-radius: 999px;
+  color: #ffffff;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--home-character-color, #f28a18) 86%, #ffffff),
+    var(--home-character-color, #f28a18)
+  );
+  font-size: clamp(0.58rem, 3.5cqw, 0.78rem);
+  font-weight: 900;
+  letter-spacing: 0;
+  box-shadow:
+    0 7px 14px color-mix(in srgb, var(--home-character-color, #f28a18) 34%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.46);
+}
+
+.onboarding-reward-preview {
+  position: relative;
+}
+
+.onboarding-reward-artwork .onboarding-reward-character {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(7px 10px 8px rgba(27, 55, 67, 0.2));
+  transform:
+    translate(
+      var(--reward-character-x, 0%),
+      var(--reward-character-y, 58%)
+    )
+    rotate(var(--reward-character-rotate, 0deg))
+    scale(var(--reward-character-scale, 1));
+  transform-origin: center bottom;
+}
+
+.onboarding-reward-sparkle {
+  position: absolute;
+  z-index: 13;
+  width: clamp(8px, 3.4cqw, 13px);
+  height: clamp(8px, 3.4cqw, 13px);
+  color: #ffd16b;
+  opacity: 0;
+  transform: scale(0.66) rotate(0deg);
+  pointer-events: none;
+}
+
+.onboarding-reward-sparkle::before,
+.onboarding-reward-sparkle::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.onboarding-reward-sparkle::before {
+  width: 100%;
+  height: 24%;
+}
+
+.onboarding-reward-sparkle::after {
+  width: 24%;
+  height: 100%;
+}
+
+.onboarding-reward-sparkle--1 {
+  left: 18%;
+  top: 18%;
+}
+
+.onboarding-reward-sparkle--2 {
+  right: 18%;
+  top: 30%;
+  color: #ffffff;
+}
+
+.onboarding-reward-sparkle--3 {
+  left: 48%;
+  bottom: 18%;
+  color: #a9e7f7;
+}
+
+.onboarding-reward-artwork .onboarding-reward-home-slot:hover .onboarding-reward-sparkle {
+  opacity: 1;
+  animation: onboarding-return-sparkle 0.9s ease-in-out infinite;
+}
+
+.onboarding-reward-artwork .onboarding-reward-home-slot:hover .onboarding-reward-sparkle--2 {
+  animation-delay: 0.16s;
+}
+
+.onboarding-reward-artwork .onboarding-reward-home-slot:hover .onboarding-reward-sparkle--3 {
+  animation-delay: 0.32s;
+}
+
+@media (max-height: 780px) {
+  .onboarding-stage--reward {
+    padding-top: clamp(92px, 16dvh, 160px);
+  }
+
+  .onboarding-stage--reward .onboarding-message p {
+    font-size: clamp(1.05rem, min(1.9vw, 3.6dvh), 2rem);
+  }
+
+  .onboarding-reward-artwork .onboarding-reward-home-slot {
+    --reward-card-compact-scale: 0.92;
+    --reward-card-compact-y: -8px;
+  }
+}
+
+@media (max-height: 680px) {
+  .onboarding-stage--reward {
+    padding-top: clamp(76px, 13dvh, 124px);
+  }
+
+  .onboarding-stage--reward .onboarding-message p {
+    font-size: clamp(0.96rem, min(1.7vw, 3.2dvh), 1.72rem);
+  }
+
+  .onboarding-reward-artwork .onboarding-reward-home-slot {
+    --reward-card-compact-scale: 0.82;
+    --reward-card-compact-y: -16px;
+  }
+}
+
+
+.onboarding-final-artwork {
+  --final-card-row-top: 34%;
+  --final-card-strip-width: min(90vw, 1780px);
+  --final-card-gap: 30px;
+  --final-card-scale: 1;
+  --final-character-x: 0%;
+  --final-character-y: 70%;
+  --final-character-scale: 1.6;
+  --final-card-hover-lift: 18px;
+  --final-card-hover-scale: 1.045;
+
+  position: relative;
+  overflow: visible;
+}
+
+.onboarding-final-card-strip {
+  position: absolute;
+  left: 50%;
+  top: var(--final-card-row-top);
+  z-index: 2;
+  width: min(
+    var(--final-card-strip-width),
+    calc(100vw - (var(--onboarding-page-pad-x) * 2) - 24px)
+  );
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: min(var(--final-card-gap), 1.8vw);
+  transform: translateX(-50%) scale(var(--final-card-scale));
+  transform-origin: center top;
+}
+
+.onboarding-final-card-slot {
+  --final-card-hover-y: 0px;
+  --final-card-hover-current-scale: 1;
+
+  transform:
+    translateY(var(--final-card-hover-y))
+    scale(var(--final-card-hover-current-scale))
+    perspective(700px)
+    rotateX(var(--tilt-x))
+    rotateY(var(--tilt-y))
+    translateY(var(--tilt-lift));
+  transform-origin: center bottom;
+  transition:
+    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.onboarding-final-card-slot:hover,
+.onboarding-final-card-slot:focus-within {
+  --final-card-hover-y: calc(var(--final-card-hover-lift) * -1);
+  --final-card-hover-current-scale: var(--final-card-hover-scale);
+  filter: drop-shadow(0 34px 46px rgba(63, 92, 96, 0.24));
+}
+
+.onboarding-final-card-slot:hover .onboarding-final-card,
+.onboarding-final-card-slot:focus-within .onboarding-final-card {
+  outline: 3px solid rgba(255, 255, 255, 0.82);
+  outline-offset: 3px;
+}
+
+.onboarding-final-card-slot:hover .onboarding-final-character,
+.onboarding-final-card-slot:focus-within .onboarding-final-character {
+  animation: onboarding-final-character-peek 0.72s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.onboarding-final-card {
+  cursor: default;
+}
+
+.onboarding-final-card .home-character-name {
+  padding-right: 0;
+}
+
+.onboarding-final-character {
+  --home-collection-character-x: var(--final-character-x);
+  --home-collection-character-y: var(--final-character-y);
+  --home-collection-character-scale: var(--final-character-scale);
+}
+
+@keyframes onboarding-final-character-peek {
+  0%,
+  100% {
+    rotate: 0deg;
+  }
+  42% {
+    rotate: -3deg;
+  }
+  70% {
+    rotate: 2deg;
+  }
+}
+
+@media (max-height: 780px) {
+  .onboarding-stage--final {
+    padding-top: clamp(92px, 16dvh, 160px);
+  }
+
+  .onboarding-stage--final .onboarding-message p {
+    font-size: clamp(1.05rem, min(1.9vw, 3.6dvh), 2rem);
+  }
+
+  .onboarding-final-artwork {
+    --final-card-row-top: 28%;
+    --final-card-scale: 0.94;
+  }
+}
+
+@media (max-height: 680px) {
+  .onboarding-stage--final {
+    padding-top: clamp(76px, 13dvh, 124px);
+  }
+
+  .onboarding-stage--final .onboarding-message p {
+    font-size: clamp(0.96rem, min(1.7vw, 3.2dvh), 1.72rem);
+  }
+
+  .onboarding-final-artwork {
+    --final-card-row-top: 22%;
+    --final-card-scale: 0.84;
+  }
+}
+
+@media (max-height: 860px) {
+  .onboarding-screen.is-story-intro .onboarding-stage,
+  .onboarding-stage--message,
+  .onboarding-stage--warning,
+  .onboarding-stage--return,
+  .onboarding-stage--reward,
+  .onboarding-stage--final {
+    padding-top: clamp(96px, 17dvh, 178px);
+  }
+}
+
+@media (max-height: 760px) {
+  .onboarding-screen.is-story-intro .onboarding-stage,
+  .onboarding-stage--message,
+  .onboarding-stage--warning,
+  .onboarding-stage--return,
+  .onboarding-stage--reward,
+  .onboarding-stage--final {
+    padding-top: clamp(82px, 14dvh, 140px);
+  }
+}
+
+@media (max-height: 680px) {
+  .onboarding-screen.is-story-intro .onboarding-stage,
+  .onboarding-stage--message,
+  .onboarding-stage--warning,
+  .onboarding-stage--return,
+  .onboarding-stage--reward,
+  .onboarding-stage--final {
+    padding-top: clamp(76px, 13dvh, 124px);
+  }
+}
+
+.onboarding-side-button {
+  position: absolute;
+  top: var(--onboarding-side-button-top);
+  z-index: 7;
+  width: clamp(58px, 7vw, 86px);
+  height: clamp(96px, 18dvh, 148px);
+  display: grid;
+  place-items: center;
+  padding: 0;
+  color: rgba(255, 255, 255, 0.92);
+  background: transparent;
+  border: 0;
+  font-size: 0;
+  line-height: 1;
+  transform: translateY(-50%);
+  transition:
+    color 0.2s ease,
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.onboarding-side-button::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0);
+  transition: background 0.2s ease;
+}
+
+.onboarding-side-chevron {
+  position: relative;
+  z-index: 1;
+  width: clamp(20px, 2.5vw, 30px);
+  height: clamp(20px, 2.5vw, 30px);
+  border-top: clamp(3px, 0.42vw, 5px) solid currentColor;
+  border-right: clamp(3px, 0.42vw, 5px) solid currentColor;
+  border-radius: 3px;
+  filter: drop-shadow(0 4px 7px rgba(34, 72, 86, 0.28));
+}
+
+.onboarding-side-button--prev {
+  left: clamp(18px, 4vw, 58px);
+}
+
+.onboarding-side-button--next {
+  right: clamp(18px, 4vw, 58px);
+}
+
+.onboarding-side-button--prev .onboarding-side-chevron {
+  transform: rotate(-135deg);
+}
+
+.onboarding-side-button--next .onboarding-side-chevron {
+  transform: rotate(45deg);
+}
+
+.onboarding-side-button:hover,
+.onboarding-side-button:focus-visible {
+  color: #ffffff;
+  transform: translateY(-50%) scale(1.06);
+}
+
+.onboarding-side-button:hover::before,
+.onboarding-side-button:focus-visible::before {
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.onboarding-side-button:disabled {
+  opacity: 0.2;
+  cursor: not-allowed;
+  transform: translateY(-50%);
+}
+
+.onboarding-side-button:disabled::before {
+  background: transparent;
+}
+
+.onboarding-screen.is-splash-active .onboarding-stage {
+  grid-template-rows: 1fr;
+  place-items: center;
+  padding: clamp(42px, 8dvh, 80px) clamp(18px, 6vw, 80px);
+}
+
+.onboarding-screen.is-splash-active .onboarding-slide-content {
+  justify-items: center;
+  align-content: center;
+}
+
+.onboarding-screen.is-splash-active .onboarding-artwork-wrapper,
+.onboarding-screen.is-splash-active .onboarding-footer,
+.onboarding-screen.is-splash-active .onboarding-side-button {
+  display: none;
+}
+
+.onboarding-screen.is-scene-story .onboarding-footer {
+  bottom: var(--onboarding-nav-bottom);
+}
+
+.onboarding-footer {
+  position: absolute;
+  left: 50%;
+  bottom: var(--onboarding-nav-bottom);
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(-50%);
+  animation: onboarding-dots-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.onboarding-skip:hover,
+.onboarding-skip:focus-visible {
+  transform: translateY(-1px);
+}
+
+.onboarding-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(6px);
+}
+
+.onboarding-dots button {
+  width: 9px;
+  height: 9px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.64);
+  box-shadow: 0 0 0 1px rgba(65, 116, 133, 0.12);
+  transform-origin: center;
+  transition:
+    width 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.onboarding-dots button:hover,
+.onboarding-dots button:focus-visible {
+  background: rgba(255, 255, 255, 0.88);
+  transform: translateY(-2px) scale(1.18);
+}
+
+.onboarding-dots button.is-active {
+  width: 28px;
+  background: #ffffff;
+  animation: onboarding-dot-active-pulse 1.85s ease-in-out infinite;
+}
+
+.onboarding-dots button:active {
+  transform: translateY(0) scale(0.88);
+}
+
+.onboarding-bubbles {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.onboarding-bubbles span {
+  position: absolute;
+  bottom: -30px;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.74);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    inset 0 1px 3px rgba(255, 255, 255, 0.76),
+    0 0 14px rgba(255, 255, 255, 0.08);
+  animation:
+    onboarding-bubble-rise 8s linear infinite,
+    onboarding-bubble-wobble 3.2s ease-in-out infinite;
+}
+
+.onboarding-bubbles span:nth-child(1) {
+  left: 8%;
+  animation-delay: 0s;
+}
+
+.onboarding-bubbles span:nth-child(2) {
+  left: 18%;
+  width: 6px;
+  height: 6px;
+  animation-delay: 2.1s;
+  animation-duration: 9.6s, 2.8s;
+}
+
+.onboarding-bubbles span:nth-child(3) {
+  left: 29%;
+  width: 11px;
+  height: 11px;
+  animation-delay: 1.2s;
+  animation-duration: 10.2s, 3.7s;
+}
+
+.onboarding-bubbles span:nth-child(4) {
+  left: 42%;
+  animation-delay: 3.4s;
+  animation-duration: 8.8s, 3.1s;
+}
+
+.onboarding-bubbles span:nth-child(5) {
+  left: 54%;
+  width: 7px;
+  height: 7px;
+  animation-delay: 0.8s;
+  animation-duration: 9.2s, 2.9s;
+}
+
+.onboarding-bubbles span:nth-child(6) {
+  left: 66%;
+  width: 12px;
+  height: 12px;
+  animation-delay: 4.6s;
+  animation-duration: 11s, 3.9s;
+}
+
+.onboarding-bubbles span:nth-child(7) {
+  left: 75%;
+  animation-delay: 2.7s;
+  animation-duration: 8.4s, 3.4s;
+}
+
+.onboarding-bubbles span:nth-child(8) {
+  left: 84%;
+  width: 6px;
+  height: 6px;
+  animation-delay: 1.8s;
+  animation-duration: 9.8s, 2.6s;
+}
+
+.onboarding-bubbles span:nth-child(9) {
+  left: 92%;
+  width: 10px;
+  height: 10px;
+  animation-delay: 3.9s;
+  animation-duration: 10.6s, 3.6s;
+}
+
+.onboarding-bubbles span:nth-child(10) {
+  left: 36%;
+  width: 5px;
+  height: 5px;
+  animation-delay: 5.2s;
+  animation-duration: 9.4s, 2.7s;
+}
+
+.onboarding-bubbles span:nth-child(11) {
+  left: 61%;
+  width: 9px;
+  height: 9px;
+  animation-delay: 6.4s;
+  animation-duration: 10.8s, 3.2s;
+}

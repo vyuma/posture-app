@@ -1,0 +1,9 @@
+/* グローバルCSSのエントリー：画面別スタイルを順番に読み込む */
+
+@import "./base.css";
+@import "./onboarding.css";
+@import "./home.css";
+@import "./code-read.css";
+@import "./measure.css";
+@import "./result.css";
+@import "./viewer.css";
