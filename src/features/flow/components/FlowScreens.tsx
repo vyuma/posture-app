@@ -12,6 +12,7 @@ import {
   emitOverlayPlacementHintRefresh,
 } from "../../overlay/overlayPlacementHintBridge";
 import {
+  isDebugUiBuildEnabled,
   isOverlayDebugUiEnabled,
   OVERLAY_DEBUG_UI_STORAGE_KEY,
 } from "../../overlay/overlayState";
@@ -89,7 +90,7 @@ type PostureRegisteredScreenProps = {
 };
 
 const COLLECTION_TOTAL_COUNT = 111;
-const SHOW_DEBUG_FLOW_CONTROLS = import.meta.env.DEV;
+const SHOW_DEBUG_FLOW_CONTROLS = isDebugUiBuildEnabled();
 
 /* ─── カードチルトハンドラ（モジュールレベルで共有） ─── */
 
@@ -624,8 +625,7 @@ export function MeasuringScreen({
     Math.ceil(snapshot.warmupRemainingMs / 1000),
   );
 
-  const showMeasureDevTools =
-    import.meta.env.DEV || isOverlayDebugUiEnabled();
+  const showMeasureDevTools = isOverlayDebugUiEnabled();
 
   const volumePreviewTimerRef = useRef<number | null>(null);
   useEffect(() => {

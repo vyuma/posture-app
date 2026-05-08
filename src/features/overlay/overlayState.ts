@@ -22,17 +22,24 @@ export const DEFAULT_OVERLAY_STATE: OverlayStatePayload = {
 /** 開発・QA 向けUI（measuring と overlay が参照）。本番でも localStorage で有効化可。 */
 export const OVERLAY_DEBUG_UI_STORAGE_KEY = "posture.debug.overlay";
 
+/** `VITE_SHOW_DEBUG_UI=true` で本番・Tauri パッケージにもデバッグUIを出す */
+export function isDebugUiBuildEnabled(): boolean {
+  return (
+    import.meta.env.DEV || import.meta.env.VITE_SHOW_DEBUG_UI === "true"
+  );
+}
+
 export function isOverlayDebugUiEnabled(): boolean {
+  if (isDebugUiBuildEnabled()) {
+    return true;
+  }
   if (typeof window === "undefined") {
-    return import.meta.env.DEV;
+    return false;
   }
   try {
-    return (
-      import.meta.env.DEV ||
-      window.localStorage.getItem(OVERLAY_DEBUG_UI_STORAGE_KEY) === "true"
-    );
+    return window.localStorage.getItem(OVERLAY_DEBUG_UI_STORAGE_KEY) === "true";
   } catch {
-    return import.meta.env.DEV;
+    return false;
   }
 }
 
