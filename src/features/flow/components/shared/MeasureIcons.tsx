@@ -1,30 +1,56 @@
+const CIRCLE_RED = "#EA4949";
+
 export function MeasurePauseIcon() {
   return (
-    <svg viewBox="0 0 24 24" width={22} height={22} aria-hidden="true">
-      <rect x="6" y="5" width="5" height="14" rx="1" fill="currentColor" />
-      <rect x="13" y="5" width="5" height="14" rx="1" fill="currentColor" />
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <circle
+        cx="32"
+        cy="32"
+        r="28"
+        fill="none"
+        stroke={CIRCLE_RED}
+        strokeWidth="3"
+      />
+      <rect x="23" y="22" width="6" height="20" rx="1.5" fill={CIRCLE_RED} />
+      <rect x="35" y="22" width="6" height="20" rx="1.5" fill={CIRCLE_RED} />
     </svg>
   );
 }
 
 export function MeasurePlayIcon() {
   return (
-    <svg viewBox="0 0 24 24" width={22} height={22} aria-hidden="true">
-      <path fill="#16a34a" d="M9 6.5v11l10-5.5-10-5.5z" />
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <circle
+        cx="32"
+        cy="32"
+        r="28"
+        fill="none"
+        stroke={CIRCLE_RED}
+        strokeWidth="3"
+      />
+      <path fill={CIRCLE_RED} d="M28 20l16 12-16 12z" />
     </svg>
   );
 }
 
 export function MeasureStopIcon() {
   return (
-    <svg viewBox="0 0 24 24" width={18} height={18} aria-hidden="true">
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <circle
+        cx="32"
+        cy="32"
+        r="28"
+        fill="none"
+        stroke={CIRCLE_RED}
+        strokeWidth="3"
+      />
       <rect
-        x="6"
-        y="6"
-        width="12"
-        height="12"
-        rx="1.5"
-        fill="currentColor"
+        x="24"
+        y="24"
+        width="16"
+        height="16"
+        rx="2.5"
+        fill={CIRCLE_RED}
       />
     </svg>
   );

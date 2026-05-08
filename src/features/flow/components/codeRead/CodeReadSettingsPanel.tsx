@@ -8,6 +8,8 @@ import { buildFrame53SoundLabel } from "../shared/soundLabels";
 export type CodeReadSettingsPanelProps = {
   /** アクセシビリティ用 id の接頭辞（同一画面に複数置く場合にずらす） */
   idPrefix?: string;
+  /** 登録完了（Frame 46）: 区切り線入りレイアウト */
+  registerCompleteLayout?: boolean;
   soundSettings: SoundSettings;
   onSoundSettingsChange: (next: SoundSettings) => void;
   isCharacterOverlayEnabled: boolean;
@@ -16,6 +18,7 @@ export type CodeReadSettingsPanelProps = {
 
 export function CodeReadSettingsPanel({
   idPrefix = "frame53",
+  registerCompleteLayout = false,
   soundSettings,
   onSoundSettingsChange,
   isCharacterOverlayEnabled,
@@ -51,103 +54,120 @@ export function CodeReadSettingsPanel({
   const soundLabelId = `${idPrefix}-switch-sound-label`;
   const volumeInputId = `${idPrefix}-volume`;
 
-  return (
-    <>
-      <div className="frame53-toggle-strip">
-        <span id={pinLabelId} className="frame53-toggle-strip-label">
-          ピンアナゴ表示
-        </span>
-        <button
-          type="button"
-          className={`frame53-toggle-strip-switch ${isCharacterOverlayEnabled ? "is-on" : ""}`}
-          role="switch"
-          aria-checked={isCharacterOverlayEnabled}
-          aria-labelledby={pinLabelId}
-          onClick={() =>
-            onCharacterOverlayEnabledChange(!isCharacterOverlayEnabled)
-          }
-        >
-          <span
-            className="frame53-toggle-strip-switch-knob"
-            aria-hidden
-          />
-        </button>
-      </div>
-      <div className="frame53-toggle-strip">
-        <span id={soundLabelId} className="frame53-toggle-strip-label">
-          サウンド
-        </span>
-        <button
-          type="button"
-          className={`frame53-toggle-strip-switch ${soundSettings.enabled ? "is-on" : ""}`}
-          role="switch"
-          aria-checked={soundSettings.enabled}
-          aria-labelledby={soundLabelId}
-          onClick={() =>
+  const pinRow = (
+    <div className="frame53-toggle-strip">
+      <span id={pinLabelId} className="frame53-toggle-strip-label">
+        ピンアナゴ表示
+      </span>
+      <button
+        type="button"
+        className={`frame53-toggle-strip-switch ${isCharacterOverlayEnabled ? "is-on" : ""}`}
+        role="switch"
+        aria-checked={isCharacterOverlayEnabled}
+        aria-labelledby={pinLabelId}
+        onClick={() =>
+          onCharacterOverlayEnabledChange(!isCharacterOverlayEnabled)
+        }
+      >
+        <span className="frame53-toggle-strip-switch-knob" aria-hidden />
+      </button>
+    </div>
+  );
+
+  const soundRow = (
+    <div className="frame53-toggle-strip">
+      <span id={soundLabelId} className="frame53-toggle-strip-label">
+        サウンド
+      </span>
+      <button
+        type="button"
+        className={`frame53-toggle-strip-switch ${soundSettings.enabled ? "is-on" : ""}`}
+        role="switch"
+        aria-checked={soundSettings.enabled}
+        aria-labelledby={soundLabelId}
+        onClick={() =>
+          onSoundSettingsChange({
+            ...soundSettings,
+            enabled: !soundSettings.enabled,
+          })
+        }
+      >
+        <span className="frame53-toggle-strip-switch-knob" aria-hidden />
+      </button>
+    </div>
+  );
+
+  const soundCard = (
+    <div
+      className={`frame53-sound-card ${!soundSettings.enabled ? "frame53-muted" : ""}`}
+    >
+      <label className="frame53-volume-row" htmlFor={volumeInputId}>
+        <span className="frame53-volume-visible-label">音量</span>
+        <input
+          id={volumeInputId}
+          className="frame53-volume-range"
+          type="range"
+          min={0}
+          max={100}
+          value={Math.round(soundSettings.volume * 100)}
+          style={{
+            ["--frame53-volume-pct" as string]: `${Math.round(soundSettings.volume * 100)}%`,
+          }}
+          onChange={(e) => {
+            const volume = Number(e.target.value) / 100;
             onSoundSettingsChange({
               ...soundSettings,
-              enabled: !soundSettings.enabled,
-            })
-          }
+              volume,
+            });
+            scheduleSoundVolumePreview(volume, soundSettings.selectedSound);
+          }}
+        />
+      </label>
+      <p className="frame53-sfx-label">効果音</p>
+      <div className="frame53-sfx-shell">
+        <select
+          className="frame53-sfx-select"
+          aria-label="効果音の種類"
+          value={soundSettings.selectedSound}
+          onChange={(e) => {
+            const selectedSound = e.target.value;
+            onSoundSettingsChange({
+              ...soundSettings,
+              selectedSound,
+            });
+            void playSoundPreview({
+              src: selectedSound,
+              volume: soundSettings.volume,
+            });
+          }}
         >
-          <span
-            className="frame53-toggle-strip-switch-knob"
-            aria-hidden
-          />
-        </button>
+          {soundOptionList.map((option) => (
+            <option key={option} value={option}>
+              {buildFrame53SoundLabel(option)}
+            </option>
+          ))}
+        </select>
       </div>
+    </div>
+  );
 
-      <div
-        className={`frame53-sound-card ${!soundSettings.enabled ? "frame53-muted" : ""}`}
-      >
-        <label className="frame53-volume-row" htmlFor={volumeInputId}>
-          <span className="frame53-volume-visible-label">音量</span>
-          <input
-            id={volumeInputId}
-            className="frame53-volume-range"
-            type="range"
-            min={0}
-            max={100}
-            value={Math.round(soundSettings.volume * 100)}
-            style={{
-              ["--frame53-volume-pct" as string]: `${Math.round(soundSettings.volume * 100)}%`,
-            }}
-            onChange={(e) => {
-              const volume = Number(e.target.value) / 100;
-              onSoundSettingsChange({
-                ...soundSettings,
-                volume,
-              });
-              scheduleSoundVolumePreview(volume, soundSettings.selectedSound);
-            }}
-          />
-        </label>
-        <p className="frame53-sfx-label">効果音</p>
-        <div className="frame53-sfx-shell">
-          <select
-            className="frame53-sfx-select"
-            aria-label="効果音の種類"
-            value={soundSettings.selectedSound}
-            onChange={(e) => {
-              const selectedSound = e.target.value;
-              onSoundSettingsChange({
-                ...soundSettings,
-                selectedSound,
-              });
-              void playSoundPreview({
-                src: selectedSound,
-                volume: soundSettings.volume,
-              });
-            }}
-          >
-            {soundOptionList.map((option) => (
-              <option key={option} value={option}>
-                {buildFrame53SoundLabel(option)}
-              </option>
-            ))}
-          </select>
-        </div>
+  if (registerCompleteLayout) {
+    return (
+      <div className="frame53-settings-panel frame53-settings-panel--register-complete">
+        <hr className="frame53-settings-figma-divider" aria-hidden />
+        {pinRow}
+        <hr className="frame53-settings-figma-divider" aria-hidden />
+        {soundRow}
+        {soundCard}
       </div>
+    );
+  }
+
+  return (
+    <>
+      {pinRow}
+      {soundRow}
+      {soundCard}
     </>
   );
 }

@@ -87,6 +87,8 @@ export type MeasuringScreenProps = {
   soundSettings: SoundSettings;
   onSoundSettingsChange: (next: SoundSettings) => void;
   onFinishMeasurement: () => void;
+  /** 測定を中断せず基準姿勢の再登録フローへ */
+  onReRegisterPosture: () => void;
   onPauseToggle: () => void;
   onOverlayEnabledChange: (enabled: boolean) => void;
   onCharacterOverlayEnabledChange: (enabled: boolean) => void;

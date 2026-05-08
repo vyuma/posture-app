@@ -1,9 +1,9 @@
-/* 測定画面（MeasuringScreen）：QRモーダル・姿勢登録と同じ Frame53 1222×681 等比（--pr-scale） */
+/* 測定画面（MeasuringScreen）：Figma 1512×982 シーン等比（--pr-scale） */
 .measuring-screen {
   position: relative;
 
   --frame53-point: #13a2d7;
-  --frame53-volume-track-muted: #e8e8e8;
+  --frame53-volume-track-muted: #ffffff;
 
   --frame53-scene-width: 1512px;
   --frame53-scene-height: 982px;
@@ -30,8 +30,8 @@
     )
   );
 
-  /* Frame 53 と同系：#13A2D7 → #F2EDCC */
-  background: linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
+  background-color: #f3f3f3;
+  background-image: linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
 
   display: flex;
   flex-direction: column;
@@ -94,7 +94,8 @@
   flex: 0 1 auto;
   display: flex;
   flex-wrap: nowrap;
-  align-items: stretch;
+  /* 左カードが内容で縦に伸びたとき、右のカメラ枠と上揃え（開発ツール表示時もスクロールで全体に届く） */
+  align-items: flex-start;
   justify-content: center;
   width: calc(1336px * var(--pr-scale));
   min-height: 0;
@@ -108,93 +109,202 @@
   width: calc(594px * var(--pr-scale));
   max-width: 100%;
   min-width: 0;
-  height: calc(694px * var(--pr-scale));
+  /* 固定 height をやめ、min のみ。内容が多いときはカードごと伸びて画面スクロールで配置ヒントまで届く */
   min-height: calc(694px * var(--pr-scale));
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: clamp(12px, 1.5vw, 16px);
+  gap: 0;
   padding: calc(48px * var(--pr-scale)) calc(56px * var(--pr-scale))
     calc(40px * var(--pr-scale));
   border-radius: calc(32px * var(--pr-scale));
-  background: rgba(255, 255, 255, 0.97);
-  border: 1px solid rgba(45, 82, 96, 0.08);
-  box-shadow:
-    0 18px 44px rgba(19, 100, 130, 0.14),
-    0 1px 0 rgba(255, 255, 255, 0.85);
+  background: #ffffff;
+  border: 0;
+  box-shadow: 0 0 calc(8.52px * var(--pr-scale)) rgba(0, 0, 0, 0.15);
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: visible;
 }
 
 .measure-control-head {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
+  gap: calc(12px * var(--pr-scale));
+  margin-bottom: calc(20px * var(--pr-scale));
 }
 
 .measure-control-title {
   margin: 0;
-  color: var(--frame53-point, #13a2d7);
-  font-size: clamp(1.2rem, 2.4vw, 1.65rem);
-  font-weight: 800;
+  color: #13a2d7;
+  font-size: max(1.25rem, calc(36px * var(--pr-scale)));
+  font-weight: 700;
+  line-height: calc(43 / 36);
+  letter-spacing: 0;
+}
+
+.measure-control-status-hint {
+  margin: calc(6px * var(--pr-scale)) 0 0;
+  font-size: max(0.75rem, calc(14px * var(--pr-scale)));
+  font-weight: 600;
+  color: #666666;
   line-height: 1.35;
 }
 
 .measure-control-icon-actions {
   flex-shrink: 0;
   display: flex;
-  gap: 10px;
+  gap: calc(24px * var(--pr-scale));
   align-items: center;
 }
 
 .measure-icon-btn {
   box-sizing: border-box;
-  width: var(--app-control-min-hit);
-  height: var(--app-control-min-hit);
+  width: calc(64px * var(--pr-scale));
+  height: calc(64px * var(--pr-scale));
+  min-width: calc(64px * var(--pr-scale));
+  min-height: calc(64px * var(--pr-scale));
   padding: 0;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  border: 2px solid rgba(239, 68, 68, 0.9);
-  background: rgba(255, 255, 255, 0.98);
-  color: #1f2937;
+  border: 0;
+  background: transparent;
+  color: inherit;
   cursor: pointer;
+  flex-shrink: 0;
   transition:
     transform 0.12s ease,
-    filter 0.12s ease;
+    opacity 0.12s ease;
+}
+
+.measure-icon-btn svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .measure-icon-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  filter: brightness(1.02);
+  transform: scale(1.03);
 }
 
 .measure-icon-btn:disabled {
-  opacity: 0.42;
+  opacity: 0.38;
   cursor: not-allowed;
   transform: none;
 }
 
-.measure-icon-btn.is-resume {
-  border-color: rgba(34, 197, 94, 0.9);
-}
-
-.measure-icon-btn--stop:not(:disabled) {
-  border-color: rgba(239, 68, 68, 0.95);
-  color: rgba(239, 68, 68, 0.95);
-}
 
 .measure-metrics-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: clamp(0.5rem, 1.2vw, 0.75rem);
+  gap: calc(24px * var(--pr-scale));
   min-width: 0;
+  margin-bottom: calc(20px * var(--pr-scale));
+}
+
+.measure-card-rule {
+  width: 100%;
+  height: 0;
+  margin: 0 0 calc(20px * var(--pr-scale));
+  border: 0;
+  border-top: calc(2px * var(--pr-scale)) solid #f5f5f5;
 }
 
 .measure-control-card .metric-tile {
-  background: #f5f5f7;
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  min-height: calc(120px * var(--pr-scale));
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: calc(20px * var(--pr-scale)) calc(12px * var(--pr-scale))
+    calc(16px * var(--pr-scale));
+  gap: calc(6px * var(--pr-scale));
+  background: #f5f5f5;
+  border: 0;
+  border-radius: calc(16px * var(--pr-scale));
+}
+
+.measure-control-card .metric-tile span:first-child {
+  color: #666666;
+  font-size: max(12px, calc(14px * var(--pr-scale)));
+  font-weight: 500;
+  text-align: center;
+}
+
+.measure-control-card .metric-tile-value-row {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: center;
+  gap: calc(2px * var(--pr-scale));
+}
+
+.measure-control-card .metric-tile strong {
+  margin: 0;
+  color: #000000;
+  font-size: max(1.75rem, calc(48px * var(--pr-scale)));
+  font-weight: 700;
+  line-height: calc(57 / 48);
+  letter-spacing: 0;
+}
+
+.measure-control-card .metric-tile-value-suffix {
+  color: #000000;
+  font-size: max(1rem, calc(24px * var(--pr-scale)));
+  font-weight: 700;
+  line-height: calc(29 / 24);
+}
+
+.measure-control-card .frame53-toggle-strip {
+  margin-bottom: calc(16px * var(--pr-scale));
+}
+
+.measure-control-card .frame53-sound-card {
+  margin-bottom: calc(8px * var(--pr-scale));
+}
+
+.measure-control-card-footer {
+  margin-top: auto;
+  padding-top: calc(16px * var(--pr-scale));
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.measure-reregister-cta {
+  width: 100%;
+  max-width: calc(482px * var(--pr-scale));
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: calc(77px * var(--pr-scale));
+  padding: calc(24px * var(--pr-scale)) calc(32px * var(--pr-scale));
+  border: 0;
+  border-radius: 999px;
+  background: #13a2d7;
+  color: #ffffff;
+  font-size: max(1rem, calc(24px * var(--pr-scale)));
+  font-weight: 700;
+  line-height: calc(29 / 24);
+  letter-spacing: 0;
+  cursor: pointer;
+  box-shadow: 0 calc(8px * var(--pr-scale)) calc(20px * var(--pr-scale))
+    rgba(19, 162, 215, 0.22);
+  transition:
+    transform 0.14s ease,
+    filter 0.14s ease;
+}
+
+.measure-reregister-cta:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+
+.measure-reregister-cta:active {
+  transform: translateY(0);
+  filter: brightness(0.98);
 }
 
 .measure-baseline-cta {
@@ -230,7 +340,7 @@
   align-items: center;
   gap: 8px;
   padding-top: 12px;
-  margin-top: 4px;
+  margin-top: calc(12px * var(--pr-scale));
   border-top: 1px dashed rgba(19, 100, 130, 0.18);
 }
 
@@ -302,25 +412,25 @@
   box-sizing: border-box;
 }
 
-/* 悪い〜良い：Figma カメラ上のフロート帯（全幅ではなく左右に余白・角丸カプセル） */
+/* 悪い〜良い：Figma Frame 50（rgba(0,0,0,0.1)・角丸24・内側ゲージ32px） */
 .measure-posture-gauge {
   position: absolute;
-  top: clamp(10px, 2vmin, 16px);
+  top: calc(24px * var(--pr-scale));
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100% - clamp(24px, 6vw, 44px));
-  max-width: 100%;
+  width: calc(100% - 132px * var(--pr-scale));
+  max-width: calc(561px * var(--pr-scale));
+  min-height: calc(80px * var(--pr-scale));
   z-index: 2500;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px clamp(14px, 3.2vw, 20px);
+  justify-content: space-between;
+  gap: calc(16px * var(--pr-scale));
+  padding: calc(24px * var(--pr-scale));
   box-sizing: border-box;
   pointer-events: none;
-  background: rgba(0, 0, 0, 0.48);
-  border-radius: 999px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: calc(24px * var(--pr-scale));
 }
 
 .measure-posture-gauge--warmup .measure-posture-gauge-fill {
@@ -331,24 +441,21 @@
 .measure-posture-gauge-end,
 .measure-posture-gauge-end--bad,
 .measure-posture-gauge-end--good {
-  flex-shrink: 0;
-  font-size: 0.72rem;
-  font-weight: 900;
-  color: rgba(255, 255, 255, 0.98);
-  text-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.55),
-    0 0 10px rgba(0, 0, 0, 0.2);
+  flex: 0 0 auto;
+  width: max-content;
+  font-size: max(14px, calc(20px * var(--pr-scale)));
+  font-weight: 700;
+  line-height: calc(24 / 20);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
 .measure-posture-gauge-track {
   flex: 1 1 auto;
   min-width: 0;
-  height: clamp(14px, 2vmin, 18px);
+  height: calc(32px * var(--pr-scale));
   border-radius: 999px;
   background: #ffffff;
-  box-shadow:
-    inset 0 1px 2px rgba(0, 0, 0, 0.06),
-    0 0 0 1px rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
 
@@ -356,13 +463,7 @@
   height: 100%;
   max-width: 100%;
   border-radius: inherit;
-  background: linear-gradient(
-    90deg,
-    #f2edcc 0%,
-    #a8e8d2 34%,
-    #5ac9e5 70%,
-    #13a2d7 100%
-  );
+  background: linear-gradient(90deg, #fcf9c3 0%, #56b9d4 100%);
   transition: width 0.35s ease;
 }
 
@@ -456,13 +557,13 @@
   border: 1px solid rgba(45, 82, 96, 0.1);
 }
 
-.metric-tile span {
+.metric-tile:not(.metric-tile--with-suffix) span {
   color: #5d737c;
   font-size: 0.76rem;
   font-weight: 900;
 }
 
-.metric-tile strong {
+.metric-tile:not(.metric-tile--with-suffix) strong {
   color: #203b45;
   font-size: 1.42rem;
   font-weight: 900;
@@ -479,6 +580,8 @@
 .measure-tool-overlay-hint-debug {
   font-size: 0.78rem;
   opacity: 0.95;
+  /* スクロールでボタンが画面下端に来たときにタップしやすくする */
+  scroll-margin-bottom: calc(24px * var(--pr-scale));
   transition:
     transform 0.14s ease,
     box-shadow 0.14s ease,

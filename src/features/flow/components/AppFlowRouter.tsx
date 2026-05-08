@@ -62,6 +62,7 @@ type AppFlowRouterProps = {
   onPostureRegisterCalibratingComplete: () => void;
   onBackHome: () => void;
   onFinishMeasurement: () => void;
+  onReRegisterPosture: () => void;
   onMeasureAgain: () => void;
   onPauseToggle: () => void;
   onOverlayEnabledChange: (enabled: boolean) => void;
@@ -111,6 +112,7 @@ export function AppFlowRouter({
   onPostureRegisterCalibratingComplete,
   onBackHome,
   onFinishMeasurement,
+  onReRegisterPosture,
   onMeasureAgain,
   onPauseToggle,
   onOverlayEnabledChange,
@@ -208,6 +210,7 @@ export function AppFlowRouter({
           soundSettings={soundSettings}
           onSoundSettingsChange={onSoundSettingsChange}
           onFinishMeasurement={onFinishMeasurement}
+          onReRegisterPosture={onReRegisterPosture}
           onPauseToggle={onPauseToggle}
           onOverlayEnabledChange={onOverlayEnabledChange}
           onCharacterOverlayEnabledChange={onCharacterOverlayEnabledChange}

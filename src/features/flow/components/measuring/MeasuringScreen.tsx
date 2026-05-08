@@ -18,7 +18,7 @@ import {
   MeasureStopIcon,
 } from "../shared/MeasureIcons";
 import { MetricTile } from "../shared/MetricTile";
-import { formatDuration, formatPercent } from "../shared/formatters";
+import { formatDuration } from "../shared/formatters";
 import { buildFrame53SoundLabel } from "../shared/soundLabels";
 import { WarmupCountdownVeil } from "./WarmupCountdownVeil";
 
@@ -34,6 +34,7 @@ export function MeasuringScreen({
   soundSettings,
   onSoundSettingsChange,
   onFinishMeasurement,
+  onReRegisterPosture,
   onPauseToggle,
   onOverlayEnabledChange,
   onCharacterOverlayEnabledChange,
@@ -41,10 +42,6 @@ export function MeasuringScreen({
   onResetCharacterPosition,
 }: MeasuringScreenProps) {
   const isWarmup = !snapshot.baselineReady;
-  const warmupSeconds = Math.max(
-    0,
-    Math.ceil(snapshot.warmupRemainingMs / 1000),
-  );
 
   const showMeasureDevTools = isOverlayDebugUiEnabled();
 
@@ -99,11 +96,13 @@ export function MeasuringScreen({
   }
 
   const headingId = "measuring-heading";
-  const title = isWarmup
-    ? "基準姿勢を測定中"
-    : isPaused
-      ? "一時停止中"
-      : "測定中";
+  const statusHintId = "measuring-status-hint";
+  const goodPercentWhole = Math.round(
+    Math.min(1, Math.max(0, stats.goodRatio)) * 100,
+  );
+  const warmupElapsedMs = isWarmup
+    ? Math.max(0, POSTURE_SPEC.warmupMs - snapshot.warmupRemainingMs)
+    : 0;
 
   const gaugePercent = isWarmup
     ? 0
@@ -115,13 +114,24 @@ export function MeasuringScreen({
   return (
     <main className="flow-screen measuring-screen">
       <FlowBrand />
-      <section className="measure-layout" aria-labelledby={headingId}>
+      <section
+        className="measure-layout"
+        aria-labelledby={headingId}
+        aria-describedby={statusHintId}
+      >
         <aside className="measure-control-card" aria-label="測定コントロール">
           <header className="measure-control-head">
             <div>
               <h1 id={headingId} className="measure-control-title">
-                {title}
+                姿勢測定中
               </h1>
+              <p id={statusHintId} className="measure-control-status-hint">
+                {isWarmup
+                  ? "基準線を学習しています…"
+                  : isPaused
+                    ? "一時停止中です"
+                    : "測定中です"}
+              </p>
             </div>
             <div className="measure-control-icon-actions">
               <button
@@ -142,7 +152,7 @@ export function MeasuringScreen({
                 className="measure-icon-btn measure-icon-btn--stop"
                 onClick={onFinishMeasurement}
                 disabled={stopDisabled}
-                aria-label="測定終了"
+                aria-label="測定を終了"
               >
                 <MeasureStopIcon />
               </button>
@@ -151,18 +161,21 @@ export function MeasuringScreen({
 
           <div className="measure-metrics-row">
             <MetricTile
-              label={isWarmup ? "測定開始まで" : "測定時間"}
+              label="測定時間"
               value={
-                isWarmup ? `${warmupSeconds}s` : formatDuration(stats.activeMeasurementMs)
+                isWarmup
+                  ? formatDuration(warmupElapsedMs)
+                  : formatDuration(stats.activeMeasurementMs)
               }
             />
             <MetricTile
               label="良い姿勢率"
-              value={
-                isWarmup ? "—" : formatPercent(stats.goodRatio)
-              }
+              value={isWarmup ? "—" : String(goodPercentWhole)}
+              valueSuffix={isWarmup ? undefined : "%"}
             />
           </div>
+
+          <div className="measure-card-rule" role="presentation" />
 
           <div className="frame53-toggle-strip">
             <span
@@ -184,6 +197,8 @@ export function MeasuringScreen({
               <span className="frame53-toggle-strip-switch-knob" aria-hidden />
             </button>
           </div>
+
+          <div className="measure-card-rule" role="presentation" />
 
           <div className="frame53-toggle-strip">
             <span
@@ -310,6 +325,16 @@ export function MeasuringScreen({
               ) : null}
             </div>
           ) : null}
+
+          <div className="measure-control-card-footer">
+            <button
+              type="button"
+              className="measure-reregister-cta"
+              onClick={onReRegisterPosture}
+            >
+              姿勢を再登録する
+            </button>
+          </div>
         </aside>
 
         <div className="measure-camera-panel measure-camera-panel--figma">

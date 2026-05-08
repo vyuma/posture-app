@@ -42,6 +42,13 @@
   overflow-y: auto;
   /* ノード fills: #13a2d7 → #f2edcc */
   background: linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
+
+  /*
+   * 登録中パネル右：Figma 694 枠内 円 320・白枠 20（直径の 6.25%）・数字 128（直径の 40%）・文言 36
+   */
+  --pr-reg-countdown-d: calc(320px * var(--pr-scale));
+  --pr-reg-countdown-digit-fs: calc(128px * var(--pr-scale));
+  --pr-reg-countdown-status-fs: calc(36px * var(--pr-scale));
 }
 
 .frame53-register-screen .flow-brand {
@@ -56,6 +63,41 @@
 .frame53-register-screen .flow-brand-logo {
   width: 100%;
   height: auto;
+}
+
+/* ヘッダー閉じる：1512×982 上56・右80（56×56） */
+.frame53-register-screen .frame53-header-close {
+  position: absolute;
+  z-index: 2;
+  top: calc(var(--frame53-scene-offset-y) + 56px * var(--pr-scale));
+  right: calc(var(--frame53-scene-offset-x) + 80px * var(--pr-scale));
+  width: calc(56px * var(--pr-scale));
+  height: calc(56px * var(--pr-scale));
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.frame53-register-screen .frame53-header-close:hover,
+.frame53-register-screen .frame53-header-close:focus-visible {
+  opacity: 0.88;
+}
+
+.frame53-register-screen .frame53-header-close:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.95);
+  outline-offset: 3px;
+}
+
+.frame53-register-screen .frame53-header-close img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
 }
 
 .frame53-panels-wrap {
@@ -83,6 +125,7 @@
   align-items: stretch;
   background: #ffffff;
   border-radius: calc(32px * var(--pr-scale));
+  box-shadow: 0 0 calc(8.52px * var(--pr-scale)) rgba(0, 0, 0, 0.15);
   overflow-x: hidden;
   /* はみ出し時のみスクロール（通常はスクロールバー非表示に近い） */
   overflow-y: auto;
@@ -119,6 +162,118 @@
 
 .frame53-footer--pr-calibrating {
   margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(24px * var(--pr-scale));
+  width: 100%;
+}
+
+.frame53-left--pr-calibrating .frame53-heading {
+  margin-bottom: calc(24px * var(--pr-scale));
+}
+
+.frame53-left--pr-calibrating .frame53-led {
+  margin-bottom: calc(32px * var(--pr-scale));
+}
+
+.frame53-pr-cal-mascot-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.frame53-pr-cal-mascot {
+  display: block;
+  width: min(100%, calc(224px * var(--pr-scale)));
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+.frame53-primary.frame53-primary--pr-calibrating:disabled {
+  width: min(calc(482px * var(--pr-scale)), 100%);
+  box-sizing: border-box;
+  padding: calc(24px * var(--pr-scale)) calc(32px * var(--pr-scale));
+  min-height: calc(77px * var(--pr-scale));
+  height: calc(77px * var(--pr-scale));
+  background: #e6e6e6;
+  color: #ffffff;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* 登録完了（設定）: Frame 46 コピー・区切り・幅482px */
+.frame53-left--pr-settings .frame53-heading {
+  margin-bottom: calc(32px * var(--pr-scale));
+}
+
+.frame53-left--pr-settings .frame53-led {
+  margin-bottom: calc(24px * var(--pr-scale));
+}
+
+.frame53-led-note {
+  margin: 0 0 calc(72px * var(--pr-scale));
+  color: #666666;
+  font-size: max(12px, calc(14px * var(--pr-scale)));
+  font-weight: 500;
+  line-height: calc(17 / 14);
+  letter-spacing: 0;
+}
+
+.frame53-settings-panel--register-complete {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: calc(24px * var(--pr-scale));
+  width: 100%;
+  /* 音量トラックの未塗りを Figma どおり白に */
+  --frame53-volume-track-muted: #ffffff;
+}
+
+.frame53-settings-panel--register-complete .frame53-settings-figma-divider {
+  align-self: center;
+  width: min(calc(482px * var(--pr-scale)), 100%);
+  height: 0;
+  margin: 0;
+  border: 0;
+  border-top: 2px solid #f5f5f5;
+}
+
+.frame53-settings-panel--register-complete .frame53-toggle-strip {
+  margin-bottom: 0;
+}
+
+.frame53-settings-panel--register-complete .frame53-sound-card {
+  align-self: center;
+  width: min(calc(482px * var(--pr-scale)), 100%);
+  margin-bottom: 0;
+}
+
+.frame53-settings-panel--register-complete .frame53-volume-range {
+  --frame53-vol-thumb-size: max(20px, calc(24px * var(--pr-scale)));
+}
+
+.frame53-left--pr-settings .frame53-sfx-select {
+  padding: calc(8px * var(--pr-scale)) calc(40px * var(--pr-scale))
+    calc(8px * var(--pr-scale)) calc(24px * var(--pr-scale));
+  border: 0;
+  border-radius: calc(16px * var(--pr-scale));
+  font-size: max(12px, calc(16px * var(--pr-scale)));
+  font-weight: 700;
+  line-height: calc(19 / 16);
+  color: #666666;
+}
+
+.frame53-left--pr-settings .frame53-primary {
+  width: min(calc(482px * var(--pr-scale)), 100%);
+  padding: calc(24px * var(--pr-scale)) calc(32px * var(--pr-scale));
+  box-sizing: border-box;
+}
+
+.frame53-left--pr-settings .frame53-primary:not(:disabled) {
+  box-shadow: none;
 }
 
 .frame53-heading {
@@ -526,7 +681,7 @@
   min-width: 0;
   padding: 0;
   border-radius: calc(32px * var(--pr-scale));
-  background: rgba(255, 255, 255, 0.2);
+  background: #a1a1a1;
   border: 0;
   box-shadow: 0 0 calc(8.52px * var(--pr-scale)) rgba(0, 0, 0, 0.15);
   overflow: hidden;
@@ -597,5 +752,66 @@
   .frame53-primary:not(:disabled):hover,
   .frame53-primary:not(:disabled):focus-visible {
     transform: none;
+  }
+}
+
+/* 姿勢登録ウォームアップ：グレーカード上に Figma 比率のリング＋カウント */
+.warmup-veil--register {
+  background: #a1a1a1;
+  gap: 0;
+  padding: calc(24px * var(--pr-scale));
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+.warmup-veil-register-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Figma: 円を縦中央よりやや上（-49.5px） */
+  transform: translateY(calc(-49.5px * var(--pr-scale)));
+}
+
+.warmup-veil--register .warmup-veil-inner--register {
+  position: relative;
+  width: var(--pr-reg-countdown-d);
+  height: var(--pr-reg-countdown-d);
+  flex: none;
+}
+
+.warmup-veil--register .warmup-veil-ring-track {
+  stroke: rgba(255, 255, 255, 0.28);
+  stroke-width: 20;
+}
+
+.warmup-veil--register .warmup-veil-ring-progress {
+  stroke: #ffffff;
+  stroke-width: 20;
+  stroke-linecap: round;
+}
+
+.warmup-veil--register .warmup-veil-count {
+  font-size: max(52px, var(--pr-reg-countdown-digit-fs));
+  font-weight: 700;
+  line-height: calc(153 / 128);
+  color: #ffffff;
+  text-shadow: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.warmup-veil--register .warmup-veil-label {
+  margin: calc(32px * var(--pr-scale)) 0 0;
+  max-width: calc(100% - 24px * var(--pr-scale));
+  color: #ffffff;
+  font-size: max(16px, var(--pr-reg-countdown-status-fs));
+  font-weight: 700;
+  line-height: calc(43 / 36);
+  letter-spacing: 0;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .warmup-veil--register .warmup-veil-ring-progress {
+    transition: none;
   }
 }

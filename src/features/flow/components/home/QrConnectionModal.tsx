@@ -1,3 +1,7 @@
+/**
+ * デスクトップ用 QR 接続モーダル（home.css .qr-modal-* と対）。
+ * 現状：アプリは flowPhase「mobileConnect」で MobileConnectScreen のみ表示しており、本コンポーネントは未マウント。
+ */
 import { useEffect, useState, useSyncExternalStore } from "react";
 
 import type { CharacterDefinition } from "../../../characters/types";

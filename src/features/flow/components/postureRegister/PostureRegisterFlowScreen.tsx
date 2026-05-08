@@ -158,6 +158,14 @@ export function PostureRegisterFlowScreen({
   return (
     <main className="flow-screen frame53-register-screen">
       <FlowBrand />
+      <button
+        type="button"
+        className="frame53-header-close"
+        onClick={onBackHome}
+        aria-label="閉じる"
+      >
+        <img src="/x.png" alt="" width={56} height={56} draggable={false} />
+      </button>
       <div className="frame53-panels-wrap">
         <section className={leftClass} aria-labelledby={headingId}>
           {postureRegisterStep === "intro" ? (
@@ -198,16 +206,28 @@ export function PostureRegisterFlowScreen({
           {postureRegisterStep === "calibrating" ? (
             <>
               <h1 id={headingId} className="frame53-heading">
-                姿勢登録
+                登録中
               </h1>
               <p className="frame53-led">
-                そのままお待ちください。基準線を学習しています。
+                肩の力を抜いて、背筋を伸ばして
+                <br />
+                5秒間キープしてください。
               </p>
-              <hr className="frame53-rule" />
               <div className="frame53-footer frame53-footer--pr-calibrating">
+                <div
+                  className="frame53-pr-cal-mascot-wrap"
+                  aria-hidden="true"
+                >
+                  <img
+                    className="frame53-pr-cal-mascot"
+                    src="/characters/anago/normal-nago/expressions/good.png"
+                    alt=""
+                    draggable={false}
+                  />
+                </div>
                 <button
                   type="button"
-                  className="frame53-primary"
+                  className="frame53-primary frame53-primary--pr-calibrating"
                   disabled
                   aria-disabled="true"
                 >
@@ -223,11 +243,14 @@ export function PostureRegisterFlowScreen({
                 登録完了
               </h1>
               <p className="frame53-led">
-                測定中のサウンドとピンアナゴ表示を設定できます。
+                測定中の設定をしてください。
               </p>
-              <hr className="frame53-rule" />
+              <p className="frame53-led-note">
+                ※ 測定開始後にも変更できます
+              </p>
               <CodeReadSettingsPanel
                 idPrefix="frame53-pr"
+                registerCompleteLayout
                 soundSettings={soundSettings}
                 onSoundSettingsChange={onSoundSettingsChange}
                 isCharacterOverlayEnabled={isCharacterOverlayEnabled}
@@ -286,9 +309,10 @@ export function PostureRegisterFlowScreen({
                 {postureRegisterStep === "calibrating" &&
                 !snapshot.baselineReady ? (
                   <WarmupCountdownVeil
+                    variant="register"
                     remainingMs={snapshot.warmupRemainingMs}
                     totalMs={POSTURE_SPEC.warmupMs}
-                    label="基準線を学習中…"
+                    label="良い姿勢を登録中"
                   />
                 ) : null}
               </>

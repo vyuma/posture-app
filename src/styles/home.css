@@ -1213,19 +1213,13 @@
 .qr-modal-right--step1 {
   /*
    * グレーアナゴ：座標系は .qr-modal-qr-composite（正方形）のみ。
-   * 位置・サイズをすべて「箱に対する %」で統一すると、ウィンドウで箱が縮んでもタイル上の見え方が不変になる。
-   * --qr-anago-scale は見た目の倍率のみ（レイアウト % とは掛け合わせない）。
+   * --qr-anago-scale … height/max に掛ける。`82 * 1% * var()` のように % を真ん中に挟むと WebKit で無効になりやすいので `82 * var() * 1%` に統一。
    */
-  --qr-anago-scale: 2;
-  /* 箱の高さに対する高さの目安（object-fit: contain） */
-  --qr-anago-height-pct-of-box: 82;
-  /* 箱の幅に対する横方向の上限 */
-  --qr-anago-max-width-pct-of-box: 42;
-  /* 箱の下端基準オフセット（負＝下端よりはみ出し）：箱の高さの % */
-  --qr-anago-anchor-bottom-pct: -107.08;
-  /* 水平：箱中央(50%) からのずれを箱「幅」の % で指定（正で右へ）*/
+  --qr-anago-scale: 1.72;
+  --qr-anago-height-pct-of-box: 78;
+  --qr-anago-max-width-pct-of-box: 40;
+  --qr-anago-anchor-bottom-pct: -18;
   --qr-anago-shift-x-pct-of-box: 5;
-  /* 縦追加：anchor-bottom と加算される箱「高さ」の %（正で視覚的に少し下へ／負で上へ）*/
   --qr-anago-shift-y-pct-add-to-bottom-pct: 0;
 
   /* 白マット・パネル余白は据え置き、QR ビットマップだけ縮小（合成正方形の一辺に対する幅 %） */
@@ -1273,7 +1267,7 @@
   justify-content: center;
 }
 
-/* 半透明は step1。合成内は白→アナゴ→QR（z-index で奥手前を固定） */
+/* step1：合成内は白→アナゴ→QR（z-index で奥手前を固定） */
 .qr-modal-qr-white-mat {
   position: absolute;
   inset: 0;
@@ -1293,12 +1287,14 @@
       ) * 1%
   );
   width: auto;
-  height: calc(var(--qr-anago-height-pct-of-box, 82) * 1% * var(--qr-anago-scale, 1));
+  height: calc(
+    var(--qr-anago-height-pct-of-box, 82) * var(--qr-anago-scale, 1) * 1%
+  );
   max-height: calc(
-    var(--qr-anago-height-pct-of-box, 82) * 1% * var(--qr-anago-scale, 1)
+    var(--qr-anago-height-pct-of-box, 82) * var(--qr-anago-scale, 1) * 1%
   );
   max-width: calc(
-    var(--qr-anago-max-width-pct-of-box, 42) * 1% * var(--qr-anago-scale, 1)
+    var(--qr-anago-max-width-pct-of-box, 42) * var(--qr-anago-scale, 1) * 1%
   );
   transform: translateX(-50%);
   object-fit: contain;

@@ -22,6 +22,8 @@
   background: linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
   transform: translate(-50%, -50%) scale(var(--mobile-connect-scale, 1));
   transform-origin: center center;
+  /* home.css の QR 系 keyframe が参照するスケール（本シーンは固定 1512×982 設計＝1） */
+  --qr-scale: 1;
 }
 
 .mobile-connect-header {
@@ -151,6 +153,7 @@
   right: 80px;
   width: 694px;
   height: 694px;
+  /* QRタイル外へはみ出すアナゴは表示し、この半透明カード（角丸）の外ではクリップする */
   overflow: hidden;
   border-radius: 32px;
   background: rgba(255, 255, 255, 0.2);
@@ -163,27 +166,6 @@
   isolation: isolate;
 }
 
-.mobile-connect-qr-pole {
-  position: absolute;
-  top: 124px;
-  left: 50%;
-  z-index: 0;
-  width: 124px;
-  height: 808.65px;
-  background:
-    linear-gradient(
-      180deg,
-      #979797 0,
-      #979797 62.9%,
-      #ffffff 62.9%,
-      #ffffff 65.35%,
-      #979797 65.35%,
-      #979797 100%
-    );
-  transform: translateX(-50%);
-  pointer-events: none;
-}
-
 .mobile-connect-qr-frame {
   position: absolute;
   top: 106px;
@@ -191,9 +173,18 @@
   z-index: 2;
   width: 483px;
   height: 483px;
-  overflow: hidden;
+  /* アナゴはタイル外へはみ出せる。クリップは .mobile-connect-right-card に任せる */
+  overflow: visible;
   border-radius: 48px;
   isolation: isolate;
+  /*
+   * QRアナゴ（/logo/QRアナゴ.png）：白マットの手前・QRビットマップの奥に配置。
+   */
+  --mc-qr-anago-scale: 1.01;
+  --mc-qr-anago-bottom: -515px;
+  --mc-qr-anago-left: 55%;
+  --mc-qr-anago-height: 792.12px;
+  --mc-qr-anago-max-width: 405.72px;
 }
 
 .mobile-connect-qr-white-mat {
@@ -206,12 +197,12 @@
 
 .mobile-connect-qr-anago {
   position: absolute;
-  bottom: -517.2px;
-  left: 55%;
+  bottom: var(--mc-qr-anago-bottom);
+  left: var(--mc-qr-anago-left);
   z-index: 2;
   width: auto;
-  height: 792.12px;
-  max-width: 405.72px;
+  height: calc(var(--mc-qr-anago-height) * var(--mc-qr-anago-scale));
+  max-width: calc(var(--mc-qr-anago-max-width) * var(--mc-qr-anago-scale));
   object-fit: contain;
   object-position: center bottom;
   opacity: 0.88;
@@ -263,4 +254,258 @@
   font-weight: 700;
   text-align: center;
   box-shadow: 0 8px 24px rgba(10, 55, 75, 0.12);
+}
+
+/* 接続完了（QR 読取後）：左カードは触覚案内＋次へ、右カードは今日のピンアナゴ */
+.mobile-connect-left-card--paired {
+  overflow: hidden;
+}
+
+.mobile-connect-left-card--paired h1 {
+  width: 180px;
+}
+
+.mobile-connect-left-card--paired p {
+  width: 429px;
+  height: auto;
+  min-height: 24px;
+}
+
+.mobile-connect-vibe-area {
+  position: absolute;
+  top: 155px;
+  left: 0;
+  display: flex;
+  width: 100%;
+  height: 380px;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-connect-vibe-stage {
+  position: relative;
+  display: flex;
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  overflow: hidden;
+  border-radius: 20px;
+}
+
+.mobile-connect-vibe-arcs {
+  display: flex;
+  flex: 0 0 auto;
+  width: 54px;
+  height: 170px;
+  align-items: center;
+  pointer-events: none;
+}
+
+.mobile-connect-vibe-arcs svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.mobile-connect-vibe-arcs path {
+  fill: none;
+  stroke: #34add5;
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: var(--vibe-arc-origin, center);
+  animation: qr-modal-vibe-arc-pulse 1s ease-out infinite;
+  filter: drop-shadow(0 1px 4px rgba(52, 173, 213, 0.28));
+}
+
+.mobile-connect-vibe-arcs--left path {
+  --vibe-arc-origin: 100% 50%;
+}
+
+.mobile-connect-vibe-arcs--right path {
+  --vibe-arc-origin: 0% 50%;
+}
+
+.mobile-connect-vibe-arcs path:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.mobile-connect-vibe-arcs path:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.mobile-connect-vibe-arcs path:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+.mobile-connect-vibe-img {
+  max-height: 290px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  transform-origin: 50% 60%;
+  animation: qr-modal-phone-vibrate 0.22s ease-in-out infinite;
+  filter: drop-shadow(0.7px 0 0 rgba(52, 173, 213, 0.32))
+    drop-shadow(-0.7px 0 0 rgba(52, 173, 213, 0.32))
+    drop-shadow(0 10px 20px rgba(15, 70, 95, 0.18));
+}
+
+.mobile-connect-next-btn {
+  position: absolute;
+  bottom: 48px;
+  left: 50%;
+  width: 482px;
+  height: 77px;
+  padding: 24px 32px;
+  border: 0;
+  border-radius: 100px;
+  background: #34add5;
+  color: #ffffff;
+  cursor: pointer;
+  font-family:
+    "SF Pro Display",
+    "SF Pro Text",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Noto Sans JP",
+    sans-serif;
+  font-size: 24px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 29px;
+  box-shadow: 0 8px 24px rgba(12, 100, 128, 0.22);
+  transform: translateX(-50%);
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease;
+}
+
+.mobile-connect-next-btn:hover,
+.mobile-connect-next-btn:focus-visible {
+  transform: translateX(-50%) translateY(-1px);
+}
+
+.mobile-connect-next-btn:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 3px;
+}
+
+.mobile-connect-right-card--paired {
+  container-type: size;
+  container-name: mc-connect-paired;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 36px 40px 0;
+}
+
+.mobile-connect-today-teaser {
+  display: grid;
+  flex: 1 1 auto;
+  width: 100%;
+  min-height: 0;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto minmax(0, 1fr);
+  row-gap: clamp(18px, 5.5cqh, 42px);
+  align-items: stretch;
+  justify-items: stretch;
+  box-sizing: border-box;
+}
+
+.mobile-connect-today-heading {
+  grid-row: 1;
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  justify-self: center;
+  color: #ffffff;
+  font-size: max(1rem, 32px);
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 38px;
+  text-align: center;
+  text-shadow: 0 1px 14px rgba(12, 60, 80, 0.25);
+  animation: qr-modal-today-heading-enter 0.48s ease 0.08s both;
+}
+
+.mobile-connect-today-character {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  grid-row: 2;
+  width: 100%;
+  min-height: 0;
+  align-items: flex-end;
+  justify-content: center;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.mobile-connect-right-card--paired .mobile-connect-today-character-img {
+  display: block;
+  max-width: min(330px, 64cqw);
+  max-height: min(530px, 85cqh);
+  width: auto;
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.12));
+}
+
+.mobile-connect-right-card--paired
+  .mobile-connect-today-character-img.character-empty {
+  min-height: min(120px, 17.6cqh);
+  width: min(200px, 45%);
+}
+
+.mobile-connect-today-character--animated
+  img.character-figure.mobile-connect-today-character-img {
+  transform-origin: 50% 92%;
+  animation:
+    qr-modal-today-character-rise 0.72s cubic-bezier(0.18, 0.74, 0.28, 1)
+      0.18s both,
+    qr-modal-today-character-idle 4.2s ease-in-out 1s infinite;
+}
+
+.mobile-connect-today-character--animated
+  .mobile-connect-today-character-img.character-empty {
+  transform-origin: 50% 90%;
+  animation:
+    qr-modal-today-character-rise 0.72s cubic-bezier(0.18, 0.74, 0.28, 1)
+      0.18s both,
+    qr-modal-today-character-placeholder-idle 3.8s ease-in-out 1s infinite;
+}
+
+@supports not (width: 1cqw) {
+  .mobile-connect-right-card--paired .mobile-connect-today-character-img {
+    max-width: 330px;
+    max-height: 530px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-connect-vibe-img,
+  .mobile-connect-vibe-arcs path {
+    animation: none;
+  }
+
+  .mobile-connect-vibe-arcs path {
+    opacity: 0.7;
+  }
+
+  .mobile-connect-today-heading,
+  .mobile-connect-today-character--animated
+    img.character-figure.mobile-connect-today-character-img,
+  .mobile-connect-today-character--animated
+    .mobile-connect-today-character-img.character-empty {
+    animation: none;
+  }
+
+  .mobile-connect-today-character--animated
+    .mobile-connect-today-character-img.character-empty {
+    opacity: 0.42;
+    transform: none;
+  }
 }

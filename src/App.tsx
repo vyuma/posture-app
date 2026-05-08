@@ -432,6 +432,16 @@ function App() {
     }
   }, [isPairedLive, isStartPending, snapshot.baselineReady]);
 
+  const handleReRegisterPostureFromMeasuring = useCallback(() => {
+    setIsPaused(false);
+    setMeasurementStats(EMPTY_MEASUREMENT_STATS);
+    measurementAccumulatorRef.current = createMeasurementAccumulator();
+    measurementStartedAtRef.current = null;
+    resetPostureEngine();
+    setPostureRegisterStep("calibrating");
+    setFlowPhase("postureRegister");
+  }, [resetPostureEngine]);
+
   const handleFinishMeasurement = useCallback(() => {
     const finalStats = sampleMeasurementStats();
     const timelineForResult = finalizePostureTimeline(
@@ -771,6 +781,7 @@ function App() {
         }
         onBackHome={() => setFlowPhase("home")}
         onFinishMeasurement={handleFinishMeasurement}
+        onReRegisterPosture={handleReRegisterPostureFromMeasuring}
         onMeasureAgain={() => {
           void handleStartMeasurement();
         }}
