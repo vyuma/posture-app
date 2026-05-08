@@ -2,6 +2,7 @@ mod commands;
 mod overlay;
 mod pairing;
 
+use commands::clipboard_commands::copy_share_image_to_clipboard;
 use commands::overlay_commands::{
     overlay_get_state, overlay_hide_character, overlay_on_posture_change, overlay_open_main_window,
     overlay_reset_position_offset, overlay_set_mode, overlay_set_position_offset,
@@ -60,7 +61,8 @@ pub fn run() {
             overlay_set_position_offset,
             overlay_reset_position_offset,
             overlay_open_main_window,
-            overlay_on_posture_change
+            overlay_on_posture_change,
+            copy_share_image_to_clipboard
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

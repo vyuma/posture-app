@@ -599,6 +599,8 @@
 .result-registered-share {
   display: grid;
   place-items: center;
+  width: 34px;
+  height: 34px;
   padding: 6px;
   border: 1px solid color-mix(in srgb, var(--result-share-icon, #888888) 24%, transparent);
   border-radius: 12px;

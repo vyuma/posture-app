@@ -1,10 +1,16 @@
 import { toBlob } from "html-to-image";
 
+import {
+  copyShareImageNative,
+  shouldPreferNativeClipboardShare,
+} from "./shareNativeClipboard";
+
 export type ShareResultOutcome =
   | "shared"
   | "downloaded"
   | "copied"
   | "aborted";
+export type ShareResultAction = "auto" | "share" | "copy";
 
 const SHARE_CAPTURE_CLASS = "is-share-capture";
 /** キャプチャ用ステージの固定幅（CSS の .is-share-capture と一致させる） */
@@ -151,6 +157,55 @@ function delay(ms: number): Promise<void> {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
 
+async function copyBlobToClipboard(blob: Blob): Promise<boolean> {
+  if (await copyShareImageNative(blob)) {
+    return true;
+  }
+
+  if (
+    typeof navigator === "undefined" ||
+    navigator.clipboard?.write === undefined ||
+    typeof ClipboardItem === "undefined"
+  ) {
+    return false;
+  }
+
+  const clipboardItemSupport = ClipboardItem as typeof ClipboardItem & {
+    supports?: (type: string) => boolean;
+  };
+  if (
+    typeof clipboardItemSupport.supports === "function" &&
+    !clipboardItemSupport.supports(blob.type)
+  ) {
+    return false;
+  }
+
+  try {
+    await navigator.clipboard.write([
+      new ClipboardItem({ [blob.type]: blob }),
+    ]);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function downloadBlob(blob: Blob, fileName: string): void {
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  try {
+    anchor.href = url;
+    anchor.download = fileName;
+    anchor.rel = "noopener";
+    anchor.style.display = "none";
+    document.body.appendChild(anchor);
+    anchor.click();
+  } finally {
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }
+}
+
 /**
  * 元 DOM を変更しないため、画面外（ただし WebKit でも painting が走る位置）に
  * 「ステージ」を作ってクローンを配置して撮影する。
@@ -192,6 +247,7 @@ function createOffscreenStage(): HTMLDivElement {
  */
 export async function shareResultCapture(
   element: HTMLElement,
+  options: { action?: ShareResultAction } = {},
 ): Promise<ShareResultOutcome> {
   const stage = createOffscreenStage();
   const clone = element.cloneNode(true) as HTMLElement;
@@ -262,8 +318,21 @@ export async function shareResultCapture(
   const file = new File([blob], `pinn-result-${Date.now()}.png`, {
     type: "image/png",
   });
+  const action = options.action ?? "auto";
+  const shouldCopyBeforeWebShare =
+    action === "copy" ||
+    (action === "auto" && shouldPreferNativeClipboardShare());
 
-  if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+  if (shouldCopyBeforeWebShare && await copyBlobToClipboard(blob)) {
+    return "copied";
+  }
+
+  if (
+    action !== "copy" &&
+    !shouldCopyBeforeWebShare &&
+    typeof navigator !== "undefined" &&
+    typeof navigator.share === "function"
+  ) {
     let canShareFiles = false;
     if (typeof navigator.canShare === "function") {
       try {
@@ -304,30 +373,15 @@ export async function shareResultCapture(
     }
   }
 
+  if (await copyBlobToClipboard(blob)) {
+    return "copied";
+  }
+
   try {
-    const url = URL.createObjectURL(blob);
-    try {
-      const anchor = document.createElement("a");
-      anchor.href = url;
-      anchor.download = file.name;
-      anchor.rel = "noopener";
-      anchor.click();
-      return "downloaded";
-    } finally {
-      URL.revokeObjectURL(url);
-    }
+    downloadBlob(blob, file.name);
+    return "downloaded";
   } catch {
-    if (
-      typeof navigator !== "undefined" &&
-      navigator.clipboard?.write !== undefined &&
-      typeof ClipboardItem !== "undefined"
-    ) {
-      await navigator.clipboard.write([
-        new ClipboardItem({ [file.type]: blob }),
-      ]);
-      return "copied";
-    }
-    throw new Error("Save and clipboard both failed");
+    throw new Error("Clipboard and save both failed");
   }
 }
 
