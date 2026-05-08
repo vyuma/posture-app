@@ -23,7 +23,8 @@ button {
   position: relative;
   width: 100%;
   height: 100%;
-  overflow: hidden;
+  /* 配置上のフキダシが上方向にはみ出してもクリップしない */
+  overflow: visible;
   background: transparent;
   pointer-events: auto;
 }
@@ -34,7 +35,8 @@ button {
 
 .overlay-actions {
   position: absolute;
-  top: 52px;
+  /* 上に寄せたいときは数値を小さく（負にも可。キャラ頭上とのバランス用） */
+  top: 10px;
   left: 50%;
   z-index: 4;
   display: flex;
@@ -47,11 +49,23 @@ button {
     transform 0.18s ease;
 }
 
-.overlay-shell:hover .overlay-actions,
-.overlay-actions:focus-within {
+/* キャラへホバーしたときのみ表示（透明ウィンドウで shell 全体へ hover が乗らない対策）。 */
+.overlay-shell:not(.overlay-shell--placement-hint):has(
+    .overlay-character:hover
+  )
+  .overlay-actions,
+.overlay-shell:not(.overlay-shell--placement-hint)
+  .overlay-actions:focus-within {
   transform: translateX(-50%) translateY(0);
   opacity: 1;
   pointer-events: auto;
+}
+
+/* 配置フキダシ表示中はアクションを出さない */
+.overlay-shell--placement-hint .overlay-actions {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(8px);
 }
 
 .overlay-action {
@@ -94,12 +108,14 @@ button {
 }
 
 .overlay-character {
+  --overlay-character-scale: 0.5;
+
   position: absolute;
-  left: 50%;
-  bottom: -34px;
+  right: 24px;
+  bottom: 24px;
   z-index: 2;
   width: 184px;
-  transform-origin: 50% 100%;
+  transform-origin: 100% 100%;
   transition: transform 0.44s cubic-bezier(0.2, 0.8, 0.2, 1);
   will-change: transform;
   cursor: grab;
@@ -115,6 +131,8 @@ button {
   display: block;
   width: 100%;
   height: auto;
+  transform: scale(var(--overlay-character-scale));
+  transform-origin: 50% 100%;
   user-select: none;
   pointer-events: none;
   filter: drop-shadow(10px 12px 14px rgba(0, 0, 0, 0.22));
@@ -172,3 +190,132 @@ button {
     translate: 0 5px;
   }
 }
+
+/*
+ * 配置ヒント吹き出し：右下キャラの上。「どこに配置する？」↔ホバーでクロスフェード。
+ *
+ * オーバーレイは小さい固定ウィンドウ（Rust: OVERLAY_WIDTH/HEIGHT）。キャラ DIV の layout 高さは
+ * img の intrinsic に近く大きいが scale(0.5) は視覚だけなので、`bottom: calc(100% - …)` で
+ * ヘッド付近へ置くと吹き出しがウィンドウ上端より外へ出てクリップされていた。
+ * 横幅はコンテナ inset で抑え、`max-width: 85vw` 等での左はみ出しを避ける。
+ */
+.overlay-placement-hint {
+  position: absolute;
+  /* left/right で幅をコンテナ内に拘束（narrow ウィンドウで左が欠けるのを防ぐ） */
+  left: 2px;
+  right: 2px;
+  width: auto;
+  max-width: none;
+  /* 足下基準でもう少し上へ（頭上側の余裕） */
+  bottom: calc(184px * var(--overlay-character-scale, 0.5) + 70px);
+  z-index: 3;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  color: #1f2937;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  letter-spacing: 0;
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  pointer-events: auto;
+}
+
+.overlay-placement-hint-body {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 1.85em;
+  min-width: 0;
+}
+
+.overlay-placement-hint-default,
+.overlay-placement-hint-hover {
+  grid-area: 1 / 1;
+  width: 100%;
+  text-align: center;
+  transition:
+    opacity 0.22s ease,
+    transform 0.22s ease;
+}
+
+.overlay-placement-hint-default {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.overlay-placement-hint-hover {
+  opacity: 0;
+  transform: translateY(0.38rem);
+  pointer-events: none;
+}
+
+.overlay-placement-hint:hover .overlay-placement-hint-default,
+.overlay-character:hover .overlay-placement-hint-default {
+  opacity: 0;
+  transform: translateY(-0.35rem);
+}
+
+.overlay-placement-hint:hover .overlay-placement-hint-hover,
+.overlay-character:hover .overlay-placement-hint-hover {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.overlay-placement-hint::after {
+  content: "";
+  position: absolute;
+  /* 右寄せキャラ向けに尾を右寄りへ（narrow レイアウト） */
+  right: 26px;
+  bottom: -8px;
+  width: 16px;
+  height: 16px;
+  background: inherit;
+  border-bottom-right-radius: 4px;
+  transform: rotate(45deg);
+  box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.08);
+  z-index: -1;
+}
+
+@media (hover: none) {
+  .overlay-placement-hint-default {
+    opacity: 0 !important;
+    visibility: hidden;
+    pointer-events: none !important;
+  }
+
+  .overlay-placement-hint-hover {
+    opacity: 1 !important;
+    transform: translateY(0) !important;
+    animation: overlay-placement-hint-in 0.35s ease;
+  }
+}
+
+@keyframes overlay-placement-hint-in {
+  from {
+    opacity: 0;
+    transform: translateY(0.35rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay-placement-hint-default,
+  .overlay-placement-hint-hover {
+    transition: none;
+  }
+
+  .overlay-placement-hint-hover {
+    animation: none;
+  }
+}
+
+/* DEV または posture.debug.overlay は本体の測定画面からイベント送信するため、このファイルでは廃止。 */

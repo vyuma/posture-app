@@ -3,9 +3,15 @@ import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
 
 import {
+  OVERLAY_PLACEMENT_HINT_REFRESH_EVENT,
+} from "../features/overlay/overlayPlacementHintBridge";
+import {
+  clearPlacementHintDismissed,
   clampPositionOffset,
   DEFAULT_OVERLAY_STATE,
+  loadPlacementHintDismissed,
   loadStoredPositionOffset,
+  savePlacementHintDismissed,
   storePositionOffset,
   type OverlayMode,
   type OverlayStatePayload,
@@ -13,13 +19,13 @@ import {
 } from "../features/overlay/overlayState";
 
 const CHARACTER_SRC: Record<Exclude<OverlayMode, "hidden">, string> = {
-  good: "/characters/anago/normal-nago/expressions/good.svg",
-  bad: "/characters/anago/normal-nago/expressions/bad.svg",
-  paused: "/characters/anago/normal-nago/expressions/paused.svg",
+  good: "/characters/anago/normal-nago/expressions/good.png",
+  bad: "/characters/anago/normal-nago/expressions/bad.png",
+  paused: "/characters/anago/normal-nago/expressions/paused.png",
 };
 
-const BAD_SINK_MAX_PX = 78;
-const BAD_SINK_PX_PER_SECOND = 8;
+const BAD_SINK_MAX_PX = 136;
+const BAD_SINK_PX_PER_SECOND = 34;
 
 type DragState = {
   pointerId: number;
@@ -36,7 +42,12 @@ export function OverlayApp() {
     loadStoredPositionOffset(),
   );
   const [isDragging, setIsDragging] = useState(false);
+  /** 配置説明の吹き出し：初回はフキダシ表示。ドラッグで実際に動かしたら以後非表示。 */
+  const [isPlacementHintVisible, setIsPlacementHintVisible] = useState(
+    () => !loadPlacementHintDismissed(),
+  );
   const dragStateRef = useRef<DragState | null>(null);
+  const dragMovedRef = useRef(false);
   const positionOffsetRef = useRef(positionOffset);
 
   useEffect(() => {
@@ -87,6 +98,16 @@ export function OverlayApp() {
       disposed = true;
       window.clearInterval(syncIntervalId);
       void unlistenPromise.then((unlisten) => unlisten());
+    };
+  }, []);
+
+  useEffect(() => {
+    const promise = listen(OVERLAY_PLACEMENT_HINT_REFRESH_EVENT, () => {
+      clearPlacementHintDismissed();
+      setIsPlacementHintVisible(true);
+    });
+    return () => {
+      void promise.then((unlisten) => unlisten());
     };
   }, []);
 
@@ -143,6 +164,7 @@ export function OverlayApp() {
       startClientY: event.clientY,
       startOffset: positionOffsetRef.current,
     };
+    dragMovedRef.current = false;
     setIsDragging(true);
   };
 
@@ -158,6 +180,13 @@ export function OverlayApp() {
       x: dragState.startOffset.x + event.clientX - dragState.startClientX,
       y: dragState.startOffset.y + event.clientY - dragState.startClientY,
     });
+
+    if (
+      nextOffset.x !== dragState.startOffset.x ||
+      nextOffset.y !== dragState.startOffset.y
+    ) {
+      dragMovedRef.current = true;
+    }
 
     setPositionOffset(nextOffset);
     storePositionOffset(nextOffset);
@@ -177,6 +206,12 @@ export function OverlayApp() {
     dragStateRef.current = null;
     setIsDragging(false);
 
+    if (dragMovedRef.current && isPlacementHintVisible) {
+      setIsPlacementHintVisible(false);
+      savePlacementHintDismissed();
+    }
+    dragMovedRef.current = false;
+
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
@@ -184,7 +219,15 @@ export function OverlayApp() {
 
   return (
     <main
-      className={`overlay-shell ${displayMode ? `overlay-shell--${displayMode}` : "overlay-shell--hidden"}`}
+      className={[
+        "overlay-shell",
+        displayMode ? `overlay-shell--${displayMode}` : "overlay-shell--hidden",
+        displayMode && isPlacementHintVisible
+          ? "overlay-shell--placement-hint"
+          : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       aria-hidden={!displayMode}
     >
       {displayMode ? (
@@ -211,12 +254,28 @@ export function OverlayApp() {
           </div>
           <div
             className={`overlay-character ${isDragging ? "overlay-character--dragging" : ""}`}
-            style={{ transform: `translate(-50%, ${badSinkPx}px)` }}
+            style={{ transform: `translateY(${badSinkPx}px)` }}
             onPointerDown={handleCharacterPointerDown}
             onPointerMove={handleCharacterPointerMove}
             onPointerUp={handleCharacterPointerEnd}
             onPointerCancel={handleCharacterPointerEnd}
           >
+            {isPlacementHintVisible ? (
+              <div
+                className="overlay-placement-hint"
+                role="note"
+                aria-label="どこに配置する？ ドラッグで動かそう！"
+              >
+                <div className="overlay-placement-hint-body">
+                  <span className="overlay-placement-hint-default">
+                    どこに配置する？
+                  </span>
+                  <span className="overlay-placement-hint-hover">
+                    ドラッグで動かそう！
+                  </span>
+                </div>
+              </div>
+            ) : null}
             <img
               src={CHARACTER_SRC[displayMode]}
               alt=""

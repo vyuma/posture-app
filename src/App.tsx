@@ -32,6 +32,7 @@ import type {
   AppFlowPhase,
   MeasurementResult,
   MeasurementStats,
+  PostureTimelineSegment,
   RewardRule,
 } from "./features/flow/types";
 import {
@@ -53,7 +54,8 @@ import {
   usePostureTracking,
   usePostureTransitionEffects,
 } from "./features/posture";
-import { SoundSettingsDialog } from "./features/sound/components/SoundSettingsDialog";
+
+
 import {
   configureRecoverySound,
   playRecoverySound,
@@ -68,7 +70,53 @@ import { useQrDataUrl } from "./lib/useQrDataUrl";
 
 type MeasurementAccumulator = MeasurementStats & {
   lastSampleAtMs: number | null;
+  postureTimeline: PostureTimelineSegment[];
 };
+
+/** 直前の active 終端に接する区間だけマージし、姿勢状態の切替で区間分割する */
+function appendPostureTimelineSlice(
+  timeline: PostureTimelineSegment[],
+  prevActiveMs: number,
+  nextActiveMs: number,
+  isGood: boolean,
+) {
+  if (nextActiveMs <= prevActiveMs || !Number.isFinite(nextActiveMs)) {
+    return;
+  }
+
+  const last = timeline[timeline.length - 1];
+  if (
+    last !== undefined &&
+    last.endMs === prevActiveMs &&
+    last.isGood === isGood
+  ) {
+    last.endMs = nextActiveMs;
+    return;
+  }
+
+  timeline.push({
+    startMs: prevActiveMs,
+    endMs: nextActiveMs,
+    isGood,
+  });
+}
+
+function finalizePostureTimeline(
+  timeline: PostureTimelineSegment[],
+  activeMeasurementMs: number,
+): PostureTimelineSegment[] {
+  if (activeMeasurementMs <= 0 || timeline.length === 0) {
+    return [];
+  }
+
+  const cloned = timeline.map((segment) => ({ ...segment }));
+  const last = cloned[cloned.length - 1];
+  if (last !== undefined) {
+    last.endMs = activeMeasurementMs;
+  }
+
+  return cloned.filter((segment) => segment.endMs > segment.startMs);
+}
 
 const REWARD_RULE: RewardRule = {
   minDurationMs: 0,
@@ -112,7 +160,6 @@ function App() {
     string | null
   >(null);
   const [qrRegenerationTick, setQrRegenerationTick] = useState(0);
-  const [isSoundDialogOpen, setIsSoundDialogOpen] = useState(false);
   const [soundSettings, setSoundSettings] = useState<SoundSettings>(() =>
     loadSoundSettings(),
   );
@@ -121,7 +168,6 @@ function App() {
   const {
     videoRef,
     canvasRef,
-    ready,
     status,
     isBadPosture,
     snapshot,
@@ -176,7 +222,6 @@ function App() {
   const measurementStartedAtRef = useRef<string | null>(null);
   const latestSnapshotRef = useRef(snapshot);
   const latestPausedRef = useRef(isPaused);
-  const previousPairedRef = useRef<boolean | null>(null);
 
   useEffect(() => {
     latestSnapshotRef.current = snapshot;
@@ -210,20 +255,6 @@ function App() {
     setQrRegenerationTick((current) => current + 1);
   }, [refreshPairing]);
 
-  useEffect(() => {
-    const paired = pairingStatus?.paired ?? false;
-    const previousPaired = previousPairedRef.current;
-    previousPairedRef.current = paired;
-
-    if (previousPaired === null) {
-      return;
-    }
-
-    if (flowPhase === "home" && !previousPaired && paired) {
-      setFlowPhase("qrScanned");
-    }
-  }, [flowPhase, pairingStatus?.paired]);
-
   const sampleMeasurementStats = useCallback((nowMs = performance.now()) => {
     const latestSnapshot = latestSnapshotRef.current;
     const accumulator = measurementAccumulatorRef.current;
@@ -243,11 +274,19 @@ function App() {
     }
 
     const deltaMs = Math.max(0, nowMs - accumulator.lastSampleAtMs);
+    const prevActiveMs = accumulator.activeMeasurementMs;
     accumulator.activeMeasurementMs += deltaMs;
 
     if (latestSnapshot.postureState === "good") {
       accumulator.goodMs += deltaMs;
     }
+
+    appendPostureTimelineSlice(
+      accumulator.postureTimeline,
+      prevActiveMs,
+      accumulator.activeMeasurementMs,
+      latestSnapshot.postureState === "good",
+    );
 
     accumulator.lastSampleAtMs = nowMs;
 
@@ -339,8 +378,20 @@ function App() {
     }
   };
 
+  const handleRemeasureBaseline = useCallback(() => {
+    measurementAccumulatorRef.current = createMeasurementAccumulator();
+    measurementStartedAtRef.current = new Date().toISOString();
+    setMeasurementStats(EMPTY_MEASUREMENT_STATS);
+    resetPostureEngine();
+    setIsPaused(false);
+  }, [resetPostureEngine]);
+
   const handleFinishMeasurement = useCallback(() => {
     const finalStats = sampleMeasurementStats();
+    const timelineForResult = finalizePostureTimeline(
+      measurementAccumulatorRef.current.postureTimeline,
+      finalStats.activeMeasurementMs,
+    );
     const measurementId = `measurement-${Date.now()}`;
     const endedAt = new Date().toISOString();
     const rewardQualified =
@@ -363,6 +414,7 @@ function App() {
             activeMeasurementMs: finalStats.activeMeasurementMs,
             goodMs: finalStats.goodMs,
             goodRatio: finalStats.goodRatio,
+            postureTimeline: timelineForResult,
           },
         ];
         acquiredCharacterId = nextRewardCharacter.id;
@@ -380,6 +432,7 @@ function App() {
       goodRatio: finalStats.goodRatio,
       rewardQualified,
       acquiredCharacterId,
+      postureTimeline: timelineForResult,
     });
     setLastAcquiredCharacterId(acquiredCharacterId);
     setIsPaused(false);
@@ -596,10 +649,8 @@ function App() {
     nextCharacter,
     lastMeasurementResult,
     lastAcquiredCharacter,
-    ready,
     videoRef,
     canvasRef,
-    status,
     snapshot,
     measurementStats,
     effectiveBadPosture,
@@ -607,6 +658,8 @@ function App() {
     isOverlayEnabled,
     isCharacterOverlayEnabled,
     isStartPending,
+    soundSettings,
+    onSoundSettingsChange: setSoundSettings,
     onRefreshPairing: () => {
       void handleRefreshPairing();
     },
@@ -629,23 +682,12 @@ function App() {
     onCharacterOverlayEnabledChange: setIsCharacterOverlayEnabled,
     onShowCharacterOverlay: handleShowCharacterOverlay,
     onResetCharacterPosition: handleResetCharacterPosition,
-    onOpenSoundSettings: () => setIsSoundDialogOpen(true),
+    onRemeasureBaseline: handleRemeasureBaseline,
   });
 
   return (
     <>
       {screen}
-      {isSoundDialogOpen ? (
-        <SoundSettingsDialog
-          settings={soundSettings}
-          onChange={setSoundSettings}
-          onClose={() => setIsSoundDialogOpen(false)}
-          onPreview={() => {
-            void primeRecoverySound();
-            void playRecoverySound();
-          }}
-        />
-      ) : null}
       {permissionPopup}
     </>
   );
@@ -666,8 +708,6 @@ function renderFlowScreen({
   nextCharacter,
   lastMeasurementResult,
   lastAcquiredCharacter,
-  ready,
-  status,
   videoRef,
   canvasRef,
   snapshot,
@@ -677,6 +717,8 @@ function renderFlowScreen({
   isOverlayEnabled,
   isCharacterOverlayEnabled,
   isStartPending,
+  soundSettings,
+  onSoundSettingsChange,
   onRefreshPairing,
   onContinueFromPaired,
   onProfileCharacterSelect,
@@ -693,7 +735,7 @@ function renderFlowScreen({
   onCharacterOverlayEnabledChange,
   onShowCharacterOverlay,
   onResetCharacterPosition,
-  onOpenSoundSettings,
+  onRemeasureBaseline,
 }: {
   flowPhase: AppFlowPhase;
   qrImageDataUrl: string;
@@ -709,8 +751,6 @@ function renderFlowScreen({
   nextCharacter: CharacterDefinition | null;
   lastMeasurementResult: MeasurementResult | null;
   lastAcquiredCharacter: CharacterDefinition | null;
-  ready: boolean;
-  status: string;
   videoRef: ReturnType<typeof usePostureTracking>["videoRef"];
   canvasRef: ReturnType<typeof usePostureTracking>["canvasRef"];
   snapshot: ReturnType<typeof usePostureTracking>["snapshot"];
@@ -720,6 +760,8 @@ function renderFlowScreen({
   isOverlayEnabled: boolean;
   isCharacterOverlayEnabled: boolean;
   isStartPending: boolean;
+  soundSettings: SoundSettings;
+  onSoundSettingsChange: (next: SoundSettings) => void;
   onRefreshPairing: () => void;
   onContinueFromPaired: () => void;
   onProfileCharacterSelect: (characterId: string) => void;
@@ -736,7 +778,7 @@ function renderFlowScreen({
   onCharacterOverlayEnabledChange: (enabled: boolean) => void;
   onShowCharacterOverlay: () => void;
   onResetCharacterPosition: () => void;
-  onOpenSoundSettings: () => void;
+  onRemeasureBaseline: () => void;
 }) {
   switch (flowPhase) {
     case "onboarding":
@@ -771,8 +813,11 @@ function renderFlowScreen({
     case "qrScanned":
       return (
         <CodeReadScreen
-          nextCharacter={nextCharacter}
           isStartPending={isStartPending}
+          soundSettings={soundSettings}
+          onSoundSettingsChange={onSoundSettingsChange}
+          isCharacterOverlayEnabled={isCharacterOverlayEnabled}
+          onCharacterOverlayEnabledChange={onCharacterOverlayEnabledChange}
           onStartMeasurement={onStartMeasurement}
           onBackHome={onBackHome}
         />
@@ -782,21 +827,21 @@ function renderFlowScreen({
         <MeasuringScreen
           videoRef={videoRef}
           canvasRef={canvasRef}
-          ready={ready}
-          status={status}
           snapshot={snapshot}
           stats={measurementStats}
           isBadPosture={effectiveBadPosture}
           isPaused={isPaused}
           isOverlayEnabled={isOverlayEnabled}
           isCharacterOverlayEnabled={isCharacterOverlayEnabled}
+          soundSettings={soundSettings}
+          onSoundSettingsChange={onSoundSettingsChange}
           onFinishMeasurement={onFinishMeasurement}
           onPauseToggle={onPauseToggle}
           onOverlayEnabledChange={onOverlayEnabledChange}
           onCharacterOverlayEnabledChange={onCharacterOverlayEnabledChange}
           onShowCharacterOverlay={onShowCharacterOverlay}
           onResetCharacterPosition={onResetCharacterPosition}
-          onOpenSoundSettings={onOpenSoundSettings}
+          onRemeasureBaseline={onRemeasureBaseline}
         />
       );
     case "postureRegistered":
@@ -868,6 +913,7 @@ function findCharacterById(characterId: string) {
 function createMeasurementAccumulator(): MeasurementAccumulator {
   return {
     lastSampleAtMs: null,
+    postureTimeline: [],
     ...EMPTY_MEASUREMENT_STATS,
   };
 }

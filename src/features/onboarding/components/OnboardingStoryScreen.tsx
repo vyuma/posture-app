@@ -5,6 +5,7 @@ import {
   getCharacterImageSrc,
 } from "../../characters/characterCatalog";
 import type { CharacterDefinition } from "../../characters/types";
+import { loadSoundSettings } from "../../sound/services/soundSettingsStorage";
 
 type StorySlide = {
   id: string;
@@ -38,113 +39,236 @@ type AdjustableArtworkLayout = {
   zIndex?: number;
 };
 
+type DockCharacterLayout = AdjustableArtworkLayout & {
+  hideBottom: string;
+};
+
+type DockCharacterTuning = {
+  xPercent: number;
+  dockDepthPercent: number;
+  sizePercent: number;
+  scale?: number;
+  rotateDeg?: number;
+  zIndex?: number;
+  hideBottomPercent: number;
+};
+
+type WarningPageLayoutTuning = {
+  sideGapPx: number;
+  phoneBottomPx: number;
+  phoneWidthPx: number;
+  dockBottomPx: number;
+  dockWidthPx: number;
+  characterOffsetXPx: number;
+  characterBottomPx: number;
+  characterWidthPx: number;
+  characterScale: number;
+  characterSinkDistancePercent: number;
+};
+
+type ReturnPageLayoutTuning = {
+  characterXPercent: number;
+  characterBottomPercent: number;
+  characterWidthPercent: number;
+  characterScale: number;
+  characterRotateDeg: number;
+  characterHideBottomPercent: number;
+  characterRiseStartPercent: number;
+  soundGapPx: number;
+  soundWidthPercentOfCharacter: number;
+  soundDelayMs: number;
+  soundDurationMs: number;
+};
+
+type RewardPageLayoutTuning = {
+  cardXPercent: number;
+  cardTopPercent: number;
+  cardWidthMinPx: number;
+  cardWidthVw: number;
+  cardWidthDvh: number;
+  cardWidthMaxPx: number;
+  cardScale: number;
+  cardRotateDeg: number;
+  characterOffsetXPercent: number;
+  characterOffsetYPercent: number;
+  characterScale: number;
+  characterRotateDeg: number;
+};
+
+function percent(value: number) {
+  return `${value}%`;
+}
+
+function negativePercent(value: number) {
+  return `-${value}%`;
+}
+
+function px(value: number) {
+  return `${value}px`;
+}
+
+function ms(value: number) {
+  return `${value}ms`;
+}
+
+function responsivePxWidth({
+  minPx,
+  vw,
+  dvh,
+  maxPx,
+}: {
+  minPx: number;
+  vw: number;
+  dvh: number;
+  maxPx: number;
+}) {
+  return `clamp(${minPx}px, min(${vw}vw, ${dvh}dvh), ${maxPx}px)`;
+}
+
+function createDockCharacterLayout(tuning: DockCharacterTuning): DockCharacterLayout {
+  return {
+    left: percent(tuning.xPercent),
+    bottom: negativePercent(tuning.dockDepthPercent),
+    width: percent(tuning.sizePercent),
+    scale: tuning.scale,
+    rotate: `${tuning.rotateDeg ?? 0}deg`,
+    zIndex: tuning.zIndex,
+    hideBottom: percent(tuning.hideBottomPercent),
+  };
+}
+
 const SECOND_PAGE_CHARACTER_LAYOUTS: SecondPageCharacterLayout[] = [
   {
     characterId: "shin-anago",
-    left: "16%",
-    bottom: "-70%",
-    width: "clamp(54px, 7vw, 92px)",
-    scale: 1.4,
+    left: "12.5%",
+    bottom: "-20%",
+    width: "clamp(78px, 8.2vw, 124px)",
+    scale: 2,
     zIndex: 4,
-    rotate: "-2deg",
+    rotate: "0deg",
     delayMs: 0,
   },
   {
     characterId: "oto-anago",
-    left: "29%",
-    bottom: "-72%",
-    width: "clamp(52px, 6.6vw, 88px)",
-    scale: 1.4,
+    left: "25%",
+    bottom: "-20%",
+    width: "clamp(78px, 8.2vw, 124px)",
+    scale: 2,
     zIndex: 5,
-    rotate: "1deg",
+    rotate: "0deg",
     delayMs: 100,
   },
   {
     characterId: "kuro-anyago",
-    left: "42%",
-    bottom: "-75%",
-    width: "clamp(56px, 7.2vw, 96px)",
-    scale: 1.4,
+    left: "37.5%",
+    bottom: "-20%",
+    width: "clamp(78px, 8.2vw, 124px)",
+    scale: 2,
     zIndex: 6,
-    rotate: "-1deg",
+    rotate: "0deg",
     delayMs: 180,
   },
   {
     characterId: "normal-nago",
-    left: "55%",
-    bottom: "-72%",
-    width: "clamp(58px, 7.4vw, 100px)",
-    scale: 1.4,
+    left: "50%",
+    bottom: "-20%",
+    width: "clamp(78px, 8.2vw, 124px)",
+    scale: 2,
     zIndex: 7,
-    rotate: "1deg",
+    rotate: "0deg",
     delayMs: 260,
   },
   {
     characterId: "dot-nago",
-    left: "68%",
-    bottom: "-70%",
-    width: "clamp(52px, 6.8vw, 90px)",
-    scale: 1.4,
+    left: "62.5%",
+    bottom: "-20%",
+    width: "clamp(78px, 8.2vw, 124px)",
+    scale: 2,
     zIndex: 6,
-    rotate: "-1deg",
+    rotate: "0deg",
     delayMs: 340,
   },
   {
     characterId: "moja-anago",
-    left: "80%",
-    bottom: "-68%",
-    width: "clamp(54px, 7vw, 94px)",
-    scale: 1.4,
+    left: "75%",
+    bottom: "-20%",
+    width: "clamp(78px, 8.2vw, 124px)",
+    scale: 2,
     zIndex: 5,
-    rotate: "2deg",
+    rotate: "0deg",
     delayMs: 420,
   },
   {
     characterId: "hat-anago",
-    left: "94%",
-    bottom: "-80%",
-    width: "clamp(50px, 6.4vw, 86px)",
-    scale: 1.55,
+    left: "87.5%",
+    bottom: "-20%",
+    width: "clamp(78px, 8.2vw, 124px)",
+    scale: 2,
     zIndex: 4,
-    rotate: "1deg",
+    rotate: "0deg",
     delayMs: 500,
   },
 ];
 
-const FOURTH_PAGE_ANAGO_LAYOUT: AdjustableArtworkLayout = {
-  left: "52%",
-  bottom: "-100%",
-  width: "clamp(56px, 10vw, 104px)",
-  scale: 2,
-  rotate: "-7deg",
-  zIndex: 3,
-};
-
-const FIFTH_PAGE_ANAGO_LAYOUT: AdjustableArtworkLayout = {
-  left: "50%",
-  bottom: "-120%",
-  width: "clamp(70px, 11vw, 118px)",
-  scale: 2.4,
-  rotate: "0deg",
-  zIndex: 4,
-};
-
-const SIXTH_PAGE_CARD_LAYOUT: AdjustableArtworkLayout = {
-  left: "50%",
-  bottom: "50%",
-  width: "clamp(124px, 18vw, 178px)",
-  scale: 1,
-  rotate: "8deg",
+const THIRD_PAGE_ANAGO_TUNING: DockCharacterTuning = {
+  xPercent: 68.3,
+  dockDepthPercent: 500,
+  sizePercent: 7.8,
+  scale: 1.6,
+  rotateDeg: 0,
   zIndex: 2,
+  hideBottomPercent: 61,
 };
 
-const SIXTH_PAGE_ANAGO_LAYOUT: AdjustableArtworkLayout = {
-  left: "50%",
-  bottom: "-170%",
-  width: "58%",
-  scale: 2.5,
-  rotate: "0deg",
-  zIndex: 2,
+const THIRD_PAGE_ANAGO_LAYOUT = createDockCharacterLayout(THIRD_PAGE_ANAGO_TUNING);
+
+// 4 / 7 warning page quick tuning:
+// edit only these numbers to move phone / dock / character.
+const WARNING_PAGE_LAYOUT_TUNING: WarningPageLayoutTuning = {
+  sideGapPx: 110,
+  phoneBottomPx: 72,
+  phoneWidthPx: 220,
+  dockBottomPx: 36,
+  dockWidthPx: 360,
+  characterOffsetXPx: 48,
+  characterBottomPx: 92,
+  characterWidthPx: 210,
+  characterScale: 0.94,
+  characterSinkDistancePercent: 110,
+};
+
+// 5 / 7 return page quick tuning:
+// adjust only these numbers for character/sound text position and size.
+const RETURN_PAGE_LAYOUT_TUNING: ReturnPageLayoutTuning = {
+  characterXPercent: 50,
+  characterBottomPercent: 63,
+  characterWidthPercent: 23.3,
+  characterScale: 2.2,
+  characterRotateDeg: 0,
+  characterHideBottomPercent: 10,
+  characterRiseStartPercent: 138,
+  soundGapPx: 15,
+  soundWidthPercentOfCharacter: 160,
+  soundDelayMs: 120,
+  soundDurationMs: 920,
+};
+const RETURN_STORY_SOUND_SRC = "/sounds/2.mp3";
+
+// 6 / 7 reward page quick tuning:
+// edit only these numbers to move/resize the reward card and character.
+const REWARD_PAGE_LAYOUT_TUNING: RewardPageLayoutTuning = {
+  cardXPercent: 50,
+  cardTopPercent: 20,
+  cardWidthMinPx: 210,
+  cardWidthVw: 16.8,
+  cardWidthDvh: 36,
+  cardWidthMaxPx: 340,
+  cardScale: 1.05,
+  cardRotateDeg: 0,
+  characterOffsetXPercent: 0,
+  characterOffsetYPercent: 30,
+  characterScale: 1.2,
+  characterRotateDeg: 0,
 };
 
 const STORY_SLIDES: StorySlide[] = [
@@ -213,6 +337,13 @@ export function OnboardingStoryScreen({ onComplete }: OnboardingStoryScreenProps
 
   const currentSlide = STORY_SLIDES[slideIndex];
   const isSplashSlide = currentSlide.variant === "splash";
+  const isStoryIntroSlide = slideIndex === 1;
+  const isDockStorySlide = currentSlide.variant === "message";
+  const isWarningStorySlide = currentSlide.variant === "warning";
+  const isReturnStorySlide = currentSlide.variant === "return";
+  const isRewardStorySlide = currentSlide.variant === "reward";
+  const isSceneStorySlide =
+    isDockStorySlide || isWarningStorySlide || isReturnStorySlide || isRewardStorySlide;
   const isFinalSlide = slideIndex === STORY_SLIDES.length - 1;
   const featuredCharacters = useMemo(
     () => [
@@ -263,9 +394,35 @@ export function OnboardingStoryScreen({ onComplete }: OnboardingStoryScreenProps
     return () => window.removeEventListener("keydown", handler);
   }, [goNext, goPrevious]);
 
+  useEffect(() => {
+    if (!isReturnStorySlide) {
+      return;
+    }
+
+    const settings = loadSoundSettings();
+    if (!settings.enabled) {
+      return;
+    }
+
+    const audio = new Audio(RETURN_STORY_SOUND_SRC);
+    audio.preload = "auto";
+    audio.volume = Math.max(0, Math.min(1, settings.volume));
+    void audio.play().catch(() => {
+      // ignore playback failures (autoplay policy, interruption)
+    });
+
+    return () => {
+      audio.pause();
+    };
+  }, [isReturnStorySlide, animKey]);
+
   return (
     <main
-      className={`onboarding-screen ${isSplashSlide ? "is-splash-active" : ""}`}
+      className={`onboarding-screen ${isSplashSlide ? "is-splash-active" : ""} ${
+        isStoryIntroSlide ? "is-story-intro" : ""
+      } ${isDockStorySlide ? "is-dock-story" : ""} ${
+        isWarningStorySlide ? "is-warning-story" : ""
+      } ${isSceneStorySlide ? "is-scene-story" : ""}`}
       aria-labelledby="onboarding-heading"
     >
       <div className="onboarding-bubbles" aria-hidden="true">
@@ -275,15 +432,17 @@ export function OnboardingStoryScreen({ onComplete }: OnboardingStoryScreenProps
       </div>
       {!isSplashSlide ? (
         <header className="onboarding-header">
-        <img
-          className="onboarding-logo"
-          src="/logo/logo_white.png"
-          alt="Piin"
-          draggable={false}
-        />
-        <button type="button" className="onboarding-skip" onClick={onComplete}>
-          スキップ
-        </button>
+          <img
+            className="onboarding-logo"
+            src="/logo/logo_white.png"
+            alt="Piin"
+            draggable={false}
+          />
+          {!isStoryIntroSlide && !isSceneStorySlide ? (
+            <button type="button" className="onboarding-skip" onClick={onComplete}>
+              スキップ
+            </button>
+          ) : null}
         </header>
       ) : null}
 
@@ -302,11 +461,11 @@ export function OnboardingStoryScreen({ onComplete }: OnboardingStoryScreenProps
             {currentSlide.variant === "splash" ? (
               <>
                 <h1 id="onboarding-heading" className="onboarding-sr-title">
-                  Piin
+                  Piiin
                 </h1>
                 <img
                   className="onboarding-main-logo"
-                  src="/logo/logo_main.svg"
+                  src="/logo/logo_main.png"
                   alt=""
                   draggable={false}
                 />
@@ -315,7 +474,7 @@ export function OnboardingStoryScreen({ onComplete }: OnboardingStoryScreenProps
               <h1 id="onboarding-heading">{currentSlide.title}</h1>
             ) : (
               <h1 id="onboarding-heading" className="onboarding-sr-title">
-                Piin Story
+                Piiin Story
               </h1>
             )}
             {currentSlide.body.map((line, index) => (
@@ -327,6 +486,15 @@ export function OnboardingStoryScreen({ onComplete }: OnboardingStoryScreenProps
               </p>
             ))}
           </div>
+          {isSplashSlide ? (
+            <button
+              type="button"
+              className="onboarding-splash-next"
+              onClick={goNext}
+            >
+              はじめる
+            </button>
+          ) : null}
         </div>
         <div
           key={`art-${animKey}`}
@@ -385,15 +553,20 @@ function StoryArtwork({
     case "friends":
       return <CharacterLineup characters={characters} />;
     case "warning":
-      return <WarningArtwork character={characters[1] ?? null} />;
+      return <WarningArtwork character={characters[3] ?? null} />;
     case "return":
       return <ReturnArtwork character={characters[0] ?? null} />;
-    case "reward":
-      return <RewardArtwork character={characters[0] ?? null} />;
+    case "reward": {
+      const rewardCharacter =
+        characters.find((character) => character.id === "normal-nago") ??
+        CHARACTER_CATALOG[0] ??
+        null;
+      return <RewardArtwork character={rewardCharacter} />;
+    }
     case "final":
       return <FinalArtwork />;
     case "message":
-      return null;
+      return <DockStoryArtwork character={characters[3] ?? null} />;
     case "splash":
       return <SplashArtwork character={characters[3] ?? null} />;
   }
@@ -455,52 +628,103 @@ function SplashArtwork({ character }: { character: CharacterDefinition | null })
   );
 }
 
-function WarningArtwork({
+function DockStoryArtwork({
   character,
 }: {
   character: CharacterDefinition | null;
 }) {
   const characterStyle = {
-    left: FOURTH_PAGE_ANAGO_LAYOUT.left,
-    bottom: FOURTH_PAGE_ANAGO_LAYOUT.bottom,
-    width: FOURTH_PAGE_ANAGO_LAYOUT.width,
-    zIndex: FOURTH_PAGE_ANAGO_LAYOUT.zIndex,
-    "--warning-character-scale": FOURTH_PAGE_ANAGO_LAYOUT.scale ?? 1,
-    "--warning-character-rotate": FOURTH_PAGE_ANAGO_LAYOUT.rotate ?? "0deg",
+    left: THIRD_PAGE_ANAGO_LAYOUT.left,
+    bottom: THIRD_PAGE_ANAGO_LAYOUT.bottom,
+    width: THIRD_PAGE_ANAGO_LAYOUT.width,
+    zIndex: THIRD_PAGE_ANAGO_LAYOUT.zIndex,
+    "--dock-character-scale": THIRD_PAGE_ANAGO_LAYOUT.scale ?? 1,
+    "--dock-character-rotate": THIRD_PAGE_ANAGO_LAYOUT.rotate ?? "0deg",
+    "--dock-character-hide-bottom": THIRD_PAGE_ANAGO_LAYOUT.hideBottom,
   } as CSSProperties;
 
   return (
-    <div className="onboarding-warning-artwork" aria-hidden="true">
-      {/* 猫背になりかけているキャラクター */}
+    <div className="onboarding-dock-artwork" aria-hidden="true">
+      <div className="onboarding-dock-stage">
+        {character ? (
+          <div className="onboarding-dock-character-wrap" style={characterStyle}>
+            <div className="onboarding-dock-character-clip">
+              <img
+                className="onboarding-dock-character"
+                src={getCharacterImageSrc(character)}
+                alt=""
+                draggable={false}
+              />
+            </div>
+          </div>
+        ) : null}
+        <img
+          className="onboarding-dock-image"
+          src="/dock1.png"
+          alt=""
+          draggable={false}
+        />
+      </div>
+    </div>
+  );
+}
+
+function WarningArtwork({
+  character,
+}: {
+  character: CharacterDefinition | null;
+}) {
+  const warningLayoutStyle = {
+    "--warning-side-gap": px(WARNING_PAGE_LAYOUT_TUNING.sideGapPx),
+    "--warning-phone-bottom": px(WARNING_PAGE_LAYOUT_TUNING.phoneBottomPx),
+    "--warning-phone-width": px(WARNING_PAGE_LAYOUT_TUNING.phoneWidthPx),
+    "--warning-dock-bottom": px(WARNING_PAGE_LAYOUT_TUNING.dockBottomPx),
+    "--warning-dock-width": px(WARNING_PAGE_LAYOUT_TUNING.dockWidthPx),
+    "--warning-character-offset-x": px(WARNING_PAGE_LAYOUT_TUNING.characterOffsetXPx),
+    "--warning-character-bottom": px(WARNING_PAGE_LAYOUT_TUNING.characterBottomPx),
+    "--warning-character-width": px(WARNING_PAGE_LAYOUT_TUNING.characterWidthPx),
+    "--warning-character-scale": WARNING_PAGE_LAYOUT_TUNING.characterScale,
+    "--warning-character-sink-distance": percent(
+      WARNING_PAGE_LAYOUT_TUNING.characterSinkDistancePercent,
+    ),
+  } as CSSProperties;
+
+  return (
+    <div
+      className="onboarding-warning-artwork"
+      style={warningLayoutStyle}
+      aria-hidden="true"
+    >
+      <div className="onboarding-warning-phone">
+        <span className="onboarding-warning-phone-pulse onboarding-warning-phone-pulse--1" />
+        <span className="onboarding-warning-phone-pulse onboarding-warning-phone-pulse--2" />
+        <img
+          src="/phone.png"
+          alt=""
+          draggable={false}
+        />
+      </div>
       {character ? (
-        <div className="onboarding-warning-char" style={characterStyle}>
-          <img src={getCharacterImageSrc(character)} alt="" draggable={false} />
+        <div className="onboarding-warning-character-wrap">
+          <span className="onboarding-warning-sound">プィッ</span>
+          <div className="onboarding-warning-character-clip">
+            <div className="onboarding-warning-character-sink">
+              <img
+                className="onboarding-warning-character"
+                src="/characters/anago/normal-nago/expressions/bad.png"
+                alt=""
+                draggable={false}
+              />
+            </div>
+          </div>
         </div>
       ) : null}
-
-      {/* バイブ通知カード */}
-      <div className="onboarding-notif-wrap">
-        <span className="onboarding-notif-wave" />
-        <span className="onboarding-notif-wave onboarding-notif-wave--2" />
-        <span className="onboarding-notif-wave onboarding-notif-wave--3" />
-        <div className="onboarding-notif-card">
-          <div className="onboarding-notif-top">
-            <span className="onboarding-notif-logo">Piin</span>
-            <span className="onboarding-notif-time">今</span>
-          </div>
-          <p className="onboarding-notif-body">姿勢が崩れています</p>
-          <div className="onboarding-notif-phone-row">
-            <div className="onboarding-notif-phone">
-              <span />
-            </div>
-            <div className="onboarding-notif-vibe-lines">
-              <span />
-              <span />
-              <span />
-            </div>
-          </div>
-        </div>
-      </div>
+      <img
+        className="onboarding-warning-dock"
+        src="/dock2.png"
+        alt=""
+        draggable={false}
+      />
     </div>
   );
 }
@@ -510,31 +734,63 @@ function ReturnArtwork({
 }: {
   character: CharacterDefinition | null;
 }) {
-  const characterStyle = {
-    left: FIFTH_PAGE_ANAGO_LAYOUT.left,
-    bottom: FIFTH_PAGE_ANAGO_LAYOUT.bottom,
-    width: FIFTH_PAGE_ANAGO_LAYOUT.width,
-    zIndex: FIFTH_PAGE_ANAGO_LAYOUT.zIndex,
-    "--return-character-scale": FIFTH_PAGE_ANAGO_LAYOUT.scale ?? 1,
-    "--return-character-rotate": FIFTH_PAGE_ANAGO_LAYOUT.rotate ?? "0deg",
+  const sceneStyle = {
+    "--return-character-left": percent(
+      RETURN_PAGE_LAYOUT_TUNING.characterXPercent,
+    ),
+    "--return-character-bottom": percent(
+      RETURN_PAGE_LAYOUT_TUNING.characterBottomPercent,
+    ),
+    "--return-character-width": percent(
+      RETURN_PAGE_LAYOUT_TUNING.characterWidthPercent,
+    ),
+    "--return-character-scale": RETURN_PAGE_LAYOUT_TUNING.characterScale,
+    "--return-character-rotate": `${RETURN_PAGE_LAYOUT_TUNING.characterRotateDeg}deg`,
+    "--return-character-hide-bottom": percent(
+      RETURN_PAGE_LAYOUT_TUNING.characterHideBottomPercent,
+    ),
+    "--return-rise-start-y": percent(
+      RETURN_PAGE_LAYOUT_TUNING.characterRiseStartPercent,
+    ),
+    "--return-sound-gap-px": px(RETURN_PAGE_LAYOUT_TUNING.soundGapPx),
+    "--return-sound-width": percent(
+      RETURN_PAGE_LAYOUT_TUNING.soundWidthPercentOfCharacter,
+    ),
+    "--return-sound-delay": ms(RETURN_PAGE_LAYOUT_TUNING.soundDelayMs),
+    "--return-sound-duration": ms(RETURN_PAGE_LAYOUT_TUNING.soundDurationMs),
   } as CSSProperties;
 
   return (
     <div className="onboarding-return-artwork" aria-hidden="true">
-      <div className="onboarding-return-stage">
-        <span className="onboarding-return-glow" />
-        <span className="onboarding-return-ring onboarding-return-ring--1" />
-        <span className="onboarding-return-ring onboarding-return-ring--2" />
-        <span className="onboarding-return-ring onboarding-return-ring--3" />
-        <span className="onboarding-sound-text">ピーン♪</span>
-        <span className="onboarding-return-sparkle onboarding-return-sparkle--1" />
-        <span className="onboarding-return-sparkle onboarding-return-sparkle--2" />
-        <span className="onboarding-return-sparkle onboarding-return-sparkle--3" />
-        {character ? (
-          <div className="onboarding-return-character" style={characterStyle}>
-            <img src={getCharacterImageSrc(character)} alt="" draggable={false} />
-          </div>
-        ) : null}
+      <div className="onboarding-return-scene" style={sceneStyle}>
+        <div className="onboarding-return-dock-group">
+          {character ? (
+            <div className="onboarding-return-character-wrap">
+              <img
+                className="onboarding-return-sound-text"
+                src="/piiin_story.png"
+                alt=""
+                draggable={false}
+              />
+              <div className="onboarding-return-character-clip">
+                <div className="onboarding-return-character-motion">
+                  <img
+                    className="onboarding-return-character-image"
+                    src="/characters/anago/normal-nago/expressions/happy.png"
+                    alt=""
+                    draggable={false}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : null}
+          <img
+            className="onboarding-return-dock"
+            src="/dock2.png"
+            alt=""
+            draggable={false}
+          />
+        </div>
       </div>
     </div>
   );
@@ -546,23 +802,30 @@ function RewardArtwork({
   character: CharacterDefinition | null;
 }) {
   const cardStyle = {
-    left: SIXTH_PAGE_CARD_LAYOUT.left,
-    bottom: SIXTH_PAGE_CARD_LAYOUT.bottom,
-    width: SIXTH_PAGE_CARD_LAYOUT.width,
-    zIndex: SIXTH_PAGE_CARD_LAYOUT.zIndex,
+    left: percent(REWARD_PAGE_LAYOUT_TUNING.cardXPercent),
+    top: percent(REWARD_PAGE_LAYOUT_TUNING.cardTopPercent),
+    width: responsivePxWidth({
+      minPx: REWARD_PAGE_LAYOUT_TUNING.cardWidthMinPx,
+      vw: REWARD_PAGE_LAYOUT_TUNING.cardWidthVw,
+      dvh: REWARD_PAGE_LAYOUT_TUNING.cardWidthDvh,
+      maxPx: REWARD_PAGE_LAYOUT_TUNING.cardWidthMaxPx,
+    }),
+    zIndex: 2,
     "--card-anim-delay": "0ms",
     "--home-character-color": character?.characterColor.primary ?? "#f05a63",
     "--home-character-soft-color": character?.characterColor.soft ?? "#f6d2d4",
-    "--reward-card-scale": SIXTH_PAGE_CARD_LAYOUT.scale ?? 1,
-    "--reward-card-rotate": SIXTH_PAGE_CARD_LAYOUT.rotate ?? "0deg",
+    "--reward-card-scale": REWARD_PAGE_LAYOUT_TUNING.cardScale,
+    "--reward-card-rotate": `${REWARD_PAGE_LAYOUT_TUNING.cardRotateDeg}deg`,
   } as CSSProperties;
   const characterStyle = {
-    left: SIXTH_PAGE_ANAGO_LAYOUT.left,
-    bottom: SIXTH_PAGE_ANAGO_LAYOUT.bottom,
-    width: SIXTH_PAGE_ANAGO_LAYOUT.width,
-    zIndex: SIXTH_PAGE_ANAGO_LAYOUT.zIndex,
-    "--reward-character-scale": SIXTH_PAGE_ANAGO_LAYOUT.scale ?? 1,
-    "--reward-character-rotate": SIXTH_PAGE_ANAGO_LAYOUT.rotate ?? "0deg",
+    "--reward-character-x": percent(
+      REWARD_PAGE_LAYOUT_TUNING.characterOffsetXPercent,
+    ),
+    "--reward-character-y": percent(
+      REWARD_PAGE_LAYOUT_TUNING.characterOffsetYPercent,
+    ),
+    "--reward-character-scale": REWARD_PAGE_LAYOUT_TUNING.characterScale,
+    "--reward-character-rotate": `${REWARD_PAGE_LAYOUT_TUNING.characterRotateDeg}deg`,
   } as CSSProperties;
 
   return (
@@ -586,10 +849,10 @@ function RewardArtwork({
           </div>
           <div className="home-character-body">
             <h3 className="home-character-name">
-              {character ? character.name : "シン・アナゴ"}
+              {character ? character.name : "シマアナゴ"}
             </h3>
             <div className="home-character-tags">
-              {(character?.personalityTags ?? ["NEW", "姿勢"]).map((tag) => (
+              {(character?.personalityTags ?? ["ムードメーカー", "フレンドリー"]).map((tag) => (
                 <span className="home-tag" key={tag}>
                   {tag}
                 </span>

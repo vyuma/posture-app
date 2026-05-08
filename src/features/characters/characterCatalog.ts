@@ -10,7 +10,7 @@ const NORMAL_NAGO_EXPRESSIONS = {
 export const CHARACTER_CATALOG: CharacterDefinition[] = [
   {
     id: "normal-nago",
-    name: "ノーマルナゴ",
+    name: "シマアナゴ",
     rarity: "common",
     story: "いつもそばで姿勢を見守ってくれる、基本のピンアナゴ。",
     portraitSrc: "/characters/anago/normal-nago/portrait.png",
@@ -19,7 +19,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
       primary: "#f28a18",
       soft: "#f8d7b2",
     },
-    personalityTags: ["ベーシック", "相棒"],
+    personalityTags: ["ムードメーカー", "フレンドリー"],
   },
   {
     id: "shin-anago",

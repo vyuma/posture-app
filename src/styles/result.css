@@ -1,9 +1,327 @@
 /* 測定結果画面（PostureRegisteredScreen）とキャラクターの色調バリエーション */
 
-.result-screen {
-  grid-template-rows: minmax(0, 0.85fr) minmax(0, 1.15fr);
+.result-screen--registered {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  min-height: 100dvh;
+  padding: clamp(48px, 8vh, 88px) clamp(16px, 3vw, 32px) clamp(24px, 4vh, 40px);
+  overflow-y: auto;
+  background: linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
 }
 
+.result-screen--accent-success {
+  --result-stat-accent: #fd8c3e;
+  --result-share-icon: #fd8c3e;
+  --result-meta-icon: #fd8c3e;
+  --result-portrait-bg: #ffe8dc;
+  --result-timeline-good: #fd8c3e;
+  --result-timeline-bad: #d4dbe0;
+}
+
+.result-screen--accent-fail {
+  --result-stat-accent: #13a2d7;
+  --result-share-icon: #8a9399;
+  --result-meta-icon: #8a9399;
+  --result-portrait-bg: #eceff1;
+  --result-timeline-good: #13a2d7;
+  --result-timeline-bad: #d4dbe0;
+}
+
+.result-registered-hero {
+  text-align: center;
+  color: #ffffff;
+  margin-bottom: clamp(18px, 3vh, 28px);
+  text-shadow: 0 2px 10px rgba(0, 40, 60, 0.18);
+}
+
+.result-registered-eyebrow {
+  margin: 0 0 6px;
+  font-size: clamp(0.9rem, 2.2vw, 1rem);
+  font-weight: 800;
+}
+
+.result-registered-title {
+  margin: 0;
+  font-size: clamp(2rem, 5.8vw, 2.85rem);
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.result-registered-card {
+  width: min(720px, 100%);
+  display: grid;
+  grid-template-columns: minmax(140px, 38%) minmax(0, 1fr);
+  gap: clamp(16px, 3vw, 28px);
+  padding: clamp(18px, 2.8vw, 26px);
+  border-radius: clamp(22px, 3.5vw, 32px);
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow:
+    0 20px 48px rgba(19, 100, 120, 0.16),
+    0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.result-registered-col--character {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.result-registered-portrait {
+  aspect-ratio: 1 / 1;
+  border-radius: clamp(14px, 2.5vw, 20px);
+  background: var(--result-portrait-bg, #f0f4f8);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+
+.result-registered-figure {
+  width: 92%;
+  height: 92%;
+  object-fit: contain;
+}
+
+.result-registered-portrait .character-empty {
+  width: 58%;
+  height: 58%;
+  border-radius: 12%;
+  background: linear-gradient(
+    160deg,
+    rgba(96, 100, 108, 0.55),
+    rgba(58, 60, 64, 0.72)
+  );
+  position: relative;
+}
+
+.result-registered-portrait .character-empty::after,
+.result-registered-portrait .character-empty::before {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.result-registered-portrait .character-empty::before {
+  width: 10%;
+  height: 10%;
+  top: 38%;
+  left: 38%;
+}
+
+.result-registered-portrait .character-empty::after {
+  width: 10%;
+  height: 10%;
+  top: 38%;
+  right: 38%;
+}
+
+.result-registered-name {
+  margin: 2px 0 0;
+  font-size: clamp(1.05rem, 2.8vw, 1.35rem);
+  font-weight: 900;
+  color: #1a2730;
+}
+
+.result-registered-tags {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 獲得時：--result-stat-accent（キャラ primary またはフォールバック）連動 */
+.result-screen--accent-success .result-registered-tag {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: color-mix(in srgb, var(--result-stat-accent) 88%, #1a2730);
+  background: color-mix(in srgb, var(--result-stat-accent) 16%, white);
+}
+
+.result-screen--accent-fail .result-registered-tag {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: rgba(138, 147, 153, 0.98);
+  background: rgba(138, 147, 153, 0.14);
+}
+
+.result-registered-col--stats {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 2vw, 16px);
+  min-width: 0;
+}
+
+.result-registered-stats-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  min-height: 28px;
+}
+
+.result-registered-share {
+  display: grid;
+  place-items: center;
+  padding: 6px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--result-share-icon, #888888);
+  cursor: pointer;
+  transition: opacity 0.14s ease;
+}
+
+.result-registered-share:hover:not(:disabled) {
+  opacity: 0.84;
+}
+
+.result-registered-share:disabled,
+.result-registered-share[aria-disabled="true"] {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.result-registered-share.is-busy svg {
+  animation: result-share-spin 0.8s linear infinite;
+}
+
+@keyframes result-share-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .result-registered-share.is-busy svg {
+    animation: none;
+  }
+}
+
+/* 共有結果のフィードバック（スクリーンリーダー用 aria-live と併用） */
+.result-registered-share-feedback {
+  margin: clamp(10px, 2vh, 16px) 0 0;
+  min-height: 1.25rem;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.94);
+  text-shadow: 0 1px 8px rgba(0, 40, 60, 0.2);
+}
+
+.result-registered-share-feedback:empty {
+  margin-top: clamp(10px, 2vh, 16px);
+}
+
+/* 共有用キャプチャ：背景グラデーション（画面と揃える） */
+.result-registered-capture-root {
+  width: 100%;
+  max-width: min(720px, 100%);
+  padding: clamp(14px, 2.8vw, 22px);
+  box-sizing: border-box;
+  border-radius: clamp(20px, 3.8vw, 30px);
+  background: linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
+}
+
+.result-registered-stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.result-registered-stat-cell {
+  min-width: 0;
+}
+
+.result-registered-stat-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #8896a4;
+}
+
+.result-registered-stat-value {
+  display: block;
+  margin-top: 4px;
+  font-size: clamp(1.35rem, 3.8vw, 1.95rem);
+  font-weight: 900;
+  color: var(--result-stat-accent, #fd8c3e);
+  letter-spacing: 0;
+}
+
+/* 姿勢タイムライン（SVG）ラッパー */
+.result-posture-timeline {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.result-posture-timeline-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-block: 4px 10px;
+  font-size: 0.62rem;
+  font-weight: 900;
+  color: #8896a4;
+}
+
+.result-posture-timeline-svg {
+  display: block;
+  border-radius: 12px;
+  max-width: 100%;
+}
+
+.result-posture-timeline-line {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.result-posture-timeline-lane-split {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.07);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+
+.result-posture-timeline-connector {
+  stroke: rgba(72, 86, 98, 0.35);
+  stroke-linecap: round;
+}
+
+.result-posture-timeline-empty-text {
+  font-size: 11px;
+  font-weight: 800;
+  fill: #8896a4;
+}
+
+.result-posture-timeline--success .result-posture-timeline-line.is-good {
+  stroke: var(--result-timeline-good, #fd8c3e);
+}
+
+.result-posture-timeline--success .result-posture-timeline-line.is-bad {
+  stroke: #9aa7b5;
+}
+
+.result-posture-timeline--fail .result-posture-timeline-line.is-good {
+  stroke: var(--result-timeline-good, #13a2d7);
+}
+
+.result-posture-timeline--fail .result-posture-timeline-line.is-bad {
+  stroke: #9aa7b5;
+}
+
+/* --- レガシー（他画面での tone フィルタ） --- */
 .result-metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(130px, 1fr));
@@ -23,7 +341,115 @@
   height: clamp(180px, calc(100dvh - 320px), 340px);
 }
 
-/* キャラクターのトーン違い（color filter） */
+.result-registered-meta {
+  margin: 4px 0 0;
+  display: grid;
+  gap: 12px;
+}
+
+.result-registered-meta-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.result-registered-meta-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.result-registered-meta-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #6b7580;
+}
+
+.result-registered-meta-value {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 800;
+  color: #27363f;
+}
+
+.result-registered-meta-icon {
+  display: grid;
+  place-items: center;
+  color: var(--result-meta-icon, #8896a4);
+}
+
+.result-registered-footer {
+  margin-top: clamp(22px, 4vh, 36px);
+  width: min(420px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.result-registered-home {
+  padding: 16px 24px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.12);
+}
+
+.result-registered-home.is-acquired {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--result-stat-accent, #fd8c3e) 70%, white) 0%,
+    var(--result-stat-accent, #fd8c3e) 100%
+  );
+}
+
+.result-registered-home.is-miss {
+  background: linear-gradient(180deg, #39bfe8 0%, #1393c9 100%);
+}
+
+.result-registered-again {
+  padding: 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-weight: 800;
+  font-size: 0.92rem;
+  color: rgba(39, 54, 63, 0.85);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+@media (max-width: 600px) {
+  .result-registered-card {
+    grid-template-columns: 1fr;
+    max-width: 400px;
+  }
+
+  .result-registered-col--character {
+    max-width: 220px;
+    margin-inline: auto;
+  }
+
+  .result-posture-timeline-axis {
+    font-size: 0.56rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .result-registered-share {
+    transition: none;
+  }
+}
+
 .tone-red {
   filter: saturate(1.25) hue-rotate(-20deg);
 }
@@ -47,4 +473,3 @@
 .tone-yellow {
   filter: hue-rotate(34deg) saturate(1.38) brightness(1.12);
 }
-

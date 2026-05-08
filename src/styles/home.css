@@ -65,8 +65,8 @@
 }
 
 .flow-screen.home-single {
-  --home-hero-height: 66.6667dvh;
-  --home-collection-peek-height: 33.3333dvh;
+  /* ヒーロー（ナビ＋グラデーション）の合計高さ。残り 1/3 が #fdfdfd のコレクション領域 */
+  --home-collection-bg-start: clamp(390px, 70dvh, 675px);
 
   position: relative;
   isolation: isolate;
@@ -74,71 +74,183 @@
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
-  background:
+  display: flex;
+  flex-direction: column;
+  /* オーバースクロール時に親(body)のグレーが透けないよう、コレクション色を背景色に置く */
+  background-color: #fdfdfd;
+  /* ナビ#34add5 → グラデーション → #fdfdfd（コレクション）を 1 枚に集約。
+     - ナビ末尾とグラデ開始を同じ位置に揃え、補間によるグラデ漏れを排除
+     - background-attachment: local でコンテンツと一緒にスクロールさせる
+       → 上端は常に #34add5（ナビ色）／下端は常に #fdfdfd（コレクション色）
+       → ラバーバンド（バウンス）で別の色が顔を出さない */
+  background-image:
     linear-gradient(
       180deg,
-      transparent 0,
-      transparent 83.3333dvh,
-      #f4f4f4 83.3333dvh,
-      #f4f4f4 100%
-    ),
-    linear-gradient(180deg, #13a2d7 5%, #f2edcc 80%);
+      #34add5 0,
+      #34add5 var(--home-nav-height),
+      var(--app-home-gradient-start) var(--home-nav-height),
+      var(--app-home-gradient-end) var(--home-collection-bg-start),
+      #fdfdfd var(--home-collection-bg-start),
+      #fdfdfd 100%
+    );
+  background-attachment: local;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
 }
 
-.home-single .flow-brand {
-  top: clamp(20px, 3vh, 30px);
-  left: clamp(20px, 5vw, 64px);
-  width: clamp(82px, 8vw, 142px);
+/* ナビゲーションバー */
+.home-nav {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--home-nav-height);
+  padding: 0 var(--flow-brand-offset-x);
+  background: #34add5;
 }
 
-/* ヒーローコピー：画面マウント時にフェードアップ */
-.home-single-copy {
-  animation: home-fade-up 0.55s ease both;
+.home-nav .flow-brand {
+  position: static;
+  width: var(--flow-brand-display-width);
 }
 
-/* QRパネル：コピーより少し遅れてフェードアップ */
-.home-single-qr {
-  animation: home-fade-up 0.55s ease 0.18s both;
-}
-
-/* プロフィールキャラクターボタン */
-.home-single-profile {
-  position: absolute;
-  top: clamp(18px, 4vh, 34px);
-  right: clamp(18px, 6vw, 74px);
-  z-index: 5;
-  width: clamp(46px, 4vw, 56px);
-  height: clamp(46px, 4vw, 56px);
+/* ナビのプロフィールボタン */
+.home-nav-profile {
   display: grid;
   place-items: center;
+  width: clamp(38px, 3.7dvh, 48px);
+  height: clamp(38px, 3.7dvh, 48px);
   overflow: hidden;
   border-radius: 999px;
   border: 0;
   padding: 0;
-  background: #f8f8f8;
-  box-shadow: 0 6px 16px rgba(12, 67, 84, 0.18);
+  background: rgba(255, 255, 255, 0.22);
+  box-shadow: 0 4px 12px rgba(12, 67, 84, 0.18);
+  transition: background 0.15s;
 }
 
-.home-single-profile:hover,
-.home-single-profile:focus-visible {
-  outline: 3px solid rgba(255, 255, 255, 0.85);
-  outline-offset: 3px;
+.home-nav-profile:hover,
+.home-nav-profile:focus-visible {
+  background: rgba(255, 255, 255, 0.38);
+  outline: 2px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 2px;
 }
 
-.home-single-profile-character {
-  width: 210px;
-  height: 210px;
+.home-nav-profile-character {
+  width: 160px;
+  height: 160px;
   object-fit: contain;
   object-position: center bottom;
-  transform: translate(-70px, 13px);
-  /* ふわふわと浮くフロートアニメーション */
+  transform: translate(-52px, 10px);
   animation: home-float 3.4s ease-in-out infinite;
+}
+
+/* ヒーローセクション：背景は親（home-single）のグラデーションを透過させる */
+.home-hero {
+  position: relative;
+  flex-shrink: 0;
+  min-height: clamp(270px, 55dvh, 585px);
+  display: flex;
+  align-items: center;
+  padding: clamp(24px, 4.5dvh, 56px) clamp(20px, 6.7vw, 102px);
+  background: transparent;
+  overflow: visible;
+}
+
+/* ヒーローコンテンツ：テキスト左・ボタン右の横並び */
+.home-hero-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: clamp(16px, 4vw, 80px);
+}
+
+/* ヒーローコピー：画面マウント時にフェードアップ */
+.home-hero-copy {
+  animation: home-fade-up 0.55s ease both;
+}
+
+.home-hero-copy h1 {
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(1.35rem, 2.38vw, 2.25rem);
+  line-height: 2;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+/* アクションボタン群：縦並び */
+.home-hero-actions {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(12px, 1.8dvh, 28px);
+  flex-shrink: 0;
+  animation: home-fade-up 0.55s ease 0.12s both;
+}
+
+/* 白丸ピルボタン */
+.home-hero-action-btn {
+  width: clamp(200px, 26.5vw, 400px);
+  height: clamp(50px, 7dvh, 69px);
+  border: 0;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #13a2d7;
+  font-size: clamp(0.95rem, 1.59vw, 1.5rem);
+  font-weight: 700;
+  letter-spacing: 0;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(13, 93, 117, 0.14);
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.home-hero-action-btn:hover,
+.home-hero-action-btn:focus-visible {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.home-hero-action-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ヒーロー右端のアナゴ装飾キャラ */
+.home-hero-anago {
+  position: absolute;
+  right: clamp(0px, 1vw, 16px);
+  bottom: 0;
+  height: clamp(140px, 72%, 430px);
+  width: auto;
+  pointer-events: none;
+  object-fit: contain;
+  object-position: bottom center;
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.12));
+  z-index: 1;
+}
+
+.home-hero-anago.character-empty {
+  display: none;
+}
+
+/* QRパネル：コピーより少し遅れてフェードアップ（後方互換用） */
+.home-single-qr {
+  animation: home-fade-up 0.55s ease 0.18s both;
 }
 
 .home-single-debug-story {
   position: absolute;
-  top: clamp(74px, 10vh, 98px);
-  right: clamp(18px, 6vw, 74px);
+  top: clamp(10px, 1.5dvh, 18px);
+  right: clamp(12px, 2vw, 24px);
   z-index: 5;
   border: 1px solid rgba(95, 100, 104, 0.18);
   border-radius: 999px;
@@ -284,144 +396,7 @@
   font-weight: 900;
 }
 
-/* ヒーロー領域（コピー＋QR）：横並びを維持してfluidにスケール */
-.home-single-hero {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(220px, 1fr) auto;
-  gap: clamp(16px, 4vw, 88px);
-  align-items: center;
-  height: var(--home-hero-height);
-  min-height: 0;
-  padding: clamp(80px, 13dvh, 136px) clamp(20px, 6vw, 102px)
-    clamp(14px, 4dvh, 42px);
-}
-
-/* Figma基準：32px / lh 48 (= 1.5) @ 1512px幅 → 2.12% */
-.home-single-copy h1 {
-  margin: 0;
-  color: #ffffff;
-  font-size: clamp(1.35rem, 2.12vw, 2rem);
-  line-height: 1.5;
-  font-weight: 700;
-  letter-spacing: 0;
-}
-
-/* Figma基準：20px / lh 24 @ 1512px幅 → 1.32% */
-.home-single-copy p {
-  margin: clamp(14px, 1.8vw, 26px) 0 0;
-  color: #ffffff;
-  font-size: clamp(0.88rem, 1.32vw, 1.25rem);
-  line-height: 1.2;
-  font-weight: 700;
-  letter-spacing: 0;
-}
-
-.home-single-copy {
-  position: relative;
-  z-index: 3;
-}
-
-/* QR表示 */
-.home-single-qr {
-  position: relative;
-  display: grid;
-  justify-items: center;
-  gap: clamp(8px, 1.6dvh, 14px);
-  margin-top: clamp(0px, 2.8dvh, 28px);
-}
-
-.home-single-qr-stage {
-  position: relative;
-  display: grid;
-  justify-items: center;
-  padding-bottom: clamp(8px, 2.4dvh, 24px);
-}
-
-.home-single-qr-frame {
-  position: relative;
-  z-index: 2;
-  width: clamp(180px, min(28vw, 36dvh), 308px);
-  aspect-ratio: 1;
-  overflow: visible;
-  border-radius: clamp(20px, 2.5vw, 28px);
-  background: #ffffff;
-  /* スキャンを促すソフトグローが周期的に光る */
-  animation: home-qr-glow 2.8s ease-in-out infinite;
-}
-
-.home-single-qr-core {
-  position: absolute;
-  z-index: 3;
-  inset: 0;
-  overflow: hidden;
-  border-radius: inherit;
-}
-
-.home-single-qr-image,
-.home-single-qr-placeholder {
-  position: relative;
-  z-index: 3;
-  aspect-ratio: 1;
-  border-radius: clamp(20px, 4vw, 42px);
-  overflow: hidden;
-}
-
-.home-single-qr-image {
-  display: block;
-  width: 100%;
-  height: 100%;
-  background: transparent;
-}
-
-.home-single-qr-placeholder {
-  width: clamp(180px, min(28vw, 36dvh), 308px);
-  display: grid;
-  place-items: center;
-  background: #e4e4e4;
-  padding: 14px;
-  color: #7a8c94;
-  font-size: 0.9rem;
-  font-weight: 900;
-  text-align: center;
-}
-
-.home-single-qr-anago {
-  position: absolute;
-  z-index: 2;
-  left: 50%;
-  top: 50%;
-  width: clamp(52px, 22%, 72px);
-  height: auto;
-  transform: translate(-30%, -4.5%);
-  display: block;
-  pointer-events: none;
-}
-
-.home-single-qr-character-badge {
-  position: absolute;
-  z-index: 3;
-  left: 50%;
-  top: 50%;
-  width: clamp(52px, 5.6vw, 74px);
-  height: clamp(52px, 5.6vw, 74px);
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  border-radius: 999px;
-  border: 3px solid #ececec;
-  background: #8d8d92;
-  transform: translate(-50%, -50%);
-}
-
-.home-single-qr-character-image {
-  width: 74%;
-  height: 74%;
-  object-fit: contain;
-  object-position: center;
-}
-
-/* デバッグ用：測定スキップボタン */
+/* デバッグ用：スキップボタン共通スタイル */
 .home-single-debug-skip {
   position: relative;
   z-index: 3;
@@ -441,17 +416,945 @@
   border-color: rgba(150, 50, 50, 0.34);
 }
 
-/* コレクション一覧 */
+/* ─── QR接続モーダル（Figma Frame 53「1」1512×982：500 + 41 + 681 = 1222、高さ681） ─── */
+
+/*
+  ビューポートに収まるよう全体を**等比スケール**（--qr-scale）。
+  container-type: size により cqw/cqh はオーバーレイのパディングを除いた内容幅・高さ基準。
+*/
+.qr-modal-overlay {
+  container-type: size;
+  container-name: qr-overlay;
+
+  /* base.css と整合（--qr-scale より前に宣言） */
+  --qr-fr1-horizontal-inset: clamp(16px, 9.591vw, 145px);
+  --qr-fr1-block-top: clamp(72px, 15.274dvh, 150px);
+  --qr-fr1-block-bottom: clamp(48px, 15.377dvh, 151px);
+
+  /*
+   * 既定：cqw 非対応環境。cqw が使えるときは直下の @supports で上書き。
+   * 横幅 1222 / 縦幅 681（Figma 行レイアウト）に収める等比。
+   */
+  --qr-scale: max(
+    0.31,
+    min(
+      1,
+      calc((100vw - 2 * var(--qr-fr1-horizontal-inset) - 20px) / 1222px),
+      calc(
+        (
+            100dvh - var(--qr-fr1-block-top) - var(--qr-fr1-block-bottom) -
+              16px
+          ) /
+          681px
+      )
+    )
+  );
+
+  /* Step1 右QRパネルと Step2 右を揃えるフロスト（背景・ぼかし・角丸・影） */
+  --qr-frost-fill: rgba(255, 255, 255, 0.22);
+  --qr-frost-blur: 34px;
+  --qr-frost-radius: calc(40px * var(--qr-scale));
+  --qr-frost-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  --qr-frost-shadow-drop: 0 calc(16px * var(--qr-scale))
+    calc(48px * var(--qr-scale)) rgba(10, 55, 75, 0.12);
+
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  padding: var(--qr-fr1-block-top) var(--qr-fr1-horizontal-inset)
+    var(--qr-fr1-block-bottom);
+  overflow-x: hidden;
+  overflow-y: auto;
+  background: linear-gradient(
+    180deg,
+    var(--app-home-gradient-start) 0%,
+    var(--app-home-gradient-end) 100%
+  );
+  animation: home-fade-up 0.3s ease both;
+}
+
+@supports (width: 1cqw) {
+  .qr-modal-overlay {
+    --qr-scale: max(
+      0.31,
+      min(
+        1,
+        calc((100cqw - 8px) / 1222px),
+        calc((100cqh - 8px) / 681px)
+      )
+    );
+  }
+}
+
+/* Figma 「1」のロゴ左上：コンテナ原点から56,24／幅約80 */
+.qr-modal-brand {
+  position: absolute;
+  top: var(--flow-brand-offset-y);
+  left: var(--flow-brand-offset-x);
+  z-index: 11;
+}
+
+.qr-modal-brand .flow-brand {
+  position: static;
+  padding: 0;
+  width: var(--flow-brand-display-width);
+  line-height: 0;
+}
+
+/* 右上・ロゴと対称になるよう同じインデックスで配置 */
+.qr-modal-close {
+  position: absolute;
+  top: var(--flow-brand-offset-y);
+  right: var(--flow-brand-offset-x);
+  z-index: 11;
+  width: clamp(36px, 4dvh, 46px);
+  height: clamp(36px, 4dvh, 46px);
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+  font-size: 1.3rem;
+  font-weight: 900;
+  line-height: 1;
+  transition: background 0.15s;
+}
+
+.qr-modal-close:hover,
+.qr-modal-close:focus-visible {
+  background: rgba(255, 255, 255, 0.46);
+}
+
+/*
+  メインカラム：Frame 46 幅500／Frame 44 幅681／間41／合計1222（すべて --qr-scale で一体スケール）
+*/
+.qr-modal-panels {
+  display: flex;
+  flex-wrap: nowrap;
+  flex: 0 1 auto;
+  align-items: stretch;
+  justify-content: center;
+  gap: calc(41px * var(--qr-scale));
+  width: min(calc(1222px * var(--qr-scale)), 100%);
+  min-width: 0;
+  box-sizing: border-box;
+  animation: home-dialog-scale-in 0.28s ease both;
+}
+
+/* Frame 46：白 500×681 corner 40、内側 padding 47/50/40 */
+.qr-modal-left {
+  flex: 0 0 calc(500px * var(--qr-scale));
+  width: calc(500px * var(--qr-scale));
+  max-width: 100%;
+  min-width: 0;
+  height: calc(681px * var(--qr-scale));
+  min-height: calc(681px * var(--qr-scale));
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: calc(47px * var(--qr-scale))
+    calc(50px * var(--qr-scale))
+    calc(40px * var(--qr-scale));
+  background: #ffffff;
+  border-radius: calc(40px * var(--qr-scale));
+}
+
+/* 「1」：タイトル下32／副題下62 */
+.qr-modal-left--step1 .qr-modal-title {
+  margin: 0 0 calc(32px * var(--qr-scale));
+}
+
+.qr-modal-left--step1 .qr-modal-subtitle {
+  margin: 0 0 calc(62px * var(--qr-scale));
+}
+
+/* 「2」：副題下32 */
+.qr-modal-left--step2 .qr-modal-title {
+  margin: 0 0 calc(32px * var(--qr-scale));
+}
+
+.qr-modal-left--step2 .qr-modal-subtitle {
+  margin: 0 0 calc(32px * var(--qr-scale));
+}
+
+/* Step2：触覚波のドロップシャドウが白カード外に広がらないようクリップ */
+.qr-modal-left--step2 {
+  overflow: hidden;
+}
+
+.qr-modal-title {
+  color: #13a2d7;
+  font-size: max(17px, calc(36px * var(--qr-scale)));
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: calc(43 / 36);
+}
+
+.qr-modal-subtitle {
+  color: #666666;
+  font-size: max(13px, calc(20px * var(--qr-scale)));
+  font-weight: 700;
+  line-height: calc(24 / 20);
+  letter-spacing: 0;
+}
+
+/* 電話：Figmaグループ〜高さ295／カード縦681の中央寄せ〜 */
+.qr-modal-phone-area {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  margin: 0;
+}
+
+.qr-modal-phone-img {
+  width: auto;
+  max-width: calc(294px * var(--qr-scale));
+  height: auto;
+  max-height: calc(295px * var(--qr-scale));
+  object-fit: contain;
+}
+
+/* 段2：サウンドと触覚（見た目トラック／ノブのみ） */
+.qr-modal-sound-haptic-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: calc(12px * var(--qr-scale));
+  min-height: calc(80px * var(--qr-scale));
+  padding: 0 calc(24px * var(--qr-scale));
+  background: #f5f5f5;
+  border-radius: calc(16px * var(--qr-scale));
+}
+
+.qr-modal-sound-haptic-toggle-label {
+  color: #666666;
+  font-size: max(0.9rem, calc(20px * var(--qr-scale)));
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
+.qr-modal-sound-haptic-switch {
+  position: relative;
+  flex-shrink: 0;
+  width: calc(52px * var(--qr-scale));
+  height: calc(28px * var(--qr-scale));
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #c4c8cc;
+  cursor: pointer;
+  transition:
+    background 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.qr-modal-sound-haptic-switch.is-on {
+  background: #34add5;
+}
+
+.qr-modal-sound-haptic-switch:focus-visible {
+  outline: 2px solid #34add5;
+  outline-offset: calc(3px * var(--qr-scale));
+}
+
+.qr-modal-sound-haptic-switch-knob {
+  position: absolute;
+  top: 50%;
+  left: calc(3px * var(--qr-scale));
+  width: calc(22px * var(--qr-scale));
+  height: calc(22px * var(--qr-scale));
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  transform: translateY(-50%);
+  transition: transform 0.18s ease;
+  pointer-events: none;
+}
+
+/* 52 - 22 - 6 = 24px 分ノブを右へ（左右 3px パディング想定） */
+.qr-modal-sound-haptic-switch.is-on .qr-modal-sound-haptic-switch-knob {
+  transform: translateY(-50%) translateX(calc(24px * var(--qr-scale)));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qr-modal-sound-haptic-switch,
+  .qr-modal-sound-haptic-switch-knob {
+    transition: none;
+  }
+}
+
+/* 段2：触覚案内用スマホ（phone.png）— 微振動＋ブランド色のゴースト＋波紋アーチ */
+@keyframes qr-modal-phone-vibrate {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  18% {
+    transform: translate3d(1.6px, -1px, 0) rotate(0.45deg);
+  }
+
+  36% {
+    transform: translate3d(-1.7px, 0.7px, 0) rotate(-0.5deg);
+  }
+
+  54% {
+    transform: translate3d(1.3px, 0.5px, 0) rotate(0.3deg);
+  }
+
+  72% {
+    transform: translate3d(-1.1px, -0.7px, 0) rotate(-0.22deg);
+  }
+
+  90% {
+    transform: translate3d(0.6px, 0.4px, 0) rotate(0.12deg);
+  }
+}
+
+@keyframes qr-modal-vibe-arc-pulse {
+  0% {
+    opacity: 0;
+    transform: scale(0.74);
+  }
+
+  28% {
+    opacity: 0.95;
+    transform: scale(1);
+  }
+
+  68% {
+    opacity: 0.45;
+    transform: scale(1.12);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.22);
+  }
+}
+
+.qr-modal-vibe-area {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(140px * var(--qr-scale));
+}
+
+.qr-modal-vibe-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(10px * var(--qr-scale));
+  max-width: 100%;
+  overflow: hidden;
+  border-radius: calc(20px * var(--qr-scale));
+}
+
+.qr-modal-vibe-arcs {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  width: calc(54px * var(--qr-scale));
+  height: calc(170px * var(--qr-scale));
+  pointer-events: none;
+}
+
+.qr-modal-vibe-arcs svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.qr-modal-vibe-arcs path {
+  fill: none;
+  stroke: #34add5;
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: var(--vibe-arc-origin, center);
+  animation: qr-modal-vibe-arc-pulse 1s ease-out infinite;
+  filter: drop-shadow(0 calc(1px * var(--qr-scale)) calc(4px * var(--qr-scale))
+    rgba(52, 173, 213, 0.28));
+}
+
+.qr-modal-vibe-arcs--left path {
+  --vibe-arc-origin: 100% 50%;
+}
+
+.qr-modal-vibe-arcs--right path {
+  --vibe-arc-origin: 0% 50%;
+}
+
+.qr-modal-vibe-arcs path:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.qr-modal-vibe-arcs path:nth-child(2) {
+  animation-delay: 0.16s;
+}
+
+.qr-modal-vibe-arcs path:nth-child(3) {
+  animation-delay: 0.32s;
+}
+
+.qr-modal-vibe-img {
+  max-height: calc(290px * var(--qr-scale));
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  transform-origin: 50% 60%;
+  animation: qr-modal-phone-vibrate 0.22s ease-in-out infinite;
+  /* 残像：ブランド色のゴーストを左右に薄く重ねて振動感を強調 */
+  filter: drop-shadow(0.7px 0 0 rgba(52, 173, 213, 0.32))
+    drop-shadow(-0.7px 0 0 rgba(52, 173, 213, 0.32))
+    drop-shadow(0 calc(10px * var(--qr-scale)) calc(20px * var(--qr-scale))
+      rgba(15, 70, 95, 0.18));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qr-modal-vibe-img,
+  .qr-modal-vibe-arcs path {
+    animation: none;
+  }
+
+  .qr-modal-vibe-arcs path {
+    opacity: 0.7;
+  }
+}
+
+.qr-modal-error-label {
+  margin: calc(16px * var(--qr-scale)) 0 0;
+  color: #b91c1c;
+  font-size: max(0.74rem, calc(14.7px * var(--qr-scale)));
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+/* Frame 36：幅400／高さ77／カード下端から40パディング（スケール） */
+.qr-modal-next-btn {
+  margin-top: auto;
+  flex-shrink: 0;
+  width: min(calc(400px * var(--qr-scale)), 100%);
+  min-height: calc(52px * var(--qr-scale));
+  height: calc(77px * var(--qr-scale));
+  align-self: center;
+  margin-bottom: 0;
+  margin-left: auto;
+  margin-right: auto;
+  border: 0;
+  border-radius: 999px;
+  background: #d3d3d3;
+  color: #ffffff;
+  font-size: max(14px, calc(24px * var(--qr-scale)));
+  font-weight: 700;
+  letter-spacing: 0;
+  cursor: not-allowed;
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease;
+}
+
+.qr-modal-next-btn:not(:disabled) {
+  background: #34add5;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(12, 100, 128, 0.22);
+}
+
+.qr-modal-next-btn:not(:disabled):hover,
+.qr-modal-next-btn:not(:disabled):focus-visible {
+  transform: translateY(-1px);
+}
+
+/*
+ Frame 44：681×681 白20%／QRは四辺とも99オフセット（99/681＝約14.547%）
+ 「QRを更新」はFrame外に配置しインレイキャンバスの余白と干渉させない。
+*/
+.qr-modal-right-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: calc(16px * var(--qr-scale));
+  flex: 0 0 calc(681px * var(--qr-scale));
+  width: calc(681px * var(--qr-scale));
+  max-width: 100%;
+  min-width: 0;
+  align-self: stretch;
+}
+
+.qr-modal-right-col--step2 {
+  gap: 0;
+}
+
+.qr-modal-right-col .qr-modal-right--step2 {
+  flex: 0 0 calc(681px * var(--qr-scale));
+  width: 100%;
+}
+
+.qr-modal-right {
+  container-type: inline-size;
+  box-sizing: border-box;
+}
+
+.qr-modal-right--step1 {
+  /*
+   * グレーアナゴ：座標系は .qr-modal-qr-composite（正方形）のみ。
+   * 位置・サイズをすべて「箱に対する %」で統一すると、ウィンドウで箱が縮んでもタイル上の見え方が不変になる。
+   * --qr-anago-scale は見た目の倍率のみ（レイアウト % とは掛け合わせない）。
+   */
+  --qr-anago-scale: 2;
+  /* 箱の高さに対する高さの目安（object-fit: contain） */
+  --qr-anago-height-pct-of-box: 82;
+  /* 箱の幅に対する横方向の上限 */
+  --qr-anago-max-width-pct-of-box: 42;
+  /* 箱の下端基準オフセット（負＝下端よりはみ出し）：箱の高さの % */
+  --qr-anago-anchor-bottom-pct: -107.08;
+  /* 水平：箱中央(50%) からのずれを箱「幅」の % で指定（正で右へ）*/
+  --qr-anago-shift-x-pct-of-box: 5;
+  /* 縦追加：anchor-bottom と加算される箱「高さ」の %（正で視覚的に少し下へ／負で上へ）*/
+  --qr-anago-shift-y-pct-add-to-bottom-pct: 0;
+
+  /* 白マット・パネル余白は据え置き、QR ビットマップだけ縮小（合成正方形の一辺に対する幅 %） */
+  --qr-pattern-width-pct-of-inner: 100;
+
+  flex: 0 0 auto;
+  width: 100%;
+  height: calc(681px * var(--qr-scale));
+  padding: calc(99px * var(--qr-scale));
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  border-radius: var(--qr-frost-radius);
+  background-color: var(--qr-frost-fill);
+  backdrop-filter: blur(var(--qr-frost-blur));
+  -webkit-backdrop-filter: blur(var(--qr-frost-blur));
+  box-shadow:
+    var(--qr-frost-shadow-inset),
+    var(--qr-frost-shadow-drop);
+  box-sizing: border-box;
+  /* 角丸パネル外にはみ出す描画を切り抜き（白タイルだけにしたい場合は composite 側へ移す） */
+  overflow: hidden;
+}
+
+.qr-modal-qr-stack {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  width: 100%;
+}
+
+/* コンテンツ幅＝親のコンテンツボックス全域（親paddingで正方形に相当） */
+.qr-modal-qr-composite {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 半透明は step1。合成内は白→アナゴ→QR（z-index で奥手前を固定） */
+.qr-modal-qr-white-mat {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  border-radius: calc(90px * var(--qr-scale));
+  background: #ffffff;
+}
+
+.qr-modal-qr-anago-behind {
+  position: absolute;
+  z-index: 30;
+  left: calc(50% + var(--qr-anago-shift-x-pct-of-box, 0) * 1%);
+  bottom: calc(
+    (
+        var(--qr-anago-anchor-bottom-pct, -2.08) +
+          var(--qr-anago-shift-y-pct-add-to-bottom-pct, 0)
+      ) * 1%
+  );
+  width: auto;
+  height: calc(var(--qr-anago-height-pct-of-box, 82) * 1% * var(--qr-anago-scale, 1));
+  max-height: calc(
+    var(--qr-anago-height-pct-of-box, 82) * 1% * var(--qr-anago-scale, 1)
+  );
+  max-width: calc(
+    var(--qr-anago-max-width-pct-of-box, 42) * 1% * var(--qr-anago-scale, 1)
+  );
+  transform: translateX(-50%);
+  object-fit: contain;
+  object-position: center bottom;
+  pointer-events: none;
+  filter: grayscale(100%) brightness(0.92);
+  opacity: 0.88;
+}
+
+.qr-modal-qr-image {
+  position: relative;
+  z-index: 40;
+  display: block;
+  width: min(100%, calc(var(--qr-pattern-width-pct-of-inner, 100) * 1%));
+  max-width: 100%;
+  height: auto;
+  border-radius: calc(90px * var(--qr-scale));
+}
+
+.qr-modal-qr-placeholder {
+  position: relative;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  width: min(100%, calc(var(--qr-pattern-width-pct-of-inner, 100) * 1%));
+  max-width: 100%;
+  aspect-ratio: 1 / 1;
+  height: auto;
+  max-height: 100%;
+  margin: 0;
+  background: rgba(245, 245, 245, 0.65);
+  border-radius: calc(90px * var(--qr-scale));
+  border: 1px dashed rgba(100, 120, 130, 0.35);
+  color: rgba(55, 70, 78, 0.95);
+  font-size: max(0.75rem, calc(16px * var(--qr-scale)));
+  font-weight: 700;
+  text-align: center;
+  padding: calc(16px * var(--qr-scale));
+  box-sizing: border-box;
+}
+
+/* Figma Frame 53「2」右列：681 角丸ガラス内に見出し＋キャラ（左は接続完了・触覚案内）
+ * 開発者が見た目を確定する場所：
+ * --qr-today-heading-cqw … 見出しの font-size = 係数 × 1cqw（パネル幅基準、cqw未対応は下のフォールバック）
+ * --qr-today-teaser-shift-x-cqw / -y-cqh … ティザーブロック全体の translate
+ * --qr-today-char-max-cqw / -cqh … キャラ画像の max-width / max-height
+ * --qr-today-teaser-extra-gap-cqh … 見出しとキャラの間隔
+ * layout: キャラの目標の高さ = --qr-today-char-max-cqh × 1cqh でグリッド2行を分け、
+ *   「残り領域」で画像を勝手に潰さない（見出しと画像の縦オーバーラップのみ防止）
+ */
+.qr-modal-right--step2 {
+  /* 見出し・キャラの cqw/cqh はこのパネル（コンテンツボックス）基準 */
+  container-type: size;
+  container-name: qr-step2;
+  --qr-today-heading-cqw: 6.32;
+  --qr-today-teaser-shift-x-cqw: 0;
+  --qr-today-teaser-shift-y-cqh: 20;
+  --qr-today-char-max-cqw: 48;
+  --qr-today-char-max-cqh: 160;
+  --qr-today-teaser-extra-gap-cqh: 11.06;
+
+  flex: 0 0 calc(681px * var(--qr-scale));
+  width: 100%;
+  height: calc(681px * var(--qr-scale));
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 0;
+  padding: calc(36px * var(--qr-scale)) calc(40px * var(--qr-scale))
+    calc(36px * var(--qr-scale));
+  border-radius: var(--qr-frost-radius);
+  background: var(--qr-frost-fill);
+  backdrop-filter: blur(var(--qr-frost-blur));
+  -webkit-backdrop-filter: blur(var(--qr-frost-blur));
+  box-shadow:
+    var(--qr-frost-shadow-inset),
+    var(--qr-frost-shadow-drop);
+  overflow: hidden;
+}
+
+.qr-modal-today-teaser {
+  flex: 1 1 auto;
+  box-sizing: border-box;
+  min-height: 0;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr;
+  /*
+   * 行1：見出し / 行2：キャラ専用。行2 の最小高さを max-cqh と揃えるため、
+   * 開発者指定のサイズどおりレイアウトできる（親の残余高だけで頭を潰さない）。
+   */
+  grid-template-rows: auto minmax(
+    calc(var(--qr-today-char-max-cqh, 82) * 1cqh),
+    1fr
+  );
+  row-gap: calc(var(--qr-today-teaser-extra-gap-cqh, 2.06) * 1cqh);
+  align-items: stretch;
+  justify-items: stretch;
+  transform: translate(
+    calc(var(--qr-today-teaser-shift-x-cqw, 0) * 1cqw),
+    calc(var(--qr-today-teaser-shift-y-cqh, 0) * 1cqh)
+  );
+}
+
+/* グリッド1行目：見出し。縮ませず、キャラ側のゆらぎより手前に */
+.qr-modal-today-teaser > .qr-modal-today-heading {
+  grid-row: 1;
+  position: relative;
+  z-index: 2;
+}
+
+@supports not (width: 1cqw) {
+  /* cqw/h 無し：フラットな近似（開発者調整は主に上のコンテナクエリ路） */
+  .qr-modal-today-teaser {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: calc(14px * var(--qr-scale));
+    transform: none;
+  }
+
+  .qr-modal-today-teaser > .qr-modal-today-heading {
+    flex-shrink: 0;
+    z-index: 2;
+  }
+
+  /*
+   * フラット環境でも「キャラ用の縦」を確保（150 ≒ 既定82に対して比率で伸ばせるように）
+   * 係数 は --qr-today-char-max-cqh の数値に比例（コンテナクエリ換算ではない）。
+   */
+  .qr-modal-today-character {
+    flex: 1 1 0;
+    min-height: max(
+      calc(280px * var(--qr-scale)),
+      calc(var(--qr-today-char-max-cqh, 82) / 82 * 320px * var(--qr-scale))
+    );
+    overflow: hidden;
+  }
+
+  .qr-modal-right--step2 .qr-modal-today-character-img {
+    max-height: calc(
+      560px * var(--qr-scale) *
+        min(2.75, calc(var(--qr-today-char-max-cqh, 82) / 82))
+    );
+    max-width: min(96%, calc(48% * var(--qr-today-char-max-cqw, 48) / 48));
+  }
+}
+
+.qr-modal-right--step2 .qr-modal-today-heading {
+  margin: 0;
+  justify-self: center;
+  color: #ffffff;
+  font-size: max(1rem, calc(var(--qr-today-heading-cqw, 5.32) * 1cqw));
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-shadow: 0 1px 14px rgba(12, 60, 80, 0.25);
+}
+
+@supports not (width: 1cqw) {
+  .qr-modal-right--step2 .qr-modal-today-heading {
+    align-self: center;
+    justify-self: auto;
+    font-size: max(1rem, calc(32px * var(--qr-scale)));
+  }
+}
+
+/* グリッド2行目：開発者指定の縦サイズブロックは template-rows で確保済み */
+.qr-modal-today-character {
+  grid-row: 2;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 0;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+.qr-modal-right--step2 .qr-modal-today-character-img {
+  max-height: calc(var(--qr-today-char-max-cqh, 82) * 1cqh);
+  width: auto;
+  max-width: calc(var(--qr-today-char-max-cqw, 48) * 1cqw);
+  object-fit: contain;
+  object-position: center bottom;
+  filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.12));
+}
+
+.qr-modal-right--step2 .qr-modal-today-character-img.character-empty {
+  min-height: calc(17.6 * 1cqh);
+  width: min(calc(28 * 1cqw), 45%);
+}
+
+@supports not (width: 1cqw) {
+  .qr-modal-right--step2 .qr-modal-today-character-img.character-empty {
+    min-height: calc(120px * var(--qr-scale));
+    width: min(calc(200px * var(--qr-scale)), 40%);
+  }
+}
+
+/* 予告キャラのゆらぎ（idle／足元基点） */
+@keyframes qr-modal-today-character-idle {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-0.25deg);
+  }
+
+  50% {
+    transform: translateY(calc(-4px * var(--qr-scale))) rotate(0.45deg);
+  }
+}
+
+@keyframes qr-modal-today-character-placeholder-idle {
+  0%,
+  100% {
+    opacity: 0.38;
+    transform: translateY(0) scale(1);
+  }
+
+  50% {
+    opacity: 0.62;
+    transform: translateY(calc(-3px * var(--qr-scale))) scale(1.03);
+  }
+}
+
+.qr-modal-today-character--animated img.character-figure.qr-modal-today-character-img {
+  transform-origin: 50% 92%;
+  animation: qr-modal-today-character-idle 4.2s ease-in-out infinite;
+}
+
+.qr-modal-today-character--animated
+  .qr-modal-today-character-img.character-empty {
+  transform-origin: 50% 90%;
+  animation: qr-modal-today-character-placeholder-idle 3.8s ease-in-out
+    infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qr-modal-today-character--animated img.character-figure.qr-modal-today-character-img,
+  .qr-modal-today-character--animated .qr-modal-today-character-img.character-empty {
+    animation: none;
+  }
+
+  .qr-modal-today-character--animated .qr-modal-today-character-img.character-empty {
+    opacity: 0.42;
+    transform: none;
+  }
+}
+
+/* Frame外：機能用（FigmaのFrame 44コンテンツ外に置くとSpecと整合） */
+.qr-modal-right-col .qr-modal-refresh-btn {
+  flex-shrink: 0;
+}
+
+.qr-modal-refresh-btn {
+  border: 1px solid rgba(255, 255, 255, 0.52);
+  border-radius: 999px;
+  padding: 8px 18px;
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  transition: background 0.15s;
+}
+
+.qr-modal-refresh-btn:hover,
+.qr-modal-refresh-btn:focus-visible {
+  background: rgba(255, 255, 255, 0.38);
+}
+
+.qr-modal-debug-actions {
+  position: absolute;
+  bottom: clamp(16px, 3dvh, 28px);
+  left: clamp(16px, 3vw, 32px);
+  z-index: 12;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* 極端に狭い幅のみ縦積み（Tauri の minWidth 720 でも行レイアウトになるよう閾値を下げる） */
+@media (max-width: 640px) {
+  /* 縦積み時：681 + 41 + 681 ≒ 1403 の高さ予算でも破綻しないよう --qr-scale を再計算 */
+  @supports (width: 1cqw) {
+    .qr-modal-overlay {
+      --qr-scale: max(
+        0.28,
+        min(
+          1,
+          calc((100cqw - 16px) / 681px),
+          calc((100cqh - 112px) / 1403px)
+        )
+      );
+    }
+  }
+
+  @supports not (width: 1cqw) {
+    .qr-modal-overlay {
+      --qr-scale: max(
+        0.28,
+        min(
+          1,
+          calc((100vw - 2 * var(--qr-fr1-horizontal-inset) - 24px) / 681px),
+          calc(
+            (
+                100dvh - var(--qr-fr1-block-top) - var(--qr-fr1-block-bottom) -
+                  136px
+              ) /
+              1403px
+          )
+        )
+      );
+    }
+  }
+
+  .qr-modal-panels {
+    flex-direction: column;
+    align-items: center;
+    max-height: none;
+    gap: calc(41px * var(--qr-scale));
+    width: min(calc(681px * var(--qr-scale)), 100%);
+    overflow: visible;
+  }
+
+  .qr-modal-left {
+    flex: 0 1 auto;
+    min-height: calc(681px * var(--qr-scale));
+    width: min(calc(500px * var(--qr-scale)), 100%);
+    max-width: 100%;
+    height: auto;
+  }
+
+  .qr-modal-right-col {
+    flex: 0 1 auto;
+    max-width: min(calc(681px * var(--qr-scale)), 100%);
+    width: min(calc(681px * var(--qr-scale)), 100%);
+  }
+}
+
+/* コレクション一覧：グラデーション上に角丸で重なる */
 .home-collection {
   position: relative;
   z-index: 2;
   width: 100%;
-  min-height: var(--home-collection-peek-height);
-  margin-top: 0;
+  flex: 1;
+  /* ヒーロー下端のグラデーション末尾に少し被せて自然につなぐ */
+  margin-top: clamp(-20px, -2dvh, -12px);
   padding: clamp(24px, 4.2dvh, 42px) clamp(14px, 4vw, 62px)
     clamp(26px, 6dvh, 54px);
   border-radius: clamp(24px, 4vw, 36px) clamp(24px, 4vw, 36px) 0 0;
-  background: #f4f4f4;
+  background: #fdfdfd;
 }
 
 /* Figma基準：コレクション ↔ カウントの視覚的gap ≒ 57px (1512px幅で3.77%) */
@@ -662,9 +1565,9 @@
 }
 
 .home-card-character {
-  --home-collection-character-scale: 3;
-  --home-collection-character-x: 0%;
-  --home-collection-character-y: 215%;
+  --home-collection-character-scale: 1.6;
+  --home-collection-character-x: 0;
+  --home-collection-character-y: 70%;
   --home-collection-character-position: center bottom;
 
   width: 100%;

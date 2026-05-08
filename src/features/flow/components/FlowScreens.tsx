@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type CSSProperties, type RefObject } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
 
 import type {
   AcquiredCharacter,
@@ -6,9 +6,25 @@ import type {
   CharacterExpression,
 } from "../../characters/types";
 import { getCharacterImageSrc } from "../../characters/characterCatalog";
-import { PostureViewer } from "../../posture";
+import { POSTURE_SPEC, PostureViewer } from "../../posture";
 import type { RuntimeSnapshot } from "../../posture/types";
+import {
+  emitOverlayPlacementHintRefresh,
+} from "../../overlay/overlayPlacementHintBridge";
+import {
+  isOverlayDebugUiEnabled,
+  OVERLAY_DEBUG_UI_STORAGE_KEY,
+} from "../../overlay/overlayState";
+import { playSoundPreview } from "../../sound/services/recoverySound";
+import {
+  BUILTIN_SOUND_OPTIONS,
+  type SoundSettings,
+} from "../../sound/types/soundSettings";
+import { playAcquisitionConfetti } from "../../../lib/playAcquisitionConfetti";
+import { shareResultCapture } from "../../../lib/shareResultCapture";
 import type { MeasurementResult, MeasurementStats } from "../types";
+
+import { PostureTimelineChart } from "./PostureTimelineChart";
 
 type HomeScreenProps = {
   characters: CharacterDefinition[];
@@ -34,8 +50,11 @@ type HomeScreenProps = {
 };
 
 type CodeReadScreenProps = {
-  nextCharacter: CharacterDefinition | null;
   isStartPending: boolean;
+  soundSettings: SoundSettings;
+  onSoundSettingsChange: (next: SoundSettings) => void;
+  isCharacterOverlayEnabled: boolean;
+  onCharacterOverlayEnabledChange: (enabled: boolean) => void;
   onStartMeasurement: () => void;
   onBackHome: () => void;
 };
@@ -43,21 +62,21 @@ type CodeReadScreenProps = {
 type MeasuringScreenProps = {
   videoRef: RefObject<HTMLVideoElement | null>;
   canvasRef: RefObject<HTMLCanvasElement | null>;
-  ready: boolean;
-  status: string;
   snapshot: RuntimeSnapshot;
   stats: MeasurementStats;
   isBadPosture: boolean;
   isPaused: boolean;
   isOverlayEnabled: boolean;
   isCharacterOverlayEnabled: boolean;
+  soundSettings: SoundSettings;
+  onSoundSettingsChange: (next: SoundSettings) => void;
   onFinishMeasurement: () => void;
   onPauseToggle: () => void;
   onOverlayEnabledChange: (enabled: boolean) => void;
   onCharacterOverlayEnabledChange: (enabled: boolean) => void;
   onShowCharacterOverlay: () => void;
   onResetCharacterPosition: () => void;
-  onOpenSoundSettings: () => void;
+  onRemeasureBaseline: () => void;
 };
 
 type PostureRegisteredScreenProps = {
@@ -105,6 +124,7 @@ export function HomeScreen(props: HomeScreenProps) {
     string | null
   >(null);
   const [isCollectionDetailClosing, setIsCollectionDetailClosing] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
 
   const acquiredCharactersById = new Map(
     props.acquiredCharacters.map((character) => [
@@ -148,38 +168,65 @@ export function HomeScreen(props: HomeScreenProps) {
 
   return (
     <main className="flow-screen home-single">
-      <FlowBrand />
-      <button
-        type="button"
-        className="home-single-profile"
-        aria-label="プロフィールキャラクターを変更"
-        onClick={() => setIsProfileDialogOpen(true)}
-      >
-        <CharacterFigure
-          character={props.profileCharacter}
-          className="home-single-profile-character"
-        />
-      </button>
-      {SHOW_DEBUG_FLOW_CONTROLS ? (
+      {/* ナビゲーションバー */}
+      <nav className="home-nav">
+        <FlowBrand />
         <button
           type="button"
-          className="home-single-debug-story"
-          onClick={props.onDebugShowOnboarding}
+          className="home-nav-profile"
+          aria-label="プロフィールキャラクターを変更"
+          onClick={() => setIsProfileDialogOpen(true)}
         >
-          DEBUG: ストーリー
+          <CharacterFigure
+            character={props.profileCharacter}
+            className="home-nav-profile-character"
+          />
         </button>
-      ) : null}
-      <section className="home-single-hero">
-        <div className="home-single-copy">
-          <h1>
-            良い姿勢を継続して
-            <br />
-            ピンアナゴをゲットしよう
-          </h1>
-          <p>コードをスマホでスキャンしてください</p>
+      </nav>
+
+      {/* ヒーローセクション */}
+      <section className="home-hero">
+        {SHOW_DEBUG_FLOW_CONTROLS ? (
+          <button
+            type="button"
+            className="home-single-debug-story"
+            onClick={props.onDebugShowOnboarding}
+          >
+            DEBUG: ストーリー
+          </button>
+        ) : null}
+        <div className="home-hero-content">
+          <div className="home-hero-copy">
+            <h1>
+              良い姿勢を継続して
+              <br />
+              ピンアナゴをゲットしよう
+            </h1>
+          </div>
+          <div className="home-hero-actions">
+            <button
+              type="button"
+              className="home-hero-action-btn"
+              onClick={() => setIsQrModalOpen(true)}
+            >
+              スマホと接続
+            </button>
+            <button
+              type="button"
+              className="home-hero-action-btn"
+              onClick={props.onDebugStartMeasurement}
+              disabled={props.isStartPending}
+            >
+              {props.isStartPending ? "登録中..." : "姿勢を測定"}
+            </button>
+          </div>
         </div>
-        <QrPanel {...props} />
+        <CharacterFigure
+          character={props.qrCharacter ?? props.profileCharacter}
+          className="home-hero-anago"
+        />
       </section>
+
       <CharacterCollection
         characters={props.characters}
         acquiredCharacters={props.acquiredCharacters}
@@ -189,6 +236,25 @@ export function HomeScreen(props: HomeScreenProps) {
         onToggleFavoriteCharacter={props.onToggleFavoriteCharacter}
         onDebugClearAcquiredCharacters={props.onDebugClearAcquiredCharacters}
       />
+
+      {/* QR接続モーダル */}
+      {isQrModalOpen ? (
+        <QrConnectionModal
+          qrImageDataUrl={props.qrImageDataUrl}
+          isPairingLoading={props.isPairingLoading}
+          pairingError={props.pairingError}
+          isPaired={props.isPaired}
+          deviceName={props.deviceName}
+          featuredCharacter={props.qrCharacter ?? props.profileCharacter}
+          onRefresh={props.onRefreshPairing}
+          onNext={() => {
+            setIsQrModalOpen(false);
+            props.onContinueFromPaired();
+          }}
+          onClose={() => setIsQrModalOpen(false)}
+        />
+      ) : null}
+
       {isProfileDialogOpen ? (
         <ProfileSelectionDialog
           isClosing={isProfileDialogClosing}
@@ -214,41 +280,297 @@ export function HomeScreen(props: HomeScreenProps) {
   );
 }
 
+function buildFrame53SoundLabel(path: string) {
+  const fileName = path.split("/").pop() ?? path;
+  return fileName.replace(/\.mp3$|\.wav$/i, "");
+}
+
+function stopPreviewStream(stream: MediaStream | null) {
+  stream?.getTracks().forEach((track) => track.stop());
+}
+
 export function CodeReadScreen({
-  nextCharacter,
   isStartPending,
+  soundSettings,
+  onSoundSettingsChange,
+  isCharacterOverlayEnabled,
+  onCharacterOverlayEnabledChange,
   onStartMeasurement,
   onBackHome,
 }: CodeReadScreenProps) {
+  const previewVideoRef = useRef<HTMLVideoElement | null>(null);
+  const previewStreamRef = useRef<MediaStream | null>(null);
+  const volumePreviewTimerRef = useRef<number | null>(null);
+  const [cameraPreview, setCameraPreview] = useState<"loading" | "live" | "error">(
+    "loading",
+  );
+
+  /** 効果音量スライダー：連続ドラッグでも再生が跳ね過ぎないようディバウンス */
+  function scheduleSoundVolumePreview(volume: number, selectedSrc: string) {
+    if (volumePreviewTimerRef.current !== null) {
+      clearTimeout(volumePreviewTimerRef.current);
+    }
+    volumePreviewTimerRef.current = window.setTimeout(() => {
+      volumePreviewTimerRef.current = null;
+      void playSoundPreview({ src: selectedSrc, volume });
+    }, 220);
+  }
+
+  /* 実カメラプレビュー（測定フックとは別ストリーム。画面離脱時に停止） */
+  useEffect(() => {
+    let cancelled = false;
+
+    async function attachPreview() {
+      if (
+        typeof navigator === "undefined" ||
+        !navigator.mediaDevices?.getUserMedia
+      ) {
+        setCameraPreview("error");
+        return;
+      }
+
+      try {
+        const stream =
+          await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: "user",
+              width: { ideal: 1280 },
+              height: { ideal: 720 },
+            },
+            audio: false,
+          }).catch(() =>
+            navigator.mediaDevices.getUserMedia({ video: true, audio: false }),
+          );
+
+        if (cancelled) {
+          stopPreviewStream(stream);
+          return;
+        }
+
+        previewStreamRef.current = stream;
+        const el = previewVideoRef.current;
+        if (!el) {
+          stopPreviewStream(stream);
+          previewStreamRef.current = null;
+          if (!cancelled) {
+            setCameraPreview("error");
+          }
+          return;
+        }
+
+        el.srcObject = stream;
+        void el.play().then(
+          () => {
+            if (!cancelled) {
+              setCameraPreview("live");
+            }
+          },
+          () => {
+            if (!cancelled) {
+              setCameraPreview("error");
+            }
+          },
+        );
+      } catch {
+        if (!cancelled) {
+          setCameraPreview("error");
+        }
+      }
+    }
+
+    void attachPreview();
+
+    return () => {
+      cancelled = true;
+      stopPreviewStream(previewStreamRef.current);
+      previewStreamRef.current = null;
+      const el = previewVideoRef.current;
+      if (el) {
+        el.srcObject = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (volumePreviewTimerRef.current !== null) {
+        clearTimeout(volumePreviewTimerRef.current);
+      }
+    };
+  }, []);
+
+  /* ブランドのみのときの戻り道（画面上に戻るボタンは無いため） */
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        onBackHome();
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onBackHome]);
+
+  const soundOptionList = useMemo(() => {
+    return Array.from(
+      new Set([
+        ...BUILTIN_SOUND_OPTIONS,
+        ...soundSettings.customSounds,
+      ]),
+    );
+  }, [soundSettings.customSounds]);
+
+  /* Frame 53「3」姿勢登録：ユーザー提供スクショのコピーに合わせる */
   return (
-    <main className="flow-screen flow-screen--focus code-read-screen">
+    <main className="flow-screen frame53-register-screen">
       <FlowBrand />
-      <button
-        type="button"
-        className="secondary-pill focus-home-button"
-        onClick={onBackHome}
-      >
-        ホームに戻る
-      </button>
-      <section className="focus-copy" aria-labelledby="code-read-heading">
-        <h1 id="code-read-heading">あなたの正しい姿勢を教えてください</h1>
-        <p>PCの前で姿勢を正してください</p>
-        <button
-          type="button"
-          className="primary-pill"
-          onClick={onStartMeasurement}
-          disabled={isStartPending}
+      <div className="frame53-panels-wrap">
+        <section className="frame53-left" aria-labelledby="frame53-register-heading">
+          <h1 id="frame53-register-heading" className="frame53-heading">
+            姿勢登録
+          </h1>
+          <p className="frame53-led">
+            肩の力を抜いて、背筋を伸ばしてください。
+          </p>
+          <hr className="frame53-rule" />
+          <div className="frame53-toggle-strip">
+            <span
+              id="frame53-switch-pin-label"
+              className="frame53-toggle-strip-label"
+            >
+              ピンアナゴ表示
+            </span>
+            <button
+              type="button"
+              className={`frame53-toggle-strip-switch ${isCharacterOverlayEnabled ? "is-on" : ""}`}
+              role="switch"
+              aria-checked={isCharacterOverlayEnabled}
+              aria-labelledby="frame53-switch-pin-label"
+              onClick={() =>
+                onCharacterOverlayEnabledChange(!isCharacterOverlayEnabled)
+              }
+            >
+              <span
+                className="frame53-toggle-strip-switch-knob"
+                aria-hidden
+              />
+            </button>
+          </div>
+          <div className="frame53-toggle-strip">
+            <span
+              id="frame53-switch-sound-label"
+              className="frame53-toggle-strip-label"
+            >
+              サウンド
+            </span>
+            <button
+              type="button"
+              className={`frame53-toggle-strip-switch ${soundSettings.enabled ? "is-on" : ""}`}
+              role="switch"
+              aria-checked={soundSettings.enabled}
+              aria-labelledby="frame53-switch-sound-label"
+              onClick={() =>
+                onSoundSettingsChange({
+                  ...soundSettings,
+                  enabled: !soundSettings.enabled,
+                })
+              }
+            >
+              <span
+                className="frame53-toggle-strip-switch-knob"
+                aria-hidden
+              />
+            </button>
+          </div>
+
+          <div
+            className={`frame53-sound-card ${!soundSettings.enabled ? "frame53-muted" : ""}`}
+          >
+            <label className="frame53-volume-row" htmlFor="frame53-volume">
+              <span className="frame53-volume-visible-label">音量</span>
+              <input
+                id="frame53-volume"
+                className="frame53-volume-range"
+                type="range"
+                min={0}
+                max={100}
+                value={Math.round(soundSettings.volume * 100)}
+                style={{
+                  ["--frame53-volume-pct" as string]: `${Math.round(soundSettings.volume * 100)}%`,
+                }}
+                onChange={(e) => {
+                  const volume = Number(e.target.value) / 100;
+                  onSoundSettingsChange({
+                    ...soundSettings,
+                    volume,
+                  });
+                  scheduleSoundVolumePreview(
+                    volume,
+                    soundSettings.selectedSound,
+                  );
+                }}
+              />
+            </label>
+            <p className="frame53-sfx-label">効果音</p>
+            <div className="frame53-sfx-shell">
+              <select
+                className="frame53-sfx-select"
+                aria-label="効果音の種類"
+                value={soundSettings.selectedSound}
+                onChange={(e) => {
+                  const selectedSound = e.target.value;
+                  onSoundSettingsChange({
+                    ...soundSettings,
+                    selectedSound,
+                  });
+                  void playSoundPreview({
+                    src: selectedSound,
+                    volume: soundSettings.volume,
+                  });
+                }}
+              >
+                {soundOptionList.map((option) => (
+                  <option key={option} value={option}>
+                    {buildFrame53SoundLabel(option)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="frame53-footer">
+            <button
+              type="button"
+              className="frame53-primary"
+              onClick={onStartMeasurement}
+              disabled={isStartPending}
+            >
+              {isStartPending ? "準備中…" : "はじめる"}
+            </button>
+          </div>
+        </section>
+        <section
+          className="frame53-camera-panel"
+          aria-label="カメラプレビュー"
         >
-          {isStartPending ? "登録中..." : "この姿勢を登録する"}
-        </button>
-      </section>
-      <section className="focus-character" aria-label="次に出会えるキャラクター">
-        <p className="focus-character-callout">ピン</p>
-        <CharacterFigure
-          character={nextCharacter}
-          className="focus-character-image"
-        />
-      </section>
+          <video
+            ref={previewVideoRef}
+            className="frame53-camera-video"
+            playsInline
+            muted
+            aria-hidden="true"
+          />
+          {cameraPreview !== "live" ? (
+            <p
+              className="frame53-camera-overlay-text"
+              aria-live="polite"
+            >
+              {cameraPreview === "error"
+                ? "カメラを開始できません"
+                : "カメラ"}
+            </p>
+          ) : null}
+        </section>
+      </div>
     </main>
   );
 }
@@ -256,21 +578,21 @@ export function CodeReadScreen({
 export function MeasuringScreen({
   videoRef,
   canvasRef,
-  ready,
-  status,
   snapshot,
   stats,
   isBadPosture,
   isPaused,
   isOverlayEnabled,
   isCharacterOverlayEnabled,
+  soundSettings,
+  onSoundSettingsChange,
   onFinishMeasurement,
   onPauseToggle,
   onOverlayEnabledChange,
   onCharacterOverlayEnabledChange,
   onShowCharacterOverlay,
   onResetCharacterPosition,
-  onOpenSoundSettings,
+  onRemeasureBaseline,
 }: MeasuringScreenProps) {
   const isWarmup = !snapshot.baselineReady;
   const warmupSeconds = Math.max(
@@ -278,77 +600,320 @@ export function MeasuringScreen({
     Math.ceil(snapshot.warmupRemainingMs / 1000),
   );
 
+  const showMeasureDevTools =
+    import.meta.env.DEV || isOverlayDebugUiEnabled();
+
+  const volumePreviewTimerRef = useRef<number | null>(null);
+  useEffect(() => {
+    return () => {
+      if (volumePreviewTimerRef.current !== null) {
+        clearTimeout(volumePreviewTimerRef.current);
+      }
+    };
+  }, []);
+
+  function scheduleMeasureVolumePreview(volume: number, selectedSrc: string) {
+    if (volumePreviewTimerRef.current !== null) {
+      clearTimeout(volumePreviewTimerRef.current);
+    }
+    volumePreviewTimerRef.current = window.setTimeout(() => {
+      volumePreviewTimerRef.current = null;
+      void playSoundPreview({ src: selectedSrc, volume });
+    }, 220);
+  }
+
+  const soundOptionList = useMemo(() => {
+    return Array.from(
+      new Set([...BUILTIN_SOUND_OPTIONS, ...soundSettings.customSounds]),
+    );
+  }, [soundSettings.customSounds]);
+
+  const [placementHintEmitNotice, setPlacementHintEmitNotice] = useState<
+    "ok" | "fail" | null
+  >(null);
+  const placementHintEmitTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (placementHintEmitTimerRef.current !== null) {
+        window.clearTimeout(placementHintEmitTimerRef.current);
+      }
+    };
+  }, []);
+
+  async function handleEmitOverlayPlacementHintRefresh() {
+    if (placementHintEmitTimerRef.current !== null) {
+      window.clearTimeout(placementHintEmitTimerRef.current);
+    }
+    const ok = await emitOverlayPlacementHintRefresh();
+    setPlacementHintEmitNotice(ok ? "ok" : "fail");
+    placementHintEmitTimerRef.current = window.setTimeout(() => {
+      setPlacementHintEmitNotice(null);
+      placementHintEmitTimerRef.current = null;
+    }, 3400);
+  }
+
+  const headingId = "measuring-heading";
+  const title = isWarmup
+    ? "基準姿勢を測定中"
+    : isPaused
+      ? "一時停止中"
+      : "測定中";
+
+  const gaugePercent = isWarmup
+    ? 0
+    : Math.round(Math.min(1, Math.max(0, stats.goodRatio)) * 100);
+  const stopDisabled =
+    !snapshot.baselineReady || stats.activeMeasurementMs <= 0;
+  const pauseDisabled = isWarmup;
+
   return (
     <main className="flow-screen measuring-screen">
       <FlowBrand />
-      <section className="measure-header" aria-labelledby="measuring-heading">
-        <div>
-          <h1 id="measuring-heading">
-            {isWarmup ? "基準姿勢を測定中" : "姿勢を測定中"}
-          </h1>
-          <p>
-            {isWarmup
-              ? "肩の力を抜いて、正面を向いたまま少し待ってください。"
-              : "ピンアナゴを逃がさないように、良い姿勢をキープしよう。"}
-          </p>
-        </div>
-        <div className="measure-actions">
-          <button type="button" className="secondary-pill" onClick={onPauseToggle}>
-            {isPaused ? "再開" : "一時停止"}
-          </button>
+      <section className="measure-layout" aria-labelledby={headingId}>
+        <aside className="measure-control-card" aria-label="測定コントロール">
+          <header className="measure-control-head">
+            <div>
+              <h1 id={headingId} className="measure-control-title">
+                {title}
+              </h1>
+            </div>
+            <div className="measure-control-icon-actions">
+              <button
+                type="button"
+                className={`measure-icon-btn measure-icon-btn--pause ${isPaused ? "is-resume" : ""}`}
+                onClick={onPauseToggle}
+                disabled={pauseDisabled}
+                aria-label={isPaused ? "再開" : "一時停止"}
+              >
+                {isPaused ? (
+                  <MeasurePlayIcon />
+                ) : (
+                  <MeasurePauseIcon />
+                )}
+              </button>
+              <button
+                type="button"
+                className="measure-icon-btn measure-icon-btn--stop"
+                onClick={onFinishMeasurement}
+                disabled={stopDisabled}
+                aria-label="測定終了"
+              >
+                <MeasureStopIcon />
+              </button>
+            </div>
+          </header>
+
+          <div className="measure-metrics-row">
+            <MetricTile
+              label={isWarmup ? "測定開始まで" : "測定時間"}
+              value={
+                isWarmup ? `${warmupSeconds}s` : formatDuration(stats.activeMeasurementMs)
+              }
+            />
+            <MetricTile
+              label="良い姿勢率"
+              value={
+                isWarmup ? "—" : formatPercent(stats.goodRatio)
+              }
+            />
+          </div>
+
+          <div className="frame53-toggle-strip">
+            <span
+              id="measure-pin-label"
+              className="frame53-toggle-strip-label"
+            >
+              ピンアナゴ表示
+            </span>
+            <button
+              type="button"
+              className={`frame53-toggle-strip-switch ${isCharacterOverlayEnabled ? "is-on" : ""}`}
+              role="switch"
+              aria-checked={isCharacterOverlayEnabled}
+              aria-labelledby="measure-pin-label"
+              onClick={() =>
+                onCharacterOverlayEnabledChange(!isCharacterOverlayEnabled)
+              }
+            >
+              <span className="frame53-toggle-strip-switch-knob" aria-hidden />
+            </button>
+          </div>
+
+          <div className="frame53-toggle-strip">
+            <span
+              id="measure-sound-label"
+              className="frame53-toggle-strip-label"
+            >
+              サウンド
+            </span>
+            <button
+              type="button"
+              className={`frame53-toggle-strip-switch ${soundSettings.enabled ? "is-on" : ""}`}
+              role="switch"
+              aria-checked={soundSettings.enabled}
+              aria-labelledby="measure-sound-label"
+              onClick={() =>
+                onSoundSettingsChange({
+                  ...soundSettings,
+                  enabled: !soundSettings.enabled,
+                })
+              }
+            >
+              <span className="frame53-toggle-strip-switch-knob" aria-hidden />
+            </button>
+          </div>
+
+          <div
+            className={`frame53-sound-card ${!soundSettings.enabled ? "frame53-muted" : ""}`}
+          >
+            <label className="frame53-volume-row" htmlFor="measure-volume">
+              <span className="frame53-volume-visible-label">音量</span>
+              <input
+                id="measure-volume"
+                className="frame53-volume-range"
+                type="range"
+                min={0}
+                max={100}
+                value={Math.round(soundSettings.volume * 100)}
+                style={{
+                  ["--frame53-volume-pct" as string]: `${Math.round(soundSettings.volume * 100)}%`,
+                }}
+                onChange={(e) => {
+                  const volume = Number(e.target.value) / 100;
+                  onSoundSettingsChange({
+                    ...soundSettings,
+                    volume,
+                  });
+                  scheduleMeasureVolumePreview(volume, soundSettings.selectedSound);
+                }}
+              />
+            </label>
+            <p className="frame53-sfx-label">効果音</p>
+            <div className="frame53-sfx-shell">
+              <select
+                className="frame53-sfx-select"
+                aria-label="効果音の種類"
+                value={soundSettings.selectedSound}
+                onChange={(e) => {
+                  const selectedSound = e.target.value;
+                  onSoundSettingsChange({
+                    ...soundSettings,
+                    selectedSound,
+                  });
+                  void playSoundPreview({
+                    src: selectedSound,
+                    volume: soundSettings.volume,
+                  });
+                }}
+              >
+                {soundOptionList.map((option) => (
+                  <option key={option} value={option}>
+                    {buildFrame53SoundLabel(option)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           <button
             type="button"
-            className="primary-pill"
-            onClick={onFinishMeasurement}
-            disabled={!snapshot.baselineReady || stats.activeMeasurementMs <= 0}
+            className="measure-baseline-cta"
+            onClick={onRemeasureBaseline}
+            disabled={isWarmup}
           >
-            測定終了
+            姿勢を再測定する
           </button>
-        </div>
-      </section>
 
-      <section className="measure-layout">
-        <div className="measure-camera-panel">
-          <PostureViewer
-            videoRef={videoRef}
-            canvasRef={canvasRef}
-            isBadPosture={isBadPosture}
-            isOverlayEnabled={isOverlayEnabled}
-            isCharacterOverlayEnabled={isCharacterOverlayEnabled}
-            experiment={snapshot.experiment}
-            onOverlayEnabledChange={onOverlayEnabledChange}
-            onCharacterOverlayEnabledChange={onCharacterOverlayEnabledChange}
-          />
-        </div>
-
-        <aside className="measure-status-panel" aria-label="測定状況">
-          <div className={`status ${ready ? "ok" : "warn"}`}>{status}</div>
-          <MetricTile
-            label={isWarmup ? "測定開始まで" : "測定時間"}
-            value={isWarmup ? `${warmupSeconds}s` : formatDuration(stats.activeMeasurementMs)}
-          />
-          <MetricTile label="良い姿勢" value={formatPercent(stats.goodRatio)} />
-          <MetricTile
-            label="現在の状態"
-            value={formatPostureState(snapshot.postureState, isWarmup, isPaused)}
-          />
-          <div className="measure-progress" aria-hidden="true">
-            <span style={{ width: `${Math.round(stats.goodRatio * 100)}%` }} />
-          </div>
-          <div className="measure-tool-row">
-            {!isCharacterOverlayEnabled ? (
-              <button type="button" className="tool-pill" onClick={onShowCharacterOverlay}>
-                キャラ表示
+          {showMeasureDevTools ? (
+            <div className="measure-debug-tools">
+              <p className="measure-debug-tools-label">開発・検証</p>
+              <div className="frame53-toggle-strip measure-debug-overlay-row">
+                <span
+                  id="measure-dev-overlay-label"
+                  className="frame53-toggle-strip-label"
+                >
+                  ライン表示
+                </span>
+                <button
+                  type="button"
+                  className={`frame53-toggle-strip-switch ${isOverlayEnabled ? "is-on" : ""}`}
+                  role="switch"
+                  aria-checked={isOverlayEnabled}
+                  aria-labelledby="measure-dev-overlay-label"
+                  onClick={() => onOverlayEnabledChange(!isOverlayEnabled)}
+                >
+                  <span className="frame53-toggle-strip-switch-knob" aria-hidden />
+                </button>
+              </div>
+              {!isCharacterOverlayEnabled ? (
+                <button type="button" className="tool-pill" onClick={onShowCharacterOverlay}>
+                  キャラ表示
+                </button>
+              ) : null}
+              <button
+                type="button"
+                className="tool-pill measure-tool-overlay-hint-debug"
+                title={`クリックでデスクトップオーバーレイへ配置ヒント再表示を送る（${OVERLAY_DEBUG_UI_STORAGE_KEY}）`}
+                onClick={() => void handleEmitOverlayPlacementHintRefresh()}
+              >
+                配置ヒント(debug)
               </button>
-            ) : null}
-            <button type="button" className="tool-pill" onClick={onResetCharacterPosition}>
-              位置リセット
-            </button>
-            <button type="button" className="tool-pill" onClick={onOpenSoundSettings}>
-              サウンド
-            </button>
-          </div>
+              <button type="button" className="tool-pill" onClick={onResetCharacterPosition}>
+                位置リセット
+              </button>
+              {placementHintEmitNotice ? (
+                <p
+                  className={`measure-placement-hint-emit-feedback measure-placement-hint-emit-feedback--${placementHintEmitNotice}`}
+                  role="status"
+                >
+                  {placementHintEmitNotice === "ok"
+                    ? "配置ヒントをオーバーレイへ送りました。画面右下のキャラ付近を確認してください。"
+                    : "送信できませんでした（ブラウザでは Tauri がありません）。"}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
         </aside>
+
+        <div className="measure-camera-panel measure-camera-panel--figma">
+          <div className="measure-camera-stack">
+            <div
+              className={`measure-posture-gauge ${isWarmup ? "measure-posture-gauge--warmup" : ""}`}
+              aria-hidden={isWarmup}
+            >
+              <span className="measure-posture-gauge-end measure-posture-gauge-end--bad">
+                悪い
+              </span>
+              <div className="measure-posture-gauge-track">
+                <div
+                  className="measure-posture-gauge-fill"
+                  style={{ width: `${gaugePercent}%` }}
+                />
+              </div>
+              <span className="measure-posture-gauge-end measure-posture-gauge-end--good">
+                良い
+              </span>
+            </div>
+            <PostureViewer
+              variant="measurement"
+              videoRef={videoRef}
+              canvasRef={canvasRef}
+              isBadPosture={isBadPosture}
+              isOverlayEnabled={isOverlayEnabled}
+              isCharacterOverlayEnabled={isCharacterOverlayEnabled}
+              experiment={snapshot.experiment}
+              onOverlayEnabledChange={onOverlayEnabledChange}
+              onCharacterOverlayEnabledChange={onCharacterOverlayEnabledChange}
+            />
+            {isWarmup ? (
+              <WarmupCountdownVeil
+                remainingMs={snapshot.warmupRemainingMs}
+                totalMs={POSTURE_SPEC.warmupMs}
+              />
+            ) : null}
+          </div>
+        </div>
       </section>
     </main>
   );
@@ -360,52 +925,246 @@ export function PostureRegisteredScreen({
   onBackHome,
   onMeasureAgain,
 }: PostureRegisteredScreenProps) {
-  const wasSuccessful = result.rewardQualified;
+  const wasSuccessful =
+    Boolean(result.rewardQualified) && acquiredCharacter !== null;
+  const timelineVariant = wasSuccessful ? "success" : "fail";
+
+  const shareCaptureRef = useRef<HTMLDivElement>(null);
+  const [shareBusy, setShareBusy] = useState(false);
+  const [shareFeedback, setShareFeedback] = useState<string | null>(null);
+
+  const personalityTags =
+    acquiredCharacter !== null && acquiredCharacter.personalityTags.length > 0
+      ? acquiredCharacter.personalityTags.slice(0, 2)
+      : (["?????", "?????"] as const);
+
+  /** キャラ primary / soft でアクセントを上書き（クラスのフォールバック値より優先） */
+  const characterThemeVars = useMemo(() => {
+    if (!wasSuccessful || acquiredCharacter === null) {
+      return undefined;
+    }
+    return {
+      "--result-stat-accent": acquiredCharacter.characterColor.primary,
+      "--result-share-icon": acquiredCharacter.characterColor.primary,
+      "--result-meta-icon": acquiredCharacter.characterColor.primary,
+      "--result-portrait-bg": acquiredCharacter.characterColor.soft,
+      "--result-timeline-good": acquiredCharacter.characterColor.primary,
+    } as CSSProperties;
+  }, [wasSuccessful, acquiredCharacter]);
+
+  const handleShareResult = useCallback(async () => {
+    if (
+      !wasSuccessful ||
+      shareCaptureRef.current === null ||
+      shareBusy
+    ) {
+      return;
+    }
+    setShareBusy(true);
+    setShareFeedback(null);
+    try {
+      const outcome = await shareResultCapture(shareCaptureRef.current);
+      if (outcome === "downloaded") {
+        const msg = "画像をダウンロードしました";
+        setShareFeedback(msg);
+        window.setTimeout(() => {
+          setShareFeedback((current) => (current === msg ? null : current));
+        }, 4200);
+      } else if (outcome === "copied") {
+        const msg = "画像をクリップボードにコピーしました";
+        setShareFeedback(msg);
+        window.setTimeout(() => {
+          setShareFeedback((current) => (current === msg ? null : current));
+        }, 4200);
+      } else if (outcome === "shared") {
+        setShareFeedback(null);
+      }
+    } catch {
+      setShareFeedback("共有に失敗しました。もう一度お試しください。");
+    } finally {
+      setShareBusy(false);
+    }
+  }, [shareBusy, wasSuccessful]);
+
+  useEffect(() => {
+    if (!wasSuccessful) {
+      return;
+    }
+    playAcquisitionConfetti(
+      acquiredCharacter !== null
+        ? { characterColors: acquiredCharacter.characterColor }
+        : undefined,
+    );
+  }, [acquiredCharacter, wasSuccessful, result.id]);
 
   return (
-    <main className="flow-screen flow-screen--focus result-screen">
+    <main
+      className={`flow-screen result-screen result-screen--registered result-screen--accent-${timelineVariant}`}
+      style={characterThemeVars}
+    >
       <FlowBrand />
-      <section className="focus-copy" aria-labelledby="registered-heading">
-        <h1 id="registered-heading">
-          {wasSuccessful
-            ? "ピンアナゴを逃がさないように良い姿勢をキープしました"
-            : "もう少しでピンアナゴに出会えそうです"}
-        </h1>
-        <p>
-          測定時間 {formatDuration(result.activeMeasurementMs)} / 良い姿勢{" "}
-          {formatPercent(result.goodRatio)}
-        </p>
-        <div className="result-metrics">
-          <MetricTile label="良い姿勢時間" value={formatDuration(result.goodMs)} />
-          <MetricTile
-            label="キャラクター"
-            value={acquiredCharacter ? "習得" : "未習得"}
-          />
-        </div>
-        <div className="result-actions">
-          <button type="button" className="primary-pill" onClick={onBackHome}>
-            ホームへ
-          </button>
-          <button type="button" className="secondary-pill" onClick={onMeasureAgain}>
-            もう一度測定
-          </button>
-        </div>
-      </section>
 
-      <section className="focus-character result-character" aria-label="測定結果">
-        <p>{acquiredCharacter ? acquiredCharacter.name : "次回チャレンジ"}</p>
-        <CharacterFigure
-          character={acquiredCharacter}
-          className="focus-character-image"
-          expression="happy"
-        />
-        {acquiredCharacter ? (
-          <small>{acquiredCharacter.story}</small>
-        ) : (
-          <small>良い姿勢が50%以上になるとキャラクターを習得できます。</small>
-        )}
-      </section>
+      <div ref={shareCaptureRef} className="result-registered-capture-root">
+        <header className="result-registered-hero" aria-labelledby="registered-heading">
+          <p className="result-registered-eyebrow">今日のチンアナゴ</p>
+          <h1 id="registered-heading" className="result-registered-title">
+            {wasSuccessful ? "獲得" : "獲得ならず…"}
+          </h1>
+        </header>
+
+        <article className="result-registered-card" aria-label="測定結果">
+        <section
+          className="result-registered-col result-registered-col--character"
+          aria-label="キャラクター"
+        >
+          <div className="result-registered-portrait">
+            <CharacterFigure
+              character={acquiredCharacter}
+              className="result-registered-figure"
+              expression={wasSuccessful ? "happy" : "bad"}
+            />
+          </div>
+          <p className="result-registered-name">
+            {acquiredCharacter?.name ?? "?????"}
+          </p>
+          <ul className="result-registered-tags">
+            {personalityTags.map((tag, index) => (
+              <li key={`${tag}-${index}`} className="result-registered-tag">
+                {tag}
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section
+          className="result-registered-col result-registered-col--stats"
+          aria-label="統計とタイムライン"
+        >
+          <div className="result-registered-stats-header">
+            <button
+              type="button"
+              className={`result-registered-share ${shareBusy ? "is-busy" : ""}`}
+              aria-label={
+                wasSuccessful ? "結果を画像で共有" : "獲得時のみ共有できます"
+              }
+              title={
+                wasSuccessful
+                  ? "結果を画像で共有（または保存）します"
+                  : "獲得時のみ共有できます"
+              }
+              disabled={!wasSuccessful || shareBusy}
+              aria-disabled={!wasSuccessful}
+              aria-busy={shareBusy}
+              onClick={() => void handleShareResult()}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width={20}
+                height={20}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                aria-hidden="true"
+              >
+                <path d="M12 16V4m0 0 4 4m-4-4L8 8" />
+                <rect x="6" y="14" width={12} height={8} rx={2} ry={2} />
+              </svg>
+            </button>
+          </div>
+
+          <div className="result-registered-stat-grid">
+            <div className="result-registered-stat-cell">
+              <span className="result-registered-stat-label">良い姿勢時間</span>
+              <strong className="result-registered-stat-value">
+                {formatDuration(result.goodMs)}
+              </strong>
+            </div>
+            <div className="result-registered-stat-cell">
+              <span className="result-registered-stat-label">良い姿勢率</span>
+              <strong className="result-registered-stat-value">
+                {formatPercent(result.goodRatio)}
+              </strong>
+            </div>
+          </div>
+
+          <PostureTimelineChart
+            segments={result.postureTimeline}
+            totalMs={result.activeMeasurementMs}
+            variant={timelineVariant}
+          />
+
+          <dl className="result-registered-meta">
+            <div className="result-registered-meta-row">
+              <dt className="result-registered-meta-label">
+                <span className="result-registered-meta-icon" aria-hidden>
+                  <RegisteredCalendarGlyph />
+                </span>
+                獲得日
+              </dt>
+              <dd className="result-registered-meta-value">
+                {formatAcquiredAt(result.endedAt)}
+              </dd>
+            </div>
+            <div className="result-registered-meta-row">
+              <dt className="result-registered-meta-label">
+                <span className="result-registered-meta-icon" aria-hidden>
+                  <RegisteredClockGlyph />
+                </span>
+                測定時間
+              </dt>
+              <dd className="result-registered-meta-value">
+                {formatDuration(result.activeMeasurementMs)}
+              </dd>
+            </div>
+          </dl>
+        </section>
+        </article>
+      </div>
+
+      <p
+        className="result-registered-share-feedback"
+        role="status"
+        aria-live="polite"
+      >
+        {shareFeedback ?? ""}
+      </p>
+
+      <footer className="result-registered-footer">
+        <button
+          type="button"
+          className={`result-registered-home ${wasSuccessful ? "is-acquired" : "is-miss"}`}
+          onClick={onBackHome}
+        >
+          ホーム
+        </button>
+        <button
+          type="button"
+          className="result-registered-again"
+          onClick={onMeasureAgain}
+        >
+          もう一度測定
+        </button>
+      </footer>
     </main>
+  );
+}
+
+function RegisteredCalendarGlyph() {
+  return (
+    <svg viewBox="0 0 20 20" width={18} height={18} aria-hidden focusable={false}>
+      <rect x="3" y="4" width="14" height="13" rx="2" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M3 8h14M8 2v4M12 2v4" fill="none" stroke="currentColor" strokeWidth="1.5" />
+    </svg>
+  );
+}
+
+function RegisteredClockGlyph() {
+  return (
+    <svg viewBox="0 0 20 20" width={18} height={18} aria-hidden focusable={false}>
+      <circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M10 7v4l3 2" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
   );
 }
 
@@ -422,45 +1181,249 @@ function FlowBrand() {
   );
 }
 
-function QrPanel({
+function QrConnectionModal({
   qrImageDataUrl,
   isPairingLoading,
-  onContinueFromPaired,
-}: HomeScreenProps) {
+  pairingError,
+  isPaired,
+  deviceName: _deviceName,
+  featuredCharacter,
+  onRefresh,
+  onNext,
+  onClose,
+}: {
+  qrImageDataUrl: string;
+  isPairingLoading: boolean;
+  pairingError: string | null;
+  isPaired: boolean;
+  deviceName: string | null;
+  featuredCharacter: CharacterDefinition | null;
+  onRefresh: () => void;
+  onNext: () => void;
+  onClose: () => void;
+}) {
+  /* Figma Frame 53：1 = QR／接続済みでも 次へ で 2 へ進む（自動で飛ばさない） */
+  const [debugForceStep2, setDebugForceStep2] = useState(false);
+  const [pairedAdvanceToStep2, setPairedAdvanceToStep2] = useState(false);
+
+  useEffect(() => {
+    if (!isPaired) {
+      setPairedAdvanceToStep2(false);
+    }
+  }, [isPaired]);
+
+  const step: 1 | 2 =
+    SHOW_DEBUG_FLOW_CONTROLS && debugForceStep2
+      ? 2
+      : isPaired && pairedAdvanceToStep2
+        ? 2
+        : 1;
+  const nextDisabled = step === 1 && !isPaired;
+  /* 見た目だけのサウンド＆触覚トグル（機能なし） */
+  const [soundHapticOn, setSoundHapticOn] = useState(true);
+
   return (
-    <div className="home-single-qr">
-      <div className="home-single-qr-stage">
-        {qrImageDataUrl ? (
-          <div className="home-single-qr-frame">
-            <img
-              className="home-single-qr-anago"
-              src="/logo/QRアナゴ.png"
-              alt=""
-              draggable={false}
-              aria-hidden="true"
-            />
-            <div className="home-single-qr-core">
-              <img
-                className="home-single-qr-image"
-                src={qrImageDataUrl}
-                alt="ペアリングQRコード"
-              />
+    <div className="qr-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="qr-modal-heading">
+      <div className="qr-modal-brand">
+        <FlowBrand />
+      </div>
+      <button
+        type="button"
+        className="qr-modal-close"
+        onClick={onClose}
+        aria-label="閉じる"
+      >
+        ×
+      </button>
+      <div className="qr-modal-panels">
+        <div className={`qr-modal-left qr-modal-left--step${step}`}>
+          {step === 1 ? (
+            <>
+              <h2 id="qr-modal-heading" className="qr-modal-title">
+                スマホと接続
+              </h2>
+              <p className="qr-modal-subtitle">
+                スマートフォンでQRを読み込んでください
+              </p>
+              <div className="qr-modal-phone-area">
+                <img
+                  src="/phone_QR.png"
+                  alt=""
+                  className="qr-modal-phone-img"
+                  draggable={false}
+                  aria-hidden="true"
+                />
+              </div>
+              {pairingError ? (
+                <p className="qr-modal-error-label">{pairingError}</p>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <h2 id="qr-modal-heading" className="qr-modal-title">
+                接続完了
+              </h2>
+              <p className="qr-modal-subtitle">
+                スマホの触覚をONにしてください
+              </p>
+              <div className="qr-modal-sound-haptic-toggle-row">
+                <span className="qr-modal-sound-haptic-toggle-label" id="qr-haptic-toggle-label">
+                  サウンドと触覚
+                </span>
+                <button
+                  type="button"
+                  className={`qr-modal-sound-haptic-switch ${soundHapticOn ? "is-on" : ""}`}
+                  role="switch"
+                  aria-checked={soundHapticOn}
+                  aria-labelledby="qr-haptic-toggle-label"
+                  onClick={() => setSoundHapticOn((v) => !v)}
+                >
+                  {/* 視覚のノブ（意味は状態のみ） */}
+                  <span className="qr-modal-sound-haptic-switch-knob" aria-hidden />
+                </button>
+              </div>
+              <div className="qr-modal-vibe-area">
+                <div className="qr-modal-vibe-stage">
+                  <span
+                    className="qr-modal-vibe-arcs qr-modal-vibe-arcs--left"
+                    aria-hidden="true"
+                  >
+                    {/* 触覚波紋（左）：3本のアーチを順に出してリップル感を出す */}
+                    <svg
+                      viewBox="0 0 40 80"
+                      fill="none"
+                      preserveAspectRatio="xMidYMid meet"
+                    >
+                      <path d="M34 8 C 14 26 14 54 34 72" />
+                      <path d="M24 16 C 10 30 10 50 24 64" />
+                      <path d="M14 24 C 6 34 6 46 14 56" />
+                    </svg>
+                  </span>
+                  <img
+                    src="/phone.png"
+                    alt=""
+                    className="qr-modal-vibe-img"
+                    draggable={false}
+                    aria-hidden="true"
+                  />
+                  <span
+                    className="qr-modal-vibe-arcs qr-modal-vibe-arcs--right"
+                    aria-hidden="true"
+                  >
+                    {/* 触覚波紋（右） */}
+                    <svg
+                      viewBox="0 0 40 80"
+                      fill="none"
+                      preserveAspectRatio="xMidYMid meet"
+                    >
+                      <path d="M6 8 C 26 26 26 54 6 72" />
+                      <path d="M16 16 C 30 30 30 50 16 64" />
+                      <path d="M26 24 C 34 34 34 46 26 56" />
+                    </svg>
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
+          <button
+            type="button"
+            className="qr-modal-next-btn"
+            onClick={() => {
+              if (nextDisabled) {
+                return;
+              }
+              if (step === 1 && isPaired) {
+                setPairedAdvanceToStep2(true);
+                return;
+              }
+              onNext();
+            }}
+            disabled={nextDisabled}
+          >
+            次へ
+          </button>
+        </div>
+
+        {step === 1 ? (
+          <div className="qr-modal-right-col">
+            <div className="qr-modal-right qr-modal-right--step1">
+              <div className="qr-modal-qr-stack">
+                {/*
+                  Figma 「1」奥→手前：①step1半透明フロスト（余白〜角丸）
+                  →②白(#fff)→③グレーアナゴ→④QR／Frame44 インナー99／QR約483中央
+                */}
+                <div className="qr-modal-qr-composite">
+                  <div className="qr-modal-qr-white-mat" aria-hidden />
+                  <img
+                    src="/logo/QRアナゴ.png"
+                    alt=""
+                    className="qr-modal-qr-anago-behind"
+                    draggable={false}
+                    aria-hidden="true"
+                  />
+                  {qrImageDataUrl ? (
+                    <img
+                      src={qrImageDataUrl}
+                      alt="ペアリングQRコード"
+                      className="qr-modal-qr-image"
+                    />
+                  ) : (
+                    <div className="qr-modal-qr-placeholder">
+                      {isPairingLoading ? "QR準備中..." : "QRを表示できません"}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
+            {qrImageDataUrl ? (
+              <button
+                type="button"
+                className="qr-modal-refresh-btn"
+                onClick={onRefresh}
+              >
+                QRを更新
+              </button>
+            ) : null}
           </div>
         ) : (
-          <div className="home-single-qr-placeholder">
-            {isPairingLoading ? "QR準備中..." : "QRを表示できません"}
+          <div className="qr-modal-right-col qr-modal-right-col--step2">
+            <div className="qr-modal-right qr-modal-right--step2">
+              {/*
+                本会話での「今日のアナゴ」に相当する、今回解禁予定キャラの予告エリア。
+                サイズ・位置は home.css の .qr-modal-right--step2 内の
+                --qr-today-heading-cqw 等を開発者が直接変更して確定させる。
+              */}
+              <div id="qr-today-teaser" className="qr-modal-today-teaser">
+                <p className="qr-modal-today-heading">今日のピンアナゴ</p>
+                <div className="qr-modal-today-character qr-modal-today-character--animated">
+                  <CharacterFigure
+                    character={featuredCharacter}
+                    className="qr-modal-today-character-img"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
+
       {SHOW_DEBUG_FLOW_CONTROLS ? (
-        <button
-          type="button"
-          className="home-single-debug-skip"
-          onClick={onContinueFromPaired}
-        >
-          DEBUG: QRスキップ
-        </button>
+        <div className="qr-modal-debug-actions">
+          <button
+            type="button"
+            className="home-single-debug-skip qr-modal-debug-skip"
+            onClick={onNext}
+          >
+            DEBUG: QRスキップ
+          </button>
+          <button
+            type="button"
+            className="home-single-debug-skip qr-modal-debug-step2"
+            onClick={() => setDebugForceStep2((v) => !v)}
+          >
+            DEBUG: Step2 {debugForceStep2 ? "OFF" : "プレビュー"}
+          </button>
+        </div>
       ) : null}
     </div>
   );
@@ -903,29 +1866,6 @@ function formatOptionalPercent(ratio: number | undefined) {
     : "-";
 }
 
-function formatPostureState(
-  postureState: RuntimeSnapshot["postureState"],
-  isWarmup: boolean,
-  isPaused: boolean,
-) {
-  if (isPaused) {
-    return "一時停止";
-  }
-
-  if (isWarmup) {
-    return "準備中";
-  }
-
-  switch (postureState) {
-    case "good":
-      return "良い姿勢";
-    case "bad":
-      return "要調整";
-    case "hold":
-      return "判定中";
-  }
-}
-
 function formatDuration(durationMs: number) {
   const totalSeconds = Math.max(0, Math.floor(durationMs / 1000));
   const minutes = Math.floor(totalSeconds / 60);
@@ -939,4 +1879,91 @@ function formatPercent(ratio: number) {
   }
 
   return `${Math.round(Math.max(0, Math.min(1, ratio)) * 100)}%`;
+}
+
+function MeasurePauseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width={22} height={22} aria-hidden="true">
+      <rect x="6" y="5" width="5" height="14" rx="1" fill="currentColor" />
+      <rect x="13" y="5" width="5" height="14" rx="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+function MeasurePlayIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width={22} height={22} aria-hidden="true">
+      <path fill="#16a34a" d="M9 6.5v11l10-5.5-10-5.5z" />
+    </svg>
+  );
+}
+
+function MeasureStopIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width={18} height={18} aria-hidden="true">
+      <rect
+        x="6"
+        y="6"
+        width="12"
+        height="12"
+        rx="1.5"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+/**
+ * 5秒ウォームアップ用の暗幕＋円弧プログレス。
+ * カメラ上に重ねて配置し、進捗は時計回り（右回り）に塗られる。
+ */
+type WarmupCountdownVeilProps = {
+  remainingMs: number;
+  totalMs: number;
+};
+
+function WarmupCountdownVeil({ remainingMs, totalMs }: WarmupCountdownVeilProps) {
+  const safeTotal = Math.max(1, totalMs);
+  const clampedRemaining = Math.max(0, Math.min(safeTotal, remainingMs));
+  const progress = 1 - clampedRemaining / safeTotal;
+  const seconds = Math.max(1, Math.ceil(clampedRemaining / 1000));
+
+  // SVG 円周 (r=46) に対する dashoffset。0 → full circle (時計回り)。
+  const radius = 46;
+  const circumference = 2 * Math.PI * radius;
+  const dashOffset = circumference * (1 - progress);
+
+  return (
+    <div className="warmup-veil" role="status" aria-live="polite">
+      <div className="warmup-veil-inner">
+        <svg
+          className="warmup-veil-ring"
+          viewBox="0 0 100 100"
+          aria-hidden="true"
+        >
+          <circle
+            className="warmup-veil-ring-track"
+            cx="50"
+            cy="50"
+            r={radius}
+            fill="none"
+          />
+          <circle
+            className="warmup-veil-ring-progress"
+            cx="50"
+            cy="50"
+            r={radius}
+            fill="none"
+            strokeDasharray={circumference}
+            strokeDashoffset={dashOffset}
+            transform="rotate(-90 50 50)"
+          />
+        </svg>
+        <div className="warmup-veil-count" aria-hidden="true">
+          {seconds}
+        </div>
+      </div>
+      <p className="warmup-veil-label">基準姿勢を測定中…</p>
+    </div>
+  );
 }

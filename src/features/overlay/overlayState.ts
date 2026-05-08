@@ -19,8 +19,28 @@ export const DEFAULT_OVERLAY_STATE: OverlayStatePayload = {
   offsetY: 0,
 };
 
+/** 開発・QA 向けUI（measuring と overlay が参照）。本番でも localStorage で有効化可。 */
+export const OVERLAY_DEBUG_UI_STORAGE_KEY = "posture.debug.overlay";
+
+export function isOverlayDebugUiEnabled(): boolean {
+  if (typeof window === "undefined") {
+    return import.meta.env.DEV;
+  }
+  try {
+    return (
+      import.meta.env.DEV ||
+      window.localStorage.getItem(OVERLAY_DEBUG_UI_STORAGE_KEY) === "true"
+    );
+  } catch {
+    return import.meta.env.DEV;
+  }
+}
+
 const CHARACTER_OVERLAY_STORAGE_KEY = "posture.overlay.characterVisible.v1";
 const OVERLAY_OFFSET_STORAGE_KEY = "posture.overlay.positionOffset.v1";
+/** キャラクター配置ヘルプ吹き出しを「初回ドラッグ完了」で消すためのキー */
+const OVERLAY_PLACEMENT_HINT_DISMISSED_KEY =
+  "posture.overlay.placementHint.dismissed.v1";
 const OFFSET_LIMIT_PX = 520;
 const DEFAULT_POSITION_OFFSET: PositionOffset = { x: 0, y: 0 };
 
@@ -76,6 +96,34 @@ export function clearStoredPositionOffset() {
     window.localStorage.removeItem(OVERLAY_OFFSET_STORAGE_KEY);
   } catch {
     // Ignore storage failures in browser preview.
+  }
+}
+
+/** 配置ヒント吹き出しを既に閉じたか（既定: 未閉鎖 = 表示する） */
+export function loadPlacementHintDismissed(): boolean {
+  try {
+    return (
+      window.localStorage.getItem(OVERLAY_PLACEMENT_HINT_DISMISSED_KEY) === "true"
+    );
+  } catch {
+    return false;
+  }
+}
+
+export function savePlacementHintDismissed() {
+  try {
+    window.localStorage.setItem(OVERLAY_PLACEMENT_HINT_DISMISSED_KEY, "true");
+  } catch {
+    // Ignore storage failures in restricted WebViews.
+  }
+}
+
+/** デバッグなどでヒント吹き出しを再度出すために永続フラグを消す */
+export function clearPlacementHintDismissed() {
+  try {
+    window.localStorage.removeItem(OVERLAY_PLACEMENT_HINT_DISMISSED_KEY);
+  } catch {
+    // Ignore storage failures in restricted WebViews.
   }
 }
 
