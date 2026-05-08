@@ -12,7 +12,6 @@ type QrConnectionModalProps = {
   isPaired: boolean;
   deviceName: string | null;
   featuredCharacter: CharacterDefinition | null;
-  onRefresh: () => void;
   onNext: () => void;
   onClose: () => void;
 };
@@ -23,13 +22,11 @@ export function QrConnectionModal({
   pairingError,
   isPaired,
   featuredCharacter,
-  onRefresh,
   onNext,
   onClose,
 }: QrConnectionModalProps) {
   const [debugForceStep2, setDebugForceStep2] = useState(false);
   const [pairedAdvanceToStep2, setPairedAdvanceToStep2] = useState(false);
-  const [soundHapticOn, setSoundHapticOn] = useState(true);
 
   useEffect(() => {
     if (!isPaired) {
@@ -58,7 +55,14 @@ export function QrConnectionModal({
         onClick={onClose}
         aria-label="閉じる"
       >
-        ×
+        <img
+          src="/x.png"
+          alt=""
+          className="qr-modal-close-img"
+          width={56}
+          height={56}
+          draggable={false}
+        />
       </button>
       <div className="qr-modal-panels">
         <div className={`qr-modal-left qr-modal-left--step${step}`}>
@@ -68,20 +72,20 @@ export function QrConnectionModal({
                 スマホと接続
               </h2>
               <p className="qr-modal-subtitle">
-                スマートフォンでQRを読み込んでください
+                スマホアプリでQRをスキャンしてください。
               </p>
+              {pairingError ? (
+                <p className="qr-modal-error-label">{pairingError}</p>
+              ) : null}
               <div className="qr-modal-phone-area">
                 <img
-                  src="/phone_QR.png"
+                  src="/mobile_piiin.png"
                   alt=""
                   className="qr-modal-phone-img"
                   draggable={false}
                   aria-hidden="true"
                 />
               </div>
-              {pairingError ? (
-                <p className="qr-modal-error-label">{pairingError}</p>
-              ) : null}
             </>
           ) : (
             <>
@@ -89,26 +93,10 @@ export function QrConnectionModal({
                 接続完了
               </h2>
               <p className="qr-modal-subtitle">
-                スマホの触覚をONにしてください
+              スマホの設定で「触覚」をONにしてください。
               </p>
-              <div className="qr-modal-sound-haptic-toggle-row">
-                <span className="qr-modal-sound-haptic-toggle-label" id="qr-haptic-toggle-label">
-                  サウンドと触覚
-                </span>
-                <button
-                  type="button"
-                  className={`qr-modal-sound-haptic-switch ${soundHapticOn ? "is-on" : ""}`}
-                  role="switch"
-                  aria-checked={soundHapticOn}
-                  aria-labelledby="qr-haptic-toggle-label"
-                  onClick={() => setSoundHapticOn((v) => !v)}
-                >
-                  <span className="qr-modal-sound-haptic-switch-knob" aria-hidden />
-                </button>
-              </div>
-              <div
-                className={`qr-modal-vibe-area ${soundHapticOn ? "is-haptic-on" : "is-haptic-off"}`}
-              >
+              {/* トグル撤去後も触覚案内の見た目は「ON」相当（振動＋波紋）を維持 */}
+              <div className="qr-modal-vibe-area is-haptic-on">
                 <div className="qr-modal-vibe-stage">
                   <span
                     className="qr-modal-vibe-arcs qr-modal-vibe-arcs--left"
@@ -183,15 +171,6 @@ export function QrConnectionModal({
                 </div>
               </div>
             </div>
-            {qrImageDataUrl ? (
-              <button
-                type="button"
-                className="qr-modal-refresh-btn"
-                onClick={onRefresh}
-              >
-                QRを更新
-              </button>
-            ) : null}
           </div>
         ) : (
           <div className="qr-modal-right-col qr-modal-right-col--step2">

@@ -177,7 +177,14 @@ impl PairingStateHandle {
             paired: state.paired,
             device_name: state.device_name.clone(),
             last_seen_at: state.last_seen_at.clone(),
+            ws_client_count: 0,
         }
+    }
+
+    /// 診断・将来コマンド用（WS 切断時はペア状態を維持するため server 側では未使用）
+    #[allow(dead_code)]
+    pub fn is_paired(&self) -> bool {
+        self.inner.lock().expect("pairing state poisoned").paired
     }
 
     pub fn matches_token(&self, token: &str) -> bool {

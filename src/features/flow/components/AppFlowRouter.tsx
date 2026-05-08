@@ -10,16 +10,20 @@ import type {
   AppFlowPhase,
   MeasurementResult,
   MeasurementStats,
+  PostureRegisterStep,
 } from "../types";
 import {
   CodeReadScreen,
   HomeScreen,
   MeasuringScreen,
+  MobileConnectScreen,
+  PostureRegisterFlowScreen,
   PostureRegisteredScreen,
 } from "./FlowScreens";
 
 type AppFlowRouterProps = {
   flowPhase: AppFlowPhase;
+  postureRegisterStep: PostureRegisterStep;
   qrImageDataUrl: string;
   isPairingLoading: boolean;
   pairingError: string | null;
@@ -44,7 +48,8 @@ type AppFlowRouterProps = {
   isStartPending: boolean;
   soundSettings: SoundSettings;
   onSoundSettingsChange: (next: SoundSettings) => void;
-  onRefreshPairing: () => void;
+  onOpenMobileConnect: () => void;
+  onPairingStatusRefresh: () => void;
   onContinueFromPaired: () => void;
   onProfileCharacterSelect: (characterId: string) => void;
   onToggleFavoriteCharacter: (characterId: string) => void;
@@ -52,6 +57,9 @@ type AppFlowRouterProps = {
   onDebugShowOnboarding: () => void;
   onCompleteOnboardingStory: () => void;
   onStartMeasurement: () => void;
+  onBeginPostureRegisterCalibrating: () => void;
+  onBeginMeasurementAfterRegister: () => void;
+  onPostureRegisterCalibratingComplete: () => void;
   onBackHome: () => void;
   onFinishMeasurement: () => void;
   onMeasureAgain: () => void;
@@ -64,6 +72,7 @@ type AppFlowRouterProps = {
 
 export function AppFlowRouter({
   flowPhase,
+  postureRegisterStep,
   qrImageDataUrl,
   isPairingLoading,
   pairingError,
@@ -88,7 +97,8 @@ export function AppFlowRouter({
   isStartPending,
   soundSettings,
   onSoundSettingsChange,
-  onRefreshPairing,
+  onOpenMobileConnect,
+  onPairingStatusRefresh,
   onContinueFromPaired,
   onProfileCharacterSelect,
   onToggleFavoriteCharacter,
@@ -96,6 +106,9 @@ export function AppFlowRouter({
   onDebugShowOnboarding,
   onCompleteOnboardingStory,
   onStartMeasurement,
+  onBeginPostureRegisterCalibrating,
+  onBeginMeasurementAfterRegister,
+  onPostureRegisterCalibratingComplete,
   onBackHome,
   onFinishMeasurement,
   onMeasureAgain,
@@ -126,13 +139,27 @@ export function AppFlowRouter({
           deviceName={deviceName}
           qrCharacter={nextCharacter}
           isStartPending={isStartPending}
-          onRefreshPairing={onRefreshPairing}
+          onOpenMobileConnect={onOpenMobileConnect}
+          onPairingStatusRefresh={onPairingStatusRefresh}
           onContinueFromPaired={onContinueFromPaired}
           onDebugStartMeasurement={onStartMeasurement}
           onProfileCharacterSelect={onProfileCharacterSelect}
           onToggleFavoriteCharacter={onToggleFavoriteCharacter}
           onDebugClearAcquiredCharacters={onDebugClearAcquiredCharacters}
           onDebugShowOnboarding={onDebugShowOnboarding}
+        />
+      );
+    case "mobileConnect":
+      return (
+        <MobileConnectScreen
+          qrImageDataUrl={qrImageDataUrl}
+          isPairingLoading={isPairingLoading}
+          pairingError={pairingError}
+          isPaired={isPaired}
+          featuredCharacter={nextCharacter}
+          onRefreshPairing={onPairingStatusRefresh}
+          onContinueFromPaired={onContinueFromPaired}
+          onBackHome={onBackHome}
         />
       );
     case "qrScanned":
@@ -144,6 +171,27 @@ export function AppFlowRouter({
           isCharacterOverlayEnabled={isCharacterOverlayEnabled}
           onCharacterOverlayEnabledChange={onCharacterOverlayEnabledChange}
           onStartMeasurement={onStartMeasurement}
+          onBackHome={onBackHome}
+        />
+      );
+    case "postureRegister":
+      return (
+        <PostureRegisterFlowScreen
+          postureRegisterStep={postureRegisterStep}
+          videoRef={videoRef}
+          canvasRef={canvasRef}
+          snapshot={snapshot}
+          isBadPosture={effectiveBadPosture}
+          isOverlayEnabled={isOverlayEnabled}
+          isCharacterOverlayEnabled={isCharacterOverlayEnabled}
+          soundSettings={soundSettings}
+          onSoundSettingsChange={onSoundSettingsChange}
+          onOverlayEnabledChange={onOverlayEnabledChange}
+          onCharacterOverlayEnabledChange={onCharacterOverlayEnabledChange}
+          isStartPending={isStartPending}
+          onRequestBeginCalibrating={onBeginPostureRegisterCalibrating}
+          onBeginMeasurementAfterRegister={onBeginMeasurementAfterRegister}
+          onCalibratingComplete={onPostureRegisterCalibratingComplete}
           onBackHome={onBackHome}
         />
       );
@@ -191,7 +239,8 @@ export function AppFlowRouter({
           deviceName={deviceName}
           qrCharacter={nextCharacter}
           isStartPending={isStartPending}
-          onRefreshPairing={onRefreshPairing}
+          onOpenMobileConnect={onOpenMobileConnect}
+          onPairingStatusRefresh={onPairingStatusRefresh}
           onContinueFromPaired={onContinueFromPaired}
           onDebugStartMeasurement={onMeasureAgain}
           onProfileCharacterSelect={onProfileCharacterSelect}

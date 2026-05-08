@@ -8,6 +8,8 @@ export type DesktopPairingStatus = {
   paired: boolean;
   deviceName: string | null;
   lastSeenAt: string | null;
+  /** アクティブな WebSocket クライアント数 */
+  wsClientCount: number;
 };
 
 export async function getPairingInfo(): Promise<PairingInfo> {
@@ -22,7 +24,7 @@ export async function sendPostureSignal(isBad: boolean): Promise<void> {
   await invoke("emit_posture_signal", { isBad });
 }
 
-/** スマホの「測定中」表示と同期する。フローが measuring の間 true。 */
+/** スマホの「測定中」表示と同期する。姿勢トラッキングが有効な間 true（通常測定・姿勢登録の実測定など）。 */
 export async function syncPairingMeasuringSession(active: boolean): Promise<void> {
   await invoke("sync_pairing_measuring_session", { active });
 }

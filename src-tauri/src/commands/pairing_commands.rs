@@ -32,7 +32,9 @@ pub fn get_pairing_info(state: State<'_, PairingStateHandle>) -> PairingInfo {
 
 #[tauri::command]
 pub fn get_pairing_status(state: State<'_, PairingStateHandle>) -> DesktopPairingStatus {
-    state.get_pairing_status()
+    let mut status = state.get_pairing_status();
+    status.ws_client_count = crate::pairing::ws_connected_client_count();
+    status
 }
 
 #[tauri::command]

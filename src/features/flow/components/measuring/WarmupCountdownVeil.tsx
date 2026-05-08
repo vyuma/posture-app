@@ -1,11 +1,14 @@
 type WarmupCountdownVeilProps = {
   remainingMs: number;
   totalMs: number;
+  /** 省略時は測定ウォームアップ用の文言 */
+  label?: string;
 };
 
 export function WarmupCountdownVeil({
   remainingMs,
   totalMs,
+  label = "基準姿勢を測定中…",
 }: WarmupCountdownVeilProps) {
   const safeTotal = Math.max(1, totalMs);
   const clampedRemaining = Math.max(0, Math.min(safeTotal, remainingMs));
@@ -45,7 +48,7 @@ export function WarmupCountdownVeil({
           {seconds}
         </div>
       </div>
-      <p className="warmup-veil-label">基準姿勢を測定中…</p>
+      <p className="warmup-veil-label">{label}</p>
     </div>
   );
 }

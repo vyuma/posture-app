@@ -214,7 +214,7 @@ const THIRD_PAGE_ANAGO_TUNING: DockCharacterTuning = {
   xPercent: 68.3,
   dockDepthPercent: 500,
   sizePercent: 7.8,
-  scale: 1.6,
+  scale: 1.1,
   rotateDeg: 0,
   zIndex: 2,
   hideBottomPercent: 61,
@@ -239,8 +239,7 @@ const RETURN_PAGE_LAYOUT_TUNING: ReturnPageLayoutTuning = {
 };
 const RETURN_STORY_SOUND_SRC = "/sounds/2.mp3";
 
-// 6 / 7 reward page quick tuning:
-// edit only these numbers to move/resize the reward card and character.
+// 5 / 6 reward（アイブロー "5 / 6"）：カードとキャラはこの定数だけ触る
 const REWARD_PAGE_LAYOUT_TUNING: RewardPageLayoutTuning = {
   cardXPercent: 50,
   cardTopPercent: 22,
@@ -250,9 +249,9 @@ const REWARD_PAGE_LAYOUT_TUNING: RewardPageLayoutTuning = {
   cardWidthMaxPx: 355,
   cardScale: 1,
   cardRotateDeg: 0,
-  characterOffsetXPercent: 0,
-  characterOffsetYPercent: 28,
-  characterScale: 1.14,
+  characterOffsetXPercent: -50,
+  characterOffsetYPercent: -2,
+  characterScale: 1.5,
   characterRotateDeg: 0,
 };
 
@@ -264,8 +263,8 @@ const FINAL_PAGE_LAYOUT_TUNING: FinalPageLayoutTuning = {
   rowMaxPx: 1362,
   cardGapPx: 24,
   cardScale: 1,
-  characterOffsetXPercent: 0,
-  characterOffsetYPercent: 0,
+  characterOffsetXPercent: 50,
+  characterOffsetYPercent: -90,
   characterScale: 1,
   hoverLiftPx: 12,
   hoverScale: 1.02,
@@ -656,10 +655,9 @@ function DockStoryArtwork({
   character: CharacterDefinition | null;
 }) {
   const characterStyle = {
-    left: THIRD_PAGE_ANAGO_LAYOUT.left,
-    bottom: THIRD_PAGE_ANAGO_LAYOUT.bottom,
-    width: THIRD_PAGE_ANAGO_LAYOUT.width,
-    zIndex: THIRD_PAGE_ANAGO_LAYOUT.zIndex,
+    "--dock-character-left": THIRD_PAGE_ANAGO_LAYOUT.left,
+    "--dock-character-bottom": THIRD_PAGE_ANAGO_LAYOUT.bottom,
+    "--dock-character-width": THIRD_PAGE_ANAGO_LAYOUT.width,
     "--dock-character-scale": THIRD_PAGE_ANAGO_LAYOUT.scale ?? 1,
     "--dock-character-rotate": THIRD_PAGE_ANAGO_LAYOUT.rotate ?? "0deg",
     "--dock-character-hide-bottom": THIRD_PAGE_ANAGO_LAYOUT.hideBottom,

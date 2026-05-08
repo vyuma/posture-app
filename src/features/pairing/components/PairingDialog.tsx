@@ -15,6 +15,10 @@ export function PairingDialog({ onClose }: PairingDialogProps) {
 
   const pairingLink = buildPairingLink(pairingInfo);
   const qrImageDataUrl = useQrDataUrl(pairingLink);
+  const wsLive =
+    Boolean(status?.paired) && (status?.wsClientCount ?? 0) > 0;
+  const pairedButWsDown =
+    Boolean(status?.paired) && !wsLive;
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -95,7 +99,23 @@ export function PairingDialog({ onClose }: PairingDialogProps) {
             <div className="pairing-status-row">
               <span>接続状態</span>
               <strong>
-                {isLoading ? "読み込み中..." : status?.paired ? "接続済み" : "待機中"}
+                {isLoading
+                  ? "読み込み中..."
+                  : wsLive
+                    ? "接続済み（リアルタイム）"
+                    : pairedButWsDown
+                      ? "端末登録済み（アプリ未接続）"
+                      : "待機中"}
+              </strong>
+            </div>
+            <div className="pairing-status-row">
+              <span>WebSocket</span>
+              <strong>
+                {isLoading
+                  ? "-"
+                  : wsLive
+                    ? `接続中（${status?.wsClientCount ?? 0}）`
+                    : "未接続"}
               </strong>
             </div>
             <div className="pairing-status-row">

@@ -12,8 +12,9 @@
   --pr-fr1-horizontal-inset: clamp(1rem, 9.591vw, 9.0625rem);
   --pr-fr1-block-top: clamp(4.5rem, 15.274dvh, 9.375rem);
   --pr-fr1-block-bottom: clamp(3rem, 15.377dvh, 9.4375rem);
+  --frame53-camera-slot-size: 694px;
 
-  /* デザイン幅1222×高681 のスケール用：パディング＋若干の余白（はみ出し防止） */
+  /* デザイン幅1235×高694 のスケール用：パディング＋若干の余白（はみ出し防止） */
   --frame53-scale-w-chrome: calc(2 * var(--pr-fr1-horizontal-inset) + 24px);
   --frame53-scale-h-chrome: calc(
     var(--pr-fr1-block-top) + var(--pr-fr1-block-bottom) + 24px
@@ -23,8 +24,8 @@
     0.31,
     min(
       1,
-      calc((100vw - var(--frame53-scale-w-chrome)) / 1222px),
-      calc((100dvh - var(--frame53-scale-h-chrome)) / 681px)
+      calc((100vw - var(--frame53-scale-w-chrome)) / 1235px),
+      calc((100dvh - var(--frame53-scale-h-chrome)) / 694px)
     )
   );
 
@@ -59,8 +60,8 @@
       0.31,
       min(
         1,
-        calc((100cqw - 24px) / 1222px),
-        calc((100cqh - 40px) / 681px)
+        calc((100cqw - 24px) / 1235px),
+        calc((100cqh - 40px) / 694px)
       )
     );
   }
@@ -71,7 +72,7 @@
   flex: 1 1 auto;
   align-items: center;
   justify-content: center;
-  width: min(calc(1222px * var(--pr-scale)), 100%);
+  width: min(calc(1235px * var(--pr-scale)), 100%);
   min-height: 0;
   gap: calc(41px * var(--pr-scale));
 }
@@ -95,6 +96,38 @@
   /* はみ出し時のみスクロール（通常はスクロールバー非表示に近い） */
   overflow-y: auto;
   /* 狭い幅スタック時は下のメディアで height:auto に切り替え */
+}
+
+/* 姿勢登録（基準線）フロー：段階別モディファイア */
+.frame53-left--pr-intro .frame53-heading {
+  margin-bottom: calc(24px * var(--pr-scale));
+}
+
+.frame53-left--pr-intro .frame53-led {
+  margin-bottom: calc(40px * var(--pr-scale));
+}
+
+.frame53-footer--pr-intro {
+  margin-top: auto;
+}
+
+.frame53-pr-intro-mascot-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.frame53-pr-intro-mascot {
+  display: block;
+  width: min(100%, calc(168px * var(--pr-scale)));
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+.frame53-footer--pr-calibrating {
+  margin-top: auto;
 }
 
 .frame53-heading {
@@ -490,19 +523,43 @@
   transform: translateY(-1px);
 }
 
-/* Frame 44：ライブカメラ（既定グレーの上に鏡映し映像／失敗時はテキスト） */
+/* Frame 44：測定画面と同じ半透明フレーム＋内側クリップ（カメラスロット） */
 .frame53-camera-panel {
   position: relative;
-  flex: 0 0 calc(681px * var(--pr-scale));
-  width: calc(681px * var(--pr-scale));
+  flex: 0 0 calc(var(--frame53-camera-slot-size) * var(--pr-scale));
+  width: calc(var(--frame53-camera-slot-size) * var(--pr-scale));
   max-width: 100%;
-  height: calc(681px * var(--pr-scale));
-  min-height: calc(681px * var(--pr-scale));
+  height: calc(var(--frame53-camera-slot-size) * var(--pr-scale));
+  min-height: calc(var(--frame53-camera-slot-size) * var(--pr-scale));
   box-sizing: border-box;
-  border-radius: calc(40px * var(--pr-scale));
-  background: #a1a1a1;
-  padding: 0;
+  min-width: 0;
+  padding: max(4px, calc(5px * var(--pr-scale)))
+    max(4px, calc(5px * var(--pr-scale)));
+  border-radius: calc(32px * var(--pr-scale));
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.28);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+}
+
+/* 内側グレー領域：intro / キャリブ共通スタック */
+.frame53-camera-panel .frame53-camera-stack {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  border-radius: calc(27px * var(--pr-scale));
+  overflow: hidden;
+  background: #a1a1a1;
+}
+
+.frame53-camera-panel .frame53-camera-stack .viewer.viewer--measurement {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: inherit;
 }
 
 .frame53-camera-video {
@@ -549,73 +606,5 @@
   .frame53-primary:not(:disabled):hover,
   .frame53-primary:not(:disabled):focus-visible {
     transform: none;
-  }
-}
-
-@media (max-width: 900px) {
-  .flow-screen.frame53-register-screen {
-    --pr-fr1-horizontal-inset: clamp(1rem, 5vw, 2rem);
-    --pr-fr1-block-top: clamp(4.5rem, 10svh, 6rem);
-    --pr-fr1-block-bottom: clamp(1rem, 4svh, 2rem);
-  }
-
-  .frame53-panels-wrap {
-    flex-wrap: wrap;
-    align-content: center;
-    justify-content: center;
-  }
-
-  .frame53-left {
-    flex: 1 1 auto;
-    height: auto;
-    min-height: 0;
-    max-height: none;
-    align-self: center;
-    /* 内容に合わせて伸び、はみ出しはカード内スクロール（ページと二重にならないよう主要はここ） */
-    overflow-y: auto;
-  }
-
-  .frame53-camera-panel {
-    order: -1;
-    flex-basis: 100%;
-    width: 100%;
-    max-width: 100%;
-    min-height: unset;
-    height: clamp(16.25rem, 42svh, calc(681px * var(--pr-scale)));
-  }
-}
-
-@media (max-width: 560px) {
-  .frame53-panels-wrap {
-    width: 100%;
-    gap: clamp(0.75rem, 3svh, 1.25rem);
-  }
-
-  .frame53-left {
-    flex-basis: 100%;
-    width: 100%;
-    padding: clamp(1.25rem, 7vw, 2rem);
-    border-radius: var(--app-radius-panel);
-  }
-
-  .frame53-camera-panel {
-    height: clamp(13.75rem, 35svh, 18rem);
-    border-radius: var(--app-radius-panel);
-  }
-
-  .frame53-toggle-strip-switch {
-    width: clamp(2.75rem, 15vw, 3.25rem);
-    height: clamp(1.5rem, 8vw, 1.75rem);
-  }
-
-  .frame53-toggle-strip-switch-knob {
-    left: 0.1875rem;
-    width: clamp(1.125rem, 6vw, 1.375rem);
-    height: clamp(1.125rem, 6vw, 1.375rem);
-  }
-
-  .frame53-toggle-strip-switch.is-on .frame53-toggle-strip-switch-knob {
-    transform: translateY(-50%)
-      translateX(calc(100% + clamp(0.25rem, 2vw, 0.375rem)));
   }
 }

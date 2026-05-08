@@ -82,7 +82,6 @@ export function CollectionDetailDialog({
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="collection-detail-header">
-          <p className="collection-detail-eyebrow">今日のピンアナゴ</p>
           <button
             type="button"
             className="collection-detail-close"

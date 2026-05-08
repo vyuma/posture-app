@@ -1,8 +1,30 @@
-/* 測定画面（MeasuringScreen）：Figma 4·5 に合わせた左カード＋カメラ。Frame53 コンポーネント用変数を供給 */
+/* 測定画面（MeasuringScreen）：QRモーダル・姿勢登録と同じ Frame53 1222×681 等比（--pr-scale） */
 .measuring-screen {
+  position: relative;
+  container-type: size;
+  container-name: measuring;
+
   --frame53-point: #13a2d7;
   --frame53-volume-track-muted: #e8e8e8;
-  --pr-scale: 0.52;
+
+  --pr-fr1-horizontal-inset: clamp(1rem, 9.591vw, 9.0625rem);
+  --pr-fr1-block-top: clamp(4.5rem, 15.274dvh, 9.375rem);
+  --pr-fr1-block-bottom: clamp(3rem, 15.377dvh, 9.4375rem);
+  --frame53-camera-slot-size: 694px;
+
+  --frame53-scale-w-chrome: calc(2 * var(--pr-fr1-horizontal-inset) + 24px);
+  --frame53-scale-h-chrome: calc(
+    var(--pr-fr1-block-top) + var(--pr-fr1-block-bottom) + 24px
+  );
+
+  --pr-scale: max(
+    0.31,
+    min(
+      1,
+      calc((100vw - var(--frame53-scale-w-chrome)) / 1235px),
+      calc((100dvh - var(--frame53-scale-h-chrome)) / 694px)
+    )
+  );
 
   /* Frame 53 と同系：#13A2D7 → #F2EDCC */
   background: linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
@@ -13,9 +35,31 @@
   justify-content: center;
   box-sizing: border-box;
   min-height: 100dvh;
-  padding: clamp(3.25rem, 9svh, 5.5rem) var(--app-viewport-inline)
-    clamp(1.25rem, 4.5svh, 2.5rem);
+  padding: var(--pr-fr1-block-top) var(--pr-fr1-horizontal-inset)
+    var(--pr-fr1-block-bottom);
+  overflow-x: hidden;
   overflow-y: auto;
+}
+
+@supports (width: 1cqw) {
+  .measuring-screen {
+    --pr-scale: max(
+      0.31,
+      min(
+        1,
+        calc((100cqw - 24px) / 1235px),
+        calc((100cqh - 40px) / 694px)
+      )
+    );
+  }
+}
+
+.measuring-screen .flow-brand {
+  position: absolute;
+  top: var(--flow-brand-offset-y);
+  left: var(--flow-brand-offset-x);
+  z-index: 2;
+  pointer-events: auto;
 }
 
 /* 旧レイアウト互換（未使用） */
@@ -52,28 +96,38 @@
 
 .measure-layout {
   flex: 0 1 auto;
-  /* 狭い窓はコンパクト、広い窓は vw に追従して拡大（上限あり） */
-  width: min(73.75rem, max(45rem, 76vw), calc(100vw - 2rem));
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  justify-content: center;
+  width: min(calc(1235px * var(--pr-scale)), 100%);
   min-height: 0;
   margin-inline: auto;
-  display: grid;
-  grid-template-columns: minmax(min(16.25rem, 100%), 36%) minmax(0, 1fr);
-  gap: clamp(16px, 2.8vw, 32px);
-  align-items: stretch;
+  gap: calc(41px * var(--pr-scale));
+  box-sizing: border-box;
 }
 
 .measure-control-card {
+  flex: 0 0 calc(500px * var(--pr-scale));
+  width: calc(500px * var(--pr-scale));
+  max-width: 100%;
+  min-width: 0;
+  height: calc(681px * var(--pr-scale));
+  min-height: calc(681px * var(--pr-scale));
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: clamp(12px, 1.5vw, 16px);
-  min-width: 0;
-  padding: clamp(16px, 1.85vw, 22px);
-  border-radius: var(--app-radius-panel);
+  padding: calc(47px * var(--pr-scale)) calc(50px * var(--pr-scale))
+    calc(40px * var(--pr-scale));
+  border-radius: calc(40px * var(--pr-scale));
   background: rgba(255, 255, 255, 0.97);
   border: 1px solid rgba(45, 82, 96, 0.08);
   box-shadow:
     0 18px 44px rgba(19, 100, 130, 0.14),
     0 1px 0 rgba(255, 255, 255, 0.85);
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .measure-control-head {
@@ -200,16 +254,18 @@
 .measure-camera-panel {
   min-width: 0;
   min-height: 0;
-  padding: clamp(5px, 0.85vw, 10px);
-  border-radius: clamp(26px, 4.2vw, 40px);
+  padding: max(4px, calc(5px * var(--pr-scale)))
+    max(4px, calc(5px * var(--pr-scale)));
+  border-radius: calc(32px * var(--pr-scale));
   background: rgba(255, 255, 255, 0.12);
   border: 1px solid rgba(255, 255, 255, 0.28);
+  box-sizing: border-box;
 }
 
 .measure-camera-panel .measure-camera-stack {
   flex: 1;
   min-height: 0;
-  border-radius: clamp(22px, 3.8vw, 38px);
+  border-radius: calc(27px * var(--pr-scale));
   overflow: hidden;
   /* 背面グレーは viewer--measurement 側へ（二重レイヤーを避ける） */
   background: transparent;
@@ -221,9 +277,14 @@
 }
 
 .measure-camera-panel--figma {
+  flex: 0 0 calc(var(--frame53-camera-slot-size) * var(--pr-scale));
+  width: calc(var(--frame53-camera-slot-size) * var(--pr-scale));
+  max-width: 100%;
+  height: calc(var(--frame53-camera-slot-size) * var(--pr-scale));
+  min-height: calc(var(--frame53-camera-slot-size) * var(--pr-scale));
   display: flex;
   flex-direction: column;
-  min-height: clamp(12.5rem, min(34svh, 28vw), 32.5rem);
+  align-self: stretch;
 }
 
 /* PostureViewer と暗幕オーバーレイを同じ枠に重ねるためのスタッキング */
@@ -235,8 +296,7 @@
 }
 
 /*
- * 測定左カード内 Frame49：登録画面と同クラスだが --pr-scale=0.52 のため音カードだけ極細になる。
- * カード幅いっぱいにしてスライダー・セレクトを確保する。
+ * 測定左カード内 Frame49：登録画面と同クラス。パネル幅は Frame53 左カードに合わせる。
  */
 .measuring-screen .frame53-sound-card {
   align-self: stretch;
@@ -497,42 +557,5 @@
 
   .metric-tile strong {
     font-size: 1.15rem;
-  }
-}
-
-/* 単列：上＝カメラ、下＝操作（一覧性） */
-@media (max-width: 920px) {
-  .measuring-screen {
-    justify-content: flex-start;
-    padding-top: clamp(4.5rem, 10svh, 6rem);
-  }
-
-  .measure-layout {
-    grid-template-columns: 1fr;
-    grid-auto-rows: auto;
-    width: min(37.5rem, 100%);
-  }
-
-  .measure-camera-panel--figma {
-    order: -1;
-    min-height: clamp(14rem, 42svh, 20rem);
-  }
-
-  .measure-control-card {
-    order: 0;
-  }
-}
-
-@media (max-width: 520px) {
-  .measure-metrics-row {
-    grid-template-columns: 1fr;
-  }
-
-  .measure-control-head {
-    align-items: center;
-  }
-
-  .measure-control-title {
-    font-size: clamp(1rem, 6vw, 1.35rem);
   }
 }

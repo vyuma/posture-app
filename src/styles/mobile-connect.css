@@ -1,0 +1,282 @@
+/* スマホと接続: 1512×982 Figma scene. */
+
+.flow-screen.mobile-connect-screen {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
+}
+
+.mobile-connect-stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1512px;
+  height: 982px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
+  transform: translate(-50%, -50%) scale(var(--mobile-connect-scale, 1));
+  transform-origin: center center;
+}
+
+.mobile-connect-header {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  width: 1512px;
+  height: 120px;
+}
+
+.mobile-connect-stage .flow-brand {
+  position: absolute;
+  top: 40px;
+  left: 80px;
+  z-index: 11;
+  width: 134px;
+  height: 80px;
+  line-height: 0;
+  pointer-events: auto;
+}
+
+.mobile-connect-stage .flow-brand-logo {
+  display: block;
+  width: 134px;
+  height: 80px;
+  object-fit: contain;
+  object-position: left top;
+  user-select: none;
+}
+
+.mobile-connect-close {
+  position: absolute;
+  top: 56px;
+  left: 1376px;
+  z-index: 12;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+}
+
+.mobile-connect-close img {
+  display: block;
+  width: 56px;
+  height: 56px;
+  user-select: none;
+}
+
+.mobile-connect-content {
+  position: absolute;
+  inset: 0;
+}
+
+.mobile-connect-left-card {
+  position: absolute;
+  top: 176px;
+  left: 96px;
+  width: 594px;
+  height: 694px;
+  overflow: hidden;
+  border-radius: 32px;
+  background: #ffffff;
+  box-shadow: 0 0 8.52px rgba(0, 0, 0, 0.15);
+}
+
+.mobile-connect-left-card h1 {
+  position: absolute;
+  top: 48px;
+  left: 56px;
+  width: 215px;
+  height: 43px;
+  margin: 0;
+  color: #13a2d7;
+  font-family:
+    "SF Pro Display",
+    "SF Pro Text",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Noto Sans JP",
+    sans-serif;
+  font-size: 36px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 43px;
+  letter-spacing: 0;
+}
+
+.mobile-connect-left-card p {
+  position: absolute;
+  top: 123px;
+  left: 56px;
+  width: 408px;
+  height: 24px;
+  margin: 0;
+  color: #666666;
+  font-family:
+    "SF Pro Display",
+    "SF Pro Text",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Noto Sans JP",
+    sans-serif;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 24px;
+  letter-spacing: 0;
+}
+
+.mobile-connect-phone-preview {
+  position: absolute;
+  top: 236px;
+  left: 66px;
+  display: block;
+  width: 445.58px;
+  height: auto;
+  max-width: none;
+  user-select: none;
+}
+
+.mobile-connect-right-card {
+  position: absolute;
+  top: 176px;
+  right: 80px;
+  width: 694px;
+  height: 694px;
+  overflow: hidden;
+  border-radius: 32px;
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 8.52px rgba(0, 0, 0, 0.15);
+}
+
+.mobile-connect-qr-stand {
+  position: absolute;
+  inset: 0;
+  isolation: isolate;
+}
+
+.mobile-connect-qr-pole {
+  position: absolute;
+  top: 124px;
+  left: 50%;
+  z-index: 0;
+  width: 124px;
+  height: 808.65px;
+  background:
+    linear-gradient(
+      180deg,
+      #979797 0,
+      #979797 62.9%,
+      #ffffff 62.9%,
+      #ffffff 65.35%,
+      #979797 65.35%,
+      #979797 100%
+    );
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.mobile-connect-qr-frame {
+  position: absolute;
+  top: 106px;
+  left: 106px;
+  z-index: 2;
+  width: 483px;
+  height: 483px;
+  overflow: hidden;
+  border-radius: 48px;
+  isolation: isolate;
+}
+
+.mobile-connect-qr-white-mat {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: 48px;
+  background: #ffffff;
+}
+
+.mobile-connect-qr-anago {
+  position: absolute;
+  bottom: -517.2px;
+  left: 55%;
+  z-index: 2;
+  width: auto;
+  height: 792.12px;
+  max-width: 405.72px;
+  object-fit: contain;
+  object-position: center bottom;
+  opacity: 0.88;
+  filter: grayscale(100%) brightness(0.92);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.mobile-connect-qr-image {
+  position: relative;
+  z-index: 3;
+  display: block;
+  width: 483px;
+  height: 483px;
+  border-radius: 48px;
+  object-fit: cover;
+  user-select: none;
+}
+
+.mobile-connect-qr-placeholder {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  width: 483px;
+  height: 483px;
+  padding: 24px;
+  border: 1px dashed rgba(100, 120, 130, 0.35);
+  border-radius: 48px;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.85);
+  color: #666666;
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.mobile-connect-error {
+  position: absolute;
+  right: 96px;
+  bottom: 40px;
+  left: 96px;
+  z-index: 20;
+  margin: 0;
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.86);
+  color: #b91c1c;
+  font-size: 16px;
+  font-weight: 700;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(10, 55, 75, 0.12);
+}
+
+.mobile-connect-debug-actions {
+  position: absolute;
+  right: 80px;
+  bottom: 32px;
+  z-index: 30;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.mobile-connect-debug-refresh,
+.mobile-connect-debug-skip {
+  box-shadow: 0 10px 24px rgba(20, 83, 102, 0.18);
+}

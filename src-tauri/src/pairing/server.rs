@@ -1,7 +1,7 @@
 use std::{
     collections::HashMap,
     io::{Read, Write},
-    net::{TcpListener, TcpStream},
+    net::{SocketAddr, TcpListener, TcpStream},
     sync::{Arc, Mutex, OnceLock},
     thread,
     time::Duration,
@@ -144,6 +144,9 @@ fn handle_disconnect(
 
     let response = state.disconnect_device();
     broadcast_ws_state_event(state, "disconnected");
+    if let Some(sink) = WS_SINK.get() {
+        clear_ws_sink(sink);
+    }
     write_json(stream, 200, &response)
 }
 
@@ -161,6 +164,8 @@ fn handle_websocket(
     if !is_websocket_upgrade(headers) {
         return write_internal_error_json(&mut stream, 400, "invalid websocket upgrade request");
     }
+
+    let peer_addr = stream.peer_addr().map_err(|error| error.to_string())?;
 
     let websocket_key = headers
         .get("sec-websocket-key")
@@ -189,7 +194,30 @@ fn handle_websocket(
         write_ws_event(&mut stream, &event)?;
     }
 
-    read_until_socket_closes(stream, state)
+    read_until_socket_closes(stream, peer_addr, state, ws_sink)
+}
+
+/// WS クライアント数（`get_pairing_status` で上書きする）
+pub fn ws_connected_client_count() -> usize {
+    WS_SINK
+        .get()
+        .map(|sink| sink.lock().expect("ws sink poisoned").len())
+        .unwrap_or(0)
+}
+
+fn clear_ws_sink(ws_sink: &WsSink) {
+    let mut clients = ws_sink.lock().expect("ws sink poisoned");
+    clients.clear();
+}
+
+/// 読み取り側が終了したら当該ピアの書き込みストリームだけシンクから外す。
+/// HTTP /pair で確立したペア状態は維持し、モバイル再接続時に snapshot で measuring 等を復元できるようにする。
+fn remove_ws_clients_for_peer(ws_sink: &WsSink, peer: SocketAddr) {
+    let mut clients = ws_sink.lock().expect("ws sink poisoned");
+    clients.retain_mut(|client| match client.peer_addr() {
+        Ok(p) => p != peer,
+        Err(_) => false,
+    });
 }
 
 pub fn broadcast_ws_state_event(state: &PairingStateHandle, event_type: &str) {
@@ -226,21 +254,29 @@ fn broadcast_ws_event(ws_sink: &WsSink, event: &impl serde::Serialize) {
     clients.retain_mut(|client| write_websocket_text_frame(client, &payload).is_ok());
 }
 
-fn read_until_socket_closes(mut stream: TcpStream, state: &PairingStateHandle) -> Result<(), String> {
+fn read_until_socket_closes(
+    mut stream: TcpStream,
+    peer_addr: SocketAddr,
+    state: &PairingStateHandle,
+    ws_sink: &WsSink,
+) -> Result<(), String> {
     let mut buffer = [0_u8; 1024];
 
-    loop {
+    let read_outcome = loop {
         match stream.read(&mut buffer) {
-            Ok(0) => return Ok(()),
+            Ok(0) => break Ok(()),
             Ok(bytes_read) => {
                 if let Some(text) = parse_websocket_text_frame(&buffer[..bytes_read]) {
                     handle_websocket_client_message(state, &text);
                 }
                 continue;
             }
-            Err(error) => return Err(error.to_string()),
+            Err(error) => break Err(error.to_string()),
         }
-    }
+    };
+
+    remove_ws_clients_for_peer(ws_sink, peer_addr);
+    read_outcome
 }
 
 fn handle_websocket_client_message(state: &PairingStateHandle, text: &str) {

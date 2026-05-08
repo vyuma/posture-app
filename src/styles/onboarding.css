@@ -544,14 +544,17 @@
   --onboarding-scene-text-size: clamp(1.32rem, min(2.35vw, 4.5dvh), 2.25rem);
   --onboarding-nav-bottom: clamp(248px, 46.5dvh, 500px);
   --onboarding-side-button-top: clamp(37%, 39.2%, 42%);
-  --onboarding-story-font-weight: 600;
-  --onboarding-splash-button-font-weight: 600;
+  --onboarding-story-font-weight: 700;
+  /* ストーリー本文の行間・字間をまとめて調整するための共通変数 */
+  --onboarding-story-line-height: 1.5;
+  --onboarding-story-letter-spacing: 0;
+  --onboarding-splash-button-font-weight: 700;
   --onboarding-splash-logo-top: min(23.02vw, 35.44dvh);
-  --onboarding-splash-logo-offset-x: min(0.99vw, 1.53dvh);
+  /* 「はじめる」ボタン巾と揃えるか少し広く見せる（--onboarding-splash-button-width より少し大きい） */
   --onboarding-splash-logo-width: clamp(
-    15rem,
-    min(26.98vw, 41.55dvh),
-    25.5rem
+    17rem,
+    min(27.5vw, 42.35dvh),
+    28.5rem
   );
   --onboarding-splash-button-center-y: calc(
     50% + min(12.07vw, 18.58dvh)
@@ -905,7 +908,8 @@
 .onboarding-screen.is-story-intro .onboarding-message p {
   color: #ffffff;
   font-size: clamp(1.35rem, min(2.38vw, 3.67dvh), 2.25rem);
-  line-height: 2;
+  line-height: var(--onboarding-story-line-height);
+  letter-spacing: var(--onboarding-story-letter-spacing);
   font-weight: 700;
   text-shadow: 0 4px 10px rgba(36, 83, 102, 0.18);
 }
@@ -1813,10 +1817,11 @@
   padding-right: 0;
 }
 
+/* home.css .home-card-character は --home-char-* のみ参照するため、親の --final-* を渡す */
 .onboarding-final-character {
-  --home-collection-character-x: var(--final-character-x);
-  --home-collection-character-y: var(--final-character-y);
-  --home-collection-character-scale: var(--final-character-scale);
+  --home-char-x: var(--final-character-x, 50%);
+  --home-char-y: var(--final-character-y, -60%);
+  --home-char-scale: var(--final-character-scale, 1);
 }
 
 @keyframes onboarding-final-character-peek {
@@ -1904,6 +1909,10 @@
   display: block;
 }
 
+.onboarding-stage--message .onboarding-slide-content {
+  pointer-events: none;
+}
+
 .onboarding-stage--message .onboarding-step {
   position: absolute;
   left: 50%;
@@ -1942,7 +1951,8 @@
 .onboarding-stage--message .onboarding-message p {
   font-size: clamp(1.35rem, min(2.38vw, 3.67dvh), 2.25rem);
   font-weight: 700;
-  line-height: 2;
+  line-height: var(--onboarding-story-line-height);
+  letter-spacing: var(--onboarding-story-letter-spacing);
 }
 
 .onboarding-stage--message .onboarding-message p + p {
@@ -1957,20 +1967,18 @@
 .onboarding-stage--message .onboarding-dock-character-wrap {
   left: 68.17%;
   bottom: var(--onboarding-dock-story-character-bottom);
+  opacity: 1;
+  z-index: 2;
   width: var(--onboarding-dock-story-character-width);
   transform:
     translateX(-50%)
-    rotate(var(--dock-character-rotate, 0deg));
+    rotate(var(--dock-character-rotate, 0deg))
+    scale(var(--dock-character-scale, 1));
 }
 
 .onboarding-stage--message .onboarding-dock-character-clip {
   aspect-ratio: 636 / 1022;
-  clip-path: inset(
-    calc(var(--dock-character-shadow-bleed) * -1)
-    calc(var(--dock-character-shadow-bleed) * -1)
-    0
-    calc(var(--dock-character-shadow-bleed) * -1)
-  );
+  clip-path: none;
 }
 
 .onboarding-stage--warning {
@@ -1983,6 +1991,10 @@
   position: absolute;
   inset: 0;
   display: block;
+}
+
+.onboarding-stage--warning .onboarding-slide-content {
+  pointer-events: none;
 }
 
 .onboarding-stage--warning .onboarding-step {
@@ -2023,7 +2035,8 @@
 .onboarding-stage--warning .onboarding-message p {
   font-size: clamp(1.35rem, min(2.38vw, 3.67dvh), 2.25rem);
   font-weight: 700;
-  line-height: 2;
+  line-height: var(--onboarding-story-line-height);
+  letter-spacing: var(--onboarding-story-letter-spacing);
 }
 
 .onboarding-stage--warning .onboarding-message p + p {
@@ -2040,6 +2053,10 @@
   position: absolute;
   inset: 0;
   display: block;
+}
+
+.onboarding-stage--return .onboarding-slide-content {
+  pointer-events: none;
 }
 
 .onboarding-stage--return .onboarding-step {
@@ -2080,7 +2097,8 @@
 .onboarding-stage--return .onboarding-message p {
   font-size: clamp(1.35rem, min(2.38vw, 3.67dvh), 2.25rem);
   font-weight: 700;
-  line-height: 2;
+  line-height: var(--onboarding-story-line-height);
+  letter-spacing: var(--onboarding-story-letter-spacing);
 }
 
 .onboarding-stage--return .onboarding-message p + p {
@@ -2117,6 +2135,10 @@
   position: absolute;
   inset: 0;
   display: block;
+}
+
+.onboarding-stage--reward .onboarding-slide-content {
+  pointer-events: none;
 }
 
 .onboarding-stage--reward .onboarding-step {
@@ -2157,7 +2179,8 @@
 .onboarding-stage--reward .onboarding-message p {
   font-size: clamp(1.35rem, min(2.38vw, 3.67dvh), 2.25rem);
   font-weight: 700;
-  line-height: 2;
+  line-height: var(--onboarding-story-line-height);
+  letter-spacing: var(--onboarding-story-letter-spacing);
 }
 
 .onboarding-stage--reward .onboarding-message p + p {
@@ -2177,14 +2200,14 @@
   width: min(16.83vw, 25.92dvh) !important;
   height: min(23.33vw, 35.93dvh);
   transform:
-    translateX(-50%)
+    translate(-50%, var(--reward-card-compact-y))
     rotate(var(--reward-card-rotate, 0deg))
-    scale(var(--reward-card-scale, 1))
+    scale(calc(var(--reward-card-scale, 1) * var(--reward-card-compact-scale, 1)))
     perspective(700px)
     rotateX(var(--tilt-x))
     rotateY(var(--tilt-y))
     translateY(var(--tilt-lift));
-  transform-origin: center bottom;
+  transform-origin: center top;
 }
 
 .onboarding-stage--reward .onboarding-reward-home-card {
@@ -2204,9 +2227,12 @@
 
 .onboarding-stage--reward .onboarding-reward-character {
   transform:
-    translate(0%, 28%)
+    translate(
+      var(--reward-character-x, 0%),
+      var(--reward-character-y, 58%)
+    )
     rotate(var(--reward-character-rotate, 0deg))
-    scale(1.14);
+    scale(var(--reward-character-scale, 1));
 }
 
 .onboarding-stage--reward .home-character-name {
@@ -2214,6 +2240,8 @@
   top: 74.70cqh;
   width: 52.55cqw;
   font-size: clamp(1rem, 8.77cqw, 1.4rem);
+  font-weight: 700;
+  font-synthesis: weight;
   line-height: 1.2;
 }
 
@@ -2227,6 +2255,8 @@
   height: 6.28cqh;
   padding-inline: 2.66cqw;
   font-size: clamp(0.48rem, 3.99cqw, 0.64rem);
+  font-weight: 700;
+  font-synthesis: weight;
   line-height: 1.2;
 }
 
@@ -2240,6 +2270,10 @@
   position: absolute;
   inset: 0;
   display: block;
+}
+
+.onboarding-stage--final .onboarding-slide-content {
+  pointer-events: none;
 }
 
 .onboarding-stage--final .onboarding-step {
@@ -2257,7 +2291,7 @@
     min(1.06vw, 1.63dvh);
   color: #ffffff;
   font-size: clamp(0.82rem, min(1.06vw, 1.63dvh), 1rem);
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.2;
   background: rgba(255, 255, 255, 0.3);
   box-shadow: none;
@@ -2280,7 +2314,8 @@
 .onboarding-stage--final .onboarding-message p {
   font-size: clamp(1.35rem, min(2.38vw, 3.67dvh), 2.25rem);
   font-weight: 700;
-  line-height: 2;
+  line-height: var(--onboarding-story-line-height);
+  letter-spacing: var(--onboarding-story-letter-spacing);
 }
 
 .onboarding-stage--final .onboarding-message p + p {
@@ -2298,7 +2333,7 @@
   top: var(--final-card-row-top);
   width: min(
     var(--final-card-strip-width),
-    calc(100vw - (var(--onboarding-story-side-x) * 2))
+    calc(100vw - min(9.92vw, 15.28dvh))
   );
   gap: min(var(--final-card-gap), min(1.57vw, 2.42dvh));
 }
@@ -2323,17 +2358,13 @@
   border-radius: 8.77cqw;
 }
 
-.onboarding-stage--final .onboarding-final-character {
-  --home-char-x: 50%;
-  --home-char-y: -60%;
-  --home-char-scale: 1;
-}
-
 .onboarding-stage--final .onboarding-final-card-name {
   left: 7.95cqw;
   top: 74.70cqh;
   width: 74cqw;
   font-size: clamp(0.9rem, 8.77cqw, 1.14rem);
+  font-weight: 700;
+  font-synthesis: weight;
   line-height: 1.2;
 }
 
@@ -2348,6 +2379,8 @@
   height: 6.36cqh;
   padding-inline: 2.66cqw;
   font-size: clamp(0.46rem, 3.99cqw, 0.52rem);
+  font-weight: 700;
+  font-synthesis: weight;
   line-height: 1.2;
 }
 
@@ -2498,7 +2531,8 @@
 
 .onboarding-screen.is-splash-active .onboarding-message {
   position: absolute;
-  left: calc(50% + var(--onboarding-splash-logo-offset-x));
+  /* ボタンと同じくビューポート水平中心（left:50% + translateX(-50%)） */
+  left: 50%;
   top: var(--onboarding-splash-logo-top);
   display: block;
   width: var(--onboarding-splash-logo-width);

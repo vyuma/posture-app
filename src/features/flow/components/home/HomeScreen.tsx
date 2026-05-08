@@ -11,7 +11,6 @@ import { FlowBrand } from "../shared/FlowBrand";
 import { CharacterCollection } from "./CharacterCollection";
 import { CollectionDetailDialog } from "./CollectionDetailDialog";
 import { ProfileSelectionDialog } from "./ProfileSelectionDialog";
-import { QrConnectionModal } from "./QrConnectionModal";
 
 let lastHomeHeroCharacterId: string | null = null;
 
@@ -22,7 +21,6 @@ export function HomeScreen(props: HomeScreenProps) {
     string | null
   >(null);
   const [isCollectionDetailClosing, setIsCollectionDetailClosing] = useState(false);
-  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const favoriteHeroCharacters = useMemo(
     () => getFavoriteHeroCharacters(props.characters, props.favoriteCharacterIds),
     [props.characters, props.favoriteCharacterIds],
@@ -79,12 +77,6 @@ export function HomeScreen(props: HomeScreenProps) {
     }, DIALOG_CLOSE_DURATION_MS);
   }, [isCollectionDetailClosing]);
 
-  const rerollHomeHeroCharacter = useCallback(() => {
-    setHeroFavoriteCharacterId((current) =>
-      rerollFavoriteHeroCharacterId(favoriteHeroCharacters, current),
-    );
-  }, [favoriteHeroCharacters]);
-
   useEffect(() => {
     setCollectionDetailCharacterId(null);
   }, [props.collectionResetTick]);
@@ -139,14 +131,14 @@ export function HomeScreen(props: HomeScreenProps) {
             <h1>
               良い姿勢を継続して
               <br />
-              ピンアナゴをゲットしよう
+              ピンアナゴを獲得しよう
             </h1>
           </div>
           <div className="home-hero-actions">
             <button
               type="button"
               className="home-hero-action-btn"
-              onClick={() => setIsQrModalOpen(true)}
+              onClick={props.onOpenMobileConnect}
             >
               スマホと接続
             </button>
@@ -176,26 +168,6 @@ export function HomeScreen(props: HomeScreenProps) {
         onToggleFavoriteCharacter={props.onToggleFavoriteCharacter}
         onDebugClearAcquiredCharacters={props.onDebugClearAcquiredCharacters}
       />
-
-      {isQrModalOpen ? (
-        <QrConnectionModal
-          qrImageDataUrl={props.qrImageDataUrl}
-          isPairingLoading={props.isPairingLoading}
-          pairingError={props.pairingError}
-          isPaired={props.isPaired}
-          deviceName={props.deviceName}
-          featuredCharacter={props.qrCharacter ?? props.profileCharacter}
-          onRefresh={props.onRefreshPairing}
-          onNext={() => {
-            setIsQrModalOpen(false);
-            props.onContinueFromPaired();
-          }}
-          onClose={() => {
-            setIsQrModalOpen(false);
-            rerollHomeHeroCharacter();
-          }}
-        />
-      ) : null}
 
       {isProfileDialogOpen ? (
         <ProfileSelectionDialog

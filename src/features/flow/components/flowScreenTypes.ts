@@ -6,7 +6,11 @@ import type {
 } from "../../characters/types";
 import type { RuntimeSnapshot } from "../../posture/types";
 import type { SoundSettings } from "../../sound/types/soundSettings";
-import type { MeasurementResult, MeasurementStats } from "../types";
+import type {
+  MeasurementResult,
+  MeasurementStats,
+  PostureRegisterStep,
+} from "../types";
 
 export type HomeScreenProps = {
   characters: CharacterDefinition[];
@@ -22,13 +26,25 @@ export type HomeScreenProps = {
   deviceName: string | null;
   qrCharacter: CharacterDefinition | null;
   isStartPending: boolean;
-  onRefreshPairing: () => void;
+  onOpenMobileConnect: () => void;
+  onPairingStatusRefresh: () => void;
   onContinueFromPaired: () => void;
   onDebugStartMeasurement: () => void;
   onProfileCharacterSelect: (characterId: string) => void;
   onToggleFavoriteCharacter: (characterId: string) => void;
   onDebugClearAcquiredCharacters: () => void;
   onDebugShowOnboarding: () => void;
+};
+
+export type MobileConnectScreenProps = {
+  qrImageDataUrl: string;
+  isPairingLoading: boolean;
+  pairingError: string | null;
+  isPaired: boolean;
+  featuredCharacter: CharacterDefinition | null;
+  onRefreshPairing: () => void;
+  onContinueFromPaired: () => void;
+  onBackHome: () => void;
 };
 
 export type CodeReadScreenProps = {
@@ -38,6 +54,25 @@ export type CodeReadScreenProps = {
   isCharacterOverlayEnabled: boolean;
   onCharacterOverlayEnabledChange: (enabled: boolean) => void;
   onStartMeasurement: () => void;
+  onBackHome: () => void;
+};
+
+export type PostureRegisterFlowScreenProps = {
+  postureRegisterStep: PostureRegisterStep;
+  videoRef: RefObject<HTMLVideoElement | null>;
+  canvasRef: RefObject<HTMLCanvasElement | null>;
+  snapshot: RuntimeSnapshot;
+  isBadPosture: boolean;
+  isOverlayEnabled: boolean;
+  isCharacterOverlayEnabled: boolean;
+  soundSettings: SoundSettings;
+  onSoundSettingsChange: (next: SoundSettings) => void;
+  onOverlayEnabledChange: (enabled: boolean) => void;
+  onCharacterOverlayEnabledChange: (enabled: boolean) => void;
+  isStartPending: boolean;
+  onRequestBeginCalibrating: () => void | Promise<void>;
+  onBeginMeasurementAfterRegister: () => void | Promise<void>;
+  onCalibratingComplete: () => void;
   onBackHome: () => void;
 };
 

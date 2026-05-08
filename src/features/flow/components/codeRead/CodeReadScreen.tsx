@@ -1,10 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { playSoundPreview } from "../../../sound/services/recoverySound";
-import { BUILTIN_SOUND_OPTIONS } from "../../../sound/types/soundSettings";
 import type { CodeReadScreenProps } from "../flowScreenTypes";
 import { FlowBrand } from "../shared/FlowBrand";
-import { buildFrame53SoundLabel } from "../shared/soundLabels";
+import { CodeReadSettingsPanel } from "./CodeReadSettingsPanel";
 
 function stopPreviewStream(stream: MediaStream | null) {
   stream?.getTracks().forEach((track) => track.stop());
@@ -21,20 +19,9 @@ export function CodeReadScreen({
 }: CodeReadScreenProps) {
   const previewVideoRef = useRef<HTMLVideoElement | null>(null);
   const previewStreamRef = useRef<MediaStream | null>(null);
-  const volumePreviewTimerRef = useRef<number | null>(null);
   const [cameraPreview, setCameraPreview] = useState<"loading" | "live" | "error">(
     "loading",
   );
-
-  function scheduleSoundVolumePreview(volume: number, selectedSrc: string) {
-    if (volumePreviewTimerRef.current !== null) {
-      clearTimeout(volumePreviewTimerRef.current);
-    }
-    volumePreviewTimerRef.current = window.setTimeout(() => {
-      volumePreviewTimerRef.current = null;
-      void playSoundPreview({ src: selectedSrc, volume });
-    }, 220);
-  }
 
   useEffect(() => {
     let cancelled = false;
@@ -111,14 +98,6 @@ export function CodeReadScreen({
   }, []);
 
   useEffect(() => {
-    return () => {
-      if (volumePreviewTimerRef.current !== null) {
-        clearTimeout(volumePreviewTimerRef.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.key === "Escape") {
         onBackHome();
@@ -127,15 +106,6 @@ export function CodeReadScreen({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [onBackHome]);
-
-  const soundOptionList = useMemo(() => {
-    return Array.from(
-      new Set([
-        ...BUILTIN_SOUND_OPTIONS,
-        ...soundSettings.customSounds,
-      ]),
-    );
-  }, [soundSettings.customSounds]);
 
   return (
     <main className="flow-screen frame53-register-screen">
@@ -149,110 +119,12 @@ export function CodeReadScreen({
             肩の力を抜いて、背筋を伸ばしてください。
           </p>
           <hr className="frame53-rule" />
-          <div className="frame53-toggle-strip">
-            <span
-              id="frame53-switch-pin-label"
-              className="frame53-toggle-strip-label"
-            >
-              ピンアナゴ表示
-            </span>
-            <button
-              type="button"
-              className={`frame53-toggle-strip-switch ${isCharacterOverlayEnabled ? "is-on" : ""}`}
-              role="switch"
-              aria-checked={isCharacterOverlayEnabled}
-              aria-labelledby="frame53-switch-pin-label"
-              onClick={() =>
-                onCharacterOverlayEnabledChange(!isCharacterOverlayEnabled)
-              }
-            >
-              <span
-                className="frame53-toggle-strip-switch-knob"
-                aria-hidden
-              />
-            </button>
-          </div>
-          <div className="frame53-toggle-strip">
-            <span
-              id="frame53-switch-sound-label"
-              className="frame53-toggle-strip-label"
-            >
-              サウンド
-            </span>
-            <button
-              type="button"
-              className={`frame53-toggle-strip-switch ${soundSettings.enabled ? "is-on" : ""}`}
-              role="switch"
-              aria-checked={soundSettings.enabled}
-              aria-labelledby="frame53-switch-sound-label"
-              onClick={() =>
-                onSoundSettingsChange({
-                  ...soundSettings,
-                  enabled: !soundSettings.enabled,
-                })
-              }
-            >
-              <span
-                className="frame53-toggle-strip-switch-knob"
-                aria-hidden
-              />
-            </button>
-          </div>
-
-          <div
-            className={`frame53-sound-card ${!soundSettings.enabled ? "frame53-muted" : ""}`}
-          >
-            <label className="frame53-volume-row" htmlFor="frame53-volume">
-              <span className="frame53-volume-visible-label">音量</span>
-              <input
-                id="frame53-volume"
-                className="frame53-volume-range"
-                type="range"
-                min={0}
-                max={100}
-                value={Math.round(soundSettings.volume * 100)}
-                style={{
-                  ["--frame53-volume-pct" as string]: `${Math.round(soundSettings.volume * 100)}%`,
-                }}
-                onChange={(e) => {
-                  const volume = Number(e.target.value) / 100;
-                  onSoundSettingsChange({
-                    ...soundSettings,
-                    volume,
-                  });
-                  scheduleSoundVolumePreview(
-                    volume,
-                    soundSettings.selectedSound,
-                  );
-                }}
-              />
-            </label>
-            <p className="frame53-sfx-label">効果音</p>
-            <div className="frame53-sfx-shell">
-              <select
-                className="frame53-sfx-select"
-                aria-label="効果音の種類"
-                value={soundSettings.selectedSound}
-                onChange={(e) => {
-                  const selectedSound = e.target.value;
-                  onSoundSettingsChange({
-                    ...soundSettings,
-                    selectedSound,
-                  });
-                  void playSoundPreview({
-                    src: selectedSound,
-                    volume: soundSettings.volume,
-                  });
-                }}
-              >
-                {soundOptionList.map((option) => (
-                  <option key={option} value={option}>
-                    {buildFrame53SoundLabel(option)}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
+          <CodeReadSettingsPanel
+            soundSettings={soundSettings}
+            onSoundSettingsChange={onSoundSettingsChange}
+            isCharacterOverlayEnabled={isCharacterOverlayEnabled}
+            onCharacterOverlayEnabledChange={onCharacterOverlayEnabledChange}
+          />
 
           <div className="frame53-footer">
             <button

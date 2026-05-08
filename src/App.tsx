@@ -24,6 +24,7 @@ import type {
   AppFlowPhase,
   MeasurementResult,
   MeasurementStats,
+  PostureRegisterStep,
 } from "./features/flow/types";
 import { PermissionPopup } from "./features/flow/components/PermissionPopup";
 import {
@@ -72,6 +73,62 @@ import type { SoundSettings } from "./features/sound/types/soundSettings";
 import { useQrDataUrl } from "./lib/useQrDataUrl";
 import { preloadShareImageCache } from "./lib/shareResultCapture";
 
+/** カメラ権限が拒否されている／取得に失敗したときの共通案内 */
+const CAMERA_PERMISSION_BLOCKED_MESSAGE_JA =
+  "カメラを利用するには許可が必要です。OSまたはブラウザーの設定でこのアプリにカメラを許可してから、もう一度お試しください。";
+
+function statusIndicatesCameraPermissionFailure(status: string): boolean {
+  const lower = status.toLowerCase();
+  return (
+    lower.includes("notallowederror") ||
+    lower.includes("permission denied") ||
+    lower.includes("permission")
+  );
+}
+
+async function ensurePairedAndCameraPermission(
+  isPairedLive: boolean,
+  setPermissionPopupMessage: (message: string | null) => void,
+): Promise<boolean> {
+  if (!isPairedLive) {
+    setPermissionPopupMessage(
+      "スマートフォンとの接続を確認してください。ホームの「スマホと接続」で QR をスキャンし、接続が完了した状態で再度お試しください。",
+    );
+    return false;
+  }
+
+  if (
+    typeof navigator === "undefined" ||
+    !navigator.mediaDevices ||
+    typeof navigator.mediaDevices.getUserMedia !== "function"
+  ) {
+    setPermissionPopupMessage(
+      "この環境ではカメラを利用できません。ブラウザーまたはOS設定をご確認ください。",
+    );
+    return false;
+  }
+
+  if (
+    typeof navigator.permissions !== "undefined" &&
+    typeof navigator.permissions.query === "function"
+  ) {
+    try {
+      const cameraPermission = await navigator.permissions.query({
+        name: "camera" as PermissionName,
+      });
+
+      if (cameraPermission.state === "denied") {
+        setPermissionPopupMessage(CAMERA_PERMISSION_BLOCKED_MESSAGE_JA);
+        return false;
+      }
+    } catch {
+      // 権限状態を事前取得できない環境では通常フローを継続する。
+    }
+  }
+
+  return true;
+}
+
 function App() {
   const [flowPhase, setFlowPhase] = useState<AppFlowPhase>(() =>
     hasCompletedOnboardingStory() ? "home" : "onboarding",
@@ -103,18 +160,20 @@ function App() {
   const [lastAcquiredCharacterId, setLastAcquiredCharacterId] = useState<
     string | null
   >(null);
-  const [qrRegenerationTick, setQrRegenerationTick] = useState(0);
   const [soundSettings, setSoundSettings] = useState<SoundSettings>(() =>
     loadSoundSettings(),
   );
+  const [postureRegisterStep, setPostureRegisterStep] =
+    useState<PostureRegisterStep>("intro");
 
-  const trackingEnabled = flowPhase === "measuring";
+  const trackingEnabled =
+    flowPhase === "measuring" ||
+    (flowPhase === "postureRegister" && postureRegisterStep !== "intro");
   useEffect(() => {
-    const active = flowPhase === "measuring";
-    void syncPairingMeasuringSession(active).catch(() => {
+    void syncPairingMeasuringSession(trackingEnabled).catch(() => {
       // Browser preview cannot reach the native pairing bridge.
     });
-  }, [flowPhase]);
+  }, [trackingEnabled]);
   const {
     videoRef,
     canvasRef,
@@ -133,12 +192,13 @@ function App() {
     status: pairingStatus,
     isLoading: isPairingLoading,
     error: pairingError,
-    refresh: refreshPairing,
+    refresh: refreshPairingSnapshot,
   } = usePairingState();
 
   const pairingLink = buildPairingLink(pairingInfo);
-  const qrImageDataUrl = useQrDataUrl(pairingLink, qrRegenerationTick);
-  const isPaired = pairingStatus?.paired ?? false;
+  const qrImageDataUrl = useQrDataUrl(pairingLink);
+  const isPairedLive =
+    Boolean(pairingStatus?.paired) && (pairingStatus?.wsClientCount ?? 0) > 0;
   const acquiredCharacterIds = useMemo(
     () => new Set(acquiredCharacters.map((character) => character.characterId)),
     [acquiredCharacters],
@@ -166,7 +226,11 @@ function App() {
     [acquiredCharacterIds, acquiredCharacters, selectedProfileCharacterId],
   );
   const effectiveBadPosture =
-    trackingEnabled && snapshot.baselineReady && !isPaused && isBadPosture;
+    flowPhase === "measuring" &&
+    trackingEnabled &&
+    snapshot.baselineReady &&
+    !isPaused &&
+    isBadPosture;
 
   const measurementAccumulatorRef = useRef(createMeasurementAccumulator());
   const measurementStartedAtRef = useRef<string | null>(null);
@@ -180,6 +244,14 @@ function App() {
   useEffect(() => {
     latestPausedRef.current = isPaused;
   }, [isPaused]);
+
+  useEffect(() => {
+    if (flowPhase === "postureRegister") {
+      return;
+    }
+
+    setPostureRegisterStep("intro");
+  }, [flowPhase]);
 
   useEffect(() => {
     const nextProfileCharacter = getProfileCharacter(
@@ -199,11 +271,6 @@ function App() {
     setSelectedProfileCharacterId(nextProfileCharacterId);
     saveSelectedProfileCharacterId(nextProfileCharacterId);
   }, [acquiredCharacterIds, acquiredCharacters, selectedProfileCharacterId]);
-
-  const handleRefreshPairing = useCallback(async () => {
-    await refreshPairing();
-    setQrRegenerationTick((current) => current + 1);
-  }, [refreshPairing]);
 
   const sampleMeasurementStats = useCallback((nowMs = performance.now()) => {
     const latestSnapshot = latestSnapshotRef.current;
@@ -274,35 +341,12 @@ function App() {
     setIsStartPending(true);
 
     try {
-      if (
-        typeof navigator === "undefined" ||
-        !navigator.mediaDevices ||
-        typeof navigator.mediaDevices.getUserMedia !== "function"
-      ) {
-        setPermissionPopupMessage(
-          "この環境ではカメラを利用できません。ブラウザーまたはOS設定をご確認ください。",
-        );
+      const ok = await ensurePairedAndCameraPermission(
+        isPairedLive,
+        setPermissionPopupMessage,
+      );
+      if (!ok) {
         return;
-      }
-
-      if (
-        typeof navigator.permissions !== "undefined" &&
-        typeof navigator.permissions.query === "function"
-      ) {
-        try {
-          const cameraPermission = await navigator.permissions.query({
-            name: "camera" as PermissionName,
-          });
-
-          if (cameraPermission.state === "denied") {
-            setPermissionPopupMessage(
-              "カメラ権限がオフになっています。OSまたはブラウザーの設定でこのアプリにカメラを許可してから、もう一度お試しください。",
-            );
-            return;
-          }
-        } catch {
-          // 権限状態を事前取得できない環境では通常フローを継続する。
-        }
       }
 
       measurementAccumulatorRef.current = createMeasurementAccumulator();
@@ -318,6 +362,69 @@ function App() {
       setIsStartPending(false);
     }
   };
+
+  const handleBeginPostureRegisterCalibrating = useCallback(async () => {
+    if (isStartPending) {
+      return;
+    }
+
+    setIsStartPending(true);
+
+    try {
+      const ok = await ensurePairedAndCameraPermission(
+        isPairedLive,
+        setPermissionPopupMessage,
+      );
+      if (!ok) {
+        return;
+      }
+
+      resetPostureEngine();
+      setPostureRegisterStep("calibrating");
+    } finally {
+      setIsStartPending(false);
+    }
+  }, [isPairedLive, isStartPending, resetPostureEngine]);
+
+  const handlePostureRegisterCalibratingComplete = useCallback(() => {
+    setPostureRegisterStep("settings");
+  }, []);
+
+  const handleBeginMeasurementAfterRegister = useCallback(async () => {
+    if (isStartPending) {
+      return;
+    }
+
+    if (!snapshot.baselineReady) {
+      setPermissionPopupMessage(
+        "基準線の学習が完了していません。しばらくお待ちのうえ、もう一度お試しください。",
+      );
+      return;
+    }
+
+    setIsStartPending(true);
+
+    try {
+      const ok = await ensurePairedAndCameraPermission(
+        isPairedLive,
+        setPermissionPopupMessage,
+      );
+      if (!ok) {
+        return;
+      }
+
+      measurementAccumulatorRef.current = createMeasurementAccumulator();
+      measurementStartedAtRef.current = new Date().toISOString();
+      setMeasurementStats(EMPTY_MEASUREMENT_STATS);
+      setLastMeasurementResult(null);
+      setLastAcquiredCharacterId(null);
+      setIsPaused(false);
+      setFlowPhase("measuring");
+      void primeRecoverySound();
+    } finally {
+      setIsStartPending(false);
+    }
+  }, [isPairedLive, isStartPending, snapshot.baselineReady]);
 
   const handleFinishMeasurement = useCallback(() => {
     const finalStats = sampleMeasurementStats();
@@ -550,25 +657,26 @@ function App() {
   }, [isPaused]);
 
   useEffect(() => {
-    if (flowPhase !== "measuring") {
+    if (flowPhase !== "measuring" && flowPhase !== "postureRegister") {
       return;
     }
 
-    const lowerStatus = status.toLowerCase();
-    const isPermissionError =
-      lowerStatus.includes("notallowederror") ||
-      lowerStatus.includes("permission denied") ||
-      lowerStatus.includes("permission");
-
-    if (!isPermissionError) {
+    if (flowPhase === "postureRegister" && postureRegisterStep === "intro") {
       return;
     }
 
-    setPermissionPopupMessage(
-      "カメラ権限が無効のため測定を開始できませんでした。設定でカメラを許可してから再度開始してください。",
-    );
-    setFlowPhase("qrScanned");
-  }, [flowPhase, status]);
+    if (!statusIndicatesCameraPermissionFailure(status)) {
+      return;
+    }
+
+    setPermissionPopupMessage(CAMERA_PERMISSION_BLOCKED_MESSAGE_JA);
+
+    if (flowPhase === "postureRegister") {
+      setPostureRegisterStep("intro");
+    } else {
+      setFlowPhase("qrScanned");
+    }
+  }, [flowPhase, postureRegisterStep, status]);
 
   useEffect(() => {
     configureRecoverySound({
@@ -602,10 +710,11 @@ function App() {
     <>
       <AppFlowRouter
         flowPhase={flowPhase}
+        postureRegisterStep={postureRegisterStep}
         qrImageDataUrl={qrImageDataUrl}
         isPairingLoading={isPairingLoading}
         pairingError={pairingError}
-        isPaired={isPaired}
+        isPaired={isPairedLive}
         deviceName={pairingStatus?.deviceName ?? null}
         acquiredCharacters={acquiredCharacters}
         profileCharacter={profileCharacter}
@@ -626,10 +735,17 @@ function App() {
         isStartPending={isStartPending}
         soundSettings={soundSettings}
         onSoundSettingsChange={setSoundSettings}
-        onRefreshPairing={() => {
-          void handleRefreshPairing();
+        onOpenMobileConnect={() => {
+          void refreshPairingSnapshot();
+          setFlowPhase("mobileConnect");
         }}
-        onContinueFromPaired={() => setFlowPhase("qrScanned")}
+        onPairingStatusRefresh={() => {
+          void refreshPairingSnapshot();
+        }}
+        onContinueFromPaired={() => {
+          setPostureRegisterStep("intro");
+          setFlowPhase("postureRegister");
+        }}
         onProfileCharacterSelect={handleProfileCharacterSelect}
         onToggleFavoriteCharacter={handleToggleFavoriteCharacter}
         onDebugClearAcquiredCharacters={handleDebugClearAcquiredCharacters}
@@ -638,6 +754,15 @@ function App() {
         onStartMeasurement={() => {
           void handleStartMeasurement();
         }}
+        onBeginPostureRegisterCalibrating={() => {
+          void handleBeginPostureRegisterCalibrating();
+        }}
+        onBeginMeasurementAfterRegister={() => {
+          void handleBeginMeasurementAfterRegister();
+        }}
+        onPostureRegisterCalibratingComplete={
+          handlePostureRegisterCalibratingComplete
+        }
         onBackHome={() => setFlowPhase("home")}
         onFinishMeasurement={handleFinishMeasurement}
         onMeasureAgain={() => {

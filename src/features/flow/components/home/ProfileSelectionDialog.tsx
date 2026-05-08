@@ -83,7 +83,7 @@ export function ProfileSelectionDialog({
           </div>
         ) : (
           <p className="profile-selection-empty">
-            まだピンアナゴを習得していません
+            まだピンアナゴを獲得していません
           </p>
         )}
       </div>

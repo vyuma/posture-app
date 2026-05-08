@@ -120,7 +120,7 @@ export function CharacterCollection({
       heartSparkleTimerRef.current = window.setTimeout(() => {
         setHeartSparkleCharacterId(null);
         heartSparkleTimerRef.current = null;
-      }, 440);
+      }, 520);
     });
   }
 
@@ -152,7 +152,7 @@ export function CharacterCollection({
           >
             {isDebugResetConfirming
               ? "DEBUG: もう一度押す"
-              : "DEBUG: 習得データ削除"}
+              : "DEBUG: 獲得データ削除"}
           </button>
         ) : null}
         {debugResetMessage ? (
@@ -174,7 +174,7 @@ export function CharacterCollection({
               >
                 <article
                   className="home-character-card is-locked"
-                  aria-label={`未習得キャラクター ${formatCollectionNumber(number)}`}
+                  aria-label={`未獲得キャラクター ${formatCollectionNumber(number)}`}
                 >
                   <span className="home-locked-slot">
                     {formatCollectionNumber(number)}
@@ -227,7 +227,9 @@ export function CharacterCollection({
                 className={`home-favorite-heart ${isFavorite ? "is-active" : ""}`}
                 onClick={(event) => {
                   event.stopPropagation();
-                  triggerHeartSparkle(character.id);
+                  if (!isFavorite) {
+                    triggerHeartSparkle(character.id);
+                  }
                   onToggleFavoriteCharacter(character.id);
                 }}
                 aria-pressed={isFavorite}

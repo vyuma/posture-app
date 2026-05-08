@@ -153,19 +153,14 @@
   }
 }
 
-@keyframes home-heart-card-sparkle {
-  0% {
-    opacity: 0;
-    transform: translate3d(-12%, 8%, 0) rotate(-8deg) scale(0.96);
+/* お気に入り追加時：ハート表面をハイライトが一度だけ横切る（background-positionでクリップ不要） */
+@keyframes home-heart-shine-sweep {
+  from {
+    background-position: 118% 50%;
   }
 
-  32% {
-    opacity: 0.95;
-  }
-
-  100% {
-    opacity: 0;
-    transform: translate3d(10%, -8%, 0) rotate(6deg) scale(1.04);
+  to {
+    background-position: -18% 50%;
   }
 }
 
@@ -781,29 +776,55 @@
   line-height: 0;
 }
 
-/* 右上・ロゴと対称になるよう同じインデックスで配置 */
+/*
+ * 閉じる：Figma「スマホと接続」1512×982 に合わせる
+ * hugeicons:cancel-circle 相当 56×56、left:1376 → 右インレット (1512-1376-56)=80 px
+ */
 .qr-modal-close {
   position: absolute;
-  top: var(--flow-brand-offset-y);
-  right: var(--flow-brand-offset-x);
   z-index: 11;
-  width: clamp(36px, 4dvh, 46px);
-  height: clamp(36px, 4dvh, 46px);
+  /* 上 64/982：ヘッダー（高さ120）内でロゴ top:40 よりやや下 */
+  top: calc(64 * 100dvh / 982);
+  /* 右 80/1512：ロゴ左 80/1512 と対称 */
+  right: calc(80 * 100vw / 1512);
+  width: clamp(44px, calc(56 * 100vw / 1512), 56px);
+  height: clamp(44px, calc(56 * 100vw / 1512), 56px);
   display: grid;
   place-items: center;
+  padding: 0;
   border: 0;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.28);
-  color: #ffffff;
-  font-size: 1.3rem;
-  font-weight: 900;
-  line-height: 1;
-  transition: background 0.15s;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.qr-modal-close-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
 }
 
 .qr-modal-close:hover,
 .qr-modal-close:focus-visible {
-  background: rgba(255, 255, 255, 0.46);
+  opacity: 0.88;
+}
+
+.qr-modal-close:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.95);
+  outline-offset: 3px;
+}
+
+@supports (width: 1cqw) {
+  .qr-modal-close {
+    /* オーバーレイをクエリコンテナにし、パネル列と同じ幅基準で寸法を揃える */
+    top: calc(64 * 100cqh / 982);
+    right: calc(80 * 100cqw / 1512);
+    width: clamp(44px, calc(56 * 100cqw / 1512), 56px);
+    height: clamp(44px, calc(56 * 100cqw / 1512), 56px);
+  }
 }
 
 /*
@@ -844,10 +865,12 @@
 /* 「1」：タイトル下32／副題下62 */
 .qr-modal-left--step1 .qr-modal-title {
   margin: 0 0 calc(32px * var(--qr-scale));
+  font-weight: 800;
 }
 
 .qr-modal-left--step1 .qr-modal-subtitle {
   margin: 0 0 calc(62px * var(--qr-scale));
+  font-weight: 800;
 }
 
 /* 「2」：副題下32 */
@@ -857,6 +880,12 @@
 
 .qr-modal-left--step2 .qr-modal-subtitle {
   margin: 0 0 calc(32px * var(--qr-scale));
+}
+
+/* Step1：電話画像の下端を白カードの下端（内側）に揃える */
+.qr-modal-left--step1 {
+  padding-bottom: 0;
+  overflow: hidden;
 }
 
 /* Step2：触覚波のドロップシャドウが白カード外に広がらないようクリップ */
@@ -890,84 +919,27 @@
   margin: 0;
 }
 
+.qr-modal-left--step1 .qr-modal-phone-area {
+  align-self: stretch;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  align-items: flex-end;
+  justify-content: center;
+}
+
 .qr-modal-phone-img {
   width: auto;
-  max-width: calc(294px * var(--qr-scale));
+  max-width: calc(380px * var(--qr-scale));
   height: auto;
-  max-height: calc(295px * var(--qr-scale));
+  max-height: calc(381px * var(--qr-scale));
   object-fit: contain;
+  object-position: center bottom;
+  display: block;
+  margin-inline: auto;
 }
 
-/* 段2：サウンドと触覚（見た目トラック／ノブのみ） */
-.qr-modal-sound-haptic-toggle-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: calc(12px * var(--qr-scale));
-  min-height: calc(80px * var(--qr-scale));
-  padding: 0 calc(24px * var(--qr-scale));
-  background: #f5f5f5;
-  border-radius: calc(16px * var(--qr-scale));
-}
-
-.qr-modal-sound-haptic-toggle-label {
-  color: #666666;
-  font-size: max(0.9rem, calc(20px * var(--qr-scale)));
-  font-weight: 700;
-  letter-spacing: 0;
-}
-
-.qr-modal-sound-haptic-switch {
-  position: relative;
-  flex-shrink: 0;
-  width: calc(52px * var(--qr-scale));
-  height: calc(28px * var(--qr-scale));
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: #c4c8cc;
-  cursor: pointer;
-  transition:
-    background 0.18s ease,
-    box-shadow 0.18s ease;
-}
-
-.qr-modal-sound-haptic-switch.is-on {
-  background: #34add5;
-}
-
-.qr-modal-sound-haptic-switch:focus-visible {
-  outline: 2px solid #34add5;
-  outline-offset: calc(3px * var(--qr-scale));
-}
-
-.qr-modal-sound-haptic-switch-knob {
-  position: absolute;
-  top: 50%;
-  left: calc(3px * var(--qr-scale));
-  width: calc(22px * var(--qr-scale));
-  height: calc(22px * var(--qr-scale));
-  border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
-  transform: translateY(-50%);
-  transition: transform 0.18s ease;
-  pointer-events: none;
-}
-
-/* 52 - 22 - 6 = 24px 分ノブを右へ（左右 3px パディング想定） */
-.qr-modal-sound-haptic-switch.is-on .qr-modal-sound-haptic-switch-knob {
-  transform: translateY(-50%) translateX(calc(24px * var(--qr-scale)));
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .qr-modal-sound-haptic-switch,
-  .qr-modal-sound-haptic-switch-knob {
-    transition: none;
-  }
-}
-
-/* 段2：触覚案内用スマホ（phone.png）— 微振動＋ブランド色のゴースト＋波紋アーチ */
+/* Step2：触覚案内用スマホ（phone.png）— 微振動＋波紋アーチ。白カード内で水平中央に揃える */
 @keyframes qr-modal-phone-vibrate {
   0%,
   100% {
@@ -1018,11 +990,18 @@
 }
 
 .qr-modal-vibe-area {
-  flex: 1;
+  flex: 1 1 auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: calc(140px * var(--qr-scale));
+  min-height: 0;
+}
+
+.qr-modal-left--step2 .qr-modal-vibe-area {
+  align-self: stretch;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .qr-modal-vibe-stage {
@@ -1092,7 +1071,6 @@
   object-fit: contain;
   transform-origin: 50% 60%;
   animation: qr-modal-phone-vibrate 0.22s ease-in-out infinite;
-  /* 残像：ブランド色のゴーストを左右に薄く重ねて振動感を強調 */
   filter: drop-shadow(0.7px 0 0 rgba(52, 173, 213, 0.32))
     drop-shadow(-0.7px 0 0 rgba(52, 173, 213, 0.32))
     drop-shadow(0 calc(10px * var(--qr-scale)) calc(20px * var(--qr-scale))
@@ -1120,6 +1098,11 @@
   .qr-modal-vibe-arcs path {
     opacity: 0.7;
   }
+}
+
+.qr-modal-left--step1 .qr-modal-error-label {
+  margin: calc(12px * var(--qr-scale)) 0 calc(8px * var(--qr-scale));
+  flex-shrink: 0;
 }
 
 .qr-modal-error-label {
@@ -1341,9 +1324,9 @@
   container-name: qr-step2;
   --qr-today-heading-cqw: 5.8;
   --qr-today-teaser-shift-x-cqw: 0;
-  --qr-today-teaser-shift-y-cqh: 0;
+  --qr-today-teaser-shift-y-cqh: 15;
   --qr-today-char-max-cqw: 64;
-  --qr-today-char-max-cqh: 72;
+  --qr-today-char-max-cqh: 85;
   --qr-today-teaser-extra-gap-cqh: 5.5;
 
   flex: 0 0 calc(681px * var(--qr-scale));
@@ -1355,8 +1338,8 @@
   align-items: stretch;
   justify-content: flex-start;
   gap: 0;
-  padding: calc(36px * var(--qr-scale)) calc(40px * var(--qr-scale))
-    calc(36px * var(--qr-scale));
+  /* キャラ足元をカード下端（内側）に接するため下パディングなし */
+  padding: calc(36px * var(--qr-scale)) calc(40px * var(--qr-scale)) 0;
   border-radius: var(--qr-frost-radius);
   background: var(--qr-frost-fill);
   backdrop-filter: blur(var(--qr-frost-blur));
@@ -1443,11 +1426,11 @@
   }
 }
 
-/* グリッド2行目：残り領域の中で中央下に立たせる */
+/* グリッド2行目：残り領域の下端にキャラを接する */
 .qr-modal-today-character {
   grid-row: 2;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: center;
   box-sizing: border-box;
   min-height: 0;
@@ -1462,7 +1445,8 @@
   width: auto;
   max-width: calc(var(--qr-today-char-max-cqw, 48) * 1cqw);
   object-fit: contain;
-  object-position: center center;
+  object-position: center bottom;
+  display: block;
   filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.12));
 }
 
@@ -1531,27 +1515,6 @@
     opacity: 0.42;
     transform: none;
   }
-}
-
-/* Frame外：機能用（FigmaのFrame 44コンテンツ外に置くとSpecと整合） */
-.qr-modal-right-col .qr-modal-refresh-btn {
-  flex-shrink: 0;
-}
-
-.qr-modal-refresh-btn {
-  border: 1px solid rgba(255, 255, 255, 0.52);
-  border-radius: 999px;
-  padding: 8px 18px;
-  background: rgba(255, 255, 255, 0.22);
-  color: #ffffff;
-  font-size: 0.82rem;
-  font-weight: 700;
-  transition: background 0.15s;
-}
-
-.qr-modal-refresh-btn:hover,
-.qr-modal-refresh-btn:focus-visible {
-  background: rgba(255, 255, 255, 0.38);
 }
 
 .qr-modal-debug-actions {
@@ -1770,7 +1733,7 @@
   will-change: transform, filter;
 }
 
-/* 未習得：チルト・影は不要（意図を明示） */
+/* 未獲得：チルト・影は不要（意図を明示） */
 .home-character-slot.is-locked-slot {
   filter: none;
   transform: none;
@@ -1902,28 +1865,30 @@
   animation: home-acquired-card-glitter 0.46s ease-out;
 }
 
-.home-character-slot.is-heart-sparkling::before {
+/* カード全体ではなくハートボタン円内だけにグロス帯（::after を inset:0 + 角丸でマスク） */
+.home-character-slot.is-heart-sparkling .home-favorite-heart::after {
   content: '';
   position: absolute;
-  inset: 9% 6%;
-  z-index: 16;
+  inset: 0;
+  border-radius: inherit;
   pointer-events: none;
-  border-radius: clamp(18px, 2.2vw, 33px);
-  background:
-    radial-gradient(circle at 80% 76%, rgba(255, 255, 255, 0.98) 0 2px, transparent 3px),
-    radial-gradient(circle at 70% 67%, rgba(255, 232, 232, 0.94) 0 2px, transparent 3px),
-    radial-gradient(circle at 58% 83%, rgba(255, 255, 255, 0.86) 0 1.5px, transparent 2.8px),
-    linear-gradient(
-      116deg,
-      rgba(255, 255, 255, 0) 28%,
-      rgba(255, 255, 255, 0.8) 54%,
-      rgba(255, 255, 255, 0) 76%
-    );
-  animation: home-heart-card-sparkle 0.42s ease-out;
+  background: linear-gradient(
+    104deg,
+    rgba(255, 255, 255, 0) 34%,
+    rgba(255, 255, 255, 0.28) 44%,
+    rgba(255, 255, 255, 0.88) 50%,
+    rgba(255, 255, 255, 0.3) 56%,
+    rgba(255, 255, 255, 0) 66%
+  );
+  background-size: 280% 100%;
+  background-position: 118% 50%;
+  background-repeat: no-repeat;
+  mix-blend-mode: soft-light;
+  animation: home-heart-shine-sweep 0.5s cubic-bezier(0.2, 0.85, 0.28, 1) forwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .home-character-slot.is-heart-sparkling::before {
+  .home-character-slot.is-heart-sparkling .home-favorite-heart::after {
     animation: none;
     opacity: 0;
   }
@@ -2011,6 +1976,7 @@
   -webkit-line-clamp: 2;
   font-size: clamp(17px, 8.77cqw, 26.36px);
   font-weight: 700;
+  font-synthesis: weight;
   line-height: clamp(21px, 7.44cqh, 31px);
   letter-spacing: 0;
   overflow-wrap: anywhere;
@@ -2046,6 +2012,7 @@
   background: color-mix(in srgb, var(--home-character-color, #53555a) 20%, #ffffff);
   font-size: clamp(10px, 3.99cqw, 12px);
   font-weight: 700;
+  font-synthesis: weight;
   letter-spacing: 0;
   line-height: clamp(12px, 3.36cqh, 14px);
   white-space: nowrap;
@@ -2215,14 +2182,6 @@
   gap: clamp(0.5rem, 2vw, 0.75rem);
   padding: clamp(1.25rem, 4vw, 1.625rem) clamp(1rem, 4vw, 1.5rem)
     clamp(0.65rem, 2vw, 0.875rem);
-}
-
-.collection-detail-eyebrow {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.94);
-  font-size: clamp(0.92rem, 1.5vw, 1rem);
-  font-weight: 800;
-  text-shadow: 0 2px 10px rgba(0, 40, 60, 0.18);
 }
 
 .collection-detail-close {
