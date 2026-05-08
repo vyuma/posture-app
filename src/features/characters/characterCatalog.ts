@@ -32,7 +32,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
       primary: "#f05a63",
       soft: "#f6d2d4",
     },
-    personalityTags: ["頑張り屋さん", "まっすぐ"],
+    personalityTags: ["頑張り屋さん", "負けず嫌い"],
   },
   {
     id: "kuro-anyago",
@@ -48,7 +48,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
   },
   {
     id: "hat-anago",
-    name: "ハットアナゴ",
+    name: "ハットナゴ",
     rarity: "rare",
     story: "休憩と集中の切り替えが上手な、おしゃれ好きのピンアナゴ。",
     portraitSrc: "/characters/anago/hat-anago/portrait.png",
@@ -56,7 +56,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
       primary: "#1677c8",
       soft: "#c8dbee",
     },
-    personalityTags: ["しっかり者", "おしゃれ"],
+    personalityTags: ["しっかり者", "リーダー気質"],
   },
   {
     id: "oto-anago",
@@ -68,11 +68,11 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
       primary: "#777777",
       soft: "#f1f1ef",
     },
-    personalityTags: ["音楽好き", "リズム感"],
+    personalityTags: ["音楽好き", "クリエイティブ"],
   },
   {
     id: "dot-nago",
-    name: "ドットナゴ",
+    name: "クマアナゴ",
     rarity: "rare",
     story: "ドット模様と一緒に、集中のリズムを刻むピンアナゴ。",
     portraitSrc: "/characters/anago/dot-nago/portrait.png",
@@ -80,7 +80,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
       primary: "#d4aa20",
       soft: "#f1e9bf",
     },
-    personalityTags: ["ドット", "集中型"],
+    personalityTags: ["おっとり", "天然"],
   },
   {
     id: "moja-anago",
@@ -92,7 +92,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
       primary: "#36a25d",
       soft: "#c9ead2",
     },
-    personalityTags: ["もじゃもじゃ", "こだわり強い"],
+    personalityTags: ["くせもの", "こだわり強い"],
   },
 ];
 

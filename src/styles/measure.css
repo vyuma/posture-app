@@ -13,7 +13,8 @@
   justify-content: center;
   box-sizing: border-box;
   min-height: 100dvh;
-  padding: clamp(52px, 9vh, 88px) clamp(16px, 3.2vw, 36px) clamp(20px, 4.5vh, 40px);
+  padding: clamp(3.25rem, 9svh, 5.5rem) var(--app-viewport-inline)
+    clamp(1.25rem, 4.5svh, 2.5rem);
   overflow-y: auto;
 }
 
@@ -52,11 +53,11 @@
 .measure-layout {
   flex: 0 1 auto;
   /* 狭い窓はコンパクト、広い窓は vw に追従して拡大（上限あり） */
-  width: min(1180px, max(720px, 76vw), calc(100vw - 32px));
+  width: min(73.75rem, max(45rem, 76vw), calc(100vw - 2rem));
   min-height: 0;
   margin-inline: auto;
   display: grid;
-  grid-template-columns: minmax(260px, 36%) minmax(0, 1fr);
+  grid-template-columns: minmax(min(16.25rem, 100%), 36%) minmax(0, 1fr);
   gap: clamp(16px, 2.8vw, 32px);
   align-items: stretch;
 }
@@ -67,7 +68,7 @@
   gap: clamp(12px, 1.5vw, 16px);
   min-width: 0;
   padding: clamp(16px, 1.85vw, 22px);
-  border-radius: clamp(24px, 3.6vw, 34px);
+  border-radius: var(--app-radius-panel);
   background: rgba(255, 255, 255, 0.97);
   border: 1px solid rgba(45, 82, 96, 0.08);
   box-shadow:
@@ -99,8 +100,8 @@
 
 .measure-icon-btn {
   box-sizing: border-box;
-  width: 50px;
-  height: 50px;
+  width: var(--app-control-min-hit);
+  height: var(--app-control-min-hit);
   padding: 0;
   border-radius: 50%;
   display: grid;
@@ -137,7 +138,7 @@
 .measure-metrics-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: clamp(0.5rem, 1.2vw, 0.75rem);
   min-width: 0;
 }
 
@@ -222,7 +223,7 @@
 .measure-camera-panel--figma {
   display: flex;
   flex-direction: column;
-  min-height: clamp(200px, min(34vh, 28vw), 520px);
+  min-height: clamp(12.5rem, min(34svh, 28vw), 32.5rem);
 }
 
 /* PostureViewer と暗幕オーバーレイを同じ枠に重ねるためのスタッキング */
@@ -326,8 +327,8 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  padding: 20px;
+  gap: clamp(0.75rem, 2vmin, 1rem);
+  padding: clamp(1rem, 3vmin, 1.5rem);
   border-radius: inherit;
   background: rgba(0, 0, 0, 0.5);
   color: #ffffff;
@@ -391,8 +392,9 @@
 .metric-tile {
   display: grid;
   gap: 4px;
-  padding: 13px 14px;
-  border-radius: 12px;
+  padding: clamp(0.6rem, 1.4vmin, 0.85rem)
+    clamp(0.7rem, 1.6vmin, 0.95rem);
+  border-radius: clamp(0.65rem, 1.3vmin, 0.85rem);
   background: rgba(255, 255, 255, 0.82);
   border: 1px solid rgba(45, 82, 96, 0.1);
 }
@@ -500,18 +502,37 @@
 
 /* 単列：上＝カメラ、下＝操作（一覧性） */
 @media (max-width: 920px) {
+  .measuring-screen {
+    justify-content: flex-start;
+    padding-top: clamp(4.5rem, 10svh, 6rem);
+  }
+
   .measure-layout {
     grid-template-columns: 1fr;
     grid-auto-rows: auto;
-    width: min(600px, max(360px, 88vw), calc(100vw - 24px));
+    width: min(37.5rem, 100%);
   }
 
   .measure-camera-panel--figma {
     order: -1;
-    min-height: min(40vh, 320px);
+    min-height: clamp(14rem, 42svh, 20rem);
   }
 
   .measure-control-card {
     order: 0;
+  }
+}
+
+@media (max-width: 520px) {
+  .measure-metrics-row {
+    grid-template-columns: 1fr;
+  }
+
+  .measure-control-head {
+    align-items: center;
+  }
+
+  .measure-control-title {
+    font-size: clamp(1rem, 6vw, 1.35rem);
   }
 }

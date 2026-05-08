@@ -18,26 +18,24 @@ import {
   loadSelectedProfileCharacterId,
   saveSelectedProfileCharacterId,
 } from "./features/characters/profileCharacterStorage";
-import type {
-  AcquiredCharacter,
-  CharacterDefinition,
-} from "./features/characters/types";
-import {
-  CodeReadScreen,
-  HomeScreen,
-  MeasuringScreen,
-  PostureRegisteredScreen,
-} from "./features/flow/components/FlowScreens";
+import type { AcquiredCharacter } from "./features/characters/types";
+import { AppFlowRouter } from "./features/flow/components/AppFlowRouter";
 import type {
   AppFlowPhase,
   MeasurementResult,
   MeasurementStats,
-  PostureTimelineSegment,
-  RewardRule,
 } from "./features/flow/types";
+import { PermissionPopup } from "./features/flow/components/PermissionPopup";
+import {
+  appendPostureTimelineSlice,
+  createMeasurementAccumulator,
+  EMPTY_MEASUREMENT_STATS,
+  finalizePostureTimeline,
+  REWARD_RULE,
+  toMeasurementStats,
+} from "./features/flow/services/measurementSession";
 import {
   hasCompletedOnboardingStory,
-  OnboardingStoryScreen,
   saveOnboardingStoryCompleted,
 } from "./features/onboarding";
 import {
@@ -49,7 +47,12 @@ import {
 } from "./features/overlay/overlayState";
 import { usePairingState } from "./features/pairing";
 import { buildPairingLink } from "./features/pairing/services/pairingLink";
-import { sendPostureSignal } from "./features/pairing/services/desktopBridge";
+import {
+  sendAcquiredCharacterEvent,
+  sendAcquiredCharactersCleared,
+  sendPostureSignal,
+  syncPairingMeasuringSession,
+} from "./features/pairing/services/desktopBridge";
 import {
   usePostureTracking,
   usePostureTransitionEffects,
@@ -68,66 +71,6 @@ import {
 import type { SoundSettings } from "./features/sound/types/soundSettings";
 import { useQrDataUrl } from "./lib/useQrDataUrl";
 import { preloadShareImageCache } from "./lib/shareResultCapture";
-
-type MeasurementAccumulator = MeasurementStats & {
-  lastSampleAtMs: number | null;
-  postureTimeline: PostureTimelineSegment[];
-};
-
-/** 直前の active 終端に接する区間だけマージし、姿勢状態の切替で区間分割する */
-function appendPostureTimelineSlice(
-  timeline: PostureTimelineSegment[],
-  prevActiveMs: number,
-  nextActiveMs: number,
-  isGood: boolean,
-) {
-  if (nextActiveMs <= prevActiveMs || !Number.isFinite(nextActiveMs)) {
-    return;
-  }
-
-  const last = timeline[timeline.length - 1];
-  if (
-    last !== undefined &&
-    last.endMs === prevActiveMs &&
-    last.isGood === isGood
-  ) {
-    last.endMs = nextActiveMs;
-    return;
-  }
-
-  timeline.push({
-    startMs: prevActiveMs,
-    endMs: nextActiveMs,
-    isGood,
-  });
-}
-
-function finalizePostureTimeline(
-  timeline: PostureTimelineSegment[],
-  activeMeasurementMs: number,
-): PostureTimelineSegment[] {
-  if (activeMeasurementMs <= 0 || timeline.length === 0) {
-    return [];
-  }
-
-  const cloned = timeline.map((segment) => ({ ...segment }));
-  const last = cloned[cloned.length - 1];
-  if (last !== undefined) {
-    last.endMs = activeMeasurementMs;
-  }
-
-  return cloned.filter((segment) => segment.endMs > segment.startMs);
-}
-
-const REWARD_RULE: RewardRule = {
-  minDurationMs: 0,
-  minGoodRatio: 0.5,
-};
-const EMPTY_MEASUREMENT_STATS: MeasurementStats = {
-  activeMeasurementMs: 0,
-  goodMs: 0,
-  goodRatio: 0,
-};
 
 function App() {
   const [flowPhase, setFlowPhase] = useState<AppFlowPhase>(() =>
@@ -166,6 +109,12 @@ function App() {
   );
 
   const trackingEnabled = flowPhase === "measuring";
+  useEffect(() => {
+    const active = flowPhase === "measuring";
+    void syncPairingMeasuringSession(active).catch(() => {
+      // Browser preview cannot reach the native pairing bridge.
+    });
+  }, [flowPhase]);
   const {
     videoRef,
     canvasRef,
@@ -311,19 +260,10 @@ function App() {
   }, [flowPhase, sampleMeasurementStats]);
 
   const permissionPopup = permissionPopupMessage ? (
-    <section className="permission-popup-backdrop" role="dialog" aria-modal="true">
-      <div className="permission-popup">
-        <h2>カメラ権限を確認してください</h2>
-        <p>{permissionPopupMessage}</p>
-        <button
-          type="button"
-          className="permission-popup-close"
-          onClick={() => setPermissionPopupMessage(null)}
-        >
-          閉じる
-        </button>
-      </div>
-    </section>
+    <PermissionPopup
+      message={permissionPopupMessage}
+      onClose={() => setPermissionPopupMessage(null)}
+    />
   ) : null;
 
   const handleStartMeasurement = async () => {
@@ -413,6 +353,24 @@ function App() {
         acquiredCharacterId = nextRewardCharacter.id;
         setAcquiredCharacters(nextAcquiredCharacters);
         saveAcquiredCharacters(nextAcquiredCharacters);
+        void sendAcquiredCharacterEvent({
+          measurementId,
+          acquiredAt: endedAt,
+          characterId: nextRewardCharacter.id,
+          characterName: nextRewardCharacter.name,
+          rarity: nextRewardCharacter.rarity,
+          activeMeasurementMs: finalStats.activeMeasurementMs,
+          goodMs: finalStats.goodMs,
+          goodRatio: finalStats.goodRatio,
+          postureTimeline: timelineForResult,
+          story: nextRewardCharacter.story,
+          portraitSrc: nextRewardCharacter.portraitSrc,
+          personalityTags: nextRewardCharacter.personalityTags,
+          characterColor: nextRewardCharacter.characterColor,
+          toneClass: nextRewardCharacter.toneClass,
+        }).catch(() => {
+          // Browser preview cannot reach the native pairing bridge.
+        });
       }
     }
 
@@ -469,6 +427,9 @@ function App() {
     saveFavoriteCharacterIds(new Set());
     setCollectionResetTick((current) => current + 1);
     saveSelectedProfileCharacterId(null);
+    void sendAcquiredCharactersCleared().catch(() => {
+      // ブラウザプレビューなど Tauri 外では無視
+    });
   }, []);
 
   const handleCompleteOnboardingStory = useCallback(() => {
@@ -637,245 +598,60 @@ function App() {
     void preloadShareImageCache([...portraitSrcs, ...auxSrcs]);
   }, []);
 
-  const screen = renderFlowScreen({
-    flowPhase,
-    qrImageDataUrl,
-    isPairingLoading,
-    pairingError,
-    isPaired,
-    deviceName: pairingStatus?.deviceName ?? null,
-    acquiredCharacters,
-    profileCharacter,
-    selectedProfileCharacterId,
-    favoriteCharacterIds,
-    collectionResetTick,
-    nextCharacter,
-    lastMeasurementResult,
-    lastAcquiredCharacter,
-    videoRef,
-    canvasRef,
-    snapshot,
-    measurementStats,
-    effectiveBadPosture,
-    isPaused,
-    isOverlayEnabled,
-    isCharacterOverlayEnabled,
-    isStartPending,
-    soundSettings,
-    onSoundSettingsChange: setSoundSettings,
-    onRefreshPairing: () => {
-      void handleRefreshPairing();
-    },
-    onContinueFromPaired: () => setFlowPhase("qrScanned"),
-    onProfileCharacterSelect: handleProfileCharacterSelect,
-    onToggleFavoriteCharacter: handleToggleFavoriteCharacter,
-    onDebugClearAcquiredCharacters: handleDebugClearAcquiredCharacters,
-    onDebugShowOnboarding: () => setFlowPhase("onboarding"),
-    onCompleteOnboardingStory: handleCompleteOnboardingStory,
-    onStartMeasurement: () => {
-      void handleStartMeasurement();
-    },
-    onBackHome: () => setFlowPhase("home"),
-    onFinishMeasurement: handleFinishMeasurement,
-    onMeasureAgain: () => {
-      void handleStartMeasurement();
-    },
-    onPauseToggle: () => setIsPaused((current) => !current),
-    onOverlayEnabledChange: setIsOverlayEnabled,
-    onCharacterOverlayEnabledChange: setIsCharacterOverlayEnabled,
-    onShowCharacterOverlay: handleShowCharacterOverlay,
-    onResetCharacterPosition: handleResetCharacterPosition,
-  });
-
   return (
     <>
-      {screen}
+      <AppFlowRouter
+        flowPhase={flowPhase}
+        qrImageDataUrl={qrImageDataUrl}
+        isPairingLoading={isPairingLoading}
+        pairingError={pairingError}
+        isPaired={isPaired}
+        deviceName={pairingStatus?.deviceName ?? null}
+        acquiredCharacters={acquiredCharacters}
+        profileCharacter={profileCharacter}
+        selectedProfileCharacterId={selectedProfileCharacterId}
+        favoriteCharacterIds={favoriteCharacterIds}
+        collectionResetTick={collectionResetTick}
+        nextCharacter={nextCharacter}
+        lastMeasurementResult={lastMeasurementResult}
+        lastAcquiredCharacter={lastAcquiredCharacter}
+        videoRef={videoRef}
+        canvasRef={canvasRef}
+        snapshot={snapshot}
+        measurementStats={measurementStats}
+        effectiveBadPosture={effectiveBadPosture}
+        isPaused={isPaused}
+        isOverlayEnabled={isOverlayEnabled}
+        isCharacterOverlayEnabled={isCharacterOverlayEnabled}
+        isStartPending={isStartPending}
+        soundSettings={soundSettings}
+        onSoundSettingsChange={setSoundSettings}
+        onRefreshPairing={() => {
+          void handleRefreshPairing();
+        }}
+        onContinueFromPaired={() => setFlowPhase("qrScanned")}
+        onProfileCharacterSelect={handleProfileCharacterSelect}
+        onToggleFavoriteCharacter={handleToggleFavoriteCharacter}
+        onDebugClearAcquiredCharacters={handleDebugClearAcquiredCharacters}
+        onDebugShowOnboarding={() => setFlowPhase("onboarding")}
+        onCompleteOnboardingStory={handleCompleteOnboardingStory}
+        onStartMeasurement={() => {
+          void handleStartMeasurement();
+        }}
+        onBackHome={() => setFlowPhase("home")}
+        onFinishMeasurement={handleFinishMeasurement}
+        onMeasureAgain={() => {
+          void handleStartMeasurement();
+        }}
+        onPauseToggle={() => setIsPaused((current) => !current)}
+        onOverlayEnabledChange={setIsOverlayEnabled}
+        onCharacterOverlayEnabledChange={setIsCharacterOverlayEnabled}
+        onShowCharacterOverlay={handleShowCharacterOverlay}
+        onResetCharacterPosition={handleResetCharacterPosition}
+      />
       {permissionPopup}
     </>
   );
-}
-
-function renderFlowScreen({
-  flowPhase,
-  qrImageDataUrl,
-  isPairingLoading,
-  pairingError,
-  isPaired,
-  deviceName,
-  acquiredCharacters,
-  profileCharacter,
-  selectedProfileCharacterId,
-  favoriteCharacterIds,
-  collectionResetTick,
-  nextCharacter,
-  lastMeasurementResult,
-  lastAcquiredCharacter,
-  videoRef,
-  canvasRef,
-  snapshot,
-  measurementStats,
-  effectiveBadPosture,
-  isPaused,
-  isOverlayEnabled,
-  isCharacterOverlayEnabled,
-  isStartPending,
-  soundSettings,
-  onSoundSettingsChange,
-  onRefreshPairing,
-  onContinueFromPaired,
-  onProfileCharacterSelect,
-  onToggleFavoriteCharacter,
-  onDebugClearAcquiredCharacters,
-  onDebugShowOnboarding,
-  onCompleteOnboardingStory,
-  onStartMeasurement,
-  onBackHome,
-  onFinishMeasurement,
-  onMeasureAgain,
-  onPauseToggle,
-  onOverlayEnabledChange,
-  onCharacterOverlayEnabledChange,
-  onShowCharacterOverlay,
-  onResetCharacterPosition,
-}: {
-  flowPhase: AppFlowPhase;
-  qrImageDataUrl: string;
-  isPairingLoading: boolean;
-  pairingError: string | null;
-  isPaired: boolean;
-  deviceName: string | null;
-  acquiredCharacters: AcquiredCharacter[];
-  profileCharacter: CharacterDefinition | null;
-  selectedProfileCharacterId: string | null;
-  favoriteCharacterIds: Set<string>;
-  collectionResetTick: number;
-  nextCharacter: CharacterDefinition | null;
-  lastMeasurementResult: MeasurementResult | null;
-  lastAcquiredCharacter: CharacterDefinition | null;
-  videoRef: ReturnType<typeof usePostureTracking>["videoRef"];
-  canvasRef: ReturnType<typeof usePostureTracking>["canvasRef"];
-  snapshot: ReturnType<typeof usePostureTracking>["snapshot"];
-  measurementStats: MeasurementStats;
-  effectiveBadPosture: boolean;
-  isPaused: boolean;
-  isOverlayEnabled: boolean;
-  isCharacterOverlayEnabled: boolean;
-  isStartPending: boolean;
-  soundSettings: SoundSettings;
-  onSoundSettingsChange: (next: SoundSettings) => void;
-  onRefreshPairing: () => void;
-  onContinueFromPaired: () => void;
-  onProfileCharacterSelect: (characterId: string) => void;
-  onToggleFavoriteCharacter: (characterId: string) => void;
-  onDebugClearAcquiredCharacters: () => void;
-  onDebugShowOnboarding: () => void;
-  onCompleteOnboardingStory: () => void;
-  onStartMeasurement: () => void;
-  onBackHome: () => void;
-  onFinishMeasurement: () => void;
-  onMeasureAgain: () => void;
-  onPauseToggle: () => void;
-  onOverlayEnabledChange: (enabled: boolean) => void;
-  onCharacterOverlayEnabledChange: (enabled: boolean) => void;
-  onShowCharacterOverlay: () => void;
-  onResetCharacterPosition: () => void;
-}) {
-  switch (flowPhase) {
-    case "onboarding":
-      return (
-        <OnboardingStoryScreen onComplete={onCompleteOnboardingStory} />
-      );
-    case "home":
-      return (
-        <HomeScreen
-          characters={CHARACTER_CATALOG}
-          acquiredCharacters={acquiredCharacters}
-          profileCharacter={profileCharacter}
-          selectedProfileCharacterId={selectedProfileCharacterId}
-          favoriteCharacterIds={favoriteCharacterIds}
-          collectionResetTick={collectionResetTick}
-          qrImageDataUrl={qrImageDataUrl}
-          isPairingLoading={isPairingLoading}
-          pairingError={pairingError}
-          isPaired={isPaired}
-          deviceName={deviceName}
-          qrCharacter={nextCharacter}
-          isStartPending={isStartPending}
-          onRefreshPairing={onRefreshPairing}
-          onContinueFromPaired={onContinueFromPaired}
-          onDebugStartMeasurement={onStartMeasurement}
-          onProfileCharacterSelect={onProfileCharacterSelect}
-          onToggleFavoriteCharacter={onToggleFavoriteCharacter}
-          onDebugClearAcquiredCharacters={onDebugClearAcquiredCharacters}
-          onDebugShowOnboarding={onDebugShowOnboarding}
-        />
-      );
-    case "qrScanned":
-      return (
-        <CodeReadScreen
-          isStartPending={isStartPending}
-          soundSettings={soundSettings}
-          onSoundSettingsChange={onSoundSettingsChange}
-          isCharacterOverlayEnabled={isCharacterOverlayEnabled}
-          onCharacterOverlayEnabledChange={onCharacterOverlayEnabledChange}
-          onStartMeasurement={onStartMeasurement}
-          onBackHome={onBackHome}
-        />
-      );
-    case "measuring":
-      return (
-        <MeasuringScreen
-          videoRef={videoRef}
-          canvasRef={canvasRef}
-          snapshot={snapshot}
-          stats={measurementStats}
-          isBadPosture={effectiveBadPosture}
-          isPaused={isPaused}
-          isOverlayEnabled={isOverlayEnabled}
-          isCharacterOverlayEnabled={isCharacterOverlayEnabled}
-          soundSettings={soundSettings}
-          onSoundSettingsChange={onSoundSettingsChange}
-          onFinishMeasurement={onFinishMeasurement}
-          onPauseToggle={onPauseToggle}
-          onOverlayEnabledChange={onOverlayEnabledChange}
-          onCharacterOverlayEnabledChange={onCharacterOverlayEnabledChange}
-          onShowCharacterOverlay={onShowCharacterOverlay}
-          onResetCharacterPosition={onResetCharacterPosition}
-        />
-      );
-    case "postureRegistered":
-      return lastMeasurementResult ? (
-        <PostureRegisteredScreen
-          result={lastMeasurementResult}
-          acquiredCharacter={lastAcquiredCharacter}
-          fallbackCharacter={nextCharacter}
-          onBackHome={onBackHome}
-        />
-      ) : (
-        <HomeScreen
-          characters={CHARACTER_CATALOG}
-          acquiredCharacters={acquiredCharacters}
-          profileCharacter={profileCharacter}
-          selectedProfileCharacterId={selectedProfileCharacterId}
-          favoriteCharacterIds={favoriteCharacterIds}
-          collectionResetTick={collectionResetTick}
-          qrImageDataUrl={qrImageDataUrl}
-          isPairingLoading={isPairingLoading}
-          pairingError={pairingError}
-          isPaired={isPaired}
-          deviceName={deviceName}
-          qrCharacter={nextCharacter}
-          isStartPending={isStartPending}
-          onRefreshPairing={onRefreshPairing}
-          onContinueFromPaired={onContinueFromPaired}
-          onDebugStartMeasurement={onMeasureAgain}
-          onProfileCharacterSelect={onProfileCharacterSelect}
-          onToggleFavoriteCharacter={onToggleFavoriteCharacter}
-          onDebugClearAcquiredCharacters={onDebugClearAcquiredCharacters}
-          onDebugShowOnboarding={onDebugShowOnboarding}
-        />
-      );
-  }
 }
 
 function getProfileCharacter(
@@ -907,29 +683,6 @@ function findCharacterById(characterId: string) {
   return (
     CHARACTER_CATALOG.find((character) => character.id === characterId) ?? null
   );
-}
-
-function createMeasurementAccumulator(): MeasurementAccumulator {
-  return {
-    lastSampleAtMs: null,
-    postureTimeline: [],
-    ...EMPTY_MEASUREMENT_STATS,
-  };
-}
-
-function toMeasurementStats(
-  accumulator: MeasurementAccumulator,
-): MeasurementStats {
-  const goodRatio =
-    accumulator.activeMeasurementMs > 0
-      ? accumulator.goodMs / accumulator.activeMeasurementMs
-      : 0;
-
-  return {
-    activeMeasurementMs: accumulator.activeMeasurementMs,
-    goodMs: accumulator.goodMs,
-    goodRatio,
-  };
 }
 
 export default App;

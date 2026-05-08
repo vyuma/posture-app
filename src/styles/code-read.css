@@ -9,9 +9,9 @@
   --frame53-point: #13a2d7;
   --frame53-volume-track-muted: #e8e8e8;
 
-  --pr-fr1-horizontal-inset: clamp(16px, 9.591vw, 145px);
-  --pr-fr1-block-top: clamp(72px, 15.274dvh, 150px);
-  --pr-fr1-block-bottom: clamp(48px, 15.377dvh, 151px);
+  --pr-fr1-horizontal-inset: clamp(1rem, 9.591vw, 9.0625rem);
+  --pr-fr1-block-top: clamp(4.5rem, 15.274dvh, 9.375rem);
+  --pr-fr1-block-bottom: clamp(3rem, 15.377dvh, 9.4375rem);
 
   /* デザイン幅1222×高681 のスケール用：パディング＋若干の余白（はみ出し防止） */
   --frame53-scale-w-chrome: calc(2 * var(--pr-fr1-horizontal-inset) + 24px);
@@ -553,6 +553,12 @@
 }
 
 @media (max-width: 900px) {
+  .flow-screen.frame53-register-screen {
+    --pr-fr1-horizontal-inset: clamp(1rem, 5vw, 2rem);
+    --pr-fr1-block-top: clamp(4.5rem, 10svh, 6rem);
+    --pr-fr1-block-bottom: clamp(1rem, 4svh, 2rem);
+  }
+
   .frame53-panels-wrap {
     flex-wrap: wrap;
     align-content: center;
@@ -575,6 +581,41 @@
     width: 100%;
     max-width: 100%;
     min-height: unset;
-    height: clamp(260px, 42dvh, calc(681px * var(--pr-scale)));
+    height: clamp(16.25rem, 42svh, calc(681px * var(--pr-scale)));
+  }
+}
+
+@media (max-width: 560px) {
+  .frame53-panels-wrap {
+    width: 100%;
+    gap: clamp(0.75rem, 3svh, 1.25rem);
+  }
+
+  .frame53-left {
+    flex-basis: 100%;
+    width: 100%;
+    padding: clamp(1.25rem, 7vw, 2rem);
+    border-radius: var(--app-radius-panel);
+  }
+
+  .frame53-camera-panel {
+    height: clamp(13.75rem, 35svh, 18rem);
+    border-radius: var(--app-radius-panel);
+  }
+
+  .frame53-toggle-strip-switch {
+    width: clamp(2.75rem, 15vw, 3.25rem);
+    height: clamp(1.5rem, 8vw, 1.75rem);
+  }
+
+  .frame53-toggle-strip-switch-knob {
+    left: 0.1875rem;
+    width: clamp(1.125rem, 6vw, 1.375rem);
+    height: clamp(1.125rem, 6vw, 1.375rem);
+  }
+
+  .frame53-toggle-strip-switch.is-on .frame53-toggle-strip-switch-knob {
+    transform: translateY(-50%)
+      translateX(calc(100% + clamp(0.25rem, 2vw, 0.375rem)));
   }
 }

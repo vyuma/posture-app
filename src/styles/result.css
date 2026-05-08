@@ -7,7 +7,8 @@
   justify-content: flex-start;
   box-sizing: border-box;
   min-height: 100dvh;
-  padding: clamp(48px, 8vh, 88px) clamp(16px, 3vw, 32px) clamp(24px, 4vh, 40px);
+  padding: clamp(3rem, 8svh, 5.5rem) var(--app-viewport-inline)
+    clamp(1.5rem, 4svh, 2.5rem);
   overflow-y: auto;
   background: linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
 }
@@ -70,7 +71,7 @@
   --result-card-radius: clamp(22px, 3.5vw, 32px);
 
   position: relative;
-  width: min(720px, 100%);
+  width: min(45rem, 100%);
   display: grid;
   grid-template-columns: minmax(140px, 38%) minmax(0, 1fr);
   gap: clamp(16px, 3vw, 28px);
@@ -504,9 +505,9 @@
 .result-registered-figure--qr-fail {
   --result-fail-qr-width: 100%;
   --result-fail-qr-height: 100%;
-  --result-fail-qr-shift-x: -10px;
-  --result-fail-qr-shift-y: -330px;
-  --result-fail-qr-scale: 3.5;
+  --result-fail-qr-shift-x: clamp(-0.75rem, -1.4vw, -0.15rem);
+  --result-fail-qr-shift-y: clamp(-20.625rem, -42vw, -8rem);
+  --result-fail-qr-scale: 3.35;
 
   width: var(--result-fail-qr-width, 100%);
   height: var(--result-fail-qr-height, 100%);
@@ -672,7 +673,7 @@
 /* 共有用キャプチャ：結果カードと同じ枠・背景をそのまま使う（余計なグラデーションカードは付けない） */
 .result-registered-capture-root {
   width: 100%;
-  max-width: min(720px, 100%);
+  max-width: min(45rem, 100%);
 }
 
 .result-registered-stat-grid {
@@ -834,7 +835,7 @@
 
 .result-registered-footer {
   margin-top: clamp(22px, 4vh, 36px);
-  width: min(420px, 100%);
+  width: min(26.25rem, 100%);
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -865,14 +866,23 @@
 }
 
 @media (max-width: 600px) {
+  .result-screen--registered {
+    padding-top: clamp(4.5rem, 10svh, 6rem);
+  }
+
   .result-registered-card {
     grid-template-columns: 1fr;
-    max-width: 400px;
+    max-width: min(25rem, 100%);
   }
 
   .result-registered-col--character {
-    max-width: 220px;
+    max-width: min(13.75rem, 70vw);
     margin-inline: auto;
+  }
+
+  .result-registered-figure--qr-fail {
+    --result-fail-qr-shift-y: clamp(-13rem, -48vw, -7rem);
+    --result-fail-qr-scale: 2.65;
   }
 
   .result-posture-timeline-axis {

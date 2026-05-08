@@ -23,9 +23,11 @@ const CHARACTER_SRC: Record<Exclude<OverlayMode, "hidden">, string> = {
   bad: "/characters/anago/normal-nago/expressions/bad.png",
   paused: "/characters/anago/normal-nago/expressions/paused.png",
 };
+const HAPPY_CHARACTER_SRC = "/characters/anago/normal-nago/expressions/happy.png";
 
 const BAD_SINK_MAX_PX = 136;
 const BAD_SINK_PX_PER_SECOND = 34;
+const GOOD_RECOVERY_ANIMATION_MS = 1150;
 
 type DragState = {
   pointerId: number;
@@ -49,10 +51,21 @@ export function OverlayApp() {
   const dragStateRef = useRef<DragState | null>(null);
   const dragMovedRef = useRef(false);
   const positionOffsetRef = useRef(positionOffset);
+  const previousModeRef = useRef<OverlayMode>(DEFAULT_OVERLAY_STATE.mode);
+  const goodRecoveryTimerRef = useRef<number | null>(null);
+  const [isGoodRecoveryAnimating, setIsGoodRecoveryAnimating] = useState(false);
 
   useEffect(() => {
     positionOffsetRef.current = positionOffset;
   }, [positionOffset]);
+
+  useEffect(() => {
+    return () => {
+      if (goodRecoveryTimerRef.current !== null) {
+        window.clearTimeout(goodRecoveryTimerRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let disposed = false;
@@ -112,6 +125,27 @@ export function OverlayApp() {
   }, []);
 
   useEffect(() => {
+    const previousMode = previousModeRef.current;
+    previousModeRef.current = overlayState.mode;
+
+    if (goodRecoveryTimerRef.current !== null) {
+      window.clearTimeout(goodRecoveryTimerRef.current);
+      goodRecoveryTimerRef.current = null;
+    }
+
+    if (previousMode === "bad" && overlayState.mode === "good") {
+      setIsGoodRecoveryAnimating(true);
+      goodRecoveryTimerRef.current = window.setTimeout(() => {
+        setIsGoodRecoveryAnimating(false);
+        goodRecoveryTimerRef.current = null;
+      }, GOOD_RECOVERY_ANIMATION_MS);
+      return;
+    }
+
+    setIsGoodRecoveryAnimating(false);
+  }, [overlayState.mode]);
+
+  useEffect(() => {
     if (overlayState.mode !== "bad") {
       setBadSinkPx(0);
       return;
@@ -136,6 +170,12 @@ export function OverlayApp() {
     overlayState.mode === "hidden" || overlayState.userHidden
       ? null
       : overlayState.mode;
+  const characterSrc =
+    displayMode === "good" && isGoodRecoveryAnimating
+      ? HAPPY_CHARACTER_SRC
+      : displayMode
+        ? CHARACTER_SRC[displayMode]
+        : null;
 
   const handleHide = () => {
     void invoke("overlay_hide_character").catch(() => {
@@ -222,6 +262,9 @@ export function OverlayApp() {
       className={[
         "overlay-shell",
         displayMode ? `overlay-shell--${displayMode}` : "overlay-shell--hidden",
+        displayMode === "good" && isGoodRecoveryAnimating
+          ? "overlay-shell--good-recovery"
+          : "",
         displayMode && isPlacementHintVisible
           ? "overlay-shell--placement-hint"
           : "",
@@ -277,7 +320,7 @@ export function OverlayApp() {
               </div>
             ) : null}
             <img
-              src={CHARACTER_SRC[displayMode]}
+              src={characterSrc ?? CHARACTER_SRC.good}
               alt=""
               draggable={false}
             />

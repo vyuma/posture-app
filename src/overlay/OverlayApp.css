@@ -142,6 +142,10 @@ button {
   animation: character-rise 0.42s ease both, character-breathe 2.8s ease-in-out 0.42s infinite;
 }
 
+.overlay-shell--good.overlay-shell--good-recovery .overlay-character {
+  animation: character-recovery-celebration 1.15s cubic-bezier(0.2, 0.9, 0.2, 1) both;
+}
+
 .overlay-shell--bad .overlay-character {
   animation: character-worry 1.4s ease-in-out infinite;
 }
@@ -168,6 +172,21 @@ button {
   }
   50% {
     scale: 1.015;
+  }
+}
+
+@keyframes character-recovery-celebration {
+  0% {
+    translate: 0 42px;
+  }
+  42% {
+    translate: 0 -16px;
+  }
+  70% {
+    translate: 0 8px;
+  }
+  100% {
+    translate: 0 0;
   }
 }
 
@@ -308,6 +327,10 @@ button {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .overlay-shell--good.overlay-shell--good-recovery .overlay-character {
+    animation: none;
+  }
+
   .overlay-placement-hint-default,
   .overlay-placement-hint-hover {
     transition: none;
