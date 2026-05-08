@@ -4,10 +4,7 @@ import type {
   AcquiredCharacter,
   CharacterDefinition,
 } from "../../../characters/types";
-import {
-  COLLECTION_TOTAL_COUNT,
-  SHOW_DEBUG_COLLECTION_CONTROLS,
-} from "../shared/debugFlags";
+import { COLLECTION_TOTAL_COUNT } from "../shared/debugFlags";
 import { CharacterFigure } from "../shared/CharacterFigure";
 import { formatCollectionNumber } from "../shared/formatters";
 import {
@@ -19,25 +16,17 @@ type CharacterCollectionProps = {
   characters: CharacterDefinition[];
   acquiredCharacters: AcquiredCharacter[];
   favoriteCharacterIds: Set<string>;
-  resetTick: number;
   onCharacterDetailOpen: (characterId: string) => void;
   onToggleFavoriteCharacter: (characterId: string) => void;
-  onDebugClearAcquiredCharacters: () => void;
 };
 
 export function CharacterCollection({
   characters,
   acquiredCharacters,
   favoriteCharacterIds,
-  resetTick,
   onCharacterDetailOpen,
   onToggleFavoriteCharacter,
-  onDebugClearAcquiredCharacters,
 }: CharacterCollectionProps) {
-  const [debugResetMessage, setDebugResetMessage] = useState<string | null>(
-    null,
-  );
-  const [isDebugResetConfirming, setIsDebugResetConfirming] = useState(false);
   const [heartSparkleCharacterId, setHeartSparkleCharacterId] = useState<
     string | null
   >(null);
@@ -64,35 +53,6 @@ export function CharacterCollection({
   const acquiredCount = collectionSlots.filter(
     (slot) => slot.acquiredCharacter !== null,
   ).length;
-
-  useEffect(() => {
-    setDebugResetMessage(null);
-    setIsDebugResetConfirming(false);
-  }, [resetTick]);
-
-  useEffect(() => {
-    if (!debugResetMessage) {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setDebugResetMessage(null);
-    }, 1800);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [debugResetMessage]);
-
-  useEffect(() => {
-    if (!isDebugResetConfirming) {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setIsDebugResetConfirming(false);
-    }, 2400);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [isDebugResetConfirming]);
 
   useEffect(() => {
     return () => {
@@ -132,34 +92,6 @@ export function CharacterCollection({
           {acquiredCount}
           <span> / {COLLECTION_TOTAL_COUNT}</span>
         </strong>
-        {SHOW_DEBUG_COLLECTION_CONTROLS ? (
-          <button
-            type="button"
-            className={`home-collection-debug-reset ${
-              isDebugResetConfirming ? "is-confirming" : ""
-            }`}
-            onClick={() => {
-              if (!isDebugResetConfirming) {
-                setIsDebugResetConfirming(true);
-                setDebugResetMessage("もう一度押すと削除");
-                return;
-              }
-
-              onDebugClearAcquiredCharacters();
-              setIsDebugResetConfirming(false);
-              setDebugResetMessage("削除しました");
-            }}
-          >
-            {isDebugResetConfirming
-              ? "DEBUG: もう一度押す"
-              : "DEBUG: 獲得データ削除"}
-          </button>
-        ) : null}
-        {debugResetMessage ? (
-          <span className="home-collection-debug-message" role="status">
-            {debugResetMessage}
-          </span>
-        ) : null}
       </div>
       <div className="home-collection-grid">
         {collectionSlots.map(({ character, acquiredCharacter, number }, index) => {

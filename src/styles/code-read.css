@@ -2,35 +2,37 @@
 
 .flow-screen.frame53-register-screen {
   position: relative;
-  container-type: size;
-  container-name: frame53;
 
   /* カード〜コントロール共通のスクショポイント (#13A2D7)。QR #34add5 とは別 */
   --frame53-point: #13a2d7;
   --frame53-volume-track-muted: #e8e8e8;
 
-  --pr-fr1-horizontal-inset: clamp(1rem, 9.591vw, 9.0625rem);
-  --pr-fr1-block-top: clamp(4.5rem, 15.274dvh, 9.375rem);
-  --pr-fr1-block-bottom: clamp(3rem, 15.377dvh, 9.4375rem);
+  --frame53-scene-width: 1512px;
+  --frame53-scene-height: 982px;
+  --frame53-scene-offset-x: calc(
+    (100vw - var(--frame53-scene-width) * var(--pr-scale)) / 2
+  );
+  --frame53-scene-offset-y: calc(
+    (100dvh - var(--frame53-scene-height) * var(--pr-scale)) / 2
+  );
+  --pr-fr1-block-top: calc(
+    var(--frame53-scene-offset-y) + 176px * var(--pr-scale)
+  );
+  --pr-fr1-block-bottom: calc(
+    var(--frame53-scene-offset-y) + 112px * var(--pr-scale)
+  );
   --frame53-camera-slot-size: 694px;
 
-  /* デザイン幅1235×高694 のスケール用：パディング＋若干の余白（はみ出し防止） */
-  --frame53-scale-w-chrome: calc(2 * var(--pr-fr1-horizontal-inset) + 24px);
-  --frame53-scale-h-chrome: calc(
-    var(--pr-fr1-block-top) + var(--pr-fr1-block-bottom) + 24px
-  );
-
+  /* QR画面の 1512×982 scene を基準に、画面全体だけ等比スケールする。 */
   --pr-scale: max(
     0.31,
     min(
-      1,
-      calc((100vw - var(--frame53-scale-w-chrome)) / 1235px),
-      calc((100dvh - var(--frame53-scale-h-chrome)) / 694px)
+      calc(100vw / 1512px),
+      calc(100dvh / 982px)
     )
   );
 
-  padding: var(--pr-fr1-block-top) var(--pr-fr1-horizontal-inset)
-    var(--pr-fr1-block-bottom);
+  padding: var(--pr-fr1-block-top) 0 var(--pr-fr1-block-bottom);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -44,27 +46,16 @@
 
 .frame53-register-screen .flow-brand {
   position: absolute;
-  top: var(--flow-brand-offset-y);
-  left: var(--flow-brand-offset-x);
+  top: calc(var(--frame53-scene-offset-y) + 40px * var(--pr-scale));
+  left: calc(var(--frame53-scene-offset-x) + 80px * var(--pr-scale));
   z-index: 2;
+  width: calc(134px * var(--pr-scale));
   pointer-events: auto;
 }
 
-@supports (width: 1cqw) {
-  .flow-screen.frame53-register-screen {
-    /*
-     * cqw/cqh はこの要素のコンテンツボックス（パディング内側）基準。
-     * 100vw 側と同じ --frame53-scale-* を引くとパディングが二重になりスケールが極端に小さくなる。
-     */
-    --pr-scale: max(
-      0.31,
-      min(
-        1,
-        calc((100cqw - 24px) / 1235px),
-        calc((100cqh - 40px) / 694px)
-      )
-    );
-  }
+.frame53-register-screen .flow-brand-logo {
+  width: 100%;
+  height: auto;
 }
 
 .frame53-panels-wrap {
@@ -72,26 +63,26 @@
   flex: 1 1 auto;
   align-items: center;
   justify-content: center;
-  width: min(calc(1235px * var(--pr-scale)), 100%);
+  width: calc(1336px * var(--pr-scale));
   min-height: 0;
-  gap: calc(41px * var(--pr-scale));
+  gap: calc(48px * var(--pr-scale));
 }
 
 /* Frame 46 相当：500×681 白／角丸40／Figma y から算出したパディング */
 .frame53-left {
-  flex: 0 0 calc(500px * var(--pr-scale));
-  width: calc(500px * var(--pr-scale));
+  flex: 0 0 calc(594px * var(--pr-scale));
+  width: calc(594px * var(--pr-scale));
   max-width: 100%;
-  height: calc(681px * var(--pr-scale));
-  min-height: calc(681px * var(--pr-scale));
+  height: calc(694px * var(--pr-scale));
+  min-height: calc(694px * var(--pr-scale));
   box-sizing: border-box;
-  padding: calc(47px * var(--pr-scale)) calc(50px * var(--pr-scale))
+  padding: calc(48px * var(--pr-scale)) calc(56px * var(--pr-scale))
     calc(40px * var(--pr-scale));
   display: flex;
   flex-direction: column;
   align-items: stretch;
   background: #ffffff;
-  border-radius: calc(40px * var(--pr-scale));
+  border-radius: calc(32px * var(--pr-scale));
   overflow-x: hidden;
   /* はみ出し時のみスクロール（通常はスクロールバー非表示に近い） */
   overflow-y: auto;
@@ -533,11 +524,11 @@
   min-height: calc(var(--frame53-camera-slot-size) * var(--pr-scale));
   box-sizing: border-box;
   min-width: 0;
-  padding: max(4px, calc(5px * var(--pr-scale)))
-    max(4px, calc(5px * var(--pr-scale)));
+  padding: 0;
   border-radius: calc(32px * var(--pr-scale));
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.2);
+  border: 0;
+  box-shadow: 0 0 calc(8.52px * var(--pr-scale)) rgba(0, 0, 0, 0.15);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -550,7 +541,7 @@
   flex: 1;
   min-height: 0;
   width: 100%;
-  border-radius: calc(27px * var(--pr-scale));
+  border-radius: calc(32px * var(--pr-scale));
   overflow: hidden;
   background: #a1a1a1;
 }

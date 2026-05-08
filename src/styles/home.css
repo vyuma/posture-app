@@ -666,6 +666,37 @@
   font-weight: 900;
 }
 
+.profile-dialog-debug {
+  padding: 4px 24px 22px;
+  border-top: 1px solid rgba(95, 100, 104, 0.12);
+  margin-top: 4px;
+}
+
+.profile-dialog-debug-label {
+  margin: 0 0 10px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #963232;
+}
+
+.profile-dialog-debug-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.profile-dialog-debug .home-single-debug-story,
+.profile-dialog-debug .home-single-debug-skip {
+  position: static;
+  z-index: auto;
+}
+
+.profile-dialog-debug .home-collection-debug-message {
+  display: block;
+  margin-top: 10px;
+}
+
 /* デバッグ用：スキップボタン共通スタイル */
 .home-single-debug-skip {
   position: relative;

@@ -42,7 +42,6 @@ export type MobileConnectScreenProps = {
   pairingError: string | null;
   isPaired: boolean;
   featuredCharacter: CharacterDefinition | null;
-  onRefreshPairing: () => void;
   onContinueFromPaired: () => void;
   onBackHome: () => void;
 };

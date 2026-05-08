@@ -3,10 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CharacterDefinition } from "../../../characters/types";
 import type { HomeScreenProps } from "../flowScreenTypes";
 import { CharacterFigure } from "../shared/CharacterFigure";
-import {
-  DIALOG_CLOSE_DURATION_MS,
-  SHOW_DEBUG_FLOW_CONTROLS,
-} from "../shared/debugFlags";
+import { DIALOG_CLOSE_DURATION_MS, SHOW_DEBUG_FLOW_CONTROLS } from "../shared/debugFlags";
 import { FlowBrand } from "../shared/FlowBrand";
 import { CharacterCollection } from "./CharacterCollection";
 import { CollectionDetailDialog } from "./CollectionDetailDialog";
@@ -117,15 +114,6 @@ export function HomeScreen(props: HomeScreenProps) {
       </nav>
 
       <section className="home-hero">
-        {SHOW_DEBUG_FLOW_CONTROLS ? (
-          <button
-            type="button"
-            className="home-single-debug-story"
-            onClick={props.onDebugShowOnboarding}
-          >
-            DEBUG: ストーリー
-          </button>
-        ) : null}
         <div className="home-hero-content">
           <div className="home-hero-copy">
             <h1>
@@ -163,10 +151,8 @@ export function HomeScreen(props: HomeScreenProps) {
         characters={props.characters}
         acquiredCharacters={props.acquiredCharacters}
         favoriteCharacterIds={props.favoriteCharacterIds}
-        resetTick={props.collectionResetTick}
         onCharacterDetailOpen={setCollectionDetailCharacterId}
         onToggleFavoriteCharacter={props.onToggleFavoriteCharacter}
-        onDebugClearAcquiredCharacters={props.onDebugClearAcquiredCharacters}
       />
 
       {isProfileDialogOpen ? (
@@ -180,6 +166,17 @@ export function HomeScreen(props: HomeScreenProps) {
             closeProfileDialog();
           }}
           onClose={closeProfileDialog}
+          debugTools={
+            SHOW_DEBUG_FLOW_CONTROLS
+              ? {
+                  collectionResetTick: props.collectionResetTick,
+                  onShowOnboarding: props.onDebugShowOnboarding,
+                  onClearAcquiredCharacters: props.onDebugClearAcquiredCharacters,
+                  onPairingRefresh: props.onPairingStatusRefresh,
+                  onPairingSkipContinue: props.onContinueFromPaired,
+                }
+              : undefined
+          }
         />
       ) : null}
       {collectionDetailCharacter && collectionDetailAcquiredCharacter ? (

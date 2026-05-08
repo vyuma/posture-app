@@ -1,7 +1,6 @@
 import { type CSSProperties, useEffect, useState } from "react";
 
 import type { MobileConnectScreenProps } from "../flowScreenTypes";
-import { SHOW_DEBUG_FLOW_CONTROLS } from "../shared/debugFlags";
 import { FlowBrand } from "../shared/FlowBrand";
 
 const MOBILE_CONNECT_SCENE_WIDTH = 1512;
@@ -30,7 +29,6 @@ export function MobileConnectScreen({
   isPairingLoading,
   pairingError,
   isPaired,
-  onRefreshPairing,
   onContinueFromPaired,
   onBackHome,
 }: MobileConnectScreenProps) {
@@ -122,25 +120,6 @@ export function MobileConnectScreen({
           <p className="mobile-connect-error" role="alert">
             {pairingError}
           </p>
-        ) : null}
-
-        {SHOW_DEBUG_FLOW_CONTROLS ? (
-          <div className="mobile-connect-debug-actions">
-            <button
-              type="button"
-              className="secondary-pill mobile-connect-debug-refresh"
-              onClick={onRefreshPairing}
-            >
-              DEBUG: QR更新
-            </button>
-            <button
-              type="button"
-              className="primary-pill mobile-connect-debug-skip"
-              onClick={onContinueFromPaired}
-            >
-              DEBUG: QRスキップ
-            </button>
-          </div>
         ) : null}
       </div>
     </main>

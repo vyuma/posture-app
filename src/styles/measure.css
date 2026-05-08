@@ -1,28 +1,32 @@
 /* 測定画面（MeasuringScreen）：QRモーダル・姿勢登録と同じ Frame53 1222×681 等比（--pr-scale） */
 .measuring-screen {
   position: relative;
-  container-type: size;
-  container-name: measuring;
 
   --frame53-point: #13a2d7;
   --frame53-volume-track-muted: #e8e8e8;
 
-  --pr-fr1-horizontal-inset: clamp(1rem, 9.591vw, 9.0625rem);
-  --pr-fr1-block-top: clamp(4.5rem, 15.274dvh, 9.375rem);
-  --pr-fr1-block-bottom: clamp(3rem, 15.377dvh, 9.4375rem);
+  --frame53-scene-width: 1512px;
+  --frame53-scene-height: 982px;
+  --frame53-scene-offset-x: calc(
+    (100vw - var(--frame53-scene-width) * var(--pr-scale)) / 2
+  );
+  --frame53-scene-offset-y: calc(
+    (100dvh - var(--frame53-scene-height) * var(--pr-scale)) / 2
+  );
+  --pr-fr1-block-top: calc(
+    var(--frame53-scene-offset-y) + 176px * var(--pr-scale)
+  );
+  --pr-fr1-block-bottom: calc(
+    var(--frame53-scene-offset-y) + 112px * var(--pr-scale)
+  );
   --frame53-camera-slot-size: 694px;
 
-  --frame53-scale-w-chrome: calc(2 * var(--pr-fr1-horizontal-inset) + 24px);
-  --frame53-scale-h-chrome: calc(
-    var(--pr-fr1-block-top) + var(--pr-fr1-block-bottom) + 24px
-  );
-
+  /* QR画面の 1512×982 scene を基準に、画面全体だけ等比スケールする。 */
   --pr-scale: max(
     0.31,
     min(
-      1,
-      calc((100vw - var(--frame53-scale-w-chrome)) / 1235px),
-      calc((100dvh - var(--frame53-scale-h-chrome)) / 694px)
+      calc(100vw / 1512px),
+      calc(100dvh / 982px)
     )
   );
 
@@ -35,31 +39,23 @@
   justify-content: center;
   box-sizing: border-box;
   min-height: 100dvh;
-  padding: var(--pr-fr1-block-top) var(--pr-fr1-horizontal-inset)
-    var(--pr-fr1-block-bottom);
+  padding: var(--pr-fr1-block-top) 0 var(--pr-fr1-block-bottom);
   overflow-x: hidden;
   overflow-y: auto;
 }
 
-@supports (width: 1cqw) {
-  .measuring-screen {
-    --pr-scale: max(
-      0.31,
-      min(
-        1,
-        calc((100cqw - 24px) / 1235px),
-        calc((100cqh - 40px) / 694px)
-      )
-    );
-  }
-}
-
 .measuring-screen .flow-brand {
   position: absolute;
-  top: var(--flow-brand-offset-y);
-  left: var(--flow-brand-offset-x);
+  top: calc(var(--frame53-scene-offset-y) + 40px * var(--pr-scale));
+  left: calc(var(--frame53-scene-offset-x) + 80px * var(--pr-scale));
   z-index: 2;
+  width: calc(134px * var(--pr-scale));
   pointer-events: auto;
+}
+
+.measuring-screen .flow-brand-logo {
+  width: 100%;
+  height: auto;
 }
 
 /* 旧レイアウト互換（未使用） */
@@ -100,27 +96,27 @@
   flex-wrap: nowrap;
   align-items: stretch;
   justify-content: center;
-  width: min(calc(1235px * var(--pr-scale)), 100%);
+  width: calc(1336px * var(--pr-scale));
   min-height: 0;
   margin-inline: auto;
-  gap: calc(41px * var(--pr-scale));
+  gap: calc(48px * var(--pr-scale));
   box-sizing: border-box;
 }
 
 .measure-control-card {
-  flex: 0 0 calc(500px * var(--pr-scale));
-  width: calc(500px * var(--pr-scale));
+  flex: 0 0 calc(594px * var(--pr-scale));
+  width: calc(594px * var(--pr-scale));
   max-width: 100%;
   min-width: 0;
-  height: calc(681px * var(--pr-scale));
-  min-height: calc(681px * var(--pr-scale));
+  height: calc(694px * var(--pr-scale));
+  min-height: calc(694px * var(--pr-scale));
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: clamp(12px, 1.5vw, 16px);
-  padding: calc(47px * var(--pr-scale)) calc(50px * var(--pr-scale))
+  padding: calc(48px * var(--pr-scale)) calc(56px * var(--pr-scale))
     calc(40px * var(--pr-scale));
-  border-radius: calc(40px * var(--pr-scale));
+  border-radius: calc(32px * var(--pr-scale));
   background: rgba(255, 255, 255, 0.97);
   border: 1px solid rgba(45, 82, 96, 0.08);
   box-shadow:
@@ -254,18 +250,19 @@
 .measure-camera-panel {
   min-width: 0;
   min-height: 0;
-  padding: max(4px, calc(5px * var(--pr-scale)))
-    max(4px, calc(5px * var(--pr-scale)));
+  padding: 0;
   border-radius: calc(32px * var(--pr-scale));
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.2);
+  border: 0;
+  box-shadow: 0 0 calc(8.52px * var(--pr-scale)) rgba(0, 0, 0, 0.15);
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .measure-camera-panel .measure-camera-stack {
   flex: 1;
   min-height: 0;
-  border-radius: calc(27px * var(--pr-scale));
+  border-radius: calc(32px * var(--pr-scale));
   overflow: hidden;
   /* 背面グレーは viewer--measurement 側へ（二重レイヤーを避ける） */
   background: transparent;

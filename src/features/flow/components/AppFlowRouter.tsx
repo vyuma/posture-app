@@ -157,7 +157,6 @@ export function AppFlowRouter({
           pairingError={pairingError}
           isPaired={isPaired}
           featuredCharacter={nextCharacter}
-          onRefreshPairing={onPairingStatusRefresh}
           onContinueFromPaired={onContinueFromPaired}
           onBackHome={onBackHome}
         />

@@ -264,19 +264,3 @@
   text-align: center;
   box-shadow: 0 8px 24px rgba(10, 55, 75, 0.12);
 }
-
-.mobile-connect-debug-actions {
-  position: absolute;
-  right: 80px;
-  bottom: 32px;
-  z-index: 30;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-.mobile-connect-debug-refresh,
-.mobile-connect-debug-skip {
-  box-shadow: 0 10px 24px rgba(20, 83, 102, 0.18);
-}

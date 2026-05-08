@@ -1,8 +1,12 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 
 import type { CharacterDefinition } from "../../../characters/types";
 import { CharacterFigure } from "../shared/CharacterFigure";
 import { SHOW_DEBUG_FLOW_CONTROLS } from "../shared/debugFlags";
+import {
+  getDebugQrModalStep2Preview,
+  subscribeDebugQrModalStep2Preview,
+} from "../shared/debugQrModalFlowPrefs";
 import { FlowBrand } from "../shared/FlowBrand";
 
 type QrConnectionModalProps = {
@@ -25,7 +29,11 @@ export function QrConnectionModal({
   onNext,
   onClose,
 }: QrConnectionModalProps) {
-  const [debugForceStep2, setDebugForceStep2] = useState(false);
+  const debugForceStep2 = useSyncExternalStore(
+    subscribeDebugQrModalStep2Preview,
+    getDebugQrModalStep2Preview,
+    getDebugQrModalStep2Preview,
+  );
   const [pairedAdvanceToStep2, setPairedAdvanceToStep2] = useState(false);
 
   useEffect(() => {
@@ -188,25 +196,6 @@ export function QrConnectionModal({
           </div>
         )}
       </div>
-
-      {SHOW_DEBUG_FLOW_CONTROLS ? (
-        <div className="qr-modal-debug-actions">
-          <button
-            type="button"
-            className="home-single-debug-skip qr-modal-debug-skip"
-            onClick={onNext}
-          >
-            DEBUG: QRスキップ
-          </button>
-          <button
-            type="button"
-            className="home-single-debug-skip qr-modal-debug-step2"
-            onClick={() => setDebugForceStep2((v) => !v)}
-          >
-            DEBUG: Step2 {debugForceStep2 ? "OFF" : "プレビュー"}
-          </button>
-        </div>
-      ) : null}
     </div>
   );
 }
