@@ -25,7 +25,9 @@ export type CharacterResultWhiteCardProps = {
   acquiredAtLabel: string;
   measurementDurationLabel: string;
   shareBusy: boolean;
+  shareBusyAction?: "share" | "copy" | null;
   onShareClick: (e: MouseEvent<HTMLButtonElement>) => void;
+  onCopyClick: (e: MouseEvent<HTMLButtonElement>) => void;
   articleClassName?: string;
   articleStyle?: CSSProperties;
   onArticleClick?: (e: MouseEvent<HTMLElement>) => void;
@@ -73,7 +75,9 @@ export const CharacterResultWhiteCard = forwardRef<
     acquiredAtLabel,
     measurementDurationLabel,
     shareBusy,
+    shareBusyAction = null,
     onShareClick,
+    onCopyClick,
     articleClassName = "",
     articleStyle,
     onArticleClick,
@@ -140,12 +144,14 @@ export const CharacterResultWhiteCard = forwardRef<
         <div className="result-registered-stats-header">
           <button
             type="button"
-            className={`result-registered-share ${shareBusy ? "is-busy" : ""}`}
+            className={`result-registered-share ${
+              shareBusy && shareBusyAction === "share" ? "is-busy" : ""
+            }`}
             aria-label="結果を画像で共有"
             title="結果を画像で共有（または保存）します"
             disabled={shareBusy}
             aria-disabled={shareBusy}
-            aria-busy={shareBusy}
+            aria-busy={shareBusy && shareBusyAction === "share"}
             onClick={(e) => {
               e.stopPropagation();
               onShareClick(e);
@@ -166,6 +172,36 @@ export const CharacterResultWhiteCard = forwardRef<
               <circle cx="17.7" cy="6.4" r="2.15" />
               <circle cx="17.7" cy="17.6" r="2.15" />
               <path d="M8.2 11.1 15.8 7.3M8.2 12.9l7.6 3.8" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            className={`result-registered-share result-registered-share--copy ${
+              shareBusy && shareBusyAction === "copy" ? "is-busy" : ""
+            }`}
+            aria-label="結果を画像でコピー"
+            title="結果を画像でコピー"
+            disabled={shareBusy}
+            aria-disabled={shareBusy}
+            aria-busy={shareBusy && shareBusyAction === "copy"}
+            onClick={(e) => {
+              e.stopPropagation();
+              onCopyClick(e);
+            }}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              width={20}
+              height={20}
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.9}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <rect x="8" y="8" width="11" height="11" rx="2" />
+              <path d="M5 15V6.8C5 5.8 5.8 5 6.8 5H15" />
             </svg>
           </button>
         </div>

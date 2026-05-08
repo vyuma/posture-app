@@ -25,7 +25,10 @@ import {
   playAcquisitionConfetti,
   playCardTapConfetti,
 } from "../../../lib/playAcquisitionConfetti";
-import { shareResultCapture } from "../../../lib/shareResultCapture";
+import {
+  shareResultCapture,
+  type ShareResultAction,
+} from "../../../lib/shareResultCapture";
 import type { MeasurementResult, MeasurementStats } from "../types";
 
 import { CharacterResultWhiteCard } from "./CharacterResultWhiteCard";
@@ -950,8 +953,9 @@ export function PostureRegisteredScreen({
   const resultCardTapResetTimerRef = useRef<number | null>(null);
   const [isResultCardEntering, setIsResultCardEntering] = useState(false);
   const [isResultCardTapped, setIsResultCardTapped] = useState(false);
-  const [shareBusy, setShareBusy] = useState(false);
+  const [shareBusyAction, setShareBusyAction] = useState<"share" | "copy" | null>(null);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
+  const shareBusy = shareBusyAction !== null;
 
   const displayCharacter = wasSuccessful ? acquiredCharacter : null;
   const personalityTags = wasSuccessful
@@ -996,17 +1000,21 @@ export function PostureRegisteredScreen({
     } as CSSProperties;
   }, [wasSuccessful, acquiredCharacter]);
 
-  const handleShareResult = useCallback(async () => {
+  const handleShareResult = useCallback(async (
+    action: Extract<ShareResultAction, "share" | "copy">,
+  ) => {
     if (
       shareCaptureRef.current === null ||
       shareBusy
     ) {
       return;
     }
-    setShareBusy(true);
+    setShareBusyAction(action);
     setShareFeedback(null);
     try {
-      const outcome = await shareResultCapture(shareCaptureRef.current);
+      const outcome = await shareResultCapture(shareCaptureRef.current, {
+        action,
+      });
       if (outcome === "downloaded") {
         const msg = "画像をダウンロードしました";
         setShareFeedback(msg);
@@ -1025,7 +1033,7 @@ export function PostureRegisteredScreen({
     } catch {
       setShareFeedback("共有に失敗しました。もう一度お試しください。");
     } finally {
-      setShareBusy(false);
+      setShareBusyAction(null);
     }
   }, [shareBusy]);
 
@@ -1151,8 +1159,12 @@ export function PostureRegisteredScreen({
           acquiredAtLabel={formatAcquiredAt(result.endedAt)}
           measurementDurationLabel={formatDuration(result.activeMeasurementMs)}
           shareBusy={shareBusy}
+          shareBusyAction={shareBusyAction}
           onShareClick={() => {
-            void handleShareResult();
+            void handleShareResult("share");
+          }}
+          onCopyClick={() => {
+            void handleShareResult("copy");
           }}
           articleClassName={`${wasSuccessful ? "result-registered-card--acquired" : ""} ${
             isResultCardEntering ? "is-entering" : ""
@@ -1647,8 +1659,9 @@ function CollectionDetailDialog({
   onClose: () => void;
 }) {
   const shareCaptureRef = useRef<HTMLElement>(null);
-  const [shareBusy, setShareBusy] = useState(false);
+  const [shareBusyAction, setShareBusyAction] = useState<"share" | "copy" | null>(null);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
+  const shareBusy = shareBusyAction !== null;
 
   const hasTimelineData =
     (acquiredCharacter.postureTimeline?.length ?? 0) > 0 &&
@@ -1665,14 +1678,18 @@ function CollectionDetailDialog({
     } as CSSProperties;
   }, [character]);
 
-  const handleShareCollection = useCallback(async () => {
+  const handleShareCollection = useCallback(async (
+    action: Extract<ShareResultAction, "share" | "copy">,
+  ) => {
     if (shareCaptureRef.current === null || shareBusy) {
       return;
     }
-    setShareBusy(true);
+    setShareBusyAction(action);
     setShareFeedback(null);
     try {
-      const outcome = await shareResultCapture(shareCaptureRef.current);
+      const outcome = await shareResultCapture(shareCaptureRef.current, {
+        action,
+      });
       if (outcome === "downloaded") {
         setShareFeedback("画像をダウンロードしました");
       } else if (outcome === "copied") {
@@ -1683,7 +1700,7 @@ function CollectionDetailDialog({
     } catch {
       setShareFeedback("共有に失敗しました。もう一度お試しください。");
     } finally {
-      setShareBusy(false);
+      setShareBusyAction(null);
     }
   }, [shareBusy]);
 
@@ -1729,8 +1746,12 @@ function CollectionDetailDialog({
             acquiredCharacter.activeMeasurementMs,
           )}
           shareBusy={shareBusy}
+          shareBusyAction={shareBusyAction}
           onShareClick={() => {
-            void handleShareCollection();
+            void handleShareCollection("share");
+          }}
+          onCopyClick={() => {
+            void handleShareCollection("copy");
           }}
           articleStyle={shareCardThemeVars}
           characterNameId="collection-detail-heading"
