@@ -64,6 +64,50 @@
   to   { transform: translateX(280%); }
 }
 
+@keyframes home-acquired-card-tap-burst {
+  0% {
+    transform:
+      perspective(760px)
+      rotateX(var(--tilt-x))
+      rotateY(var(--tilt-y))
+      translateY(calc(var(--tilt-lift) - 2px))
+      scale(1);
+    filter: drop-shadow(0 12px 24px rgba(63, 92, 96, 0.18));
+  }
+  40% {
+    transform:
+      perspective(760px)
+      rotateX(calc(var(--tilt-x) * 0.6))
+      rotateY(calc(var(--tilt-y) * 0.6))
+      translateY(calc(var(--tilt-lift) - 16px))
+      scale(1.038);
+    filter: drop-shadow(0 26px 34px rgba(63, 92, 96, 0.28));
+  }
+  100% {
+    transform:
+      perspective(760px)
+      rotateX(var(--tilt-x))
+      rotateY(var(--tilt-y))
+      translateY(var(--tilt-lift))
+      scale(1);
+    filter: drop-shadow(0 14px 26px rgba(63, 92, 96, 0.2));
+  }
+}
+
+@keyframes home-acquired-card-glitter {
+  0% {
+    opacity: 0;
+    transform: translateX(-28%) translateY(10%) rotate(-10deg);
+  }
+  28% {
+    opacity: 0.88;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(24%) translateY(-12%) rotate(8deg);
+  }
+}
+
 .flow-screen.home-single {
   /* ヒーロー（ナビ＋グラデーション）の合計高さ。残り 1/3 が #fdfdfd のコレクション領域 */
   --home-collection-bg-start: clamp(390px, 70dvh, 675px);
@@ -1498,6 +1542,29 @@
   overflow: hidden;
 }
 
+.home-character-card.is-acquired::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  border-radius: inherit;
+  background:
+    linear-gradient(
+      118deg,
+      rgba(255, 255, 255, 0.56) 0%,
+      rgba(255, 255, 255, 0) 34%
+    ),
+    linear-gradient(
+      300deg,
+      rgba(255, 255, 255, 0.24) 15%,
+      rgba(255, 255, 255, 0) 62%
+    );
+  mix-blend-mode: screen;
+  pointer-events: none;
+  opacity: 0.62;
+  transition: opacity 0.3s ease;
+}
+
 /* hover/focus時はoutlineのみ。lift＆影はJS mousemoveハンドラのチルトシステムが制御する */
 .home-character-card.is-acquired:hover,
 .home-character-card.is-acquired:focus-visible {
@@ -1525,6 +1592,45 @@
 
 .home-character-slot:hover .home-character-card.is-acquired::after {
   opacity: 1;
+}
+
+.home-character-slot:hover .home-character-card.is-acquired::before,
+.home-character-slot:has(.home-character-card.is-acquired:focus-visible)
+  .home-character-card.is-acquired::before {
+  opacity: 0.82;
+}
+
+.home-character-slot.is-tapped {
+  animation: home-acquired-card-tap-burst 0.46s cubic-bezier(0.18, 0.74, 0.28, 1);
+}
+
+.home-character-slot.is-tapped .home-character-card.is-acquired::before {
+  opacity: 0.96;
+}
+
+.home-character-slot.is-tapped .home-character-card.is-acquired::after {
+  opacity: 1;
+}
+
+.home-character-slot.is-tapped::after {
+  content: '';
+  position: absolute;
+  inset: 10% 6%;
+  z-index: 15;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 16% 22%, rgba(255, 255, 255, 0.95) 0 2px, transparent 3px),
+    radial-gradient(circle at 80% 24%, rgba(255, 255, 255, 0.9) 0 2px, transparent 3px),
+    radial-gradient(circle at 70% 76%, rgba(255, 255, 255, 0.88) 0 1.8px, transparent 3px),
+    radial-gradient(circle at 34% 66%, rgba(255, 255, 255, 0.82) 0 2px, transparent 3px),
+    linear-gradient(
+      110deg,
+      rgba(255, 255, 255, 0) 24%,
+      rgba(255, 255, 255, 0.8) 52%,
+      rgba(255, 255, 255, 0) 74%
+    );
+  animation: home-acquired-card-glitter 0.46s ease-out;
 }
 
 .home-character-card.is-locked {
@@ -1700,13 +1806,14 @@
 }
 
 .collection-detail-dialog {
+  position: relative;
   width: min(860px, 100%);
   max-height: min(780px, calc(100vh - 48px));
   overflow: auto;
   border-radius: 30px;
-  background: linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
-  border: 1px solid rgba(255, 255, 255, 0.34);
-  box-shadow: 0 26px 58px rgba(18, 54, 65, 0.34);
+  background: transparent;
+  border: 0;
+  box-shadow: none;
   /* ダイアログ出現アニメーション */
   animation: home-dialog-scale-in 0.22s ease both;
 }
@@ -1726,7 +1833,7 @@
 
 .collection-detail-eyebrow {
   margin: 0;
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.94);
   font-size: clamp(0.92rem, 1.5vw, 1rem);
   font-weight: 800;
   text-shadow: 0 2px 10px rgba(0, 40, 60, 0.18);
@@ -1750,108 +1857,27 @@
   box-shadow: 0 8px 16px rgba(18, 54, 65, 0.18);
 }
 
-.collection-detail-card {
+/* 白カード本体は result.css の .result-registered-card に統一 */
+.collection-detail-dialog .result-registered-card {
   width: min(720px, calc(100% - 36px));
-  margin: 0 auto 20px;
-  display: grid;
-  grid-template-columns: minmax(200px, 38%) minmax(0, 1fr);
-  gap: clamp(16px, 3vw, 28px);
-  padding: clamp(18px, 2.8vw, 26px);
-  border-radius: clamp(22px, 3.5vw, 32px);
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow:
-    0 20px 48px rgba(19, 100, 120, 0.16),
-    0 1px 0 rgba(255, 255, 255, 0.9);
+  margin: 0 auto 16px;
 }
 
-.collection-detail-col {
-  min-width: 0;
+/* 共有対象外：ストーリーは白カードの下に配置 */
+.collection-detail-story-below {
+  width: min(720px, calc(100% - 36px));
+  margin: 0 auto 16px;
+  padding: clamp(14px, 2.5vw, 20px) clamp(16px, 3vw, 22px);
+  border-radius: clamp(18px, 3vw, 24px);
+  background: rgba(255, 255, 255, 0.96);
+  box-sizing: border-box;
 }
 
-.collection-detail-col--character {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.collection-detail-col--stats {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.collection-detail-preview {
-  aspect-ratio: 1;
-  display: grid;
-  place-items: center;
-  overflow: hidden;
-  border-radius: 20px;
-  background: var(--home-character-soft-color, #d1d1d1);
-}
-
-.collection-detail-character {
-  width: 94%;
-  height: 94%;
-  object-fit: contain;
-  object-position: center bottom;
-  filter: drop-shadow(10px 12px 10px rgba(23, 31, 41, 0.24));
-}
-
-.collection-detail-name {
-  margin: 0;
-  font-size: clamp(1.05rem, 2.8vw, 1.35rem);
-  font-weight: 900;
-  color: #1a2730;
-}
-
-.collection-detail-info {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.collection-detail-stat {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: #f5f5f5;
-}
-
-.collection-detail-stat span {
-  color: #8896a4;
-  font-size: 0.78rem;
-  font-weight: 800;
-}
-
-.collection-detail-stat strong {
-  min-width: 0;
-  overflow: hidden;
-  color: #27363f;
-  font-size: 0.98rem;
-  font-weight: 900;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.collection-detail-story-wrap {
-  display: grid;
-  gap: 8px;
-  padding: 2px 2px 0;
-}
-
-.collection-detail-story-wrap h3 {
-  margin: 0;
+.collection-detail-story-below h3 {
+  margin: 0 0 8px;
   color: #6b7580;
   font-size: 0.8rem;
   font-weight: 900;
-}
-
-.collection-detail-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
 }
 
 .collection-detail-story {
@@ -1863,13 +1889,13 @@
   line-height: 1.55;
 }
 
-@media (max-width: 700px) {
-  .collection-detail-card {
-    grid-template-columns: 1fr;
-  }
-
-  .collection-detail-col--character {
-    max-width: 240px;
-    margin-inline: auto;
-  }
+.collection-detail-share-feedback {
+  margin: 0 auto 12px;
+  min-height: 1.1rem;
+  max-width: min(720px, calc(100% - 36px));
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 1px 6px rgba(0, 40, 60, 0.22);
 }

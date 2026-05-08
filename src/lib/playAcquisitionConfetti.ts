@@ -15,6 +15,17 @@ export type AcquisitionConfettiOptions = {
   characterColors?: { primary: string; soft: string };
 };
 
+export type TapConfettiOptions = {
+  /** 画面座標（viewport基準） */
+  clientX: number;
+  clientY: number;
+  /** クリックした要素サイズ（単位: px） */
+  elementWidth: number;
+  elementHeight: number;
+  /** カラー連動（任意） */
+  characterColors?: { primary: string; soft: string };
+};
+
 function clampByte(value: number): number {
   return Math.max(0, Math.min(255, Math.round(value)));
 }
@@ -142,4 +153,67 @@ export function playAcquisitionConfetti(
   window.setTimeout(() => {
     fireSides();
   }, 520);
+}
+
+/**
+ * カードタップ時のミニ演出（クリック位置中心）
+ * 既存の獲得演出より軽く、短く、繰り返しに強い設定。
+ */
+export function playCardTapConfetti(options: TapConfettiOptions): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return;
+  }
+
+  const viewportWidth = window.innerWidth || 1;
+  const viewportHeight = window.innerHeight || 1;
+  const originX = Math.max(0, Math.min(1, options.clientX / viewportWidth));
+  const originY = Math.max(0, Math.min(1, options.clientY / viewportHeight));
+
+  const baseColors =
+    options.characterColors !== undefined
+      ? [
+          options.characterColors.primary,
+          options.characterColors.soft,
+          shiftHexLightness(options.characterColors.primary, 0.12),
+          shiftHexLightness(options.characterColors.primary, -0.12),
+          "#ffffff",
+        ]
+      : DEFAULT_ACQUISITION_COLORS;
+
+  const sizeFactor = Math.max(
+    0.8,
+    Math.min(1.25, (options.elementWidth + options.elementHeight) / 520),
+  );
+
+  confetti({
+    particleCount: Math.round(20 * sizeFactor),
+    spread: 72,
+    startVelocity: 24,
+    gravity: 1.05,
+    decay: 0.9,
+    scalar: 0.82,
+    ticks: 140,
+    origin: { x: originX, y: originY },
+    colors: baseColors,
+    disableForReducedMotion: true,
+  });
+
+  window.setTimeout(() => {
+    confetti({
+      particleCount: Math.round(12 * sizeFactor),
+      spread: 40,
+      startVelocity: 17,
+      gravity: 1.06,
+      decay: 0.91,
+      scalar: 0.68,
+      ticks: 110,
+      origin: { x: originX, y: originY },
+      colors: baseColors,
+      disableForReducedMotion: true,
+    });
+  }, 95);
 }

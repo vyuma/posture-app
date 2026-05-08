@@ -67,6 +67,7 @@ import {
 } from "./features/sound/services/soundSettingsStorage";
 import type { SoundSettings } from "./features/sound/types/soundSettings";
 import { useQrDataUrl } from "./lib/useQrDataUrl";
+import { preloadShareImageCache } from "./lib/shareResultCapture";
 
 type MeasurementAccumulator = MeasurementStats & {
   lastSampleAtMs: number | null;
@@ -378,14 +379,6 @@ function App() {
     }
   };
 
-  const handleRemeasureBaseline = useCallback(() => {
-    measurementAccumulatorRef.current = createMeasurementAccumulator();
-    measurementStartedAtRef.current = new Date().toISOString();
-    setMeasurementStats(EMPTY_MEASUREMENT_STATS);
-    resetPostureEngine();
-    setIsPaused(false);
-  }, [resetPostureEngine]);
-
   const handleFinishMeasurement = useCallback(() => {
     const finalStats = sampleMeasurementStats();
     const timelineForResult = finalizePostureTimeline(
@@ -634,6 +627,16 @@ function App() {
     };
   }, []);
 
+  // 共有画像で portrait が初回に欠ける問題を防ぐため、起動直後に
+  // キャラ portrait と QR 失敗時のロゴをデータ URL キャッシュへ流し込む
+  useEffect(() => {
+    const portraitSrcs = CHARACTER_CATALOG.map(
+      (character) => character.portraitSrc,
+    );
+    const auxSrcs = ["/logo/QRアナゴ.png"];
+    void preloadShareImageCache([...portraitSrcs, ...auxSrcs]);
+  }, []);
+
   const screen = renderFlowScreen({
     flowPhase,
     qrImageDataUrl,
@@ -682,7 +685,6 @@ function App() {
     onCharacterOverlayEnabledChange: setIsCharacterOverlayEnabled,
     onShowCharacterOverlay: handleShowCharacterOverlay,
     onResetCharacterPosition: handleResetCharacterPosition,
-    onRemeasureBaseline: handleRemeasureBaseline,
   });
 
   return (
@@ -735,7 +737,6 @@ function renderFlowScreen({
   onCharacterOverlayEnabledChange,
   onShowCharacterOverlay,
   onResetCharacterPosition,
-  onRemeasureBaseline,
 }: {
   flowPhase: AppFlowPhase;
   qrImageDataUrl: string;
@@ -778,7 +779,6 @@ function renderFlowScreen({
   onCharacterOverlayEnabledChange: (enabled: boolean) => void;
   onShowCharacterOverlay: () => void;
   onResetCharacterPosition: () => void;
-  onRemeasureBaseline: () => void;
 }) {
   switch (flowPhase) {
     case "onboarding":
@@ -841,7 +841,6 @@ function renderFlowScreen({
           onCharacterOverlayEnabledChange={onCharacterOverlayEnabledChange}
           onShowCharacterOverlay={onShowCharacterOverlay}
           onResetCharacterPosition={onResetCharacterPosition}
-          onRemeasureBaseline={onRemeasureBaseline}
         />
       );
     case "postureRegistered":
@@ -851,7 +850,6 @@ function renderFlowScreen({
           acquiredCharacter={lastAcquiredCharacter}
           fallbackCharacter={nextCharacter}
           onBackHome={onBackHome}
-          onMeasureAgain={onMeasureAgain}
         />
       ) : (
         <HomeScreen

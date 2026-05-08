@@ -20,11 +20,14 @@ import {
   BUILTIN_SOUND_OPTIONS,
   type SoundSettings,
 } from "../../sound/types/soundSettings";
-import { playAcquisitionConfetti } from "../../../lib/playAcquisitionConfetti";
+import {
+  playAcquisitionConfetti,
+  playCardTapConfetti,
+} from "../../../lib/playAcquisitionConfetti";
 import { shareResultCapture } from "../../../lib/shareResultCapture";
 import type { MeasurementResult, MeasurementStats } from "../types";
 
-import { PostureTimelineChart } from "./PostureTimelineChart";
+import { CharacterResultWhiteCard } from "./CharacterResultWhiteCard";
 
 type HomeScreenProps = {
   characters: CharacterDefinition[];
@@ -76,7 +79,6 @@ type MeasuringScreenProps = {
   onCharacterOverlayEnabledChange: (enabled: boolean) => void;
   onShowCharacterOverlay: () => void;
   onResetCharacterPosition: () => void;
-  onRemeasureBaseline: () => void;
 };
 
 type PostureRegisteredScreenProps = {
@@ -84,7 +86,6 @@ type PostureRegisteredScreenProps = {
   acquiredCharacter: CharacterDefinition | null;
   fallbackCharacter: CharacterDefinition | null;
   onBackHome: () => void;
-  onMeasureAgain: () => void;
 };
 
 const COLLECTION_TOTAL_COUNT = 111;
@@ -96,24 +97,47 @@ const SHOW_DEBUG_FLOW_CONTROLS = import.meta.env.DEV;
  * Mouse position tracked and applied as CSS custom properties
  * so the CSS tilt transform reads them without React re-renders.
  */
-function onCardSlotMouseMove(e: React.MouseEvent<HTMLDivElement>) {
-  const el = e.currentTarget;
+function applyCardTilt(
+  el: HTMLElement,
+  clientX: number,
+  clientY: number,
+  intensityDeg: number,
+  lift: string,
+) {
   const rect = el.getBoundingClientRect();
-  const x = (e.clientX - rect.left) / rect.width;
-  const y = (e.clientY - rect.top) / rect.height;
-  el.style.setProperty("--tilt-x", `${(0.5 - y) * 14}deg`);
-  el.style.setProperty("--tilt-y", `${(x - 0.5) * 14}deg`);
-  el.style.setProperty("--tilt-lift", "-10px");
+  const width = Math.max(1, rect.width);
+  const height = Math.max(1, rect.height);
+  const x = (clientX - rect.left) / width;
+  const y = (clientY - rect.top) / height;
+  el.style.setProperty("--tilt-x", `${(0.5 - y) * intensityDeg}deg`);
+  el.style.setProperty("--tilt-y", `${(x - 0.5) * intensityDeg}deg`);
+  el.style.setProperty("--tilt-lift", lift);
   el.style.setProperty("--tilt-shine-x", `${x * 100}%`);
   el.style.setProperty("--tilt-shine-y", `${y * 100}%`);
 }
 
-function onCardSlotMouseLeave(e: React.MouseEvent<HTMLDivElement>) {
-  const el = e.currentTarget;
+function resetCardTilt(el: HTMLElement) {
   el.style.setProperty("--tilt-x", "0deg");
   el.style.setProperty("--tilt-y", "0deg");
   el.style.setProperty("--tilt-lift", "0px");
 }
+
+function onCardSlotMouseMove(e: React.MouseEvent<HTMLDivElement>) {
+  applyCardTilt(e.currentTarget, e.clientX, e.clientY, 14, "-10px");
+}
+
+function onCardSlotMouseLeave(e: React.MouseEvent<HTMLDivElement>) {
+  resetCardTilt(e.currentTarget);
+}
+
+function onResultCardMouseMove(e: React.MouseEvent<HTMLElement>) {
+  applyCardTilt(e.currentTarget, e.clientX, e.clientY, 5.5, "-4px");
+}
+
+function onResultCardMouseLeave(e: React.MouseEvent<HTMLElement>) {
+  resetCardTilt(e.currentTarget);
+}
+
 const SHOW_DEBUG_COLLECTION_CONTROLS = SHOW_DEBUG_FLOW_CONTROLS;
 
 const DIALOG_CLOSE_DURATION_MS = 230;
@@ -593,7 +617,6 @@ export function MeasuringScreen({
   onCharacterOverlayEnabledChange,
   onShowCharacterOverlay,
   onResetCharacterPosition,
-  onRemeasureBaseline,
 }: MeasuringScreenProps) {
   const isWarmup = !snapshot.baselineReady;
   const warmupSeconds = Math.max(
@@ -817,15 +840,6 @@ export function MeasuringScreen({
             </div>
           </div>
 
-          <button
-            type="button"
-            className="measure-baseline-cta"
-            onClick={onRemeasureBaseline}
-            disabled={isWarmup}
-          >
-            姿勢を再測定する
-          </button>
-
           {showMeasureDevTools ? (
             <div className="measure-debug-tools">
               <p className="measure-debug-tools-label">開発・検証</p>
@@ -925,13 +939,17 @@ export function PostureRegisteredScreen({
   acquiredCharacter,
   fallbackCharacter: _fallbackCharacter,
   onBackHome,
-  onMeasureAgain,
 }: PostureRegisteredScreenProps) {
   const wasSuccessful =
     Boolean(result.rewardQualified) && acquiredCharacter !== null;
   const timelineVariant = wasSuccessful ? "success" : "fail";
 
-  const shareCaptureRef = useRef<HTMLDivElement>(null);
+  const shareCaptureRef = useRef<HTMLElement>(null);
+  const resultCardEnterTimerRef = useRef<number | null>(null);
+  const resultCardTapFrameRef = useRef<number | null>(null);
+  const resultCardTapResetTimerRef = useRef<number | null>(null);
+  const [isResultCardEntering, setIsResultCardEntering] = useState(false);
+  const [isResultCardTapped, setIsResultCardTapped] = useState(false);
   const [shareBusy, setShareBusy] = useState(false);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
 
@@ -955,6 +973,26 @@ export function PostureRegisteredScreen({
       "--result-meta-icon": acquiredCharacter.characterColor.primary,
       "--result-portrait-bg": acquiredCharacter.characterColor.soft,
       "--result-timeline-good": acquiredCharacter.characterColor.primary,
+    } as CSSProperties;
+  }, [wasSuccessful, acquiredCharacter]);
+
+  /** 共有キャプチャ対象（白カード）に必要な色変数を直接注入する */
+  const shareCardThemeVars = useMemo(() => {
+    if (wasSuccessful && acquiredCharacter !== null) {
+      return {
+        "--result-stat-accent": acquiredCharacter.characterColor.primary,
+        "--result-share-icon": acquiredCharacter.characterColor.primary,
+        "--result-meta-icon": acquiredCharacter.characterColor.primary,
+        "--result-portrait-bg": acquiredCharacter.characterColor.soft,
+        "--result-timeline-good": acquiredCharacter.characterColor.primary,
+      } as CSSProperties;
+    }
+    return {
+      "--result-stat-accent": "#8a9399",
+      "--result-share-icon": "#8a9399",
+      "--result-meta-icon": "#8a9399",
+      "--result-portrait-bg": "#eceff1",
+      "--result-timeline-good": "#8a9399",
     } as CSSProperties;
   }, [wasSuccessful, acquiredCharacter]);
 
@@ -992,6 +1030,81 @@ export function PostureRegisteredScreen({
   }, [shareBusy]);
 
   useEffect(() => {
+    return () => {
+      if (resultCardEnterTimerRef.current !== null) {
+        window.clearTimeout(resultCardEnterTimerRef.current);
+      }
+      if (resultCardTapFrameRef.current !== null) {
+        window.cancelAnimationFrame(resultCardTapFrameRef.current);
+      }
+      if (resultCardTapResetTimerRef.current !== null) {
+        window.clearTimeout(resultCardTapResetTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (resultCardEnterTimerRef.current !== null) {
+      window.clearTimeout(resultCardEnterTimerRef.current);
+      resultCardEnterTimerRef.current = null;
+    }
+
+    if (!wasSuccessful) {
+      setIsResultCardEntering(false);
+      return;
+    }
+
+    setIsResultCardEntering(true);
+    resultCardEnterTimerRef.current = window.setTimeout(() => {
+      setIsResultCardEntering(false);
+      resultCardEnterTimerRef.current = null;
+    }, 760);
+  }, [wasSuccessful, result.id]);
+
+  const handleResultCardTap = useCallback((event: React.MouseEvent<HTMLElement>) => {
+    if (!wasSuccessful || acquiredCharacter === null) {
+      return;
+    }
+
+    if (
+      event.target instanceof Element &&
+      event.target.closest("button")
+    ) {
+      return;
+    }
+
+    const cardElement = event.currentTarget;
+    const rect = cardElement.getBoundingClientRect();
+    const clickX = event.clientX || rect.left + rect.width / 2;
+    const clickY = event.clientY || rect.top + rect.height / 2;
+
+    playCardTapConfetti({
+      clientX: clickX,
+      clientY: clickY,
+      elementWidth: rect.width,
+      elementHeight: rect.height,
+      characterColors: acquiredCharacter.characterColor,
+    });
+
+    setIsResultCardTapped(false);
+    if (resultCardTapFrameRef.current !== null) {
+      window.cancelAnimationFrame(resultCardTapFrameRef.current);
+    }
+    resultCardTapFrameRef.current = window.requestAnimationFrame(() => {
+      setIsResultCardTapped(true);
+      resultCardTapFrameRef.current = null;
+    });
+
+    if (resultCardTapResetTimerRef.current !== null) {
+      window.clearTimeout(resultCardTapResetTimerRef.current);
+    }
+    resultCardTapResetTimerRef.current = window.setTimeout(() => {
+      setIsResultCardTapped(false);
+      resultCardTapResetTimerRef.current = null;
+    }, 520);
+  }, [wasSuccessful, acquiredCharacter]);
+
+  useEffect(() => {
     if (!wasSuccessful) {
       return;
     }
@@ -1009,9 +1122,9 @@ export function PostureRegisteredScreen({
     >
       <FlowBrand />
 
-      <div ref={shareCaptureRef} className="result-registered-capture-root">
+      <div className="result-registered-capture-root">
         <header className="result-registered-hero" aria-labelledby="registered-heading">
-          <p className="result-registered-eyebrow">今日のチンアナゴ</p>
+          <p className="result-registered-eyebrow">今日のピンアナゴ</p>
           <h1
             id="registered-heading"
             className={`result-registered-title ${wasSuccessful ? "" : "is-fail"}`}
@@ -1020,119 +1133,37 @@ export function PostureRegisteredScreen({
           </h1>
         </header>
 
-        <article className="result-registered-card" aria-label="測定結果">
-        <section
-          className="result-registered-col result-registered-col--character"
-          aria-label="キャラクター"
-        >
-          <div className="result-registered-portrait">
-            {wasSuccessful ? (
-              <CharacterFigure
-                character={displayCharacter}
-                className="result-registered-figure"
-              />
-            ) : (
-              <img
-                className="result-registered-figure result-registered-figure--qr-fail"
-                src="/logo/QRアナゴ.png"
-                alt=""
-                draggable={false}
-              />
-            )}
-          </div>
-          <p className="result-registered-name">
-            {wasSuccessful ? displayCharacter?.name ?? "？？？？？" : "？？？？？"}
-          </p>
-          <ul className="result-registered-tags">
-            {personalityTags.map((tag, index) => (
-              <li key={`${tag}-${index}`} className="result-registered-tag">
-                {tag}
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section
-          className="result-registered-col result-registered-col--stats"
-          aria-label="統計とタイムライン"
-        >
-          <div className="result-registered-stats-header">
-            <button
-              type="button"
-              className={`result-registered-share ${shareBusy ? "is-busy" : ""}`}
-              aria-label="結果を画像で共有"
-              title="結果を画像で共有（または保存）します"
-              disabled={shareBusy}
-              aria-disabled={shareBusy}
-              aria-busy={shareBusy}
-              onClick={() => void handleShareResult()}
-            >
-              <svg
-                viewBox="0 0 24 24"
-                width={20}
-                height={20}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={1.9}
-                strokeLinejoin="round"
-                strokeLinecap="round"
-                aria-hidden="true"
-              >
-                <circle cx="6.3" cy="12" r="2.15" />
-                <circle cx="17.7" cy="6.4" r="2.15" />
-                <circle cx="17.7" cy="17.6" r="2.15" />
-                <path d="M8.2 11.1 15.8 7.3M8.2 12.9l7.6 3.8" />
-              </svg>
-            </button>
-          </div>
-
-          <div className="result-registered-stat-grid">
-            <div className="result-registered-stat-cell">
-              <span className="result-registered-stat-label">良い姿勢時間</span>
-              <strong className="result-registered-stat-value">
-                {formatDuration(result.goodMs)}
-              </strong>
-            </div>
-            <div className="result-registered-stat-cell">
-              <span className="result-registered-stat-label">良い姿勢率</span>
-              <strong className="result-registered-stat-value">
-                {formatPercent(result.goodRatio)}
-              </strong>
-            </div>
-          </div>
-
-          <PostureTimelineChart
-            segments={result.postureTimeline}
-            totalMs={result.activeMeasurementMs}
-            variant={timelineVariant}
-          />
-
-          <dl className="result-registered-meta">
-            <div className="result-registered-meta-row">
-              <dt className="result-registered-meta-label">
-                <span className="result-registered-meta-icon" aria-hidden>
-                  <RegisteredCalendarGlyph />
-                </span>
-                獲得日
-              </dt>
-              <dd className="result-registered-meta-value">
-                {formatAcquiredAt(result.endedAt)}
-              </dd>
-            </div>
-            <div className="result-registered-meta-row">
-              <dt className="result-registered-meta-label">
-                <span className="result-registered-meta-icon" aria-hidden>
-                  <RegisteredClockGlyph />
-                </span>
-                測定時間
-              </dt>
-              <dd className="result-registered-meta-value">
-                {formatDuration(result.activeMeasurementMs)}
-              </dd>
-            </div>
-          </dl>
-        </section>
-        </article>
+        <CharacterResultWhiteCard
+          ref={shareCaptureRef}
+          portraitMode={wasSuccessful ? "character" : "qr-fail"}
+          character={displayCharacter}
+          personalityTags={personalityTags}
+          goodDurationLabel={formatDuration(result.goodMs)}
+          goodRatioLabel={formatPercent(result.goodRatio)}
+          timelineSegments={result.postureTimeline}
+          timelineTotalMs={result.activeMeasurementMs}
+          timelineVariant={timelineVariant}
+          timelineGoodStrokeResolved={
+            wasSuccessful && acquiredCharacter !== null
+              ? acquiredCharacter.characterColor.primary
+              : "#8a9399"
+          }
+          acquiredAtLabel={formatAcquiredAt(result.endedAt)}
+          measurementDurationLabel={formatDuration(result.activeMeasurementMs)}
+          shareBusy={shareBusy}
+          onShareClick={() => {
+            void handleShareResult();
+          }}
+          articleClassName={`${wasSuccessful ? "result-registered-card--acquired" : ""} ${
+            isResultCardEntering ? "is-entering" : ""
+          } ${
+            isResultCardTapped ? "is-tapped" : ""
+          }`.trim()}
+          articleStyle={shareCardThemeVars}
+          onArticleClick={handleResultCardTap}
+          onArticleMouseMove={wasSuccessful ? onResultCardMouseMove : undefined}
+          onArticleMouseLeave={wasSuccessful ? onResultCardMouseLeave : undefined}
+        />
       </div>
 
       <p
@@ -1151,33 +1182,8 @@ export function PostureRegisteredScreen({
         >
           ホーム
         </button>
-        <button
-          type="button"
-          className="result-registered-again"
-          onClick={onMeasureAgain}
-        >
-          もう一度測定
-        </button>
       </footer>
     </main>
-  );
-}
-
-function RegisteredCalendarGlyph() {
-  return (
-    <svg viewBox="0 0 20 20" width={18} height={18} aria-hidden focusable={false}>
-      <rect x="3" y="4" width="14" height="13" rx="2" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M3 8h14M8 2v4M12 2v4" fill="none" stroke="currentColor" strokeWidth="1.5" />
-    </svg>
-  );
-}
-
-function RegisteredClockGlyph() {
-  return (
-    <svg viewBox="0 0 20 20" width={18} height={18} aria-hidden focusable={false}>
-      <circle cx="10" cy="10" r="7" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M10 7v4l3 2" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
   );
 }
 
@@ -1640,18 +1646,24 @@ function CollectionDetailDialog({
   acquiredCharacter: AcquiredCharacter;
   onClose: () => void;
 }) {
-  const dialogStyle = {
-    "--home-character-color": character.characterColor.primary,
-    "--home-character-soft-color": character.characterColor.soft,
-    "--result-timeline-good": character.characterColor.primary,
-  } as CSSProperties;
-  const shareCaptureRef = useRef<HTMLDivElement>(null);
+  const shareCaptureRef = useRef<HTMLElement>(null);
   const [shareBusy, setShareBusy] = useState(false);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
 
   const hasTimelineData =
     (acquiredCharacter.postureTimeline?.length ?? 0) > 0 &&
     (acquiredCharacter.activeMeasurementMs ?? 0) > 0;
+  const timelineVariant = hasTimelineData ? "success" : "fail";
+
+  const shareCardThemeVars = useMemo(() => {
+    return {
+      "--result-stat-accent": character.characterColor.primary,
+      "--result-share-icon": character.characterColor.primary,
+      "--result-meta-icon": character.characterColor.primary,
+      "--result-portrait-bg": character.characterColor.soft,
+      "--result-timeline-good": character.characterColor.primary,
+    } as CSSProperties;
+  }, [character]);
 
   const handleShareCollection = useCallback(async () => {
     if (shareCaptureRef.current === null || shareBusy) {
@@ -1686,11 +1698,10 @@ function CollectionDetailDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby="collection-detail-heading"
-        style={dialogStyle}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="collection-detail-header">
-          <p className="collection-detail-eyebrow">今日のチンアナゴ</p>
+          <p className="collection-detail-eyebrow">今日のピンアナゴ</p>
           <button
             type="button"
             className="collection-detail-close"
@@ -1700,96 +1711,37 @@ function CollectionDetailDialog({
             ×
           </button>
         </div>
-        <article
+        <CharacterResultWhiteCard
           ref={shareCaptureRef}
-          className="collection-detail-card"
-          aria-labelledby="collection-detail-heading"
+          portraitMode="character"
+          character={character}
+          personalityTags={character.personalityTags}
+          goodDurationLabel={formatOptionalDuration(acquiredCharacter.goodMs)}
+          goodRatioLabel={formatOptionalPercent(acquiredCharacter.goodRatio)}
+          timelineSegments={acquiredCharacter.postureTimeline ?? []}
+          timelineTotalMs={acquiredCharacter.activeMeasurementMs ?? 0}
+          timelineVariant={timelineVariant}
+          timelineGoodStrokeResolved={
+            hasTimelineData ? character.characterColor.primary : "#8a9399"
+          }
+          acquiredAtLabel={formatAcquiredAt(acquiredCharacter.acquiredAt)}
+          measurementDurationLabel={formatOptionalDuration(
+            acquiredCharacter.activeMeasurementMs,
+          )}
+          shareBusy={shareBusy}
+          onShareClick={() => {
+            void handleShareCollection();
+          }}
+          articleStyle={shareCardThemeVars}
+          characterNameId="collection-detail-heading"
+        />
+        <div
+          className="collection-detail-story-below"
+          aria-labelledby="collection-detail-story-heading"
         >
-          <section
-            className="collection-detail-col collection-detail-col--character"
-            aria-label="キャラクター"
-          >
-            <div className="collection-detail-preview">
-              <CharacterFigure
-                character={character}
-                className="collection-detail-character"
-              />
-            </div>
-            <h2 id="collection-detail-heading" className="collection-detail-name">
-              {character.name}
-            </h2>
-            <div className="collection-detail-tags">
-              {character.personalityTags.map((tag) => (
-                <span className="home-tag" key={tag}>
-                  {tag}
-                </span>
-              ))}
-            </div>
-          </section>
-          <section
-            className="collection-detail-col collection-detail-col--stats"
-            aria-label="統計とストーリー"
-          >
-            <div className="collection-detail-stats-header">
-              <button
-                type="button"
-                className={`result-registered-share ${shareBusy ? "is-busy" : ""}`}
-                aria-label="結果を画像で共有"
-                title="結果を画像で共有（または保存）します"
-                disabled={shareBusy}
-                aria-busy={shareBusy}
-                onClick={() => void handleShareCollection()}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  width={20}
-                  height={20}
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={1.9}
-                  strokeLinejoin="round"
-                  strokeLinecap="round"
-                  aria-hidden="true"
-                >
-                  <circle cx="6.3" cy="12" r="2.15" />
-                  <circle cx="17.7" cy="6.4" r="2.15" />
-                  <circle cx="17.7" cy="17.6" r="2.15" />
-                  <path d="M8.2 11.1 15.8 7.3M8.2 12.9l7.6 3.8" />
-                </svg>
-              </button>
-            </div>
-            <div className="collection-detail-info">
-              <div className="collection-detail-stat">
-                <span>習得日</span>
-                <strong>{formatAcquiredAt(acquiredCharacter.acquiredAt)}</strong>
-              </div>
-              <div className="collection-detail-stat">
-                <span>良い姿勢率</span>
-                <strong>{formatOptionalPercent(acquiredCharacter.goodRatio)}</strong>
-              </div>
-              <div className="collection-detail-stat">
-                <span>良い姿勢時間</span>
-                <strong>{formatOptionalDuration(acquiredCharacter.goodMs)}</strong>
-              </div>
-              <div className="collection-detail-stat">
-                <span>稼働時間</span>
-                <strong>
-                  {formatOptionalDuration(acquiredCharacter.activeMeasurementMs)}
-                </strong>
-              </div>
-            </div>
-            <PostureTimelineChart
-              segments={acquiredCharacter.postureTimeline ?? []}
-              totalMs={acquiredCharacter.activeMeasurementMs ?? 0}
-              variant={hasTimelineData ? "success" : "fail"}
-              className="collection-detail-timeline"
-            />
-            <div className="collection-detail-story-wrap">
-              <h3>ストーリー</h3>
-              <p className="collection-detail-story">{character.story}</p>
-            </div>
-          </section>
-        </article>
+          <h3 id="collection-detail-story-heading">ストーリー</h3>
+          <p className="collection-detail-story">{character.story}</p>
+        </div>
         <p className="collection-detail-share-feedback" role="status" aria-live="polite">
           {shareFeedback ?? ""}
         </p>

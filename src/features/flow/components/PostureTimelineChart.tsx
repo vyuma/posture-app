@@ -8,6 +8,13 @@ type PostureTimelineChartProps = {
   totalMs: number;
   variant?: "success" | "fail";
   className?: string;
+  /**
+   * 共有キャプチャ等で CSS 変数が効かない環境向け：良い線の色を HEX 等で直接指定。
+   * 未指定時は従来どおり var(--result-timeline-good, …) を使用。
+   */
+  resolvedGoodStroke?: string;
+  /** 悪い線色（省略時は固定のグレー系） */
+  resolvedBadStroke?: string;
 };
 
 const VIEWBOX_W = 360;
@@ -30,6 +37,8 @@ export function PostureTimelineChart({
   totalMs,
   variant = "success",
   className,
+  resolvedGoodStroke,
+  resolvedBadStroke,
 }: PostureTimelineChartProps) {
   const safeTotal = Number.isFinite(totalMs) ? Math.max(0, totalMs) : 0;
   const hasData = segments.length > 0 && safeTotal > 0;
@@ -42,6 +51,14 @@ export function PostureTimelineChart({
   const yOne = TRACK_Y + 12;
   const yZero = TRACK_Y + TRACK_H - 12;
   const strokeW = 3.2;
+  const goodStroke =
+    resolvedGoodStroke !== undefined
+      ? resolvedGoodStroke
+      : variant === "success"
+        ? "var(--result-timeline-good, #fd8c3e)"
+        : "var(--result-timeline-good, #13a2d7)";
+  const badStroke = resolvedBadStroke ?? "#9aa7b5";
+  const connectorStroke = "rgba(72, 86, 98, 0.35)";
 
   const steps: ReactElement[] = [];
 
@@ -58,6 +75,7 @@ export function PostureTimelineChart({
         segment.isGood
           ? "result-posture-timeline-line is-good"
           : "result-posture-timeline-line is-bad";
+      const strokeColor = segment.isGood ? goodStroke : badStroke;
 
       steps.push(
         <line
@@ -69,6 +87,7 @@ export function PostureTimelineChart({
           y2={y}
           strokeWidth={strokeW}
           strokeLinecap="round"
+          stroke={strokeColor}
         />,
       );
 
@@ -89,6 +108,7 @@ export function PostureTimelineChart({
             x2={xv}
             y2={segment.isGood ? yOne : yZero}
             strokeWidth={strokeW * 0.55}
+            stroke={connectorStroke}
           />,
         );
       }
@@ -114,8 +134,9 @@ export function PostureTimelineChart({
       <svg
         className="result-posture-timeline-svg"
         viewBox={`0 0 ${VIEWBOX_W} ${VIEWBOX_H}`}
-        width="100%"
+        width={VIEWBOX_W}
         height={VIEWBOX_H}
+        style={{ width: "100%", height: "auto" }}
         preserveAspectRatio="xMidYMid meet"
         role="img"
         aria-label={`姿勢タイムライン（ステップ線）。${summaryLabel}。横軸は測定時間、縦軸は良い姿勢を1（上）・そうでないを0（下）。`}
