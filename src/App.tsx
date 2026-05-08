@@ -89,11 +89,14 @@ function statusIndicatesCameraPermissionFailure(status: string): boolean {
 async function ensurePairedAndCameraPermission(
   isPairedLive: boolean,
   setPermissionPopupMessage: (message: string | null) => void,
+  /** 未ペア時は案内どおりホームで「スマホと接続」へ誘導する */
+  onPairingMissing?: () => void,
 ): Promise<boolean> {
   if (!isPairedLive) {
     setPermissionPopupMessage(
       "スマートフォンとの接続を確認してください。ホームの「スマホと接続」で QR をスキャンし、接続が完了した状態で再度お試しください。",
     );
+    onPairingMissing?.();
     return false;
   }
 
@@ -344,6 +347,7 @@ function App() {
       const ok = await ensurePairedAndCameraPermission(
         isPairedLive,
         setPermissionPopupMessage,
+        () => setFlowPhase("home"),
       );
       if (!ok) {
         return;
@@ -374,6 +378,7 @@ function App() {
       const ok = await ensurePairedAndCameraPermission(
         isPairedLive,
         setPermissionPopupMessage,
+        () => setFlowPhase("home"),
       );
       if (!ok) {
         return;
@@ -408,6 +413,7 @@ function App() {
       const ok = await ensurePairedAndCameraPermission(
         isPairedLive,
         setPermissionPopupMessage,
+        () => setFlowPhase("home"),
       );
       if (!ok) {
         return;
