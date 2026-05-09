@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
+import { useLiveFigmaPrScaleStyle } from "../../hooks/useLiveFigmaPrScaleStyle";
 import type { CodeReadScreenProps } from "../flowScreenTypes";
 import { FlowBrand } from "../shared/FlowBrand";
 import { CodeReadSettingsPanel } from "./CodeReadSettingsPanel";
@@ -17,6 +18,8 @@ export function CodeReadScreen({
   onStartMeasurement,
   onBackHome,
 }: CodeReadScreenProps) {
+  const figmaPrScaleStyle = useLiveFigmaPrScaleStyle();
+
   const previewVideoRef = useRef<HTMLVideoElement | null>(null);
   const previewStreamRef = useRef<MediaStream | null>(null);
   const [cameraPreview, setCameraPreview] = useState<"loading" | "live" | "error">(
@@ -108,7 +111,10 @@ export function CodeReadScreen({
   }, [onBackHome]);
 
   return (
-    <main className="flow-screen frame53-register-screen">
+    <main
+      className="flow-screen frame53-register-screen"
+      style={figmaPrScaleStyle}
+    >
       <FlowBrand />
       <div className="frame53-panels-wrap">
         <section className="frame53-left" aria-labelledby="frame53-register-heading">

@@ -1,29 +1,13 @@
 import { type CSSProperties, useEffect, useState } from "react";
 
 import type { MobileConnectScreenProps } from "../flowScreenTypes";
+import { computeFigmaScenePrScale } from "../../utils/figmaSceneScale";
 import { CharacterFigure } from "../shared/CharacterFigure";
 import { FlowBrand } from "../shared/FlowBrand";
-
-const MOBILE_CONNECT_SCENE_WIDTH = 1512;
-const MOBILE_CONNECT_SCENE_HEIGHT = 982;
 
 type MobileConnectStageStyle = CSSProperties & {
   "--mobile-connect-scale": string;
 };
-
-function getMobileConnectSceneScale() {
-  if (typeof window === "undefined") {
-    return 1;
-  }
-
-  const viewportWidth = window.visualViewport?.width ?? window.innerWidth;
-  const viewportHeight = window.visualViewport?.height ?? window.innerHeight;
-
-  return Math.min(
-    viewportWidth / MOBILE_CONNECT_SCENE_WIDTH,
-    viewportHeight / MOBILE_CONNECT_SCENE_HEIGHT,
-  );
-}
 
 export function MobileConnectScreen({
   qrImageDataUrl,
@@ -34,20 +18,22 @@ export function MobileConnectScreen({
   onContinueFromPaired,
   onBackHome,
 }: MobileConnectScreenProps) {
-  const [sceneScale, setSceneScale] = useState(() => getMobileConnectSceneScale());
+  const [sceneScale, setSceneScale] = useState(() => computeFigmaScenePrScale());
 
   useEffect(() => {
     const syncSceneScale = () => {
-      setSceneScale(getMobileConnectSceneScale());
+      setSceneScale(computeFigmaScenePrScale());
     };
 
     syncSceneScale();
     window.addEventListener("resize", syncSceneScale);
     window.visualViewport?.addEventListener("resize", syncSceneScale);
+    window.visualViewport?.addEventListener("scroll", syncSceneScale);
 
     return () => {
       window.removeEventListener("resize", syncSceneScale);
       window.visualViewport?.removeEventListener("resize", syncSceneScale);
+      window.visualViewport?.removeEventListener("scroll", syncSceneScale);
     };
   }, []);
 

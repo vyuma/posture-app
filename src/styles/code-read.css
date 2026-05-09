@@ -23,10 +23,15 @@
   );
   --frame53-camera-slot-size: 694px;
 
-  /* QR画面の 1512×982 scene を基準に、画面全体だけ等比スケールする。 */
+  /*
+   * 1512×982 基準の等比。無制限だとタイポが肥大化するため上限あり。
+   * 1 固定だと QHD 級で余白ばかりで「潰れた」印象になるため、緩い上限にする。
+   * JS（useLiveFigmaPrScaleStyle）が main に --pr-scale を上書きする場合は visualViewport 基準で MobileConnect と一致。
+   */
   --pr-scale: max(
     0.31,
     min(
+      1.35,
       calc(100vw / 1512px),
       calc(100dvh / 982px)
     )
@@ -117,8 +122,16 @@
   align-items: center;
   justify-content: center;
   width: calc(1336px * var(--pr-scale));
+  max-width: 100%;
+  min-width: 0;
   min-height: 0;
   gap: calc(48px * var(--pr-scale));
+  box-sizing: border-box;
+}
+
+/* 接続画面に近い上基準。padding で縦オフセット済みのため帯の中央へ塊収束させない */
+.flow-screen.frame53-register-screen .frame53-panels-wrap {
+  justify-content: flex-start;
 }
 
 /* Frame 46 相当：500×681 白／角丸40／Figma y から算出したパディング */

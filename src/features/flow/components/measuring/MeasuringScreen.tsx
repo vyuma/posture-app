@@ -10,6 +10,7 @@ import {
 import { POSTURE_SPEC, PostureViewer } from "../../../posture";
 import { playSoundPreview } from "../../../sound/services/recoverySound";
 import { BUILTIN_SOUND_OPTIONS } from "../../../sound/types/soundSettings";
+import { useLiveFigmaPrScaleStyle } from "../../hooks/useLiveFigmaPrScaleStyle";
 import type { MeasuringScreenProps } from "../flowScreenTypes";
 import { FlowBrand } from "../shared/FlowBrand";
 import {
@@ -41,6 +42,8 @@ export function MeasuringScreen({
   onShowCharacterOverlay,
   onResetCharacterPosition,
 }: MeasuringScreenProps) {
+  const figmaPrScaleStyle = useLiveFigmaPrScaleStyle();
+
   const isWarmup = !snapshot.baselineReady;
 
   const showMeasureDevTools = isOverlayDebugUiEnabled();
@@ -112,7 +115,10 @@ export function MeasuringScreen({
   const pauseDisabled = isWarmup;
 
   return (
-    <main className="flow-screen measuring-screen">
+    <main
+      className="flow-screen measuring-screen"
+      style={figmaPrScaleStyle}
+    >
       <FlowBrand />
       <section
         className="measure-layout"

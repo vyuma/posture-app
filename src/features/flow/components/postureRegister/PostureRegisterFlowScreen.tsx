@@ -7,6 +7,7 @@ import {
 } from "../../../overlay/overlayState";
 import { POSTURE_SPEC, PostureViewer } from "../../../posture";
 import { CodeReadSettingsPanel } from "../codeRead/CodeReadSettingsPanel";
+import { useLiveFigmaPrScaleStyle } from "../../hooks/useLiveFigmaPrScaleStyle";
 import type { PostureRegisterFlowScreenProps } from "../flowScreenTypes";
 import { FlowBrand } from "../shared/FlowBrand";
 import { WarmupCountdownVeil } from "../measuring/WarmupCountdownVeil";
@@ -33,6 +34,8 @@ export function PostureRegisterFlowScreen({
   onCalibratingComplete,
   onResetCharacterPosition,
 }: PostureRegisterFlowScreenProps) {
+  const figmaPrScaleStyle = useLiveFigmaPrScaleStyle();
+
   const previewVideoRef = useRef<HTMLVideoElement | null>(null);
   const previewStreamRef = useRef<MediaStream | null>(null);
   const [cameraPreview, setCameraPreview] = useState<
@@ -177,7 +180,10 @@ export function PostureRegisterFlowScreen({
         : "frame53-pr-settings-heading";
 
   return (
-    <main className="flow-screen frame53-register-screen">
+    <main
+      className="flow-screen frame53-register-screen"
+      style={figmaPrScaleStyle}
+    >
       <FlowBrand />
       <div className="frame53-panels-wrap">
         <section className={leftClass} aria-labelledby={headingId}>
