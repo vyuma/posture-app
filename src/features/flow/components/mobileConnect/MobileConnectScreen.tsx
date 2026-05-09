@@ -1,5 +1,6 @@
 import { type CSSProperties, useEffect, useState } from "react";
 
+import { isTauriRuntime } from "../../../../lib/tauriRuntime";
 import type { MobileConnectScreenProps } from "../flowScreenTypes";
 import { computeFigmaScenePrScale } from "../../utils/figmaSceneScale";
 import { CharacterFigure } from "../shared/CharacterFigure";
@@ -40,6 +41,8 @@ export function MobileConnectScreen({
   const stageStyle: MobileConnectStageStyle = {
     "--mobile-connect-scale": sceneScale.toString(),
   };
+
+  const showWebQrSkip = !isTauriRuntime() && !isPaired;
 
   return (
     <main className="flow-screen mobile-connect-screen">
@@ -176,6 +179,15 @@ export function MobileConnectScreen({
                     </div>
                   )}
                 </div>
+                {showWebQrSkip ? (
+                  <button
+                    type="button"
+                    className="mobile-connect-web-qr-skip-btn"
+                    onClick={() => onContinueFromPaired()}
+                  >
+                    次へ
+                  </button>
+                ) : null}
               </div>
             )}
           </article>

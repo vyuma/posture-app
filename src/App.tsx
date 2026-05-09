@@ -70,8 +70,13 @@ import {
   saveSoundSettings,
 } from "./features/sound/services/soundSettingsStorage";
 import type { SoundSettings } from "./features/sound/types/soundSettings";
+import { isTauriRuntime } from "./lib/tauriRuntime";
 import { useQrDataUrl } from "./lib/useQrDataUrl";
 import { preloadShareImageCache } from "./lib/shareResultCapture";
+
+/** ブラウザ版：ペアリング用QRの代わりに埋め込むデモURL */
+const WEB_ONLY_QR_PAYLOAD =
+  "https://www.youtube.com/watch?v=reiOGrrkmlI";
 
 /** カメラ権限が拒否されている／取得に失敗したときの共通案内 */
 const CAMERA_PERMISSION_BLOCKED_MESSAGE_JA =
@@ -92,7 +97,8 @@ async function ensurePairedAndCameraPermission(
   /** 未ペア時は案内どおりホームで「スマホと接続」へ誘導する */
   onPairingMissing?: () => void,
 ): Promise<boolean> {
-  if (!isPairedLive) {
+  // ブラウザ版はペアリングなしで測定・姿勢登録まで進められる
+  if (isTauriRuntime() && !isPairedLive) {
     setPermissionPopupMessage(
       "スマートフォンとの接続を確認してください。ホームの「スマホと接続」で QR をスキャンし、接続が完了した状態で再度お試しください。",
     );
@@ -209,7 +215,8 @@ function App() {
   } = usePairingState();
 
   const pairingLink = buildPairingLink(pairingInfo);
-  const qrImageDataUrl = useQrDataUrl(pairingLink);
+  const qrPayload = isTauriRuntime() ? pairingLink : WEB_ONLY_QR_PAYLOAD;
+  const qrImageDataUrl = useQrDataUrl(qrPayload);
   const isPairedLive =
     Boolean(pairingStatus?.paired) && (pairingStatus?.wsClientCount ?? 0) > 0;
   const acquiredCharacterIds = useMemo(
@@ -576,6 +583,10 @@ function App() {
   });
 
   useEffect(() => {
+    if (!isTauriRuntime()) {
+      return;
+    }
+
     let disposed = false;
 
     const applyOverlayState = (state: OverlayStatePayload) => {
@@ -601,7 +612,11 @@ function App() {
 
     return () => {
       disposed = true;
-      void unlistenPromise.then((unlisten) => unlisten());
+      void unlistenPromise
+        .then((unlisten) => unlisten())
+        .catch(() => {
+          // Tauri 外や初期化失敗時は無視
+        });
     };
   }, []);
 
@@ -618,6 +633,15 @@ function App() {
         : "hidden";
 
     const syncOverlay = async () => {
+      if (!isTauriRuntime()) {
+        if (!isCharacterOverlayEnabled) {
+          saveCharacterOverlayEnabled(false);
+        } else {
+          saveCharacterOverlayEnabled(true);
+        }
+        return;
+      }
+
       if (!isCharacterOverlayEnabled) {
         saveCharacterOverlayEnabled(false);
         await invoke("overlay_hide_character").catch(() => {});
@@ -652,6 +676,9 @@ function App() {
 
   const handleResetCharacterPosition = useCallback(() => {
     clearStoredPositionOffset();
+    if (!isTauriRuntime()) {
+      return;
+    }
     void invoke("overlay_reset_position_offset").catch(() => {
       // Browser preview cannot reach Tauri commands.
     });
@@ -700,6 +727,9 @@ function App() {
 
   useEffect(() => {
     return () => {
+      if (!isTauriRuntime()) {
+        return;
+      }
       void Promise.allSettled([
         sendPostureSignal(false),
         invoke("overlay_set_mode", { mode: "hidden" }),

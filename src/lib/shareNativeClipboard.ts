@@ -1,5 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 
+import { isTauriRuntime } from "./tauriRuntime";
+
 function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -22,16 +24,6 @@ async function blobToBase64(blob: Blob): Promise<string> {
     throw new Error("Invalid data URL");
   }
   return dataUrl.slice(commaIndex + 1);
-}
-
-function isTauriRuntime(): boolean {
-  if (
-    typeof window === "undefined" ||
-    !("__TAURI_INTERNALS__" in window)
-  ) {
-    return false;
-  }
-  return true;
 }
 
 export function shouldPreferNativeClipboardShare(): boolean {

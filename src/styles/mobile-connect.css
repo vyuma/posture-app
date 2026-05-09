@@ -239,6 +239,48 @@
   text-align: center;
 }
 
+/* ブラウザ版：実ペアリングなしでQRステップをスキップ */
+.mobile-connect-web-qr-skip-btn {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  z-index: 4;
+  width: min(420px, 86%);
+  height: 64px;
+  padding: 18px 28px;
+  border: 0;
+  border-radius: 100px;
+  background: #34add5;
+  color: #ffffff;
+  cursor: pointer;
+  font-family:
+    "SF Pro Display",
+    "SF Pro Text",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Noto Sans JP",
+    sans-serif;
+  font-size: 22px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.2;
+  box-shadow: 0 8px 24px rgba(12, 100, 128, 0.22);
+  transform: translateX(-50%);
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease;
+}
+
+.mobile-connect-web-qr-skip-btn:hover,
+.mobile-connect-web-qr-skip-btn:focus-visible {
+  transform: translateX(-50%) translateY(-1px);
+}
+
+.mobile-connect-web-qr-skip-btn:focus-visible {
+  outline: 3px solid rgba(255, 255, 255, 0.85);
+  outline-offset: 3px;
+}
+
 .mobile-connect-error {
   position: absolute;
   right: 96px;
