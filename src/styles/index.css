@@ -1,6 +1,7 @@
 /* グローバルCSSのエントリー：画面別スタイルを順番に読み込む */
 
 @import "./base.css";
+@import "./web-inline-overlay.css";
 @import "./onboarding.css";
 @import "./home.css";
 @import "./mobile-connect.css";

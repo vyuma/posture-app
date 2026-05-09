@@ -37,6 +37,7 @@ import {
   hasCompletedOnboardingStory,
   saveOnboardingStoryCompleted,
 } from "./features/onboarding";
+import { computeMeasuringCharacterOverlayMode } from "./features/overlay/computeMeasuringCharacterOverlayMode";
 import {
   clearStoredPositionOffset,
   loadCharacterOverlayEnabled,
@@ -44,6 +45,7 @@ import {
   type OverlayMode,
   type OverlayStatePayload,
 } from "./features/overlay/overlayState";
+import { WebInlineCharacterOverlay } from "./features/overlay/WebInlineCharacterOverlay";
 import { usePairingState } from "./features/pairing";
 import { buildPairingLink } from "./features/pairing/services/pairingLink";
 import {
@@ -251,6 +253,16 @@ function App() {
     snapshot.baselineReady &&
     !isPaused &&
     isBadPosture;
+
+  const webInlineCharacterMode = useMemo(() => {
+    const mode = computeMeasuringCharacterOverlayMode(
+      flowPhase,
+      isPaused,
+      snapshot.baselineReady,
+      isBadPosture,
+    );
+    return mode === "hidden" ? null : mode;
+  }, [flowPhase, isPaused, snapshot.baselineReady, isBadPosture]);
 
   const measurementAccumulatorRef = useRef(createMeasurementAccumulator());
   const measurementStartedAtRef = useRef<string | null>(null);
@@ -820,6 +832,11 @@ function App() {
         onShowCharacterOverlay={handleShowCharacterOverlay}
         onResetCharacterPosition={handleResetCharacterPosition}
       />
+      {!isTauriRuntime() &&
+      isCharacterOverlayEnabled &&
+      webInlineCharacterMode !== null ? (
+        <WebInlineCharacterOverlay mode={webInlineCharacterMode} />
+      ) : null}
       {permissionPopup}
     </>
   );
