@@ -32,11 +32,7 @@ pub fn copy_share_image_to_clipboard(png_base64: String) -> Result<(), String> {
     Err(last_error)
 }
 
-fn write_image_to_clipboard(
-    width: usize,
-    height: usize,
-    bytes: &[u8],
-) -> Result<(), String> {
+fn write_image_to_clipboard(width: usize, height: usize, bytes: &[u8]) -> Result<(), String> {
     let mut clipboard =
         Clipboard::new().map_err(|error| format!("failed to open clipboard: {error}"))?;
     clipboard

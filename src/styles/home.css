@@ -2229,10 +2229,17 @@
   box-shadow: 0 8px 16px rgba(18, 54, 65, 0.18);
 }
 
-/* 白カード本体は result.css の .result-registered-card に統一 */
-.collection-detail-dialog .result-registered-card {
-  width: min(45rem, calc(100% - clamp(1.25rem, 6vw, 2.25rem)));
+/* 白カード＋カード外アクションは result.css のブロックレイアウトに統一 */
+.collection-detail-dialog .result-registered-card-block {
+  width: min(calc(45rem + 64px + 22px), calc(100% - clamp(1.25rem, 6vw, 2.25rem)));
   margin: 0 auto clamp(0.75rem, 3vw, 1rem);
+}
+
+.collection-detail-dialog .result-registered-card-block .result-registered-card {
+  width: min(45rem, 100%);
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 /* 共有対象外：ストーリーは白カードの下に配置 */

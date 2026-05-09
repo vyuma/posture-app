@@ -51,6 +51,7 @@ type AppFlowRouterProps = {
   onOpenMobileConnect: () => void;
   onPairingStatusRefresh: () => void;
   onContinueFromPaired: () => void;
+  onDebugDisconnectPairingDevice: () => Promise<void>;
   onProfileCharacterSelect: (characterId: string) => void;
   onToggleFavoriteCharacter: (characterId: string) => void;
   onDebugClearAcquiredCharacters: () => void;
@@ -101,6 +102,7 @@ export function AppFlowRouter({
   onOpenMobileConnect,
   onPairingStatusRefresh,
   onContinueFromPaired,
+  onDebugDisconnectPairingDevice,
   onProfileCharacterSelect,
   onToggleFavoriteCharacter,
   onDebugClearAcquiredCharacters,
@@ -144,6 +146,7 @@ export function AppFlowRouter({
           onOpenMobileConnect={onOpenMobileConnect}
           onPairingStatusRefresh={onPairingStatusRefresh}
           onContinueFromPaired={onContinueFromPaired}
+          onDebugDisconnectPairingDevice={onDebugDisconnectPairingDevice}
           onDebugStartMeasurement={onStartMeasurement}
           onProfileCharacterSelect={onProfileCharacterSelect}
           onToggleFavoriteCharacter={onToggleFavoriteCharacter}
@@ -193,7 +196,7 @@ export function AppFlowRouter({
           onRequestBeginCalibrating={onBeginPostureRegisterCalibrating}
           onBeginMeasurementAfterRegister={onBeginMeasurementAfterRegister}
           onCalibratingComplete={onPostureRegisterCalibratingComplete}
-          onBackHome={onBackHome}
+          onResetCharacterPosition={onResetCharacterPosition}
         />
       );
     case "measuring":
@@ -244,6 +247,7 @@ export function AppFlowRouter({
           onOpenMobileConnect={onOpenMobileConnect}
           onPairingStatusRefresh={onPairingStatusRefresh}
           onContinueFromPaired={onContinueFromPaired}
+          onDebugDisconnectPairingDevice={onDebugDisconnectPairingDevice}
           onDebugStartMeasurement={onMeasureAgain}
           onProfileCharacterSelect={onProfileCharacterSelect}
           onToggleFavoriteCharacter={onToggleFavoriteCharacter}

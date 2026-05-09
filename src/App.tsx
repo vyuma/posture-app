@@ -28,10 +28,8 @@ import type {
 } from "./features/flow/types";
 import { PermissionPopup } from "./features/flow/components/PermissionPopup";
 import {
-  appendPostureTimelineSlice,
   createMeasurementAccumulator,
   EMPTY_MEASUREMENT_STATS,
-  finalizePostureTimeline,
   REWARD_RULE,
   toMeasurementStats,
 } from "./features/flow/services/measurementSession";
@@ -49,10 +47,12 @@ import {
 import { usePairingState } from "./features/pairing";
 import { buildPairingLink } from "./features/pairing/services/pairingLink";
 import {
+  disconnectPairingDevice,
   sendAcquiredCharacterEvent,
   sendAcquiredCharactersCleared,
   sendPostureSignal,
   syncPairingMeasuringSession,
+  syncPairingGoodPostureRegistration,
 } from "./features/pairing/services/desktopBridge";
 import {
   usePostureTracking,
@@ -172,11 +172,21 @@ function App() {
   const trackingEnabled =
     flowPhase === "measuring" ||
     (flowPhase === "postureRegister" && postureRegisterStep !== "intro");
+  const isMeasuringPhase = flowPhase === "measuring";
+  const isPostureRegisterLive =
+    flowPhase === "postureRegister" && postureRegisterStep !== "intro";
+
   useEffect(() => {
-    void syncPairingMeasuringSession(trackingEnabled).catch(() => {
+    void syncPairingMeasuringSession(isMeasuringPhase).catch(() => {
       // Browser preview cannot reach the native pairing bridge.
     });
-  }, [trackingEnabled]);
+  }, [isMeasuringPhase]);
+
+  useEffect(() => {
+    void syncPairingGoodPostureRegistration(isPostureRegisterLive).catch(() => {
+      // Browser preview cannot reach the native pairing bridge.
+    });
+  }, [isPostureRegisterLive]);
   const {
     videoRef,
     canvasRef,
@@ -294,19 +304,11 @@ function App() {
     }
 
     const deltaMs = Math.max(0, nowMs - accumulator.lastSampleAtMs);
-    const prevActiveMs = accumulator.activeMeasurementMs;
     accumulator.activeMeasurementMs += deltaMs;
 
     if (latestSnapshot.postureState === "good") {
       accumulator.goodMs += deltaMs;
     }
-
-    appendPostureTimelineSlice(
-      accumulator.postureTimeline,
-      prevActiveMs,
-      accumulator.activeMeasurementMs,
-      latestSnapshot.postureState === "good",
-    );
 
     accumulator.lastSampleAtMs = nowMs;
 
@@ -444,10 +446,6 @@ function App() {
 
   const handleFinishMeasurement = useCallback(() => {
     const finalStats = sampleMeasurementStats();
-    const timelineForResult = finalizePostureTimeline(
-      measurementAccumulatorRef.current.postureTimeline,
-      finalStats.activeMeasurementMs,
-    );
     const measurementId = `measurement-${Date.now()}`;
     const endedAt = new Date().toISOString();
     const rewardQualified =
@@ -470,7 +468,6 @@ function App() {
             activeMeasurementMs: finalStats.activeMeasurementMs,
             goodMs: finalStats.goodMs,
             goodRatio: finalStats.goodRatio,
-            postureTimeline: timelineForResult,
           },
         ];
         acquiredCharacterId = nextRewardCharacter.id;
@@ -485,7 +482,6 @@ function App() {
           activeMeasurementMs: finalStats.activeMeasurementMs,
           goodMs: finalStats.goodMs,
           goodRatio: finalStats.goodRatio,
-          postureTimeline: timelineForResult,
           story: nextRewardCharacter.story,
           portraitSrc: nextRewardCharacter.portraitSrc,
           personalityTags: nextRewardCharacter.personalityTags,
@@ -506,7 +502,6 @@ function App() {
       goodRatio: finalStats.goodRatio,
       rewardQualified,
       acquiredCharacterId,
-      postureTimeline: timelineForResult,
     });
     setLastAcquiredCharacterId(acquiredCharacterId);
     setIsPaused(false);
@@ -761,6 +756,10 @@ function App() {
         onContinueFromPaired={() => {
           setPostureRegisterStep("intro");
           setFlowPhase("postureRegister");
+        }}
+        onDebugDisconnectPairingDevice={async () => {
+          await disconnectPairingDevice();
+          await refreshPairingSnapshot();
         }}
         onProfileCharacterSelect={handleProfileCharacterSelect}
         onToggleFavoriteCharacter={handleToggleFavoriteCharacter}

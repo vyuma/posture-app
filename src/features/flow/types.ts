@@ -21,18 +21,10 @@ export type MeasurementStats = {
   goodRatio: number;
 };
 
-/** 測定の「アクティブ時間」軸上の区間（warmup / pause 中は伸びない） */
-export type PostureTimelineSegment = {
-  startMs: number;
-  endMs: number;
-  isGood: boolean;
-};
-
 export type MeasurementResult = MeasurementStats & {
   id: string;
   startedAt: string;
   endedAt: string;
   rewardQualified: boolean;
   acquiredCharacterId: string | null;
-  postureTimeline: PostureTimelineSegment[];
 };

@@ -9,8 +9,9 @@ use commands::overlay_commands::{
     overlay_show_character,
 };
 use commands::pairing_commands::{
-    emit_acquired_character_event, emit_acquired_characters_cleared, emit_posture_signal,
-    get_pairing_info, get_pairing_status, sync_pairing_measuring_session,
+    disconnect_pairing_device, emit_acquired_character_event, emit_acquired_characters_cleared,
+    emit_posture_signal, get_pairing_info, get_pairing_status,
+    sync_pairing_good_posture_registration, sync_pairing_measuring_session,
 };
 use overlay::state::OverlayStateHandle;
 use overlay::window::ensure_overlay_window;
@@ -50,10 +51,12 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_pairing_info,
             get_pairing_status,
+            disconnect_pairing_device,
             emit_posture_signal,
             emit_acquired_character_event,
             emit_acquired_characters_cleared,
             sync_pairing_measuring_session,
+            sync_pairing_good_posture_registration,
             overlay_set_mode,
             overlay_get_state,
             overlay_hide_character,

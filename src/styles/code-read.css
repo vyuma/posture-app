@@ -49,6 +49,17 @@
   --pr-reg-countdown-d: calc(320px * var(--pr-scale));
   --pr-reg-countdown-digit-fs: calc(128px * var(--pr-scale));
   --pr-reg-countdown-status-fs: calc(36px * var(--pr-scale));
+
+  /*
+   * 姿勢登録 intro／登録中 共通マスコット（同一アセット・同一レイアウト）
+   * width: 設計px（無単位）× --pr-scale × size-mult。位置は shift を --pr-scale で追従。
+   */
+  --pr-intro-mascot-width-px: 168;
+  --pr-intro-mascot-size-mult: 1.2;
+  /* intro のみ: ボタンとの隙間 24（×--pr-scale）に加算する無単位 px 相当 */
+  --pr-intro-mascot-gap-add-px: 0;
+  --pr-intro-mascot-shift-x-px: 0;
+  --pr-intro-mascot-shift-y-px: 30;
 }
 
 .frame53-register-screen .flow-brand {
@@ -138,26 +149,145 @@
 }
 
 .frame53-left--pr-intro .frame53-led {
-  margin-bottom: calc(40px * var(--pr-scale));
+  /* 登録中パネルと同じ下余白（フッター直上のリズムを揃える） */
+  margin-bottom: calc(32px * var(--pr-scale));
 }
 
+/* 登録中フッターと同じ flex／幅／隙間（CTA の位置を一致させる） */
 .frame53-footer--pr-intro {
   margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(
+    (24 + var(--pr-intro-mascot-gap-add-px, 0)) * var(--pr-scale) * 1px
+  );
+  width: 100%;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
 }
 
 .frame53-pr-intro-mascot-wrap {
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
+  z-index: 0;
+  pointer-events: none;
 }
 
-.frame53-pr-intro-mascot {
+.frame53-footer--pr-intro .frame53-primary {
+  position: relative;
+  z-index: 1;
+  width: min(calc(482px * var(--pr-scale)), 100%);
+  box-sizing: border-box;
+  padding: calc(24px * var(--pr-scale)) calc(32px * var(--pr-scale));
+  min-height: calc(77px * var(--pr-scale));
+  height: calc(77px * var(--pr-scale));
+}
+
+@keyframes pr-mascot-intro-float {
+  0%,
+  100% {
+    transform: translate(
+        calc(var(--pr-intro-mascot-shift-x-px, 0) * var(--pr-scale) * 1px),
+        calc(
+          (var(--pr-intro-mascot-shift-y-px, 0) - 4) * var(--pr-scale) * 1px
+        )
+      )
+      scale(1);
+  }
+  50% {
+    transform: translate(
+        calc(var(--pr-intro-mascot-shift-x-px, 0) * var(--pr-scale) * 1px),
+        calc(
+          (var(--pr-intro-mascot-shift-y-px, 0) + 4) * var(--pr-scale) * 1px
+        )
+      )
+      scale(1.02);
+  }
+}
+
+@keyframes pr-mascot-cal-nod {
+  0%,
+  100% {
+    transform: translate(
+        calc(var(--pr-intro-mascot-shift-x-px, 0) * var(--pr-scale) * 1px),
+        calc(var(--pr-intro-mascot-shift-y-px, 0) * var(--pr-scale) * 1px)
+      )
+      rotate(-1.5deg);
+  }
+  50% {
+    transform: translate(
+        calc(var(--pr-intro-mascot-shift-x-px, 0) * var(--pr-scale) * 1px),
+        calc(
+          (var(--pr-intro-mascot-shift-y-px, 0) + 6) * var(--pr-scale) * 1px
+        )
+      )
+      rotate(1.5deg);
+  }
+}
+
+.frame53-pr-settings-mascot-wrap {
+  display: flex;
+  justify-content: center;
+  margin: calc(12px * var(--pr-scale, 1)) 0
+    calc(8px * var(--pr-scale, 1));
+  pointer-events: none;
+}
+
+.frame53-pr-settings-mascot {
   display: block;
-  width: min(100%, calc(168px * var(--pr-scale)));
+  width: min(
+    100%,
+    calc(
+      var(--pr-intro-mascot-width-px, 168) * var(--pr-scale, 1) *
+        var(--pr-intro-mascot-size-mult, 1) * 0.92 * 1px
+    )
+  );
   height: auto;
   object-fit: contain;
   user-select: none;
   pointer-events: none;
+}
+
+.frame53-pr-intro-mascot,
+.frame53-pr-cal-mascot {
+  display: block;
+  width: min(
+    100%,
+    calc(
+      var(--pr-intro-mascot-width-px, 168) * var(--pr-scale) *
+        var(--pr-intro-mascot-size-mult, 1) * 1px
+    )
+  );
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+  transform: translate(
+    calc(var(--pr-intro-mascot-shift-x-px, 0) * var(--pr-scale) * 1px),
+    calc(var(--pr-intro-mascot-shift-y-px, 0) * var(--pr-scale) * 1px)
+  );
+}
+
+.frame53-pr-intro-mascot {
+  animation: pr-mascot-intro-float 3.2s ease-in-out infinite;
+  transform-origin: 50% 80%;
+}
+
+.frame53-pr-cal-mascot {
+  animation: pr-mascot-cal-nod 1.4s ease-in-out infinite;
+  transform-origin: 50% 80%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame53-pr-intro-mascot,
+  .frame53-pr-cal-mascot,
+  .frame53-pr-settings-mascot {
+    animation: none;
+  }
 }
 
 .frame53-footer--pr-calibrating {
@@ -167,6 +297,14 @@
   align-items: center;
   gap: calc(24px * var(--pr-scale));
   width: 100%;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.frame53-footer--pr-calibrating .frame53-primary {
+  position: relative;
+  z-index: 1;
 }
 
 .frame53-left--pr-calibrating .frame53-heading {
@@ -181,14 +319,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-.frame53-pr-cal-mascot {
-  display: block;
-  width: min(100%, calc(224px * var(--pr-scale)));
-  height: auto;
-  object-fit: contain;
-  user-select: none;
+  position: relative;
+  z-index: 0;
   pointer-events: none;
 }
 
@@ -226,7 +358,7 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: calc(24px * var(--pr-scale));
+  gap: 0;
   width: 100%;
   /* 音量トラックの未塗りを Figma どおり白に */
   --frame53-volume-track-muted: #ffffff;
@@ -241,23 +373,68 @@
   border-top: 2px solid #f5f5f5;
 }
 
+/* Line1→ピン行 24px、ピン行→Line2 20px（y284→332）、Line2→サウンド 24px、サウンド→Frame49 20px（y356→404） */
+.frame53-settings-panel--register-complete > hr:nth-of-type(1) {
+  margin-bottom: calc(24px * var(--pr-scale));
+}
+
+.frame53-settings-panel--register-complete
+  > .frame53-toggle-strip:nth-of-type(1) {
+  margin-bottom: calc(20px * var(--pr-scale));
+}
+
+.frame53-settings-panel--register-complete > hr:nth-of-type(2) {
+  margin-bottom: calc(24px * var(--pr-scale));
+}
+
+.frame53-settings-panel--register-complete
+  > .frame53-toggle-strip:nth-of-type(2) {
+  margin-bottom: calc(20px * var(--pr-scale));
+}
+
 .frame53-settings-panel--register-complete .frame53-toggle-strip {
   margin-bottom: 0;
 }
 
+/* Frame 49: 482×137・内側 24・音量〜効果音の段間 36 */
 .frame53-settings-panel--register-complete .frame53-sound-card {
   align-self: center;
   width: min(calc(482px * var(--pr-scale)), 100%);
   margin-bottom: 0;
+  min-height: calc(137px * var(--pr-scale));
+  padding: calc(24px * var(--pr-scale)) calc(24px * var(--pr-scale))
+    calc(21px * var(--pr-scale));
+  box-sizing: border-box;
+}
+
+.frame53-settings-panel--register-complete .frame53-volume-row {
+  margin-bottom: calc(36px * var(--pr-scale));
+}
+
+.frame53-settings-panel--register-complete .frame53-sfx-label {
+  margin: 0 0 calc(8px * var(--pr-scale));
+}
+
+.frame53-settings-panel--register-complete .frame53-toggle-strip-label {
+  top: 0;
+  line-height: calc(24 / 20);
+}
+
+.frame53-settings-panel--register-complete .frame53-volume-visible-label {
+  font-size: max(12px, calc(16px * var(--pr-scale)));
+  line-height: calc(19 / 16);
 }
 
 .frame53-settings-panel--register-complete .frame53-volume-range {
   --frame53-vol-thumb-size: max(20px, calc(24px * var(--pr-scale)));
+  height: calc(28px * var(--pr-scale));
 }
 
 .frame53-left--pr-settings .frame53-sfx-select {
+  /* Frame 40: 8×24。右は▼用に余白を確保 */
   padding: calc(8px * var(--pr-scale)) calc(40px * var(--pr-scale))
     calc(8px * var(--pr-scale)) calc(24px * var(--pr-scale));
+  min-height: calc(52px * var(--pr-scale));
   border: 0;
   border-radius: calc(16px * var(--pr-scale));
   font-size: max(12px, calc(16px * var(--pr-scale)));
@@ -274,6 +451,34 @@
 
 .frame53-left--pr-settings .frame53-primary:not(:disabled) {
   box-shadow: none;
+}
+
+/* 登録完了：本文＋デバッグは内側スクロール、姿勢測定を開始は常にカード下端 */
+.frame53-left--pr-settings {
+  min-height: 0;
+  /* 白カード全体は伸ばさず、はみ出しは .frame53-pr-settings-scroll のみスクロール */
+  overflow-y: hidden;
+}
+
+.frame53-pr-settings-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* スクロール領域の上端を見出しから揃える */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.frame53-pr-settings-debug {
+  flex-wrap: wrap;
+  margin-top: calc(20px * var(--pr-scale));
+  padding-bottom: calc(8px * var(--pr-scale));
+}
+
+.frame53-footer--pr-settings-cta {
+  flex-shrink: 0;
 }
 
 .frame53-heading {
@@ -331,6 +536,8 @@
 }
 
 .frame53-toggle-strip-label {
+  position: relative;
+  top: calc(-3px * var(--pr-scale));
   color: #666666;
   font-size: max(12px, calc(20px * var(--pr-scale)));
   font-weight: 700;
@@ -431,7 +638,7 @@
   align-self: center;
   width: min(calc(400px * var(--pr-scale)), 100%);
   margin-bottom: calc(24px * var(--pr-scale));
-  padding: calc(24px * var(--pr-scale)) calc(22px * var(--pr-scale));
+  padding: calc(18px * var(--pr-scale)) calc(20px * var(--pr-scale));
   box-sizing: border-box;
   border-radius: calc(16px * var(--pr-scale));
   background: #f5f5f5;
@@ -448,7 +655,7 @@
   display: flex;
   align-items: center;
   gap: calc(14px * var(--pr-scale));
-  margin-bottom: calc(20px * var(--pr-scale));
+  margin-bottom: calc(14px * var(--pr-scale));
 }
 
 .frame53-volume-visible-label {
@@ -462,7 +669,7 @@
 .frame53-volume-range {
   flex: 1 1 auto;
   min-width: 0;
-  height: calc(28px * var(--pr-scale));
+  height: calc(24px * var(--pr-scale));
   accent-color: var(--frame53-point);
 
   appearance: none;
@@ -575,8 +782,8 @@
   appearance: none;
   -webkit-appearance: none;
 
-  padding: calc(14px * var(--pr-scale)) calc(40px * var(--pr-scale))
-    calc(14px * var(--pr-scale)) calc(18px * var(--pr-scale));
+  padding: calc(10px * var(--pr-scale)) calc(40px * var(--pr-scale))
+    calc(10px * var(--pr-scale)) calc(18px * var(--pr-scale));
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: calc(14px * var(--pr-scale));
   background-color: #ffffff;
@@ -756,12 +963,44 @@
 }
 
 /* 姿勢登録ウォームアップ：グレーカード上に Figma 比率のリング＋カウント */
+@keyframes warmup-register-veil-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes warmup-register-stack-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-49.5px * var(--pr-scale)))
+      scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(calc(-49.5px * var(--pr-scale))) scale(1);
+  }
+}
+
+@keyframes warmup-register-ring-breathe {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0));
+  }
+  50% {
+    filter: drop-shadow(0 0 calc(12px * var(--pr-scale)) rgba(255, 255, 255, 0.35));
+  }
+}
+
 .warmup-veil--register {
   background: #a1a1a1;
   gap: 0;
   padding: calc(24px * var(--pr-scale));
   justify-content: center;
   box-sizing: border-box;
+  animation: warmup-register-veil-in 0.35s ease-out both;
 }
 
 .warmup-veil-register-stack {
@@ -770,6 +1009,8 @@
   align-items: center;
   /* Figma: 円を縦中央よりやや上（-49.5px） */
   transform: translateY(calc(-49.5px * var(--pr-scale)));
+  animation: warmup-register-stack-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.05s
+    both;
 }
 
 .warmup-veil--register .warmup-veil-inner--register {
@@ -777,6 +1018,7 @@
   width: var(--pr-reg-countdown-d);
   height: var(--pr-reg-countdown-d);
   flex: none;
+  animation: warmup-register-ring-breathe 2.4s ease-in-out infinite;
 }
 
 .warmup-veil--register .warmup-veil-ring-track {
@@ -811,6 +1053,18 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .warmup-veil--register {
+    animation: none;
+  }
+
+  .warmup-veil-register-stack {
+    animation: none;
+  }
+
+  .warmup-veil--register .warmup-veil-inner--register {
+    animation: none;
+  }
+
   .warmup-veil--register .warmup-veil-ring-progress {
     transition: none;
   }

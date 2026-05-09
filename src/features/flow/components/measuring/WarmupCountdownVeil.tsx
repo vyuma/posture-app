@@ -62,7 +62,10 @@ export function WarmupCountdownVeil({
         />
       </svg>
       <div className="warmup-veil-count" aria-hidden="true">
-        {seconds}
+        {/* 秒が変わるたびにキーを振ってカウントのポップを再生 */}
+        <span key={seconds} className="warmup-veil-count-pop">
+          {seconds}
+        </span>
       </div>
     </div>
   );
@@ -75,10 +78,10 @@ export function WarmupCountdownVeil({
           <p className="warmup-veil-label">{label}</p>
         </div>
       ) : (
-        <>
+        <div className="warmup-veil-focus-stack">
           {ringBlock}
           <p className="warmup-veil-label">{label}</p>
-        </>
+        </div>
       )}
     </div>
   );

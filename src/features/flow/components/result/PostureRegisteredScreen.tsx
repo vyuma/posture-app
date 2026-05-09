@@ -25,7 +25,7 @@ export function PostureRegisteredScreen({
 }: PostureRegisteredScreenProps) {
   const wasSuccessful =
     Boolean(result.rewardQualified) && acquiredCharacter !== null;
-  const timelineVariant = wasSuccessful ? "success" : "fail";
+  const accentVariant = wasSuccessful ? "success" : "fail";
 
   const shareCaptureRef = useRef<HTMLElement>(null);
   const resultCardEnterTimerRef = useRef<number | null>(null);
@@ -34,6 +34,9 @@ export function PostureRegisteredScreen({
   const [isResultCardEntering, setIsResultCardEntering] = useState(false);
   const [isResultCardTapped, setIsResultCardTapped] = useState(false);
   const [shareBusy, setShareBusy] = useState(false);
+  const [shareBusyAction, setShareBusyAction] = useState<"share" | "copy" | null>(
+    null,
+  );
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
 
   const displayCharacter = wasSuccessful ? acquiredCharacter : null;
@@ -54,7 +57,6 @@ export function PostureRegisteredScreen({
       "--result-share-icon": acquiredCharacter.characterColor.primary,
       "--result-meta-icon": acquiredCharacter.characterColor.primary,
       "--result-portrait-bg": acquiredCharacter.characterColor.soft,
-      "--result-timeline-good": acquiredCharacter.characterColor.primary,
     } as CSSProperties;
   }, [wasSuccessful, acquiredCharacter]);
 
@@ -65,50 +67,52 @@ export function PostureRegisteredScreen({
         "--result-share-icon": acquiredCharacter.characterColor.primary,
         "--result-meta-icon": acquiredCharacter.characterColor.primary,
         "--result-portrait-bg": acquiredCharacter.characterColor.soft,
-        "--result-timeline-good": acquiredCharacter.characterColor.primary,
       } as CSSProperties;
     }
     return {
-      "--result-stat-accent": "#8a9399",
-      "--result-share-icon": "#8a9399",
-      "--result-meta-icon": "#8a9399",
-      "--result-portrait-bg": "#eceff1",
-      "--result-timeline-good": "#8a9399",
+      "--result-stat-accent": "#979797",
+      "--result-share-icon": "#979797",
+      "--result-meta-icon": "#979797",
+      "--result-portrait-bg": "rgba(151, 151, 151, 0.2)",
     } as CSSProperties;
   }, [wasSuccessful, acquiredCharacter]);
 
-  const handleShareResult = useCallback(async () => {
-    if (
-      shareCaptureRef.current === null ||
-      shareBusy
-    ) {
-      return;
-    }
-    setShareBusy(true);
-    setShareFeedback(null);
-    try {
-      const outcome = await shareResultCapture(shareCaptureRef.current);
-      if (outcome === "downloaded") {
-        const msg = "画像をダウンロードしました";
-        setShareFeedback(msg);
-        window.setTimeout(() => {
-          setShareFeedback((current) => (current === msg ? null : current));
-        }, 4200);
-      } else if (outcome === "copied") {
-        const msg = "画像をクリップボードにコピーしました";
-        setShareFeedback(msg);
-        window.setTimeout(() => {
-          setShareFeedback((current) => (current === msg ? null : current));
-        }, 4200);
-      } else if (outcome === "shared") {
-        setShareFeedback(null);
+  const handleResultCapture = useCallback(
+    async (mode: "share" | "copy") => {
+      if (shareCaptureRef.current === null || shareBusy) {
+        return;
       }
-    } catch {
-      setShareFeedback("共有に失敗しました。もう一度お試しください。");
-    } finally {
-      setShareBusy(false);
-    }
-  }, [shareBusy]);
+      setShareBusy(true);
+      setShareBusyAction(mode === "copy" ? "copy" : "share");
+      setShareFeedback(null);
+      try {
+        const outcome = await shareResultCapture(shareCaptureRef.current, {
+          action: mode === "copy" ? "copy" : "auto",
+        });
+        if (outcome === "downloaded") {
+          const msg = "画像をダウンロードしました";
+          setShareFeedback(msg);
+          window.setTimeout(() => {
+            setShareFeedback((current) => (current === msg ? null : current));
+          }, 4200);
+        } else if (outcome === "copied") {
+          const msg = "画像をクリップボードにコピーしました";
+          setShareFeedback(msg);
+          window.setTimeout(() => {
+            setShareFeedback((current) => (current === msg ? null : current));
+          }, 4200);
+        } else if (outcome === "shared") {
+          setShareFeedback(null);
+        }
+      } catch {
+        setShareFeedback("共有に失敗しました。もう一度お試しください。");
+      } finally {
+        setShareBusy(false);
+        setShareBusyAction(null);
+      }
+    },
+    [shareBusy],
+  );
 
   useEffect(() => {
     return () => {
@@ -198,7 +202,7 @@ export function PostureRegisteredScreen({
 
   return (
     <main
-      className={`flow-screen result-screen result-screen--registered result-screen--accent-${timelineVariant}`}
+      className={`flow-screen result-screen result-screen--registered result-screen--accent-${accentVariant}`}
       style={characterThemeVars}
     >
       <FlowBrand />
@@ -214,37 +218,72 @@ export function PostureRegisteredScreen({
           </h1>
         </header>
 
-        <CharacterResultWhiteCard
-          ref={shareCaptureRef}
-          portraitMode={wasSuccessful ? "character" : "qr-fail"}
-          character={displayCharacter}
-          personalityTags={personalityTags}
-          goodDurationLabel={formatDuration(result.goodMs)}
-          goodRatioLabel={formatPercent(result.goodRatio)}
-          timelineSegments={result.postureTimeline}
-          timelineTotalMs={result.activeMeasurementMs}
-          timelineVariant={timelineVariant}
-          timelineGoodStrokeResolved={
-            wasSuccessful && acquiredCharacter !== null
-              ? acquiredCharacter.characterColor.primary
-              : "#8a9399"
-          }
-          acquiredAtLabel={formatAcquiredAt(result.endedAt)}
-          measurementDurationLabel={formatDuration(result.activeMeasurementMs)}
-          shareBusy={shareBusy}
-          onShareClick={() => {
-            void handleShareResult();
-          }}
-          articleClassName={`${wasSuccessful ? "result-registered-card--acquired" : ""} ${
-            isResultCardEntering ? "is-entering" : ""
-          } ${
-            isResultCardTapped ? "is-tapped" : ""
-          }`.trim()}
-          articleStyle={shareCardThemeVars}
-          onArticleClick={handleResultCardTap}
-          onArticleMouseMove={wasSuccessful ? onResultCardMouseMove : undefined}
-          onArticleMouseLeave={wasSuccessful ? onResultCardMouseLeave : undefined}
-        />
+        <div className="result-registered-card-block">
+          <CharacterResultWhiteCard
+            ref={shareCaptureRef}
+            portraitMode={wasSuccessful ? "character" : "acquisition-fail"}
+            character={displayCharacter}
+            personalityTags={personalityTags}
+            goodDurationLabel={formatDuration(result.goodMs)}
+            goodRatioLabel={formatPercent(result.goodRatio)}
+            acquiredAtLabel={formatAcquiredAt(result.endedAt)}
+            measurementDurationLabel={formatDuration(result.activeMeasurementMs)}
+            characterStory={
+              wasSuccessful && displayCharacter !== null
+                ? displayCharacter.story
+                : "？？？？？？？？？"
+            }
+            articleClassName={`${
+              wasSuccessful
+                ? "result-registered-card--acquired"
+                : "result-registered-card--acquisition-fail"
+            } ${isResultCardEntering ? "is-entering" : ""} ${
+              isResultCardTapped ? "is-tapped" : ""
+            }`.trim()}
+            articleStyle={shareCardThemeVars}
+            onArticleClick={handleResultCardTap}
+            onArticleMouseMove={wasSuccessful ? onResultCardMouseMove : undefined}
+            onArticleMouseLeave={wasSuccessful ? onResultCardMouseLeave : undefined}
+          />
+          <div
+            className="result-registered-outside-actions"
+            role="toolbar"
+            aria-label="結果画像の共有と保存"
+          >
+            <button
+              type="button"
+              className={`result-registered-outside-action${
+                shareBusy && shareBusyAction === "share" ? " is-busy" : ""
+              }`}
+              aria-label="結果を画像で共有"
+              title="結果を画像で共有（または保存）します"
+              disabled={shareBusy}
+              aria-disabled={shareBusy}
+              aria-busy={shareBusy && shareBusyAction === "share"}
+              onClick={() => {
+                void handleResultCapture("share");
+              }}
+            >
+              <img src="/share.png" alt="" width={32} height={32} draggable={false} />
+            </button>
+            <button
+              type="button"
+              className={`result-registered-outside-action${
+                shareBusy && shareBusyAction === "copy" ? " is-busy" : ""
+              }`}
+              aria-label="結果を画像でコピー"
+              title="結果を画像でコピー"
+              disabled={shareBusy}
+              aria-disabled={shareBusy}
+              aria-busy={shareBusy && shareBusyAction === "copy"}
+              onClick={() => {
+                void handleResultCapture("copy");
+              }}
+            >
+              <img src="/download.png" alt="" width={32} height={32} draggable={false} />
+            </button>
+          </div>
+        </div>
       </div>
 
       <p

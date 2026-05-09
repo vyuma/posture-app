@@ -120,6 +120,7 @@ export function MeasuringScreen({
         aria-describedby={statusHintId}
       >
         <aside className="measure-control-card" aria-label="測定コントロール">
+          <div className="measure-control-scroll">
           <header className="measure-control-head">
             <div>
               <h1 id={headingId} className="measure-control-title">
@@ -302,29 +303,32 @@ export function MeasuringScreen({
                   キャラ表示
                 </button>
               ) : null}
-              <button
-                type="button"
-                className="tool-pill measure-tool-overlay-hint-debug"
-                title={`クリックでデスクトップオーバーレイへ配置ヒント再表示を送る（${OVERLAY_DEBUG_UI_STORAGE_KEY}）`}
-                onClick={() => void handleEmitOverlayPlacementHintRefresh()}
-              >
-                配置ヒント(debug)
-              </button>
-              <button type="button" className="tool-pill" onClick={onResetCharacterPosition}>
-                位置リセット
-              </button>
-              {placementHintEmitNotice ? (
-                <p
-                  className={`measure-placement-hint-emit-feedback measure-placement-hint-emit-feedback--${placementHintEmitNotice}`}
-                  role="status"
+              <div className="measure-debug-tools-tail">
+                <button
+                  type="button"
+                  className="tool-pill measure-tool-overlay-hint-debug"
+                  title={`クリックでデスクトップオーバーレイへ配置ヒント再表示を送る（${OVERLAY_DEBUG_UI_STORAGE_KEY}）`}
+                  onClick={() => void handleEmitOverlayPlacementHintRefresh()}
                 >
-                  {placementHintEmitNotice === "ok"
-                    ? "配置ヒントをオーバーレイへ送りました。画面右下のキャラ付近を確認してください。"
-                    : "送信できませんでした（ブラウザでは Tauri がありません）。"}
-                </p>
-              ) : null}
+                  配置ヒント(debug)
+                </button>
+                <button type="button" className="tool-pill" onClick={onResetCharacterPosition}>
+                  位置リセット
+                </button>
+                {placementHintEmitNotice ? (
+                  <p
+                    className={`measure-placement-hint-emit-feedback measure-placement-hint-emit-feedback--${placementHintEmitNotice}`}
+                    role="status"
+                  >
+                    {placementHintEmitNotice === "ok"
+                      ? "配置ヒントをオーバーレイへ送りました。画面右下のキャラ付近を確認してください。"
+                      : "送信できませんでした（ブラウザでは Tauri がありません）。"}
+                  </p>
+                ) : null}
+              </div>
             </div>
           ) : null}
+          </div>
 
           <div className="measure-control-card-footer">
             <button

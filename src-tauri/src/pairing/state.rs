@@ -25,6 +25,8 @@ struct PairingState {
     last_sequence: u64,
     /// PC フローが measuring の間 true（スマホ側の「測定中」表示と同期）
     measuring_session_active: bool,
+    /// PC で良い姿勢登録（キャリブレーション）中は true（スマホの登録中 UI と同期）
+    good_posture_registration_active: bool,
     pending_acks: HashMap<String, PendingAckRecord>,
 }
 
@@ -81,14 +83,7 @@ pub struct WsEvent {
     last_seen_at: Option<String>,
     created_at: String,
     measuring_session_active: bool,
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct PostureTimelineSegmentPayload {
-    pub start_ms: f64,
-    pub end_ms: f64,
-    pub is_good: bool,
+    good_posture_registration_active: bool,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -109,8 +104,6 @@ pub struct AcquiredCharacterPayload {
     pub active_measurement_ms: Option<u64>,
     pub good_ms: Option<u64>,
     pub good_ratio: Option<f64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub posture_timeline: Option<Vec<PostureTimelineSegmentPayload>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub story: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -135,6 +128,7 @@ pub struct ReliableWsEvent {
     last_seen_at: Option<String>,
     created_at: String,
     measuring_session_active: bool,
+    good_posture_registration_active: bool,
     payload: AcquiredCharacterPayload,
 }
 
@@ -150,6 +144,7 @@ impl PairingStateHandle {
                 last_seen_at: None,
                 last_sequence: 0,
                 measuring_session_active: false,
+                good_posture_registration_active: false,
                 pending_acks: HashMap::new(),
             })),
         }
@@ -217,6 +212,8 @@ impl PairingStateHandle {
         state.device_name = None;
         state.last_seen_at = None;
         state.last_sequence += 1;
+        state.measuring_session_active = false;
+        state.good_posture_registration_active = false;
 
         DisconnectResponse {
             ok: true,
@@ -233,18 +230,29 @@ impl PairingStateHandle {
     pub fn set_measuring_session_active(&self, active: bool) {
         let mut state = self.inner.lock().expect("pairing state poisoned");
         state.measuring_session_active = active;
+        if active {
+            state.good_posture_registration_active = false;
+        }
     }
 
-    pub fn create_acquired_event(
-        &self,
-        payload: AcquiredCharacterPayload,
-    ) -> ReliableWsEvent {
+    pub fn set_good_posture_registration_active(&self, active: bool) {
+        let mut state = self.inner.lock().expect("pairing state poisoned");
+        if active {
+            state.good_posture_registration_active = true;
+            state.measuring_session_active = false;
+        } else {
+            state.good_posture_registration_active = false;
+        }
+    }
+
+    pub fn create_acquired_event(&self, payload: AcquiredCharacterPayload) -> ReliableWsEvent {
         let mut state = self.inner.lock().expect("pairing state poisoned");
         state.last_sequence += 1;
         let sequence = state.last_sequence;
         let created_at = timestamp_string();
         let event_id = format!("evt-{}-{}", created_at, sequence);
         let measuring_session_active = state.measuring_session_active;
+        let good_posture_registration_active = state.good_posture_registration_active;
         let event = ReliableWsEvent {
             r#type: "acquired_character".to_string(),
             event_id: event_id.clone(),
@@ -255,6 +263,7 @@ impl PairingStateHandle {
             last_seen_at: state.last_seen_at.clone(),
             created_at: created_at.clone(),
             measuring_session_active,
+            good_posture_registration_active,
             payload: payload.clone(),
         };
         state.pending_acks.insert(
@@ -318,6 +327,7 @@ impl PairingStateHandle {
                     last_seen_at: last_seen_at.clone(),
                     created_at: record.created_at.clone(),
                     measuring_session_active: state.measuring_session_active,
+                    good_posture_registration_active: state.good_posture_registration_active,
                     payload: record.payload.clone(),
                 }
             })
@@ -335,6 +345,7 @@ impl PairingStateHandle {
         let device_name = state.device_name.clone();
         let last_seen_at = state.last_seen_at.clone();
         let measuring_session_active = state.measuring_session_active;
+        let good_posture_registration_active = state.good_posture_registration_active;
         let mut records: Vec<PendingAckRecord> = state.pending_acks.values().cloned().collect();
         records.sort_by_key(|record| record.sequence);
 
@@ -375,6 +386,7 @@ impl PairingStateHandle {
                 last_seen_at: last_seen_at.clone(),
                 created_at: record.created_at,
                 measuring_session_active,
+                good_posture_registration_active,
                 payload: record.payload,
             });
         }
@@ -410,6 +422,7 @@ impl PairingStateHandle {
             last_seen_at: state.last_seen_at.clone(),
             created_at: timestamp_string(),
             measuring_session_active: state.measuring_session_active,
+            good_posture_registration_active: state.good_posture_registration_active,
         }
     }
 
@@ -436,7 +449,6 @@ impl PairingStateHandle {
             message: "deviceName が指定されていません".to_string(),
         }
     }
-
 }
 
 pub fn timestamp_string() -> String {

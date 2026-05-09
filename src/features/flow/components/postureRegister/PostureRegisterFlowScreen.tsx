@@ -1,5 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 
+import { emitOverlayPlacementHintRefresh } from "../../../overlay/overlayPlacementHintBridge";
+import {
+  isOverlayDebugUiEnabled,
+  OVERLAY_DEBUG_UI_STORAGE_KEY,
+} from "../../../overlay/overlayState";
 import { POSTURE_SPEC, PostureViewer } from "../../../posture";
 import { CodeReadSettingsPanel } from "../codeRead/CodeReadSettingsPanel";
 import type { PostureRegisterFlowScreenProps } from "../flowScreenTypes";
@@ -26,13 +31,40 @@ export function PostureRegisterFlowScreen({
   onRequestBeginCalibrating,
   onBeginMeasurementAfterRegister,
   onCalibratingComplete,
-  onBackHome,
+  onResetCharacterPosition,
 }: PostureRegisterFlowScreenProps) {
   const previewVideoRef = useRef<HTMLVideoElement | null>(null);
   const previewStreamRef = useRef<MediaStream | null>(null);
   const [cameraPreview, setCameraPreview] = useState<
     "loading" | "live" | "error"
   >("loading");
+
+  const showRegisterDevTools = isOverlayDebugUiEnabled();
+
+  const [placementHintEmitNotice, setPlacementHintEmitNotice] = useState<
+    "ok" | "fail" | null
+  >(null);
+  const placementHintEmitTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (placementHintEmitTimerRef.current !== null) {
+        window.clearTimeout(placementHintEmitTimerRef.current);
+      }
+    };
+  }, []);
+
+  async function handleEmitOverlayPlacementHintRefresh() {
+    if (placementHintEmitTimerRef.current !== null) {
+      window.clearTimeout(placementHintEmitTimerRef.current);
+    }
+    const ok = await emitOverlayPlacementHintRefresh();
+    setPlacementHintEmitNotice(ok ? "ok" : "fail");
+    placementHintEmitTimerRef.current = window.setTimeout(() => {
+      setPlacementHintEmitNotice(null);
+      placementHintEmitTimerRef.current = null;
+    }, 3400);
+  }
 
   useEffect(() => {
     if (postureRegisterStep !== "intro") {
@@ -130,17 +162,6 @@ export function PostureRegisterFlowScreen({
     snapshot.baselineReady,
   ]);
 
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
-        onBackHome();
-      }
-    }
-
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onBackHome]);
-
   const leftClass =
     postureRegisterStep === "intro"
       ? "frame53-left frame53-left--pr-intro"
@@ -158,14 +179,6 @@ export function PostureRegisterFlowScreen({
   return (
     <main className="flow-screen frame53-register-screen">
       <FlowBrand />
-      <button
-        type="button"
-        className="frame53-header-close"
-        onClick={onBackHome}
-        aria-label="閉じる"
-      >
-        <img src="/x.png" alt="" width={56} height={56} draggable={false} />
-      </button>
       <div className="frame53-panels-wrap">
         <section className={leftClass} aria-labelledby={headingId}>
           {postureRegisterStep === "intro" ? (
@@ -186,7 +199,7 @@ export function PostureRegisterFlowScreen({
                 >
                   <img
                     className="frame53-pr-intro-mascot"
-                    src="/characters/anago/normal-nago/expressions/happy.png"
+                    src="/set1.png"
                     alt=""
                     draggable={false}
                   />
@@ -220,7 +233,7 @@ export function PostureRegisterFlowScreen({
                 >
                   <img
                     className="frame53-pr-cal-mascot"
-                    src="/characters/anago/normal-nago/expressions/good.png"
+                    src="/set2.png"
                     alt=""
                     draggable={false}
                   />
@@ -239,26 +252,68 @@ export function PostureRegisterFlowScreen({
 
           {postureRegisterStep === "settings" ? (
             <>
-              <h1 id={headingId} className="frame53-heading">
-                登録完了
-              </h1>
-              <p className="frame53-led">
-                測定中の設定をしてください。
-              </p>
-              <p className="frame53-led-note">
-                ※ 測定開始後にも変更できます
-              </p>
-              <CodeReadSettingsPanel
-                idPrefix="frame53-pr"
-                registerCompleteLayout
-                soundSettings={soundSettings}
-                onSoundSettingsChange={onSoundSettingsChange}
-                isCharacterOverlayEnabled={isCharacterOverlayEnabled}
-                onCharacterOverlayEnabledChange={
-                  onCharacterOverlayEnabledChange
-                }
-              />
-              <div className="frame53-footer">
+              <div className="frame53-pr-settings-scroll">
+                <h1 id={headingId} className="frame53-heading">
+                  登録完了
+                </h1>
+                <p className="frame53-led">
+                  測定中の設定をしてください。
+                </p>
+                <p className="frame53-led-note">
+                  ※ 測定開始後にも変更できます
+                </p>
+                <div
+                  className="frame53-pr-settings-mascot-wrap"
+                  aria-hidden="true"
+                >
+                  <img
+                    className="frame53-pr-settings-mascot"
+                    src="/set3.png"
+                    alt=""
+                    draggable={false}
+                  />
+                </div>
+                <CodeReadSettingsPanel
+                  idPrefix="frame53-pr"
+                  registerCompleteLayout
+                  soundSettings={soundSettings}
+                  onSoundSettingsChange={onSoundSettingsChange}
+                  isCharacterOverlayEnabled={isCharacterOverlayEnabled}
+                  onCharacterOverlayEnabledChange={
+                    onCharacterOverlayEnabledChange
+                  }
+                />
+                {showRegisterDevTools ? (
+                  <div className="measure-debug-tools measure-debug-tools--below-primary frame53-pr-settings-debug">
+                    <button
+                      type="button"
+                      className="tool-pill measure-tool-overlay-hint-debug"
+                      title={`クリックでデスクトップオーバーレイへ配置ヒント再表示を送る（${OVERLAY_DEBUG_UI_STORAGE_KEY}）`}
+                      onClick={() => void handleEmitOverlayPlacementHintRefresh()}
+                    >
+                      配置ヒント(debug)
+                    </button>
+                    <button
+                      type="button"
+                      className="tool-pill"
+                      onClick={onResetCharacterPosition}
+                    >
+                      位置リセット
+                    </button>
+                    {placementHintEmitNotice ? (
+                      <p
+                        className={`measure-placement-hint-emit-feedback measure-placement-hint-emit-feedback--${placementHintEmitNotice}`}
+                        role="status"
+                      >
+                        {placementHintEmitNotice === "ok"
+                          ? "配置ヒントをオーバーレイへ送りました。画面右下のキャラ付近を確認してください。"
+                          : "送信できませんでした（ブラウザでは Tauri がありません）。"}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+              <div className="frame53-footer frame53-footer--pr-settings-cta">
                 <button
                   type="button"
                   className="frame53-primary"

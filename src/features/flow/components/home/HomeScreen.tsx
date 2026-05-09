@@ -174,6 +174,7 @@ export function HomeScreen(props: HomeScreenProps) {
                   onClearAcquiredCharacters: props.onDebugClearAcquiredCharacters,
                   onPairingRefresh: props.onPairingStatusRefresh,
                   onPairingSkipContinue: props.onContinueFromPaired,
+                  onPairingDisconnect: props.onDebugDisconnectPairingDevice,
                 }
               : undefined
           }

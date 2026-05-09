@@ -19,6 +19,7 @@ export type ProfileDialogDebugTools = {
   onClearAcquiredCharacters: () => void;
   onPairingRefresh: () => void;
   onPairingSkipContinue: () => void;
+  onPairingDisconnect: () => Promise<void>;
 };
 
 type ProfileSelectionDialogProps = {
@@ -119,6 +120,11 @@ function ProfileDialogDebugPanel({
   const [debugResetMessage, setDebugResetMessage] = useState<string | null>(
     null,
   );
+  const [debugPairingMessage, setDebugPairingMessage] = useState<string | null>(
+    null,
+  );
+  const [isDebugPairingDisconnecting, setIsDebugPairingDisconnecting] =
+    useState(false);
   const [isDebugResetConfirming, setIsDebugResetConfirming] = useState(false);
   const debugQrStep2Preview = useSyncExternalStore(
     subscribeDebugQrModalStep2Preview,
@@ -142,6 +148,18 @@ function ProfileDialogDebugPanel({
 
     return () => window.clearTimeout(timeoutId);
   }, [debugResetMessage]);
+
+  useEffect(() => {
+    if (!debugPairingMessage) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setDebugPairingMessage(null);
+    }, 1800);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [debugPairingMessage]);
 
   useEffect(() => {
     if (!isDebugResetConfirming) {
@@ -205,6 +223,29 @@ function ProfileDialogDebugPanel({
         </button>
         <button
           type="button"
+          className="secondary-pill profile-dialog-debug-btn"
+          disabled={isDebugPairingDisconnecting}
+          onClick={async () => {
+            setIsDebugPairingDisconnecting(true);
+            setDebugPairingMessage(null);
+
+            try {
+              await debugTools.onPairingDisconnect();
+              setDebugPairingMessage("スマホ接続を解除しました");
+            } catch (error) {
+              console.error("Failed to disconnect paired phone", error);
+              setDebugPairingMessage("接続解除に失敗しました");
+            } finally {
+              setIsDebugPairingDisconnecting(false);
+            }
+          }}
+        >
+          {isDebugPairingDisconnecting
+            ? "DEBUG: 解除中..."
+            : "DEBUG: スマホ接続解除"}
+        </button>
+        <button
+          type="button"
           className="home-single-debug-skip profile-dialog-debug-btn"
           onClick={() => toggleDebugQrModalStep2Preview()}
         >
@@ -214,6 +255,11 @@ function ProfileDialogDebugPanel({
       {debugResetMessage ? (
         <span className="home-collection-debug-message" role="status">
           {debugResetMessage}
+        </span>
+      ) : null}
+      {debugPairingMessage ? (
+        <span className="home-collection-debug-message" role="status">
+          {debugPairingMessage}
         </span>
       ) : null}
     </div>

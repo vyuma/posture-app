@@ -94,8 +94,8 @@
   flex: 0 1 auto;
   display: flex;
   flex-wrap: nowrap;
-  /* 左カードが内容で縦に伸びたとき、右のカメラ枠と上揃え（開発ツール表示時もスクロールで全体に届く） */
-  align-items: flex-start;
+  /* 左カードは高さ固定（登録画面の白カードと同じ）、はみ出しはカード内スクロール */
+  align-items: stretch;
   justify-content: center;
   width: calc(1336px * var(--pr-scale));
   min-height: 0;
@@ -109,7 +109,8 @@
   width: calc(594px * var(--pr-scale));
   max-width: 100%;
   min-width: 0;
-  /* 固定 height をやめ、min のみ。内容が多いときはカードごと伸びて画面スクロールで配置ヒントまで届く */
+  /* Frame 46 相当：登録画面 .frame53-left と同じ 694 枠（白カード内でスクロール） */
+  height: calc(694px * var(--pr-scale));
   min-height: calc(694px * var(--pr-scale));
   box-sizing: border-box;
   display: flex;
@@ -122,7 +123,18 @@
   border: 0;
   box-shadow: 0 0 calc(8.52px * var(--pr-scale)) rgba(0, 0, 0, 0.15);
   overflow-x: hidden;
-  overflow-y: visible;
+  overflow-y: hidden;
+}
+
+/* コントロール本文（メトリクス〜開発ツール）。多いときはここだけ縦スクロール */
+.measure-control-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .measure-control-head {
@@ -265,7 +277,8 @@
 }
 
 .measure-control-card-footer {
-  margin-top: auto;
+  flex-shrink: 0;
+  margin-top: 0;
   padding-top: calc(16px * var(--pr-scale));
   width: 100%;
   box-sizing: border-box;
@@ -344,6 +357,17 @@
   border-top: 1px dashed rgba(19, 100, 130, 0.18);
 }
 
+/* 開発ツール内の下段（配置ヒント等）。親 .measure-debug-tools とは別枠で区切る */
+.measure-debug-tools-tail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: calc(12px * var(--pr-scale));
+  padding-top: calc(12px * var(--pr-scale));
+  border-top: 1px dashed rgba(19, 100, 130, 0.14);
+}
+
 .measure-debug-tools-label {
   flex: 1 1 100%;
   margin: 0;
@@ -358,11 +382,13 @@
 }
 
 .measure-camera-panel {
+  position: relative;
   min-width: 0;
   min-height: 0;
   padding: 0;
   border-radius: calc(32px * var(--pr-scale));
-  background: rgba(255, 255, 255, 0.2);
+  /* 登録完了（.frame53-camera-panel）と同一のスロット見た目 */
+  background: #a1a1a1;
   border: 0;
   box-shadow: 0 0 calc(8.52px * var(--pr-scale)) rgba(0, 0, 0, 0.15);
   box-sizing: border-box;
@@ -374,13 +400,15 @@
   min-height: 0;
   border-radius: calc(32px * var(--pr-scale));
   overflow: hidden;
-  /* 背面グレーは viewer--measurement 側へ（二重レイヤーを避ける） */
-  background: transparent;
+  background: #a1a1a1;
 }
 
-.measure-camera-panel .viewer,
-.measure-camera-panel video.camera {
-  background: transparent;
+/* 登録画面と同様、スロット内で viewer を枠いっぱいに（白枠の見え方を揃える） */
+.measure-camera-panel .measure-camera-stack .viewer.viewer--measurement {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: inherit;
 }
 
 .measure-camera-panel--figma {
@@ -478,6 +506,11 @@
  * カメラと PostureViewer 内の表示モード切替 (z-index:2300) より前面に出す。
  */
 .warmup-veil {
+  --warmup-gap: clamp(0.75rem, 2vmin, 1rem);
+  /* ラベル行のおおよその高さ（.warmup-veil-label の font-size × line-height に合わせる） */
+  --warmup-label-line-box: calc(
+    clamp(0.92rem, 1.6vmin, 1.05rem) * 1.35
+  );
   position: absolute;
   inset: 0;
   z-index: 2600;
@@ -485,7 +518,6 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(0.75rem, 2vmin, 1rem);
   padding: clamp(1rem, 3vmin, 1.5rem);
   border-radius: inherit;
   background: rgba(0, 0, 0, 0.5);
@@ -493,6 +525,17 @@
   pointer-events: auto;
   -webkit-user-select: none;
   user-select: none;
+}
+
+/* リング＋ラベルを縦にまとめ、リング中心をカメラ（.measure-camera-stack）の中心に一致 */
+.warmup-veil-focus-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--warmup-gap);
+  transform: translateY(
+    calc((var(--warmup-gap) + var(--warmup-label-line-box)) / 2)
+  );
 }
 
 .warmup-veil-inner {
@@ -523,8 +566,26 @@
     stroke-dashoffset 0.3s linear;
 }
 
+@keyframes warmup-count-pop {
+  0% {
+    transform: scale(0.82);
+    opacity: 0.65;
+  }
+  55% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 .warmup-veil-count {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: clamp(2.4rem, 6vmin, 4rem);
   font-weight: 800;
   line-height: 1;
@@ -533,10 +594,16 @@
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
 }
 
+.warmup-veil-count-pop {
+  display: inline-block;
+  animation: warmup-count-pop 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 .warmup-veil-label {
   margin: 0;
   color: rgba(255, 255, 255, 0.92);
   font-size: clamp(0.92rem, 1.6vmin, 1.05rem);
+  line-height: 1.35;
   font-weight: 700;
   letter-spacing: 0;
 }
@@ -544,6 +611,10 @@
 @media (prefers-reduced-motion: reduce) {
   .warmup-veil-ring-progress {
     transition: none;
+  }
+
+  .warmup-veil-count-pop {
+    animation: none;
   }
 }
 

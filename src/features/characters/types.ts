@@ -1,5 +1,3 @@
-import type { PostureTimelineSegment } from "../flow/types";
-
 export type CharacterRarity = "common" | "rare" | "epic";
 export type CharacterExpression = "good" | "bad" | "paused" | "happy";
 
@@ -31,5 +29,4 @@ export type AcquiredCharacter = {
   activeMeasurementMs?: number;
   goodMs?: number;
   goodRatio?: number;
-  postureTimeline?: PostureTimelineSegment[];
 };

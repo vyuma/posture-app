@@ -1,0 +1,77 @@
+/* スマホ Web ミラー（?remotePair=1）：PC のペアリング WS に同期 */
+
+.remote-pairing-screen {
+  box-sizing: border-box;
+  min-height: 100dvh;
+  padding: clamp(2.5rem, 8svh, 4rem) var(--app-viewport-inline, 16px)
+    clamp(1.5rem, 4svh, 2rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
+  color: #ffffff;
+}
+
+.remote-pairing-card {
+  width: min(26rem, 100%);
+  margin-top: clamp(1rem, 3vh, 1.75rem);
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #1a2730;
+  box-shadow: 0 12px 40px rgba(0, 40, 60, 0.12);
+  text-align: center;
+}
+
+.remote-pairing-badge {
+  margin: 0 0 10px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5a6a78;
+}
+
+.remote-pairing-title {
+  margin: 0 0 10px;
+  font-size: clamp(1.35rem, 4.2vw, 1.85rem);
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.remote-pairing-lead {
+  margin: 0 0 16px;
+  font-size: 0.92rem;
+  font-weight: 650;
+  line-height: 1.55;
+  color: #3d4d5c;
+}
+
+.remote-pairing-art {
+  display: grid;
+  place-items: center;
+  margin: 8px auto 0;
+  max-width: min(280px, 72vw);
+}
+
+.remote-pairing-art img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+.remote-pairing-error {
+  margin: 14px 0 0;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #b42318;
+}
+
+.remote-pairing-screen--measuring .remote-pairing-title {
+  color: #0d5f7a;
+}
+
+.remote-pairing-screen--postureRegister .remote-pairing-title {
+  color: #0d5f7a;
+}

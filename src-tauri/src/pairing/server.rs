@@ -29,7 +29,10 @@ struct AckEventMessage {
 
 pub fn start_pairing_server(state: PairingStateHandle) -> Result<(), String> {
     let listener = TcpListener::bind("0.0.0.0:0").map_err(|error| error.to_string())?;
-    let port = listener.local_addr().map_err(|error| error.to_string())?.port();
+    let port = listener
+        .local_addr()
+        .map_err(|error| error.to_string())?
+        .port();
     state.set_port(port);
 
     let ws_sink: WsSink = Arc::new(Mutex::new(Vec::new()));
@@ -44,7 +47,8 @@ pub fn start_pairing_server(state: PairingStateHandle) -> Result<(), String> {
                     let request_state = listener_state.clone();
                     let request_ws_sink = listener_sink.clone();
                     thread::spawn(move || {
-                        if let Err(error) = handle_connection(stream, request_state, request_ws_sink)
+                        if let Err(error) =
+                            handle_connection(stream, request_state, request_ws_sink)
                         {
                             eprintln!("pairing server error: {error}");
                         }
@@ -62,11 +66,8 @@ pub fn start_pairing_server(state: PairingStateHandle) -> Result<(), String> {
     thread::spawn(move || loop {
         thread::sleep(Duration::from_secs(1));
         let now_epoch_sec = timestamp_string().parse::<u64>().unwrap_or_default();
-        let retry_events = retry_state.build_retry_due_events(
-            now_epoch_sec,
-            ACK_TIMEOUT_SEC,
-            ACK_MAX_RETRY,
-        );
+        let retry_events =
+            retry_state.build_retry_due_events(now_epoch_sec, ACK_TIMEOUT_SEC, ACK_MAX_RETRY);
         if retry_events.is_empty() {
             continue;
         }
@@ -82,7 +83,9 @@ fn handle_connection(
     ws_sink: WsSink,
 ) -> Result<(), String> {
     let mut buffer = [0_u8; 4096];
-    let bytes_read = stream.read(&mut buffer).map_err(|error| error.to_string())?;
+    let bytes_read = stream
+        .read(&mut buffer)
+        .map_err(|error| error.to_string())?;
 
     if bytes_read == 0 {
         return Ok(());
@@ -203,6 +206,13 @@ pub fn ws_connected_client_count() -> usize {
         .get()
         .map(|sink| sink.lock().expect("ws sink poisoned").len())
         .unwrap_or(0)
+}
+
+/// デスクトップ側のデバッグ操作で接続中のスマホ WebSocket を閉じる
+pub fn disconnect_ws_clients() {
+    if let Some(sink) = WS_SINK.get() {
+        clear_ws_sink(sink);
+    }
 }
 
 fn clear_ws_sink(ws_sink: &WsSink) {
@@ -356,9 +366,7 @@ fn write_websocket_text_frame(stream: &mut TcpStream, text: &str) -> Result<(), 
 
     frame.extend_from_slice(payload);
 
-    stream
-        .write_all(&frame)
-        .map_err(|error| error.to_string())
+    stream.write_all(&frame).map_err(|error| error.to_string())
 }
 
 fn write_ws_event(stream: &mut TcpStream, event: &impl serde::Serialize) -> Result<(), String> {
@@ -408,10 +416,7 @@ fn parse_headers(request: &str) -> HashMap<String, String> {
     headers
 }
 
-fn validate_token(
-    state: &PairingStateHandle,
-    query_map: &QueryMap,
-) -> Option<ErrorResponse> {
+fn validate_token(state: &PairingStateHandle, query_map: &QueryMap) -> Option<ErrorResponse> {
     let token = match query_map.get("token") {
         Some(token) if !token.is_empty() => token,
         _ => return Some(state.missing_token_error()),

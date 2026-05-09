@@ -29,6 +29,7 @@ export type HomeScreenProps = {
   onOpenMobileConnect: () => void;
   onPairingStatusRefresh: () => void;
   onContinueFromPaired: () => void;
+  onDebugDisconnectPairingDevice: () => Promise<void>;
   onDebugStartMeasurement: () => void;
   onProfileCharacterSelect: (characterId: string) => void;
   onToggleFavoriteCharacter: (characterId: string) => void;
@@ -72,7 +73,7 @@ export type PostureRegisterFlowScreenProps = {
   onRequestBeginCalibrating: () => void | Promise<void>;
   onBeginMeasurementAfterRegister: () => void | Promise<void>;
   onCalibratingComplete: () => void;
-  onBackHome: () => void;
+  onResetCharacterPosition: () => void;
 };
 
 export type MeasuringScreenProps = {
