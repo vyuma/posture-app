@@ -5,6 +5,7 @@ import type {
   CharacterDefinition,
 } from "../../../characters/types";
 import { shareResultCapture } from "../../../../lib/shareResultCapture";
+import { isTauriRuntime } from "../../../../lib/tauriRuntime";
 import { CharacterResultWhiteCard } from "../CharacterResultWhiteCard";
 import {
   formatAcquiredAt,
@@ -149,13 +150,15 @@ export function CollectionDetailDialog({
             </button>
           </div>
         </div>
-        <div
-          className="collection-detail-story-below"
-          aria-labelledby="collection-detail-story-heading"
-        >
-          <h3 id="collection-detail-story-heading">ストーリー</h3>
-          <p className="collection-detail-story">{character.story}</p>
-        </div>
+        {isTauriRuntime() && character.story.trim().length > 0 ? (
+          <div
+            className="collection-detail-story-below"
+            aria-labelledby="collection-detail-story-heading"
+          >
+            <h3 id="collection-detail-story-heading">ストーリー</h3>
+            <p className="collection-detail-story">{character.story}</p>
+          </div>
+        ) : null}
         <p className="collection-detail-share-feedback" role="status" aria-live="polite">
           {shareFeedback ?? ""}
         </p>

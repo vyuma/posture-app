@@ -136,6 +136,71 @@
   letter-spacing: 0;
 }
 
+/* ブラウザ版：案内コピー（枠なし） */
+.mobile-connect-left-card--webQr h1 {
+  width: min(492px, calc(100% - 112px));
+}
+
+.mobile-connect-web-guide {
+  position: absolute;
+  top: 104px;
+  left: 56px;
+  width: 480px;
+}
+
+.mobile-connect-left-card--webQr .mobile-connect-web-lead,
+.mobile-connect-left-card--webQr .mobile-connect-web-note,
+.mobile-connect-left-card--webQr .mobile-connect-web-desktop {
+  position: static;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  font-family:
+    "SF Pro Display",
+    "SF Pro Text",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Noto Sans JP",
+    sans-serif;
+  font-style: normal;
+  letter-spacing: 0;
+}
+
+.mobile-connect-left-card--webQr .mobile-connect-web-lead {
+  margin-bottom: 12px;
+  color: #444444;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.mobile-connect-left-card--webQr .mobile-connect-web-lead strong {
+  color: #0d8bb8;
+  font-weight: 800;
+}
+
+.mobile-connect-left-card--webQr .mobile-connect-web-note {
+  margin-bottom: 10px;
+  color: #555555;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.mobile-connect-left-card--webQr .mobile-connect-web-desktop {
+  color: #5c5c5c;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.mobile-connect-left-card--webQr .mobile-connect-phone-preview {
+  top: 268px;
+  left: 102px;
+  width: 368px;
+}
+
 .mobile-connect-phone-preview {
   position: absolute;
   top: 236px;

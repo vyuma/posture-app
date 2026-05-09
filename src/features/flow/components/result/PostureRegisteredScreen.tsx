@@ -5,6 +5,7 @@ import {
   playCardTapConfetti,
 } from "../../../../lib/playAcquisitionConfetti";
 import { shareResultCapture } from "../../../../lib/shareResultCapture";
+import { isTauriRuntime } from "../../../../lib/tauriRuntime";
 import { CharacterResultWhiteCard } from "../CharacterResultWhiteCard";
 import type { PostureRegisteredScreenProps } from "../flowScreenTypes";
 import {
@@ -229,9 +230,11 @@ export function PostureRegisteredScreen({
             acquiredAtLabel={formatAcquiredAt(result.endedAt)}
             measurementDurationLabel={formatDuration(result.activeMeasurementMs)}
             characterStory={
-              wasSuccessful && displayCharacter !== null
-                ? displayCharacter.story
-                : "？？？？？？？？？"
+              !isTauriRuntime()
+                ? null
+                : wasSuccessful && displayCharacter !== null
+                  ? displayCharacter.story
+                  : "？？？？？？？？？"
             }
             articleClassName={`${
               wasSuccessful

@@ -61,13 +61,21 @@ export function MobileConnectScreen({
 
         <section
           className="mobile-connect-content"
-          aria-label={isPaired ? "接続完了" : "スマホと接続"}
+          aria-label={
+            isPaired
+              ? "接続完了"
+              : showWebQrSkip
+                ? "ブラウザ版の案内"
+                : "スマホと接続"
+          }
         >
           <article
             className={
               isPaired
                 ? "mobile-connect-left-card mobile-connect-left-card--paired"
-                : "mobile-connect-left-card"
+                : showWebQrSkip
+                  ? "mobile-connect-left-card mobile-connect-left-card--webQr"
+                  : "mobile-connect-left-card"
             }
           >
             {isPaired ? (
@@ -123,6 +131,28 @@ export function MobileConnectScreen({
                 >
                   次へ
                 </button>
+              </>
+            ) : showWebQrSkip ? (
+              <>
+                <h1>ブラウザでのご利用</h1>
+                <div className="mobile-connect-web-guide">
+                  <p className="mobile-connect-web-lead">
+                    右のQRの下にある<strong>「次へ」</strong>
+                    で先に進み、姿勢測定や登録フローをお試しください。
+                  </p>
+                  <p className="mobile-connect-web-note">
+                    表示中のQRは参考・デモ用です（ブラウザからの実ペアリングはありません）。
+                  </p>
+                  <p className="mobile-connect-web-desktop">
+                    デスクトップアプリ版では、スマホアプリとQRスキャンによるペアリングで連携できます。
+                  </p>
+                </div>
+                <img
+                  src="/mobile_piiin.png"
+                  alt="Piiin mobile app preview"
+                  className="mobile-connect-phone-preview"
+                  draggable={false}
+                />
               </>
             ) : (
               <>

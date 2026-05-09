@@ -14,7 +14,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
     id: "normal-nago",
     name: "シマアナゴ",
     rarity: "common",
-    story: "いつもそばで姿勢を見守ってくれる、基本のピンアナゴ。",
+    story: "",
     portraitSrc: "/characters/anago/normal-nago/portrait.png",
     expressions: NORMAL_NAGO_EXPRESSIONS,
     characterColor: {
