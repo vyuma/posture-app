@@ -359,15 +359,16 @@ export function OnboardingStoryScreen({ onComplete }: OnboardingStoryScreenProps
     isFinalStorySlide;
   const isFinalSlide = slideIndex === STORY_SLIDES.length - 1;
   const featuredCharacters = useMemo(
-    () => [
-      CHARACTER_CATALOG[1],
-      CHARACTER_CATALOG[4],
-      CHARACTER_CATALOG[2],
-      CHARACTER_CATALOG[0],
-      CHARACTER_CATALOG[5],
-      CHARACTER_CATALOG[6],
-      CHARACTER_CATALOG[3],
-    ].filter((character): character is CharacterDefinition => character !== undefined),
+    () =>
+      [
+        CHARACTER_CATALOG[1],
+        CHARACTER_CATALOG[5],
+        CHARACTER_CATALOG[2],
+        CHARACTER_CATALOG[0],
+        CHARACTER_CATALOG[3],
+        CHARACTER_CATALOG[4],
+        CHARACTER_CATALOG[6],
+      ].filter((character): character is CharacterDefinition => character !== undefined),
     [],
   );
 
