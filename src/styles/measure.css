@@ -1,20 +1,61 @@
-/* 測定画面（MeasuringScreen）：Figma 4·5 に合わせた左カード＋カメラ。Frame53 コンポーネント用変数を供給 */
+/* 測定画面（MeasuringScreen）：Figma 1512×982 シーン等比（--pr-scale） */
 .measuring-screen {
-  --frame53-point: #13a2d7;
-  --frame53-volume-track-muted: #e8e8e8;
-  --pr-scale: 0.52;
+  position: relative;
 
-  /* Frame 53 と同系：#13A2D7 → #F2EDCC */
-  background: linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
+  --frame53-point: #13a2d7;
+  --frame53-volume-track-muted: #ffffff;
+
+  --frame53-scene-width: 1512px;
+  --frame53-scene-height: 982px;
+  --frame53-scene-offset-x: calc(
+    (100vw - var(--frame53-scene-width) * var(--pr-scale)) / 2
+  );
+  --frame53-scene-offset-y: calc(
+    (100dvh - var(--frame53-scene-height) * var(--pr-scale)) / 2
+  );
+  --pr-fr1-block-top: calc(
+    var(--frame53-scene-offset-y) + 176px * var(--pr-scale)
+  );
+  --pr-fr1-block-bottom: calc(
+    var(--frame53-scene-offset-y) + 112px * var(--pr-scale)
+  );
+  --frame53-camera-slot-size: 694px;
+
+  /* 登録画面と同じ --pr-scale 方針（無制限防止＋大画面で過度に縮まない緩上限）。 */
+  /* JS（useLiveFigmaPrScaleStyle）が main に上書きする場合は visualViewport 基準で MobileConnect / Frame53 と一致。 */
+  --pr-scale: min(
+    1.35,
+    calc(100vw / 1512px),
+    calc(100dvh / 982px)
+  );
+
+  background-color: #f3f3f3;
+  background-image: linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
 
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* padding で縦オフセット済みのため、登録画面と同様に帯中央へ塊収束させない */
+  justify-content: flex-start;
   box-sizing: border-box;
   min-height: 100dvh;
-  padding: clamp(52px, 9vh, 88px) clamp(16px, 3.2vw, 36px) clamp(20px, 4.5vh, 40px);
+  padding: var(--pr-fr1-block-top) 0 var(--pr-fr1-block-bottom);
+  overflow-x: hidden;
   overflow-y: auto;
+}
+
+.measuring-screen .flow-brand {
+  position: absolute;
+  top: calc(var(--frame53-scene-offset-y) + 40px * var(--pr-scale));
+  left: calc(var(--frame53-scene-offset-x) + 80px * var(--pr-scale));
+  z-index: 2;
+  width: calc(134px * var(--pr-scale));
+  pointer-events: auto;
+}
+
+.measuring-screen .flow-brand-logo {
+  width: 100%;
+  height: auto;
 }
 
 /* 旧レイアウト互換（未使用） */
@@ -51,99 +92,234 @@
 
 .measure-layout {
   flex: 0 1 auto;
-  /* 狭い窓はコンパクト、広い窓は vw に追従して拡大（上限あり） */
-  width: min(1180px, max(720px, 76vw), calc(100vw - 32px));
+  display: flex;
+  flex-wrap: nowrap;
+  /* 左カードは高さ固定（登録画面の白カードと同じ）、はみ出しはカード内スクロール */
+  align-items: stretch;
+  justify-content: center;
+  width: calc(1336px * var(--pr-scale));
+  max-width: 100%;
+  min-width: 0;
   min-height: 0;
   margin-inline: auto;
-  display: grid;
-  grid-template-columns: minmax(260px, 36%) minmax(0, 1fr);
-  gap: clamp(16px, 2.8vw, 32px);
-  align-items: stretch;
+  gap: calc(48px * var(--pr-scale));
+  box-sizing: border-box;
 }
 
 .measure-control-card {
+  flex: 0 0 calc(594px * var(--pr-scale));
+  width: calc(594px * var(--pr-scale));
+  max-width: 100%;
+  min-width: 0;
+  /* Frame 46 相当：登録画面 .frame53-left と同じ 694 枠（白カード内でスクロール） */
+  height: calc(694px * var(--pr-scale));
+  min-height: calc(694px * var(--pr-scale));
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: clamp(12px, 1.5vw, 16px);
-  min-width: 0;
-  padding: clamp(16px, 1.85vw, 22px);
-  border-radius: clamp(24px, 3.6vw, 34px);
-  background: rgba(255, 255, 255, 0.97);
-  border: 1px solid rgba(45, 82, 96, 0.08);
-  box-shadow:
-    0 18px 44px rgba(19, 100, 130, 0.14),
-    0 1px 0 rgba(255, 255, 255, 0.85);
+  gap: 0;
+  padding: calc(48px * var(--pr-scale)) calc(56px * var(--pr-scale))
+    calc(40px * var(--pr-scale));
+  border-radius: calc(32px * var(--pr-scale));
+  background: #ffffff;
+  border: 0;
+  box-shadow: 0 0 calc(8.52px * var(--pr-scale)) rgba(0, 0, 0, 0.15);
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+/* コントロール本文（メトリクス〜開発ツール）。多いときはここだけ縦スクロール */
+.measure-control-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .measure-control-head {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: 12px;
+  gap: calc(12px * var(--pr-scale));
+  margin-bottom: calc(20px * var(--pr-scale));
 }
 
 .measure-control-title {
   margin: 0;
-  color: var(--frame53-point, #13a2d7);
-  font-size: clamp(1.2rem, 2.4vw, 1.65rem);
-  font-weight: 800;
+  color: #13a2d7;
+  font-size: max(1.25rem, calc(36px * var(--pr-scale)));
+  font-weight: 700;
+  line-height: calc(43 / 36);
+  letter-spacing: 0;
+}
+
+.measure-control-status-hint {
+  margin: calc(6px * var(--pr-scale)) 0 0;
+  font-size: max(0.75rem, calc(14px * var(--pr-scale)));
+  font-weight: 600;
+  color: #666666;
   line-height: 1.35;
 }
 
 .measure-control-icon-actions {
   flex-shrink: 0;
   display: flex;
-  gap: 10px;
+  gap: calc(24px * var(--pr-scale));
   align-items: center;
 }
 
 .measure-icon-btn {
   box-sizing: border-box;
-  width: 50px;
-  height: 50px;
+  width: calc(64px * var(--pr-scale));
+  height: calc(64px * var(--pr-scale));
+  min-width: calc(64px * var(--pr-scale));
+  min-height: calc(64px * var(--pr-scale));
   padding: 0;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  border: 2px solid rgba(239, 68, 68, 0.9);
-  background: rgba(255, 255, 255, 0.98);
-  color: #1f2937;
+  border: 0;
+  background: transparent;
+  color: inherit;
   cursor: pointer;
+  flex-shrink: 0;
   transition:
     transform 0.12s ease,
-    filter 0.12s ease;
+    opacity 0.12s ease;
+}
+
+.measure-icon-btn svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .measure-icon-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  filter: brightness(1.02);
+  transform: scale(1.03);
 }
 
 .measure-icon-btn:disabled {
-  opacity: 0.42;
+  opacity: 0.38;
   cursor: not-allowed;
   transform: none;
 }
 
-.measure-icon-btn.is-resume {
-  border-color: rgba(34, 197, 94, 0.9);
-}
-
-.measure-icon-btn--stop:not(:disabled) {
-  border-color: rgba(239, 68, 68, 0.95);
-  color: rgba(239, 68, 68, 0.95);
-}
 
 .measure-metrics-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  gap: calc(24px * var(--pr-scale));
   min-width: 0;
+  margin-bottom: calc(20px * var(--pr-scale));
+}
+
+.measure-card-rule {
+  width: 100%;
+  height: 0;
+  margin: 0 0 calc(20px * var(--pr-scale));
+  border: 0;
+  border-top: calc(2px * var(--pr-scale)) solid #f5f5f5;
 }
 
 .measure-control-card .metric-tile {
-  background: #f5f5f7;
-  border: 1px solid rgba(0, 0, 0, 0.06);
+  min-height: calc(120px * var(--pr-scale));
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: calc(20px * var(--pr-scale)) calc(12px * var(--pr-scale))
+    calc(16px * var(--pr-scale));
+  gap: calc(6px * var(--pr-scale));
+  background: #f5f5f5;
+  border: 0;
+  border-radius: calc(16px * var(--pr-scale));
+}
+
+.measure-control-card .metric-tile span:first-child {
+  color: #666666;
+  font-size: max(12px, calc(14px * var(--pr-scale)));
+  font-weight: 500;
+  text-align: center;
+}
+
+.measure-control-card .metric-tile-value-row {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  justify-content: center;
+  gap: calc(2px * var(--pr-scale));
+}
+
+.measure-control-card .metric-tile strong {
+  margin: 0;
+  color: #000000;
+  font-size: max(1.75rem, calc(48px * var(--pr-scale)));
+  font-weight: 700;
+  line-height: calc(57 / 48);
+  letter-spacing: 0;
+}
+
+.measure-control-card .metric-tile-value-suffix {
+  color: #000000;
+  font-size: max(1rem, calc(24px * var(--pr-scale)));
+  font-weight: 700;
+  line-height: calc(29 / 24);
+}
+
+.measure-control-card .frame53-toggle-strip {
+  margin-bottom: calc(16px * var(--pr-scale));
+}
+
+.measure-control-card .frame53-sound-card {
+  margin-bottom: calc(8px * var(--pr-scale));
+}
+
+.measure-control-card-footer {
+  flex-shrink: 0;
+  margin-top: 0;
+  padding-top: calc(16px * var(--pr-scale));
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.measure-reregister-cta {
+  width: 100%;
+  max-width: calc(482px * var(--pr-scale));
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: calc(77px * var(--pr-scale));
+  padding: calc(24px * var(--pr-scale)) calc(32px * var(--pr-scale));
+  border: 0;
+  border-radius: 999px;
+  background: #13a2d7;
+  color: #ffffff;
+  font-size: max(1rem, calc(24px * var(--pr-scale)));
+  font-weight: 700;
+  line-height: calc(29 / 24);
+  letter-spacing: 0;
+  cursor: pointer;
+  box-shadow: 0 calc(8px * var(--pr-scale)) calc(20px * var(--pr-scale))
+    rgba(19, 162, 215, 0.22);
+  transition:
+    transform 0.14s ease,
+    filter 0.14s ease;
+}
+
+.measure-reregister-cta:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+
+.measure-reregister-cta:active {
+  transform: translateY(0);
+  filter: brightness(0.98);
 }
 
 .measure-baseline-cta {
@@ -179,8 +355,19 @@
   align-items: center;
   gap: 8px;
   padding-top: 12px;
-  margin-top: 4px;
+  margin-top: calc(12px * var(--pr-scale));
   border-top: 1px dashed rgba(19, 100, 130, 0.18);
+}
+
+/* 開発ツール内の下段（配置ヒント等）。親 .measure-debug-tools とは別枠で区切る */
+.measure-debug-tools-tail {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: calc(12px * var(--pr-scale));
+  padding-top: calc(12px * var(--pr-scale));
+  border-top: 1px dashed rgba(19, 100, 130, 0.14);
 }
 
 .measure-debug-tools-label {
@@ -197,32 +384,44 @@
 }
 
 .measure-camera-panel {
+  position: relative;
   min-width: 0;
   min-height: 0;
-  padding: clamp(5px, 0.85vw, 10px);
-  border-radius: clamp(26px, 4.2vw, 40px);
-  background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.28);
+  padding: 0;
+  border-radius: calc(32px * var(--pr-scale));
+  /* 登録完了（.frame53-camera-panel）と同一のスロット見た目 */
+  background: #a1a1a1;
+  border: 0;
+  box-shadow: 0 0 calc(8.52px * var(--pr-scale)) rgba(0, 0, 0, 0.15);
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .measure-camera-panel .measure-camera-stack {
   flex: 1;
   min-height: 0;
-  border-radius: clamp(22px, 3.8vw, 38px);
+  border-radius: calc(32px * var(--pr-scale));
   overflow: hidden;
-  /* 背面グレーは viewer--measurement 側へ（二重レイヤーを避ける） */
-  background: transparent;
+  background: #a1a1a1;
 }
 
-.measure-camera-panel .viewer,
-.measure-camera-panel video.camera {
-  background: transparent;
+/* 登録画面と同様、スロット内で viewer を枠いっぱいに（白枠の見え方を揃える） */
+.measure-camera-panel .measure-camera-stack .viewer.viewer--measurement {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: inherit;
 }
 
 .measure-camera-panel--figma {
+  flex: 0 0 calc(var(--frame53-camera-slot-size) * var(--pr-scale));
+  width: calc(var(--frame53-camera-slot-size) * var(--pr-scale));
+  max-width: 100%;
+  height: calc(var(--frame53-camera-slot-size) * var(--pr-scale));
+  min-height: calc(var(--frame53-camera-slot-size) * var(--pr-scale));
   display: flex;
   flex-direction: column;
-  min-height: clamp(200px, min(34vh, 28vw), 520px);
+  align-self: stretch;
 }
 
 /* PostureViewer と暗幕オーバーレイを同じ枠に重ねるためのスタッキング */
@@ -234,8 +433,7 @@
 }
 
 /*
- * 測定左カード内 Frame49：登録画面と同クラスだが --pr-scale=0.52 のため音カードだけ極細になる。
- * カード幅いっぱいにしてスライダー・セレクトを確保する。
+ * 測定左カード内 Frame49：登録画面と同クラス。パネル幅は Frame53 左カードに合わせる。
  */
 .measuring-screen .frame53-sound-card {
   align-self: stretch;
@@ -244,25 +442,25 @@
   box-sizing: border-box;
 }
 
-/* 悪い〜良い：Figma カメラ上のフロート帯（全幅ではなく左右に余白・角丸カプセル） */
+/* 悪い〜良い：Figma Frame 50（rgba(0,0,0,0.1)・角丸24・内側ゲージ32px） */
 .measure-posture-gauge {
   position: absolute;
-  top: clamp(10px, 2vmin, 16px);
+  top: calc(24px * var(--pr-scale));
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100% - clamp(24px, 6vw, 44px));
-  max-width: 100%;
+  width: calc(100% - 132px * var(--pr-scale));
+  max-width: calc(561px * var(--pr-scale));
+  min-height: calc(80px * var(--pr-scale));
   z-index: 2500;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px clamp(14px, 3.2vw, 20px);
+  justify-content: space-between;
+  gap: calc(16px * var(--pr-scale));
+  padding: calc(24px * var(--pr-scale));
   box-sizing: border-box;
   pointer-events: none;
-  background: rgba(0, 0, 0, 0.48);
-  border-radius: 999px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: calc(24px * var(--pr-scale));
 }
 
 .measure-posture-gauge--warmup .measure-posture-gauge-fill {
@@ -273,24 +471,21 @@
 .measure-posture-gauge-end,
 .measure-posture-gauge-end--bad,
 .measure-posture-gauge-end--good {
-  flex-shrink: 0;
-  font-size: 0.72rem;
-  font-weight: 900;
-  color: rgba(255, 255, 255, 0.98);
-  text-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.55),
-    0 0 10px rgba(0, 0, 0, 0.2);
+  flex: 0 0 auto;
+  width: max-content;
+  font-size: max(14px, calc(20px * var(--pr-scale)));
+  font-weight: 700;
+  line-height: calc(24 / 20);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 }
 
 .measure-posture-gauge-track {
   flex: 1 1 auto;
   min-width: 0;
-  height: clamp(14px, 2vmin, 18px);
+  height: calc(32px * var(--pr-scale));
   border-radius: 999px;
   background: #ffffff;
-  box-shadow:
-    inset 0 1px 2px rgba(0, 0, 0, 0.06),
-    0 0 0 1px rgba(0, 0, 0, 0.05);
   overflow: hidden;
 }
 
@@ -298,13 +493,7 @@
   height: 100%;
   max-width: 100%;
   border-radius: inherit;
-  background: linear-gradient(
-    90deg,
-    #f2edcc 0%,
-    #a8e8d2 34%,
-    #5ac9e5 70%,
-    #13a2d7 100%
-  );
+  background: linear-gradient(90deg, #fcf9c3 0%, #56b9d4 100%);
   transition: width 0.35s ease;
 }
 
@@ -319,6 +508,11 @@
  * カメラと PostureViewer 内の表示モード切替 (z-index:2300) より前面に出す。
  */
 .warmup-veil {
+  --warmup-gap: clamp(0.75rem, 2vmin, 1rem);
+  /* ラベル行のおおよその高さ（.warmup-veil-label の font-size × line-height に合わせる） */
+  --warmup-label-line-box: calc(
+    clamp(0.92rem, 1.6vmin, 1.05rem) * 1.35
+  );
   position: absolute;
   inset: 0;
   z-index: 2600;
@@ -326,14 +520,24 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  padding: 20px;
+  padding: clamp(1rem, 3vmin, 1.5rem);
   border-radius: inherit;
   background: rgba(0, 0, 0, 0.5);
   color: #ffffff;
   pointer-events: auto;
   -webkit-user-select: none;
   user-select: none;
+}
+
+/* リング＋ラベルを縦にまとめ、リング中心をカメラ（.measure-camera-stack）の中心に一致 */
+.warmup-veil-focus-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--warmup-gap);
+  transform: translateY(
+    calc((var(--warmup-gap) + var(--warmup-label-line-box)) / 2)
+  );
 }
 
 .warmup-veil-inner {
@@ -364,8 +568,26 @@
     stroke-dashoffset 0.3s linear;
 }
 
+@keyframes warmup-count-pop {
+  0% {
+    transform: scale(0.82);
+    opacity: 0.65;
+  }
+  55% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 .warmup-veil-count {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-size: clamp(2.4rem, 6vmin, 4rem);
   font-weight: 800;
   line-height: 1;
@@ -374,10 +596,16 @@
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
 }
 
+.warmup-veil-count-pop {
+  display: inline-block;
+  animation: warmup-count-pop 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
 .warmup-veil-label {
   margin: 0;
   color: rgba(255, 255, 255, 0.92);
   font-size: clamp(0.92rem, 1.6vmin, 1.05rem);
+  line-height: 1.35;
   font-weight: 700;
   letter-spacing: 0;
 }
@@ -386,24 +614,29 @@
   .warmup-veil-ring-progress {
     transition: none;
   }
+
+  .warmup-veil-count-pop {
+    animation: none;
+  }
 }
 
 .metric-tile {
   display: grid;
   gap: 4px;
-  padding: 13px 14px;
-  border-radius: 12px;
+  padding: clamp(0.6rem, 1.4vmin, 0.85rem)
+    clamp(0.7rem, 1.6vmin, 0.95rem);
+  border-radius: clamp(0.65rem, 1.3vmin, 0.85rem);
   background: rgba(255, 255, 255, 0.82);
   border: 1px solid rgba(45, 82, 96, 0.1);
 }
 
-.metric-tile span {
+.metric-tile:not(.metric-tile--with-suffix) span {
   color: #5d737c;
   font-size: 0.76rem;
   font-weight: 900;
 }
 
-.metric-tile strong {
+.metric-tile:not(.metric-tile--with-suffix) strong {
   color: #203b45;
   font-size: 1.42rem;
   font-weight: 900;
@@ -420,6 +653,8 @@
 .measure-tool-overlay-hint-debug {
   font-size: 0.78rem;
   opacity: 0.95;
+  /* スクロールでボタンが画面下端に来たときにタップしやすくする */
+  scroll-margin-bottom: calc(24px * var(--pr-scale));
   transition:
     transform 0.14s ease,
     box-shadow 0.14s ease,
@@ -483,6 +718,72 @@
   }
 }
 
+/* 狭いビューポート：横2列だと CTA が画面外になるため縦積み＋セーフエリア */
+@media (max-width: 900px) {
+  .measuring-screen {
+    padding-left: max(12px, env(safe-area-inset-left, 0px));
+    padding-right: max(12px, env(safe-area-inset-right, 0px));
+    padding-bottom: max(
+      var(--pr-fr1-block-bottom),
+      calc(12px + env(safe-area-inset-bottom, 0px))
+    );
+  }
+
+  .measuring-screen .flow-brand {
+    left: max(
+      12px,
+      calc(var(--frame53-scene-offset-x) + 48px * var(--pr-scale)),
+      env(safe-area-inset-left, 0px)
+    );
+    top: max(
+      calc(var(--frame53-scene-offset-y) + 20px * var(--pr-scale)),
+      calc(10px + env(safe-area-inset-top, 0px))
+    );
+    width: calc(120px * var(--pr-scale));
+  }
+
+  .measure-layout {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-width: min(100%, calc(100vw - 24px));
+    gap: clamp(14px, 4vw, 28px);
+  }
+
+  .measure-control-card {
+    flex: 0 1 auto;
+    flex-basis: auto;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: min(420px, 58dvh);
+    max-height: min(640px, 72dvh);
+  }
+
+  .measure-camera-panel--figma {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 1;
+    max-height: min(92vw, 52dvh);
+    align-self: center;
+  }
+
+  .measure-reregister-cta {
+    max-width: 100%;
+    min-height: max(48px, calc(77px * var(--pr-scale)));
+  }
+
+  .measure-icon-btn {
+    width: max(44px, calc(64px * var(--pr-scale)));
+    height: max(44px, calc(64px * var(--pr-scale)));
+    min-width: max(44px, calc(64px * var(--pr-scale)));
+    min-height: max(44px, calc(64px * var(--pr-scale)));
+  }
+}
+
 /* 縦幅が狭いときは左カード内メトリクスを詰める */
 @media (max-height: 640px) {
   .measure-control-title {
@@ -495,23 +796,5 @@
 
   .metric-tile strong {
     font-size: 1.15rem;
-  }
-}
-
-/* 単列：上＝カメラ、下＝操作（一覧性） */
-@media (max-width: 920px) {
-  .measure-layout {
-    grid-template-columns: 1fr;
-    grid-auto-rows: auto;
-    width: min(600px, max(360px, 88vw), calc(100vw - 24px));
-  }
-
-  .measure-camera-panel--figma {
-    order: -1;
-    min-height: min(40vh, 320px);
-  }
-
-  .measure-control-card {
-    order: 0;
   }
 }

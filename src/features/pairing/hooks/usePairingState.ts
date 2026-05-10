@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 
+import { isTauriRuntime } from "../../../lib/tauriRuntime";
 import {
   getDesktopPairingStatus,
   getPairingInfo,
+  WEB_DESKTOP_PAIRING_STATUS,
   type DesktopPairingStatus,
 } from "../services/desktopBridge";
 import type { PairingInfo } from "../types/pairing";
@@ -35,6 +37,18 @@ export function usePairingState() {
 
   useEffect(() => {
     isMountedRef.current = true;
+
+    if (!isTauriRuntime()) {
+      setState({
+        pairingInfo: null,
+        status: WEB_DESKTOP_PAIRING_STATUS,
+        isLoading: false,
+        error: null,
+      });
+      return () => {
+        isMountedRef.current = false;
+      };
+    }
 
     async function loadInitialState() {
       try {
@@ -105,6 +119,16 @@ export function usePairingState() {
   return {
     ...state,
     refresh: async () => {
+      if (!isTauriRuntime()) {
+        setState({
+          pairingInfo: null,
+          status: WEB_DESKTOP_PAIRING_STATUS,
+          isLoading: false,
+          error: null,
+        });
+        return;
+      }
+
       try {
         const [pairingInfo, status] = await readPairingSnapshot();
 

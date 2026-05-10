@@ -1,0 +1,99 @@
+/* ブラウザ版：右下インラインキャラ（Tauri オーバーレイの代替） */
+
+.web-inline-character-overlay {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  padding-right: max(12px, env(safe-area-inset-right, 0px));
+  padding-bottom: max(0px, env(safe-area-inset-bottom, 0px));
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.web-inline-character-sink {
+  transform-origin: 100% 100%;
+  will-change: transform;
+}
+
+.web-inline-character {
+  --web-inline-character-scale: 0.66;
+
+  position: relative;
+  width: min(228px, 34vw);
+  transform-origin: 100% 100%;
+  will-change: transform;
+}
+
+.web-inline-character img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transform: scale(var(--web-inline-character-scale));
+  transform-origin: 50% 100%;
+  user-select: none;
+  pointer-events: none;
+  filter: drop-shadow(10px 12px 14px rgba(0, 0, 0, 0.22));
+}
+
+.web-inline-character-overlay--good .web-inline-character {
+  animation: web-inline-character-rise 0.42s ease both,
+    web-inline-character-breathe 2.8s ease-in-out 0.42s infinite;
+}
+
+.web-inline-character-overlay--bad .web-inline-character {
+  animation: web-inline-character-worry 1.4s ease-in-out infinite;
+}
+
+.web-inline-character-overlay--paused .web-inline-character {
+  animation: web-inline-character-sleep 3.2s ease-in-out infinite;
+}
+
+@keyframes web-inline-character-rise {
+  from {
+    opacity: 0;
+    translate: 0 34px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@keyframes web-inline-character-breathe {
+  0%,
+  100% {
+    scale: 1;
+  }
+  50% {
+    scale: 1.015;
+  }
+}
+
+/* 沈みは親 .web-inline-character-sink、揺れは子のみ（translate が競合しない） */
+@keyframes web-inline-character-worry {
+  0%,
+  100% {
+    translate: 0 0;
+    rotate: 0deg;
+  }
+  25% {
+    translate: -3px 3px;
+    rotate: -2deg;
+  }
+  75% {
+    translate: 3px 2px;
+    rotate: 2deg;
+  }
+}
+
+@keyframes web-inline-character-sleep {
+  0%,
+  100% {
+    translate: 0 0;
+    filter: drop-shadow(10px 12px 14px rgba(0, 0, 0, 0.22));
+  }
+  50% {
+    translate: 0 6px;
+    filter: drop-shadow(8px 10px 12px rgba(0, 0, 0, 0.18));
+  }
+}

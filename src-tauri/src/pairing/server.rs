@@ -1,36 +1,54 @@
 use std::{
     collections::HashMap,
     io::{Read, Write},
-    net::{TcpListener, TcpStream},
+    net::{SocketAddr, TcpListener, TcpStream},
     sync::{Arc, Mutex, OnceLock},
     thread,
+    time::Duration,
 };
 
 use base64::Engine;
+use serde::Deserialize;
 use sha1::{Digest, Sha1};
 
-use super::state::{timestamp_string, ErrorResponse, PairingStateHandle};
+use super::state::{timestamp_string, AcquiredCharacterPayload, ErrorResponse, PairingStateHandle};
 
 type WsSink = Arc<Mutex<Vec<TcpStream>>>;
 type QueryMap = HashMap<String, String>;
 static WS_SINK: OnceLock<WsSink> = OnceLock::new();
+const ACK_TIMEOUT_SEC: u64 = 5;
+const ACK_MAX_RETRY: u32 = 5;
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct AckEventMessage {
+    r#type: String,
+    ack_event_id: String,
+    ack_sequence: u64,
+}
 
 pub fn start_pairing_server(state: PairingStateHandle) -> Result<(), String> {
     let listener = TcpListener::bind("0.0.0.0:0").map_err(|error| error.to_string())?;
-    let port = listener.local_addr().map_err(|error| error.to_string())?.port();
+    let port = listener
+        .local_addr()
+        .map_err(|error| error.to_string())?
+        .port();
     state.set_port(port);
 
     let ws_sink: WsSink = Arc::new(Mutex::new(Vec::new()));
     let _ = WS_SINK.set(ws_sink.clone());
 
+    let listener_state = state.clone();
+    let listener_sink = ws_sink.clone();
     thread::spawn(move || {
         for stream in listener.incoming() {
             match stream {
                 Ok(stream) => {
-                    let request_state = state.clone();
-                    let request_ws_sink = ws_sink.clone();
+                    let request_state = listener_state.clone();
+                    let request_ws_sink = listener_sink.clone();
                     thread::spawn(move || {
-                        if let Err(error) = handle_connection(stream, request_state, request_ws_sink)
+                        if let Err(error) =
+                            handle_connection(stream, request_state, request_ws_sink)
                         {
                             eprintln!("pairing server error: {error}");
                         }
@@ -43,6 +61,19 @@ pub fn start_pairing_server(state: PairingStateHandle) -> Result<(), String> {
         }
     });
 
+    let retry_state = state.clone();
+    let retry_sink = ws_sink.clone();
+    thread::spawn(move || loop {
+        thread::sleep(Duration::from_secs(1));
+        let now_epoch_sec = timestamp_string().parse::<u64>().unwrap_or_default();
+        let retry_events =
+            retry_state.build_retry_due_events(now_epoch_sec, ACK_TIMEOUT_SEC, ACK_MAX_RETRY);
+        if retry_events.is_empty() {
+            continue;
+        }
+        broadcast_ws_events(&retry_sink, &retry_events);
+    });
+
     Ok(())
 }
 
@@ -52,7 +83,9 @@ fn handle_connection(
     ws_sink: WsSink,
 ) -> Result<(), String> {
     let mut buffer = [0_u8; 4096];
-    let bytes_read = stream.read(&mut buffer).map_err(|error| error.to_string())?;
+    let bytes_read = stream
+        .read(&mut buffer)
+        .map_err(|error| error.to_string())?;
 
     if bytes_read == 0 {
         return Ok(());
@@ -114,6 +147,9 @@ fn handle_disconnect(
 
     let response = state.disconnect_device();
     broadcast_ws_state_event(state, "disconnected");
+    if let Some(sink) = WS_SINK.get() {
+        clear_ws_sink(sink);
+    }
     write_json(stream, 200, &response)
 }
 
@@ -131,6 +167,8 @@ fn handle_websocket(
     if !is_websocket_upgrade(headers) {
         return write_internal_error_json(&mut stream, 400, "invalid websocket upgrade request");
     }
+
+    let peer_addr = stream.peer_addr().map_err(|error| error.to_string())?;
 
     let websocket_key = headers
         .get("sec-websocket-key")
@@ -154,14 +192,62 @@ fn handle_websocket(
 
     let snapshot = state.build_ws_event("snapshot");
     write_ws_event(&mut stream, &snapshot)?;
+    let pending_events = state.build_pending_resend_events();
+    for event in pending_events {
+        write_ws_event(&mut stream, &event)?;
+    }
 
-    read_until_socket_closes(stream)
+    read_until_socket_closes(stream, peer_addr, state, ws_sink)
+}
+
+/// WS クライアント数（`get_pairing_status` で上書きする）
+pub fn ws_connected_client_count() -> usize {
+    WS_SINK
+        .get()
+        .map(|sink| sink.lock().expect("ws sink poisoned").len())
+        .unwrap_or(0)
+}
+
+/// デスクトップ側のデバッグ操作で接続中のスマホ WebSocket を閉じる
+pub fn disconnect_ws_clients() {
+    if let Some(sink) = WS_SINK.get() {
+        clear_ws_sink(sink);
+    }
+}
+
+fn clear_ws_sink(ws_sink: &WsSink) {
+    let mut clients = ws_sink.lock().expect("ws sink poisoned");
+    clients.clear();
+}
+
+/// 読み取り側が終了したら当該ピアの書き込みストリームだけシンクから外す。
+/// HTTP /pair で確立したペア状態は維持し、モバイル再接続時に snapshot で measuring 等を復元できるようにする。
+fn remove_ws_clients_for_peer(ws_sink: &WsSink, peer: SocketAddr) {
+    let mut clients = ws_sink.lock().expect("ws sink poisoned");
+    clients.retain_mut(|client| match client.peer_addr() {
+        Ok(p) => p != peer,
+        Err(_) => false,
+    });
 }
 
 pub fn broadcast_ws_state_event(state: &PairingStateHandle, event_type: &str) {
     if let Some(ws_sink) = WS_SINK.get() {
         let event = state.build_ws_event(event_type);
         broadcast_ws_event(ws_sink, &event);
+    }
+}
+
+pub fn broadcast_ws_acquired_event(state: &PairingStateHandle, payload: AcquiredCharacterPayload) {
+    if let Some(ws_sink) = WS_SINK.get() {
+        let event = state.create_acquired_event(payload);
+        state.mark_acquired_event_sent(&event.event_id);
+        broadcast_ws_event(ws_sink, &event);
+    }
+}
+
+fn broadcast_ws_events<T: serde::Serialize>(ws_sink: &WsSink, events: &[T]) {
+    for event in events {
+        broadcast_ws_event(ws_sink, event);
     }
 }
 
@@ -178,16 +264,87 @@ fn broadcast_ws_event(ws_sink: &WsSink, event: &impl serde::Serialize) {
     clients.retain_mut(|client| write_websocket_text_frame(client, &payload).is_ok());
 }
 
-fn read_until_socket_closes(mut stream: TcpStream) -> Result<(), String> {
+fn read_until_socket_closes(
+    mut stream: TcpStream,
+    peer_addr: SocketAddr,
+    state: &PairingStateHandle,
+    ws_sink: &WsSink,
+) -> Result<(), String> {
     let mut buffer = [0_u8; 1024];
 
-    loop {
+    let read_outcome = loop {
         match stream.read(&mut buffer) {
-            Ok(0) => return Ok(()),
-            Ok(_) => continue,
-            Err(error) => return Err(error.to_string()),
+            Ok(0) => break Ok(()),
+            Ok(bytes_read) => {
+                if let Some(text) = parse_websocket_text_frame(&buffer[..bytes_read]) {
+                    handle_websocket_client_message(state, &text);
+                }
+                continue;
+            }
+            Err(error) => break Err(error.to_string()),
         }
+    };
+
+    remove_ws_clients_for_peer(ws_sink, peer_addr);
+    read_outcome
+}
+
+fn handle_websocket_client_message(state: &PairingStateHandle, text: &str) {
+    let ack = match serde_json::from_str::<AckEventMessage>(text) {
+        Ok(message) => message,
+        Err(_) => return,
+    };
+    if ack.r#type != "ack_event" {
+        return;
     }
+    if !state.ack_event(&ack.ack_event_id, ack.ack_sequence) {
+        eprintln!(
+            "unmatched ack received: event_id={}, sequence={}",
+            ack.ack_event_id, ack.ack_sequence
+        );
+    }
+}
+
+fn parse_websocket_text_frame(frame: &[u8]) -> Option<String> {
+    if frame.len() < 2 {
+        return None;
+    }
+    let opcode = frame[0] & 0x0F;
+    if opcode != 0x1 {
+        return None;
+    }
+    let masked = (frame[1] & 0x80) != 0;
+    if !masked {
+        return None;
+    }
+    let mut payload_len = (frame[1] & 0x7F) as usize;
+    let mut index = 2_usize;
+    if payload_len == 126 {
+        if frame.len() < 4 {
+            return None;
+        }
+        payload_len = u16::from_be_bytes([frame[2], frame[3]]) as usize;
+        index = 4;
+    } else if payload_len == 127 {
+        if frame.len() < 10 {
+            return None;
+        }
+        payload_len = u64::from_be_bytes([
+            frame[2], frame[3], frame[4], frame[5], frame[6], frame[7], frame[8], frame[9],
+        ]) as usize;
+        index = 10;
+    }
+    if frame.len() < index + 4 + payload_len {
+        return None;
+    }
+    let mask = &frame[index..index + 4];
+    let payload_start = index + 4;
+    let payload_end = payload_start + payload_len;
+    let mut decoded = Vec::with_capacity(payload_len);
+    for (offset, byte) in frame[payload_start..payload_end].iter().enumerate() {
+        decoded.push(*byte ^ mask[offset % 4]);
+    }
+    String::from_utf8(decoded).ok()
 }
 
 fn write_websocket_text_frame(stream: &mut TcpStream, text: &str) -> Result<(), String> {
@@ -209,9 +366,7 @@ fn write_websocket_text_frame(stream: &mut TcpStream, text: &str) -> Result<(), 
 
     frame.extend_from_slice(payload);
 
-    stream
-        .write_all(&frame)
-        .map_err(|error| error.to_string())
+    stream.write_all(&frame).map_err(|error| error.to_string())
 }
 
 fn write_ws_event(stream: &mut TcpStream, event: &impl serde::Serialize) -> Result<(), String> {
@@ -261,10 +416,7 @@ fn parse_headers(request: &str) -> HashMap<String, String> {
     headers
 }
 
-fn validate_token(
-    state: &PairingStateHandle,
-    query_map: &QueryMap,
-) -> Option<ErrorResponse> {
+fn validate_token(state: &PairingStateHandle, query_map: &QueryMap) -> Option<ErrorResponse> {
     let token = match query_map.get("token") {
         Some(token) if !token.is_empty() => token,
         _ => return Some(state.missing_token_error()),

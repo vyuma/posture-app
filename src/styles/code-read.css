@@ -2,34 +2,39 @@
 
 .flow-screen.frame53-register-screen {
   position: relative;
-  container-type: size;
-  container-name: frame53;
 
   /* カード〜コントロール共通のスクショポイント (#13A2D7)。QR #34add5 とは別 */
   --frame53-point: #13a2d7;
   --frame53-volume-track-muted: #e8e8e8;
 
-  --pr-fr1-horizontal-inset: clamp(16px, 9.591vw, 145px);
-  --pr-fr1-block-top: clamp(72px, 15.274dvh, 150px);
-  --pr-fr1-block-bottom: clamp(48px, 15.377dvh, 151px);
+  --frame53-scene-width: 1512px;
+  --frame53-scene-height: 982px;
+  --frame53-scene-offset-x: calc(
+    (100vw - var(--frame53-scene-width) * var(--pr-scale)) / 2
+  );
+  --frame53-scene-offset-y: calc(
+    (100dvh - var(--frame53-scene-height) * var(--pr-scale)) / 2
+  );
+  --pr-fr1-block-top: calc(
+    var(--frame53-scene-offset-y) + 176px * var(--pr-scale)
+  );
+  --pr-fr1-block-bottom: calc(
+    var(--frame53-scene-offset-y) + 112px * var(--pr-scale)
+  );
+  --frame53-camera-slot-size: 694px;
 
-  /* デザイン幅1222×高681 のスケール用：パディング＋若干の余白（はみ出し防止） */
-  --frame53-scale-w-chrome: calc(2 * var(--pr-fr1-horizontal-inset) + 24px);
-  --frame53-scale-h-chrome: calc(
-    var(--pr-fr1-block-top) + var(--pr-fr1-block-bottom) + 24px
+  /*
+   * 1512×982 基準の等比。無制限だとタイポが肥大化するため上限あり。
+   * 1 固定だと QHD 級で余白ばかりで「潰れた」印象になるため、緩い上限にする。
+   * JS（useLiveFigmaPrScaleStyle）が main に --pr-scale を上書きする場合は visualViewport 基準で MobileConnect と一致。
+   */
+  --pr-scale: min(
+    1.35,
+    calc(100vw / 1512px),
+    calc(100dvh / 982px)
   );
 
-  --pr-scale: max(
-    0.31,
-    min(
-      1,
-      calc((100vw - var(--frame53-scale-w-chrome)) / 1222px),
-      calc((100dvh - var(--frame53-scale-h-chrome)) / 681px)
-    )
-  );
-
-  padding: var(--pr-fr1-block-top) var(--pr-fr1-horizontal-inset)
-    var(--pr-fr1-block-bottom);
+  padding: var(--pr-fr1-block-top) 0 var(--pr-fr1-block-bottom);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -39,31 +44,73 @@
   overflow-y: auto;
   /* ノード fills: #13a2d7 → #f2edcc */
   background: linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
+
+  /*
+   * 登録中パネル右：Figma 694 枠内 円 320・白枠 20（直径の 6.25%）・数字 128（直径の 40%）・文言 36
+   */
+  --pr-reg-countdown-d: calc(320px * var(--pr-scale));
+  --pr-reg-countdown-digit-fs: calc(128px * var(--pr-scale));
+  --pr-reg-countdown-status-fs: calc(36px * var(--pr-scale));
+
+  /*
+   * 姿勢登録 intro／登録中 共通マスコット（同一アセット・同一レイアウト）
+   * width: 設計px（無単位）× --pr-scale × size-mult。位置は shift を --pr-scale で追従。
+   */
+  --pr-intro-mascot-width-px: 168;
+  --pr-intro-mascot-size-mult: 1.2;
+  /* intro のみ: ボタンとの隙間 24（×--pr-scale）に加算する無単位 px 相当 */
+  --pr-intro-mascot-gap-add-px: 0;
+  --pr-intro-mascot-shift-x-px: 0;
+  --pr-intro-mascot-shift-y-px: 30;
 }
 
 .frame53-register-screen .flow-brand {
   position: absolute;
-  top: var(--flow-brand-offset-y);
-  left: var(--flow-brand-offset-x);
+  top: calc(var(--frame53-scene-offset-y) + 40px * var(--pr-scale));
+  left: calc(var(--frame53-scene-offset-x) + 80px * var(--pr-scale));
   z-index: 2;
+  width: calc(134px * var(--pr-scale));
   pointer-events: auto;
 }
 
-@supports (width: 1cqw) {
-  .flow-screen.frame53-register-screen {
-    /*
-     * cqw/cqh はこの要素のコンテンツボックス（パディング内側）基準。
-     * 100vw 側と同じ --frame53-scale-* を引くとパディングが二重になりスケールが極端に小さくなる。
-     */
-    --pr-scale: max(
-      0.31,
-      min(
-        1,
-        calc((100cqw - 24px) / 1222px),
-        calc((100cqh - 40px) / 681px)
-      )
-    );
-  }
+.frame53-register-screen .flow-brand-logo {
+  width: 100%;
+  height: auto;
+}
+
+/* ヘッダー閉じる：1512×982 上56・右80（56×56） */
+.frame53-register-screen .frame53-header-close {
+  position: absolute;
+  z-index: 2;
+  top: calc(var(--frame53-scene-offset-y) + 56px * var(--pr-scale));
+  right: calc(var(--frame53-scene-offset-x) + 80px * var(--pr-scale));
+  width: calc(56px * var(--pr-scale));
+  height: calc(56px * var(--pr-scale));
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.frame53-register-screen .frame53-header-close:hover,
+.frame53-register-screen .frame53-header-close:focus-visible {
+  opacity: 0.88;
+}
+
+.frame53-register-screen .frame53-header-close:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.95);
+  outline-offset: 3px;
+}
+
+.frame53-register-screen .frame53-header-close img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
 }
 
 .frame53-panels-wrap {
@@ -71,30 +118,377 @@
   flex: 1 1 auto;
   align-items: center;
   justify-content: center;
-  width: min(calc(1222px * var(--pr-scale)), 100%);
+  width: calc(1336px * var(--pr-scale));
+  max-width: 100%;
+  min-width: 0;
   min-height: 0;
-  gap: calc(41px * var(--pr-scale));
+  gap: calc(48px * var(--pr-scale));
+  box-sizing: border-box;
+}
+
+/* 接続画面に近い上基準。padding で縦オフセット済みのため帯の中央へ塊収束させない */
+.flow-screen.frame53-register-screen .frame53-panels-wrap {
+  justify-content: flex-start;
 }
 
 /* Frame 46 相当：500×681 白／角丸40／Figma y から算出したパディング */
 .frame53-left {
-  flex: 0 0 calc(500px * var(--pr-scale));
-  width: calc(500px * var(--pr-scale));
+  flex: 0 0 calc(594px * var(--pr-scale));
+  width: calc(594px * var(--pr-scale));
   max-width: 100%;
-  height: calc(681px * var(--pr-scale));
-  min-height: calc(681px * var(--pr-scale));
+  height: calc(694px * var(--pr-scale));
+  min-height: calc(694px * var(--pr-scale));
   box-sizing: border-box;
-  padding: calc(47px * var(--pr-scale)) calc(50px * var(--pr-scale))
+  padding: calc(48px * var(--pr-scale)) calc(56px * var(--pr-scale))
     calc(40px * var(--pr-scale));
   display: flex;
   flex-direction: column;
   align-items: stretch;
   background: #ffffff;
-  border-radius: calc(40px * var(--pr-scale));
+  border-radius: calc(32px * var(--pr-scale));
+  box-shadow: 0 0 calc(8.52px * var(--pr-scale)) rgba(0, 0, 0, 0.15);
   overflow-x: hidden;
   /* はみ出し時のみスクロール（通常はスクロールバー非表示に近い） */
   overflow-y: auto;
   /* 狭い幅スタック時は下のメディアで height:auto に切り替え */
+}
+
+/* 姿勢登録（基準線）フロー：段階別モディファイア */
+.frame53-left--pr-intro .frame53-heading {
+  margin-bottom: calc(24px * var(--pr-scale));
+}
+
+.frame53-left--pr-intro .frame53-led {
+  /* 登録中パネルと同じ下余白（フッター直上のリズムを揃える） */
+  margin-bottom: calc(32px * var(--pr-scale));
+}
+
+/* 登録中フッターと同じ flex／幅／隙間（CTA の位置を一致させる） */
+.frame53-footer--pr-intro {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(
+    (24 + var(--pr-intro-mascot-gap-add-px, 0)) * var(--pr-scale) * 1px
+  );
+  width: 100%;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.frame53-pr-intro-mascot-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.frame53-footer--pr-intro .frame53-primary {
+  position: relative;
+  z-index: 1;
+  width: min(calc(482px * var(--pr-scale)), 100%);
+  box-sizing: border-box;
+  padding: calc(24px * var(--pr-scale)) calc(32px * var(--pr-scale));
+  min-height: calc(77px * var(--pr-scale));
+  height: calc(77px * var(--pr-scale));
+}
+
+@keyframes pr-mascot-intro-float {
+  0%,
+  100% {
+    transform: translate(
+        calc(var(--pr-intro-mascot-shift-x-px, 0) * var(--pr-scale) * 1px),
+        calc(
+          (var(--pr-intro-mascot-shift-y-px, 0) - 4) * var(--pr-scale) * 1px
+        )
+      )
+      scale(1);
+  }
+  50% {
+    transform: translate(
+        calc(var(--pr-intro-mascot-shift-x-px, 0) * var(--pr-scale) * 1px),
+        calc(
+          (var(--pr-intro-mascot-shift-y-px, 0) + 4) * var(--pr-scale) * 1px
+        )
+      )
+      scale(1.02);
+  }
+}
+
+@keyframes pr-mascot-cal-nod {
+  0%,
+  100% {
+    transform: translate(
+        calc(var(--pr-intro-mascot-shift-x-px, 0) * var(--pr-scale) * 1px),
+        calc(var(--pr-intro-mascot-shift-y-px, 0) * var(--pr-scale) * 1px)
+      )
+      rotate(-1.5deg);
+  }
+  50% {
+    transform: translate(
+        calc(var(--pr-intro-mascot-shift-x-px, 0) * var(--pr-scale) * 1px),
+        calc(
+          (var(--pr-intro-mascot-shift-y-px, 0) + 6) * var(--pr-scale) * 1px
+        )
+      )
+      rotate(1.5deg);
+  }
+}
+
+.frame53-pr-settings-mascot-wrap {
+  display: flex;
+  justify-content: center;
+  margin: calc(12px * var(--pr-scale, 1)) 0
+    calc(8px * var(--pr-scale, 1));
+  pointer-events: none;
+}
+
+.frame53-pr-settings-mascot {
+  display: block;
+  width: min(
+    100%,
+    calc(
+      var(--pr-intro-mascot-width-px, 168) * var(--pr-scale, 1) *
+        var(--pr-intro-mascot-size-mult, 1) * 0.92 * 1px
+    )
+  );
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+}
+
+.frame53-pr-intro-mascot,
+.frame53-pr-cal-mascot {
+  display: block;
+  width: min(
+    100%,
+    calc(
+      var(--pr-intro-mascot-width-px, 168) * var(--pr-scale) *
+        var(--pr-intro-mascot-size-mult, 1) * 1px
+    )
+  );
+  height: auto;
+  object-fit: contain;
+  user-select: none;
+  pointer-events: none;
+  transform: translate(
+    calc(var(--pr-intro-mascot-shift-x-px, 0) * var(--pr-scale) * 1px),
+    calc(var(--pr-intro-mascot-shift-y-px, 0) * var(--pr-scale) * 1px)
+  );
+}
+
+.frame53-pr-intro-mascot {
+  animation: pr-mascot-intro-float 3.2s ease-in-out infinite;
+  transform-origin: 50% 80%;
+}
+
+.frame53-pr-cal-mascot {
+  animation: pr-mascot-cal-nod 1.4s ease-in-out infinite;
+  transform-origin: 50% 80%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .frame53-pr-intro-mascot,
+  .frame53-pr-cal-mascot,
+  .frame53-pr-settings-mascot {
+    animation: none;
+  }
+}
+
+.frame53-footer--pr-calibrating {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: calc(24px * var(--pr-scale));
+  width: 100%;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.frame53-footer--pr-calibrating .frame53-primary {
+  position: relative;
+  z-index: 1;
+}
+
+.frame53-left--pr-calibrating .frame53-heading {
+  margin-bottom: calc(24px * var(--pr-scale));
+}
+
+.frame53-left--pr-calibrating .frame53-led {
+  margin-bottom: calc(32px * var(--pr-scale));
+}
+
+.frame53-pr-cal-mascot-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.frame53-primary.frame53-primary--pr-calibrating:disabled {
+  width: min(calc(482px * var(--pr-scale)), 100%);
+  box-sizing: border-box;
+  padding: calc(24px * var(--pr-scale)) calc(32px * var(--pr-scale));
+  min-height: calc(77px * var(--pr-scale));
+  height: calc(77px * var(--pr-scale));
+  background: #e6e6e6;
+  color: #ffffff;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* 登録完了（設定）: Frame 46 コピー・区切り・幅482px */
+.frame53-left--pr-settings .frame53-heading {
+  margin-bottom: calc(32px * var(--pr-scale));
+}
+
+.frame53-left--pr-settings .frame53-led {
+  margin-bottom: calc(24px * var(--pr-scale));
+}
+
+.frame53-led-note {
+  margin: 0 0 calc(72px * var(--pr-scale));
+  color: #666666;
+  font-size: max(12px, calc(14px * var(--pr-scale)));
+  font-weight: 500;
+  line-height: calc(17 / 14);
+  letter-spacing: 0;
+}
+
+.frame53-settings-panel--register-complete {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0;
+  width: 100%;
+  /* 音量トラックの未塗りを Figma どおり白に */
+  --frame53-volume-track-muted: #ffffff;
+}
+
+.frame53-settings-panel--register-complete .frame53-settings-figma-divider {
+  align-self: center;
+  width: min(calc(482px * var(--pr-scale)), 100%);
+  height: 0;
+  margin: 0;
+  border: 0;
+  border-top: 2px solid #f5f5f5;
+}
+
+/* Line1→ピン行 24px、ピン行→Line2 20px（y284→332）、Line2→サウンド 24px、サウンド→Frame49 20px（y356→404） */
+.frame53-settings-panel--register-complete > hr:nth-of-type(1) {
+  margin-bottom: calc(24px * var(--pr-scale));
+}
+
+.frame53-settings-panel--register-complete
+  > .frame53-toggle-strip:nth-of-type(1) {
+  margin-bottom: calc(20px * var(--pr-scale));
+}
+
+.frame53-settings-panel--register-complete > hr:nth-of-type(2) {
+  margin-bottom: calc(24px * var(--pr-scale));
+}
+
+.frame53-settings-panel--register-complete
+  > .frame53-toggle-strip:nth-of-type(2) {
+  margin-bottom: calc(20px * var(--pr-scale));
+}
+
+.frame53-settings-panel--register-complete .frame53-toggle-strip {
+  margin-bottom: 0;
+}
+
+/* Frame 49: 482×137・内側 24・音量〜効果音の段間 36 */
+.frame53-settings-panel--register-complete .frame53-sound-card {
+  align-self: center;
+  width: min(calc(482px * var(--pr-scale)), 100%);
+  margin-bottom: 0;
+  min-height: calc(137px * var(--pr-scale));
+  padding: calc(24px * var(--pr-scale)) calc(24px * var(--pr-scale))
+    calc(21px * var(--pr-scale));
+  box-sizing: border-box;
+}
+
+.frame53-settings-panel--register-complete .frame53-volume-row {
+  margin-bottom: calc(36px * var(--pr-scale));
+}
+
+.frame53-settings-panel--register-complete .frame53-sfx-label {
+  margin: 0 0 calc(8px * var(--pr-scale));
+}
+
+.frame53-settings-panel--register-complete .frame53-toggle-strip-label {
+  top: 0;
+  line-height: calc(24 / 20);
+}
+
+.frame53-settings-panel--register-complete .frame53-volume-visible-label {
+  font-size: max(12px, calc(16px * var(--pr-scale)));
+  line-height: calc(19 / 16);
+}
+
+.frame53-settings-panel--register-complete .frame53-volume-range {
+  --frame53-vol-thumb-size: max(20px, calc(24px * var(--pr-scale)));
+  height: calc(28px * var(--pr-scale));
+}
+
+.frame53-left--pr-settings .frame53-sfx-select {
+  /* Frame 40: 8×24。右は▼用に余白を確保 */
+  padding: calc(8px * var(--pr-scale)) calc(40px * var(--pr-scale))
+    calc(8px * var(--pr-scale)) calc(24px * var(--pr-scale));
+  min-height: calc(52px * var(--pr-scale));
+  border: 0;
+  border-radius: calc(16px * var(--pr-scale));
+  font-size: max(12px, calc(16px * var(--pr-scale)));
+  font-weight: 700;
+  line-height: calc(19 / 16);
+  color: #666666;
+}
+
+.frame53-left--pr-settings .frame53-primary {
+  width: min(calc(482px * var(--pr-scale)), 100%);
+  padding: calc(24px * var(--pr-scale)) calc(32px * var(--pr-scale));
+  box-sizing: border-box;
+}
+
+.frame53-left--pr-settings .frame53-primary:not(:disabled) {
+  box-shadow: none;
+}
+
+/* 登録完了：本文＋デバッグは内側スクロール、姿勢測定を開始は常にカード下端 */
+.frame53-left--pr-settings {
+  min-height: 0;
+  /* 白カード全体は伸ばさず、はみ出しは .frame53-pr-settings-scroll のみスクロール */
+  overflow-y: hidden;
+}
+
+.frame53-pr-settings-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* スクロール領域の上端を見出しから揃える */
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.frame53-pr-settings-debug {
+  flex-wrap: wrap;
+  margin-top: calc(20px * var(--pr-scale));
+  padding-bottom: calc(8px * var(--pr-scale));
+}
+
+.frame53-footer--pr-settings-cta {
+  flex-shrink: 0;
 }
 
 .frame53-heading {
@@ -152,6 +546,8 @@
 }
 
 .frame53-toggle-strip-label {
+  position: relative;
+  top: calc(-3px * var(--pr-scale));
   color: #666666;
   font-size: max(12px, calc(20px * var(--pr-scale)));
   font-weight: 700;
@@ -252,7 +648,7 @@
   align-self: center;
   width: min(calc(400px * var(--pr-scale)), 100%);
   margin-bottom: calc(24px * var(--pr-scale));
-  padding: calc(24px * var(--pr-scale)) calc(22px * var(--pr-scale));
+  padding: calc(18px * var(--pr-scale)) calc(20px * var(--pr-scale));
   box-sizing: border-box;
   border-radius: calc(16px * var(--pr-scale));
   background: #f5f5f5;
@@ -269,7 +665,7 @@
   display: flex;
   align-items: center;
   gap: calc(14px * var(--pr-scale));
-  margin-bottom: calc(20px * var(--pr-scale));
+  margin-bottom: calc(14px * var(--pr-scale));
 }
 
 .frame53-volume-visible-label {
@@ -283,7 +679,7 @@
 .frame53-volume-range {
   flex: 1 1 auto;
   min-width: 0;
-  height: calc(28px * var(--pr-scale));
+  height: calc(24px * var(--pr-scale));
   accent-color: var(--frame53-point);
 
   appearance: none;
@@ -396,8 +792,8 @@
   appearance: none;
   -webkit-appearance: none;
 
-  padding: calc(14px * var(--pr-scale)) calc(40px * var(--pr-scale))
-    calc(14px * var(--pr-scale)) calc(18px * var(--pr-scale));
+  padding: calc(10px * var(--pr-scale)) calc(40px * var(--pr-scale))
+    calc(10px * var(--pr-scale)) calc(18px * var(--pr-scale));
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: calc(14px * var(--pr-scale));
   background-color: #ffffff;
@@ -490,19 +886,43 @@
   transform: translateY(-1px);
 }
 
-/* Frame 44：ライブカメラ（既定グレーの上に鏡映し映像／失敗時はテキスト） */
+/* Frame 44：測定画面と同じ半透明フレーム＋内側クリップ（カメラスロット） */
 .frame53-camera-panel {
   position: relative;
-  flex: 0 0 calc(681px * var(--pr-scale));
-  width: calc(681px * var(--pr-scale));
+  flex: 0 0 calc(var(--frame53-camera-slot-size) * var(--pr-scale));
+  width: calc(var(--frame53-camera-slot-size) * var(--pr-scale));
   max-width: 100%;
-  height: calc(681px * var(--pr-scale));
-  min-height: calc(681px * var(--pr-scale));
+  height: calc(var(--frame53-camera-slot-size) * var(--pr-scale));
+  min-height: calc(var(--frame53-camera-slot-size) * var(--pr-scale));
   box-sizing: border-box;
-  border-radius: calc(40px * var(--pr-scale));
-  background: #a1a1a1;
+  min-width: 0;
   padding: 0;
+  border-radius: calc(32px * var(--pr-scale));
+  background: #a1a1a1;
+  border: 0;
+  box-shadow: 0 0 calc(8.52px * var(--pr-scale)) rgba(0, 0, 0, 0.15);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+}
+
+/* 内側グレー領域：intro / キャリブ共通スタック */
+.frame53-camera-panel .frame53-camera-stack {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  border-radius: calc(32px * var(--pr-scale));
+  overflow: hidden;
+  background: #a1a1a1;
+}
+
+.frame53-camera-panel .frame53-camera-stack .viewer.viewer--measurement {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: inherit;
 }
 
 .frame53-camera-video {
@@ -552,29 +972,185 @@
   }
 }
 
+/* 姿勢登録ウォームアップ：グレーカード上に Figma 比率のリング＋カウント */
+@keyframes warmup-register-veil-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes warmup-register-stack-in {
+  from {
+    opacity: 0;
+    transform: translateY(calc(-49.5px * var(--pr-scale)))
+      scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(calc(-49.5px * var(--pr-scale))) scale(1);
+  }
+}
+
+@keyframes warmup-register-ring-breathe {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0));
+  }
+  50% {
+    filter: drop-shadow(0 0 calc(12px * var(--pr-scale)) rgba(255, 255, 255, 0.35));
+  }
+}
+
+.warmup-veil--register {
+  background: #a1a1a1;
+  gap: 0;
+  padding: calc(24px * var(--pr-scale));
+  justify-content: center;
+  box-sizing: border-box;
+  animation: warmup-register-veil-in 0.35s ease-out both;
+}
+
+.warmup-veil-register-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Figma: 円を縦中央よりやや上（-49.5px） */
+  transform: translateY(calc(-49.5px * var(--pr-scale)));
+  animation: warmup-register-stack-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.05s
+    both;
+}
+
+.warmup-veil--register .warmup-veil-inner--register {
+  position: relative;
+  width: var(--pr-reg-countdown-d);
+  height: var(--pr-reg-countdown-d);
+  flex: none;
+  animation: warmup-register-ring-breathe 2.4s ease-in-out infinite;
+}
+
+.warmup-veil--register .warmup-veil-ring-track {
+  stroke: rgba(255, 255, 255, 0.28);
+  stroke-width: 20;
+}
+
+.warmup-veil--register .warmup-veil-ring-progress {
+  stroke: #ffffff;
+  stroke-width: 20;
+  stroke-linecap: round;
+}
+
+.warmup-veil--register .warmup-veil-count {
+  font-size: max(52px, var(--pr-reg-countdown-digit-fs));
+  font-weight: 700;
+  line-height: calc(153 / 128);
+  color: #ffffff;
+  text-shadow: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.warmup-veil--register .warmup-veil-label {
+  margin: calc(32px * var(--pr-scale)) 0 0;
+  max-width: calc(100% - 24px * var(--pr-scale));
+  color: #ffffff;
+  font-size: max(16px, var(--pr-reg-countdown-status-fs));
+  font-weight: 700;
+  line-height: calc(43 / 36);
+  letter-spacing: 0;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .warmup-veil--register {
+    animation: none;
+  }
+
+  .warmup-veil-register-stack {
+    animation: none;
+  }
+
+  .warmup-veil--register .warmup-veil-inner--register {
+    animation: none;
+  }
+
+  .warmup-veil--register .warmup-veil-ring-progress {
+    transition: none;
+  }
+}
+
+/* 狭いビューポート：登録／コード読取と同型パネルを縦積み（モバイルブラウザ向け） */
 @media (max-width: 900px) {
+  .flow-screen.frame53-register-screen {
+    padding-left: max(12px, env(safe-area-inset-left, 0px));
+    padding-right: max(12px, env(safe-area-inset-right, 0px));
+    padding-bottom: max(
+      var(--pr-fr1-block-bottom),
+      calc(12px + env(safe-area-inset-bottom, 0px))
+    );
+  }
+
+  .frame53-register-screen .flow-brand {
+    left: max(
+      12px,
+      calc(var(--frame53-scene-offset-x) + 48px * var(--pr-scale)),
+      env(safe-area-inset-left, 0px)
+    );
+    top: max(
+      calc(var(--frame53-scene-offset-y) + 20px * var(--pr-scale)),
+      calc(10px + env(safe-area-inset-top, 0px))
+    );
+    width: calc(120px * var(--pr-scale));
+  }
+
+  .frame53-register-screen .frame53-header-close {
+    right: max(
+      12px,
+      calc(var(--frame53-scene-offset-x) + 56px * var(--pr-scale)),
+      env(safe-area-inset-right, 0px)
+    );
+    top: max(
+      calc(var(--frame53-scene-offset-y) + 44px * var(--pr-scale)),
+      calc(8px + env(safe-area-inset-top, 0px))
+    );
+  }
+
   .frame53-panels-wrap {
-    flex-wrap: wrap;
-    align-content: center;
-    justify-content: center;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-width: min(100%, calc(100vw - 24px));
+    gap: clamp(14px, 4vw, 28px);
   }
 
   .frame53-left {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
+    flex-basis: auto;
+    width: 100%;
+    max-width: 100%;
     height: auto;
-    min-height: 0;
-    max-height: none;
-    align-self: center;
-    /* 内容に合わせて伸び、はみ出しはカード内スクロール（ページと二重にならないよう主要はここ） */
-    overflow-y: auto;
+    min-height: min(400px, 52dvh);
+    max-height: min(620px, 70dvh);
   }
 
   .frame53-camera-panel {
-    order: -1;
-    flex-basis: 100%;
+    flex: 0 0 auto;
     width: 100%;
     max-width: 100%;
-    min-height: unset;
-    height: clamp(260px, 42dvh, calc(681px * var(--pr-scale)));
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 1;
+    max-height: min(92vw, 48dvh);
+    align-self: center;
+  }
+
+  .frame53-primary {
+    min-height: max(48px, calc(77px * var(--pr-scale)));
+  }
+
+  .frame53-footer--pr-intro .frame53-primary {
+    min-height: max(48px, calc(77px * var(--pr-scale)));
+    height: max(48px, calc(77px * var(--pr-scale)));
   }
 }

@@ -1,33 +1,23 @@
-import {
-  forwardRef,
-  type CSSProperties,
-  type MouseEvent,
-  type ReactElement,
-} from "react";
+import { forwardRef, type CSSProperties, type MouseEvent, type ReactElement } from "react";
 
 import type { CharacterDefinition } from "../../characters/types";
 import { getCharacterImageSrc } from "../../characters/characterCatalog";
-import type { PostureTimelineSegment } from "../types";
 
-import { PostureTimelineChart } from "./PostureTimelineChart";
+/** 「78%」形式のラベルを数字と % に分けて表示用にする */
+function splitPercentLabel(label: string): { main: string; suffix: string } | null {
+  const m = /^(\d+)(%)$/.exec(label.trim());
+  return m !== null ? { main: m[1], suffix: m[2] } : null;
+}
 
 export type CharacterResultWhiteCardProps = {
-  portraitMode: "character" | "qr-fail";
+  /** ピンアナゴ未獲得時は acquisition-fail（failed_nago.png） */
+  portraitMode: "character" | "qr-fail" | "acquisition-fail";
   character: CharacterDefinition | null;
   personalityTags: readonly string[];
   goodDurationLabel: string;
   goodRatioLabel: string;
-  timelineSegments: PostureTimelineSegment[];
-  timelineTotalMs: number;
-  timelineVariant: "success" | "fail";
-  /** html-to-image 向けに「良い」ライン色を確定（HEX 推奨） */
-  timelineGoodStrokeResolved: string;
   acquiredAtLabel: string;
   measurementDurationLabel: string;
-  shareBusy: boolean;
-  shareBusyAction?: "share" | "copy" | null;
-  onShareClick: (e: MouseEvent<HTMLButtonElement>) => void;
-  onCopyClick: (e: MouseEvent<HTMLButtonElement>) => void;
   articleClassName?: string;
   articleStyle?: CSSProperties;
   onArticleClick?: (e: MouseEvent<HTMLElement>) => void;
@@ -35,6 +25,8 @@ export type CharacterResultWhiteCardProps = {
   onArticleMouseLeave?: (e: MouseEvent<HTMLElement>) => void;
   /** ダイアログの aria-labelledby 用（任意） */
   characterNameId?: string;
+  /** カード右カラム下部に表示するストーリー（獲得成功画面など） */
+  characterStory?: string | null;
 };
 
 function RegisteredCalendarGlyph() {
@@ -68,26 +60,28 @@ export const CharacterResultWhiteCard = forwardRef<
     personalityTags,
     goodDurationLabel,
     goodRatioLabel,
-    timelineSegments,
-    timelineTotalMs,
-    timelineVariant,
-    timelineGoodStrokeResolved,
     acquiredAtLabel,
     measurementDurationLabel,
-    shareBusy,
-    shareBusyAction = null,
-    onShareClick,
-    onCopyClick,
     articleClassName = "",
     articleStyle,
     onArticleClick,
     onArticleMouseMove,
     onArticleMouseLeave,
     characterNameId,
+    characterStory = null,
   } = props;
 
+  const ratioParts = splitPercentLabel(goodRatioLabel);
+
   const portraitInner: ReactElement =
-    portraitMode === "qr-fail" ? (
+    portraitMode === "acquisition-fail" ? (
+      <img
+        className="result-registered-figure result-registered-figure--acquisition-fail"
+        src="/failed_nago.png"
+        alt=""
+        draggable={false}
+      />
+    ) : portraitMode === "qr-fail" ? (
       <img
         className="result-registered-figure result-registered-figure--qr-fail"
         src="/logo/QRアナゴ.png"
@@ -113,7 +107,7 @@ export const CharacterResultWhiteCard = forwardRef<
   return (
     <article
       ref={ref}
-      className={`result-registered-card ${articleClassName}`.trim()}
+      className={`result-registered-card result-registered-card--detail ${articleClassName}`.trim()}
       aria-label="測定結果"
       style={articleStyle}
       onClick={onArticleClick}
@@ -139,73 +133,8 @@ export const CharacterResultWhiteCard = forwardRef<
 
       <section
         className="result-registered-col result-registered-col--stats"
-        aria-label="統計とタイムライン"
+        aria-label="統計"
       >
-        <div className="result-registered-stats-header">
-          <button
-            type="button"
-            className={`result-registered-share ${
-              shareBusy && shareBusyAction === "share" ? "is-busy" : ""
-            }`}
-            aria-label="結果を画像で共有"
-            title="結果を画像で共有（または保存）します"
-            disabled={shareBusy}
-            aria-disabled={shareBusy}
-            aria-busy={shareBusy && shareBusyAction === "share"}
-            onClick={(e) => {
-              e.stopPropagation();
-              onShareClick(e);
-            }}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              width={20}
-              height={20}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.9}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-              aria-hidden="true"
-            >
-              <circle cx="6.3" cy="12" r="2.15" />
-              <circle cx="17.7" cy="6.4" r="2.15" />
-              <circle cx="17.7" cy="17.6" r="2.15" />
-              <path d="M8.2 11.1 15.8 7.3M8.2 12.9l7.6 3.8" />
-            </svg>
-          </button>
-          <button
-            type="button"
-            className={`result-registered-share result-registered-share--copy ${
-              shareBusy && shareBusyAction === "copy" ? "is-busy" : ""
-            }`}
-            aria-label="結果を画像でコピー"
-            title="結果を画像でコピー"
-            disabled={shareBusy}
-            aria-disabled={shareBusy}
-            aria-busy={shareBusy && shareBusyAction === "copy"}
-            onClick={(e) => {
-              e.stopPropagation();
-              onCopyClick(e);
-            }}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              width={20}
-              height={20}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.9}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-              aria-hidden="true"
-            >
-              <rect x="8" y="8" width="11" height="11" rx="2" />
-              <path d="M5 15V6.8C5 5.8 5.8 5 6.8 5H15" />
-            </svg>
-          </button>
-        </div>
-
         <div className="result-registered-stat-grid">
           <div className="result-registered-stat-cell">
             <span className="result-registered-stat-label">良い姿勢時間</span>
@@ -213,16 +142,18 @@ export const CharacterResultWhiteCard = forwardRef<
           </div>
           <div className="result-registered-stat-cell">
             <span className="result-registered-stat-label">良い姿勢率</span>
-            <strong className="result-registered-stat-value">{goodRatioLabel}</strong>
+            {ratioParts !== null ? (
+              <strong
+                className="result-registered-stat-value result-registered-stat-value--ratio-parts"
+              >
+                <span className="result-registered-stat-value-num">{ratioParts.main}</span>
+                <span className="result-registered-stat-value-suffix">{ratioParts.suffix}</span>
+              </strong>
+            ) : (
+              <strong className="result-registered-stat-value">{goodRatioLabel}</strong>
+            )}
           </div>
         </div>
-
-        <PostureTimelineChart
-          segments={timelineSegments}
-          totalMs={timelineTotalMs}
-          variant={timelineVariant}
-          resolvedGoodStroke={timelineGoodStrokeResolved}
-        />
 
         <dl className="result-registered-meta">
           <div className="result-registered-meta-row">
@@ -244,6 +175,10 @@ export const CharacterResultWhiteCard = forwardRef<
             <dd className="result-registered-meta-value">{measurementDurationLabel}</dd>
           </div>
         </dl>
+
+        {characterStory !== null && characterStory.length > 0 ? (
+          <p className="result-registered-story">{characterStory}</p>
+        ) : null}
       </section>
     </article>
   );

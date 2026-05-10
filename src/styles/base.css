@@ -3,6 +3,13 @@
 :root {
   --app-home-gradient-start: #13a2d7;
   --app-home-gradient-end: #f2edcc;
+  --app-viewport-inline: clamp(1rem, 4.25vw, 4rem);
+  --app-viewport-block: clamp(1rem, 4svh, 3.5rem);
+  --app-control-min-hit: clamp(2.5rem, 7vmin, 3.25rem);
+  --app-radius-panel: clamp(1.25rem, 3vw, 2.5rem);
+  --app-radius-card: clamp(1rem, 2.2vw, 2rem);
+  --app-shadow-soft: 0 clamp(0.75rem, 2vw, 1.5rem)
+    clamp(1.75rem, 4vw, 3.5rem) rgba(18, 54, 65, 0.18);
 
   /*
    * ---------------------------------------------------------------------------
@@ -18,9 +25,9 @@
    * - --flow-brand-offset-y-auto ナビバーと同じ見え方に近づける top の基準
    * ---------------------------------------------------------------------------
    */
-  --flow-brand-base-width: clamp(60px, 6.6vw, 100px);
+  --flow-brand-base-width: clamp(3.75rem, 6.6vw, 6.25rem);
   --flow-brand-scale: 1.3;
-  --flow-brand-offset-x: clamp(20px, -5vw, 64px);
+  --flow-brand-offset-x: var(--app-viewport-inline);
   --flow-brand-offset-y-shift: 0px;
   --flow-brand-height-ratio: 0.34;
 
@@ -28,10 +35,10 @@
     var(--flow-brand-base-width) * var(--flow-brand-scale)
   );
 
-  --home-nav-height: clamp(60px, 7.7dvh, 76px);
+  --home-nav-height: clamp(3.75rem, 7.7dvh, 4.75rem);
 
   --flow-brand-offset-y-auto: max(
-    8px,
+    0.5rem,
     calc(
       (
           var(--home-nav-height) -
@@ -120,9 +127,9 @@ button {
 .flow-screen {
   position: relative;
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
+  min-height: 100svh;
   height: 100dvh;
-  min-height: 0;
   overflow: hidden;
   background:
     linear-gradient(180deg, rgba(32, 169, 209, 0.96) 0%, rgba(114, 196, 205, 0.88) 48%, rgba(239, 238, 202, 0.9) 100%),

@@ -20,6 +20,51 @@
   50%       { translate: 0 -7px; }
 }
 
+/* ヒーローのグラデーションにゆっくり流れる光を重ねる */
+@keyframes home-hero-gradient-drift {
+  0% {
+    background-position: 0% 50%, 100% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%, 0% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%, 100% 50%;
+  }
+}
+
+/* ホームヒーローのアナゴ登場：下からすっと出てきて定位置へ */
+@keyframes home-hero-anago-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(34%) scale(0.96);
+  }
+
+  64% {
+    opacity: 1;
+    transform: translateY(-2.5%) scale(1.015);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 登場後の待機モーション：水中でゆっくり揺れる程度に抑える */
+@keyframes home-hero-anago-idle {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-0.15deg) scale(1);
+  }
+
+  50% {
+    transform: translateY(-8px) rotate(0.3deg) scale(1.006);
+  }
+}
+
 /* ダイアログ出現：スケールアップしながらフェードイン */
 @keyframes home-dialog-scale-in {
   from {
@@ -108,9 +153,50 @@
   }
 }
 
+/* お気に入り追加時：ハート表面をハイライトが一度だけ横切る（background-positionでクリップ不要） */
+@keyframes home-heart-shine-sweep {
+  from {
+    background-position: 118% 50%;
+  }
+
+  to {
+    background-position: -18% 50%;
+  }
+}
+
+@keyframes qr-modal-today-heading-enter {
+  from {
+    opacity: 0;
+    transform: translateY(calc(14px * var(--qr-scale)));
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes qr-modal-today-character-rise {
+  0% {
+    opacity: 0;
+    transform: translateY(20%) scale(0.96);
+  }
+
+  68% {
+    opacity: 1;
+    transform: translateY(-2%) scale(1.012);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .flow-screen.home-single {
   /* ヒーロー（ナビ＋グラデーション）の合計高さ。残り 1/3 が #fdfdfd のコレクション領域 */
   --home-collection-bg-start: clamp(390px, 70dvh, 675px);
+  --home-hero-character-space: clamp(118px, 17vw, 250px);
 
   position: relative;
   isolation: isolate;
@@ -204,6 +290,31 @@
   overflow: visible;
 }
 
+.home-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      112deg,
+      rgba(255, 255, 255, 0) 18%,
+      rgba(255, 255, 255, 0.16) 42%,
+      rgba(255, 255, 255, 0) 66%
+    ),
+    linear-gradient(
+      248deg,
+      rgba(19, 162, 215, 0) 10%,
+      rgba(255, 247, 209, 0.18) 48%,
+      rgba(19, 162, 215, 0) 76%
+    );
+  background-size: 220% 100%, 190% 100%;
+  opacity: 0.72;
+  mix-blend-mode: soft-light;
+  animation: home-hero-gradient-drift 16s ease-in-out infinite;
+}
+
 /* ヒーローコンテンツ：テキスト左・ボタン右の横並び */
 .home-hero-content {
   position: relative;
@@ -213,10 +324,14 @@
   justify-content: space-between;
   width: 100%;
   gap: clamp(16px, 4vw, 80px);
+  min-width: 0;
+  padding-right: var(--home-hero-character-space);
+  box-sizing: border-box;
 }
 
 /* ヒーローコピー：画面マウント時にフェードアップ */
 .home-hero-copy {
+  min-width: 0;
   animation: home-fade-up 0.55s ease both;
 }
 
@@ -236,7 +351,7 @@
   gap: clamp(12px, 1.8dvh, 28px);
   flex-shrink: 0;
   animation: home-fade-up 0.55s ease 0.12s both;
-  margin-right: 170px; 
+  margin-right: 0;
 }
 
 /* 白丸ピルボタン */
@@ -281,10 +396,120 @@
   object-position: bottom center;
   filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.12));
   z-index: 1;
+  transform-origin: center bottom;
+  animation:
+    home-hero-anago-rise 0.82s cubic-bezier(0.18, 0.74, 0.28, 1) 0.08s both,
+    home-hero-anago-idle 5.4s ease-in-out 1.05s infinite;
 }
 
 .home-hero-anago.character-empty {
   display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero::before {
+    animation: none;
+  }
+
+  .home-hero-anago {
+    animation: none;
+  }
+}
+
+@media (max-width: 980px) {
+  .flow-screen.home-single {
+    --home-collection-bg-start: clamp(350px, 68dvh, 590px);
+    --home-hero-character-space: clamp(92px, 18vw, 150px);
+  }
+
+  .home-hero {
+    min-height: clamp(300px, 54dvh, 460px);
+    align-items: center;
+    padding:
+      clamp(22px, 4dvh, 42px)
+      clamp(20px, 5.8vw, 56px);
+  }
+
+  .home-hero-content {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: clamp(18px, 3dvh, 28px);
+  }
+
+  .home-hero-copy h1 {
+    max-width: 16em;
+    line-height: 1.65;
+  }
+
+  .home-hero-actions {
+    width: min(340px, 100%);
+  }
+
+  .home-hero-action-btn {
+    width: 100%;
+  }
+
+  .home-hero-anago {
+    right: clamp(4px, 1.8vw, 18px);
+    height: clamp(150px, 50%, 300px);
+  }
+}
+
+@media (max-width: 760px) {
+  .flow-screen.home-single {
+    --home-hero-character-space: clamp(74px, 16vw, 110px);
+  }
+
+  .home-hero {
+    min-height: clamp(292px, 52dvh, 420px);
+    padding:
+      clamp(18px, 3.4dvh, 30px)
+      clamp(18px, 4.4vw, 32px);
+  }
+
+  .home-hero-content {
+    gap: clamp(14px, 2.8dvh, 22px);
+  }
+
+  .home-hero-copy h1 {
+    font-size: clamp(1.18rem, 3.2vw, 1.42rem);
+    line-height: 1.55;
+  }
+
+  .home-hero-actions {
+    width: min(300px, 100%);
+    gap: clamp(10px, 2dvh, 14px);
+  }
+
+  .home-hero-action-btn {
+    height: clamp(46px, 8.5dvh, 54px);
+    font-size: clamp(0.9rem, 2.6vw, 1.05rem);
+  }
+
+  .home-hero-anago {
+    height: clamp(124px, 42%, 220px);
+    opacity: 0.9;
+  }
+
+  .home-collection {
+    padding-inline: clamp(12px, 3vw, 22px);
+  }
+}
+
+@media (max-height: 620px) {
+  .home-hero {
+    min-height: clamp(250px, 50dvh, 340px);
+    padding-block: clamp(16px, 3dvh, 28px);
+  }
+
+  .home-hero-copy h1 {
+    line-height: 1.48;
+  }
+
+  .home-hero-actions {
+    gap: 10px;
+  }
 }
 
 /* QRパネル：コピーより少し遅れてフェードアップ（後方互換用） */
@@ -441,6 +666,37 @@
   font-weight: 900;
 }
 
+.profile-dialog-debug {
+  padding: 4px 24px 22px;
+  border-top: 1px solid rgba(95, 100, 104, 0.12);
+  margin-top: 4px;
+}
+
+.profile-dialog-debug-label {
+  margin: 0 0 10px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #963232;
+}
+
+.profile-dialog-debug-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.profile-dialog-debug .home-single-debug-story,
+.profile-dialog-debug .home-single-debug-skip {
+  position: static;
+  z-index: auto;
+}
+
+.profile-dialog-debug .home-collection-debug-message {
+  display: block;
+  margin-top: 10px;
+}
+
 /* デバッグ用：スキップボタン共通スタイル */
 .home-single-debug-skip {
   position: relative;
@@ -480,18 +736,14 @@
    * 既定：cqw 非対応環境。cqw が使えるときは直下の @supports で上書き。
    * 横幅 1222 / 縦幅 681（Figma 行レイアウト）に収める等比。
    */
-  --qr-scale: max(
-    0.31,
-    min(
-      1,
-      calc((100vw - 2 * var(--qr-fr1-horizontal-inset) - 20px) / 1222px),
-      calc(
-        (
-            100dvh - var(--qr-fr1-block-top) - var(--qr-fr1-block-bottom) -
-              16px
-          ) /
-          681px
-      )
+  --qr-scale: min(
+    1,
+    calc((100vw - 2 * var(--qr-fr1-horizontal-inset) - 20px) / 1222px),
+    calc(
+      (
+          100dvh - var(--qr-fr1-block-top) - var(--qr-fr1-block-bottom) - 16px
+        ) /
+        681px
     )
   );
 
@@ -525,13 +777,10 @@
 
 @supports (width: 1cqw) {
   .qr-modal-overlay {
-    --qr-scale: max(
-      0.31,
-      min(
-        1,
-        calc((100cqw - 8px) / 1222px),
-        calc((100cqh - 8px) / 681px)
-      )
+    --qr-scale: min(
+      1,
+      calc((100cqw - 8px) / 1222px),
+      calc((100cqh - 8px) / 681px)
     );
   }
 }
@@ -551,29 +800,55 @@
   line-height: 0;
 }
 
-/* 右上・ロゴと対称になるよう同じインデックスで配置 */
+/*
+ * 閉じる：Figma「スマホと接続」1512×982 に合わせる
+ * hugeicons:cancel-circle 相当 56×56、left:1376 → 右インレット (1512-1376-56)=80 px
+ */
 .qr-modal-close {
   position: absolute;
-  top: var(--flow-brand-offset-y);
-  right: var(--flow-brand-offset-x);
   z-index: 11;
-  width: clamp(36px, 4dvh, 46px);
-  height: clamp(36px, 4dvh, 46px);
+  /* 上 64/982：ヘッダー（高さ120）内でロゴ top:40 よりやや下 */
+  top: calc(64 * 100dvh / 982);
+  /* 右 80/1512：ロゴ左 80/1512 と対称 */
+  right: calc(80 * 100vw / 1512);
+  width: clamp(44px, calc(56 * 100vw / 1512), 56px);
+  height: clamp(44px, calc(56 * 100vw / 1512), 56px);
   display: grid;
   place-items: center;
+  padding: 0;
   border: 0;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.28);
-  color: #ffffff;
-  font-size: 1.3rem;
-  font-weight: 900;
-  line-height: 1;
-  transition: background 0.15s;
+  border-radius: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.qr-modal-close-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  pointer-events: none;
 }
 
 .qr-modal-close:hover,
 .qr-modal-close:focus-visible {
-  background: rgba(255, 255, 255, 0.46);
+  opacity: 0.88;
+}
+
+.qr-modal-close:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.95);
+  outline-offset: 3px;
+}
+
+@supports (width: 1cqw) {
+  .qr-modal-close {
+    /* オーバーレイをクエリコンテナにし、パネル列と同じ幅基準で寸法を揃える */
+    top: calc(64 * 100cqh / 982);
+    right: calc(80 * 100cqw / 1512);
+    width: clamp(44px, calc(56 * 100cqw / 1512), 56px);
+    height: clamp(44px, calc(56 * 100cqw / 1512), 56px);
+  }
 }
 
 /*
@@ -614,10 +889,12 @@
 /* 「1」：タイトル下32／副題下62 */
 .qr-modal-left--step1 .qr-modal-title {
   margin: 0 0 calc(32px * var(--qr-scale));
+  font-weight: 800;
 }
 
 .qr-modal-left--step1 .qr-modal-subtitle {
   margin: 0 0 calc(62px * var(--qr-scale));
+  font-weight: 800;
 }
 
 /* 「2」：副題下32 */
@@ -627,6 +904,12 @@
 
 .qr-modal-left--step2 .qr-modal-subtitle {
   margin: 0 0 calc(32px * var(--qr-scale));
+}
+
+/* Step1：電話画像の下端を白カードの下端（内側）に揃える */
+.qr-modal-left--step1 {
+  padding-bottom: 0;
+  overflow: hidden;
 }
 
 /* Step2：触覚波のドロップシャドウが白カード外に広がらないようクリップ */
@@ -660,84 +943,27 @@
   margin: 0;
 }
 
+.qr-modal-left--step1 .qr-modal-phone-area {
+  align-self: stretch;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  align-items: flex-end;
+  justify-content: center;
+}
+
 .qr-modal-phone-img {
   width: auto;
-  max-width: calc(294px * var(--qr-scale));
+  max-width: calc(380px * var(--qr-scale));
   height: auto;
-  max-height: calc(295px * var(--qr-scale));
+  max-height: calc(381px * var(--qr-scale));
   object-fit: contain;
+  object-position: center bottom;
+  display: block;
+  margin-inline: auto;
 }
 
-/* 段2：サウンドと触覚（見た目トラック／ノブのみ） */
-.qr-modal-sound-haptic-toggle-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: calc(12px * var(--qr-scale));
-  min-height: calc(80px * var(--qr-scale));
-  padding: 0 calc(24px * var(--qr-scale));
-  background: #f5f5f5;
-  border-radius: calc(16px * var(--qr-scale));
-}
-
-.qr-modal-sound-haptic-toggle-label {
-  color: #666666;
-  font-size: max(0.9rem, calc(20px * var(--qr-scale)));
-  font-weight: 700;
-  letter-spacing: 0;
-}
-
-.qr-modal-sound-haptic-switch {
-  position: relative;
-  flex-shrink: 0;
-  width: calc(52px * var(--qr-scale));
-  height: calc(28px * var(--qr-scale));
-  padding: 0;
-  border: 0;
-  border-radius: 999px;
-  background: #c4c8cc;
-  cursor: pointer;
-  transition:
-    background 0.18s ease,
-    box-shadow 0.18s ease;
-}
-
-.qr-modal-sound-haptic-switch.is-on {
-  background: #34add5;
-}
-
-.qr-modal-sound-haptic-switch:focus-visible {
-  outline: 2px solid #34add5;
-  outline-offset: calc(3px * var(--qr-scale));
-}
-
-.qr-modal-sound-haptic-switch-knob {
-  position: absolute;
-  top: 50%;
-  left: calc(3px * var(--qr-scale));
-  width: calc(22px * var(--qr-scale));
-  height: calc(22px * var(--qr-scale));
-  border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
-  transform: translateY(-50%);
-  transition: transform 0.18s ease;
-  pointer-events: none;
-}
-
-/* 52 - 22 - 6 = 24px 分ノブを右へ（左右 3px パディング想定） */
-.qr-modal-sound-haptic-switch.is-on .qr-modal-sound-haptic-switch-knob {
-  transform: translateY(-50%) translateX(calc(24px * var(--qr-scale)));
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .qr-modal-sound-haptic-switch,
-  .qr-modal-sound-haptic-switch-knob {
-    transition: none;
-  }
-}
-
-/* 段2：触覚案内用スマホ（phone.png）— 微振動＋ブランド色のゴースト＋波紋アーチ */
+/* Step2：触覚案内用スマホ（phone.png）— 微振動＋波紋アーチ。白カード内で水平中央に揃える */
 @keyframes qr-modal-phone-vibrate {
   0%,
   100% {
@@ -788,11 +1014,18 @@
 }
 
 .qr-modal-vibe-area {
-  flex: 1;
+  flex: 1 1 auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: calc(140px * var(--qr-scale));
+  min-height: 0;
+}
+
+.qr-modal-left--step2 .qr-modal-vibe-area {
+  align-self: stretch;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .qr-modal-vibe-stage {
@@ -862,11 +1095,22 @@
   object-fit: contain;
   transform-origin: 50% 60%;
   animation: qr-modal-phone-vibrate 0.22s ease-in-out infinite;
-  /* 残像：ブランド色のゴーストを左右に薄く重ねて振動感を強調 */
   filter: drop-shadow(0.7px 0 0 rgba(52, 173, 213, 0.32))
     drop-shadow(-0.7px 0 0 rgba(52, 173, 213, 0.32))
     drop-shadow(0 calc(10px * var(--qr-scale)) calc(20px * var(--qr-scale))
       rgba(15, 70, 95, 0.18));
+}
+
+.qr-modal-vibe-area.is-haptic-off .qr-modal-vibe-img {
+  animation: none;
+  transform: none;
+  filter: drop-shadow(0 calc(8px * var(--qr-scale)) calc(18px * var(--qr-scale))
+    rgba(15, 70, 95, 0.16));
+}
+
+.qr-modal-vibe-area.is-haptic-off .qr-modal-vibe-arcs path {
+  animation: none;
+  opacity: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -878,6 +1122,11 @@
   .qr-modal-vibe-arcs path {
     opacity: 0.7;
   }
+}
+
+.qr-modal-left--step1 .qr-modal-error-label {
+  margin: calc(12px * var(--qr-scale)) 0 calc(8px * var(--qr-scale));
+  flex-shrink: 0;
 }
 
 .qr-modal-error-label {
@@ -957,19 +1206,13 @@
 .qr-modal-right--step1 {
   /*
    * グレーアナゴ：座標系は .qr-modal-qr-composite（正方形）のみ。
-   * 位置・サイズをすべて「箱に対する %」で統一すると、ウィンドウで箱が縮んでもタイル上の見え方が不変になる。
-   * --qr-anago-scale は見た目の倍率のみ（レイアウト % とは掛け合わせない）。
+   * --qr-anago-scale … height/max に掛ける。`82 * 1% * var()` のように % を真ん中に挟むと WebKit で無効になりやすいので `82 * var() * 1%` に統一。
    */
-  --qr-anago-scale: 2;
-  /* 箱の高さに対する高さの目安（object-fit: contain） */
-  --qr-anago-height-pct-of-box: 82;
-  /* 箱の幅に対する横方向の上限 */
-  --qr-anago-max-width-pct-of-box: 42;
-  /* 箱の下端基準オフセット（負＝下端よりはみ出し）：箱の高さの % */
-  --qr-anago-anchor-bottom-pct: -107.08;
-  /* 水平：箱中央(50%) からのずれを箱「幅」の % で指定（正で右へ）*/
+  --qr-anago-scale: 1.72;
+  --qr-anago-height-pct-of-box: 78;
+  --qr-anago-max-width-pct-of-box: 40;
+  --qr-anago-anchor-bottom-pct: -18;
   --qr-anago-shift-x-pct-of-box: 5;
-  /* 縦追加：anchor-bottom と加算される箱「高さ」の %（正で視覚的に少し下へ／負で上へ）*/
   --qr-anago-shift-y-pct-add-to-bottom-pct: 0;
 
   /* 白マット・パネル余白は据え置き、QR ビットマップだけ縮小（合成正方形の一辺に対する幅 %） */
@@ -1017,7 +1260,7 @@
   justify-content: center;
 }
 
-/* 半透明は step1。合成内は白→アナゴ→QR（z-index で奥手前を固定） */
+/* step1：合成内は白→アナゴ→QR（z-index で奥手前を固定） */
 .qr-modal-qr-white-mat {
   position: absolute;
   inset: 0;
@@ -1037,12 +1280,14 @@
       ) * 1%
   );
   width: auto;
-  height: calc(var(--qr-anago-height-pct-of-box, 82) * 1% * var(--qr-anago-scale, 1));
+  height: calc(
+    var(--qr-anago-height-pct-of-box, 82) * var(--qr-anago-scale, 1) * 1%
+  );
   max-height: calc(
-    var(--qr-anago-height-pct-of-box, 82) * 1% * var(--qr-anago-scale, 1)
+    var(--qr-anago-height-pct-of-box, 82) * var(--qr-anago-scale, 1) * 1%
   );
   max-width: calc(
-    var(--qr-anago-max-width-pct-of-box, 42) * 1% * var(--qr-anago-scale, 1)
+    var(--qr-anago-max-width-pct-of-box, 42) * var(--qr-anago-scale, 1) * 1%
   );
   transform: translateX(-50%);
   object-fit: contain;
@@ -1090,19 +1335,19 @@
  * --qr-today-teaser-shift-x-cqw / -y-cqh … ティザーブロック全体の translate
  * --qr-today-char-max-cqw / -cqh … キャラ画像の max-width / max-height
  * --qr-today-teaser-extra-gap-cqh … 見出しとキャラの間隔
- * layout: キャラの目標の高さ = --qr-today-char-max-cqh × 1cqh でグリッド2行を分け、
- *   「残り領域」で画像を勝手に潰さない（見出しと画像の縦オーバーラップのみ防止）
+ * layout: 見出しを固定し、キャラは残り領域内で max-size だけを指定する。
+ *   min-height をパネルより大きくしないことで、どの解像度でも見切れを防ぐ。
  */
 .qr-modal-right--step2 {
   /* 見出し・キャラの cqw/cqh はこのパネル（コンテンツボックス）基準 */
   container-type: size;
   container-name: qr-step2;
-  --qr-today-heading-cqw: 6.32;
+  --qr-today-heading-cqw: 5.8;
   --qr-today-teaser-shift-x-cqw: 0;
-  --qr-today-teaser-shift-y-cqh: 20;
-  --qr-today-char-max-cqw: 48;
-  --qr-today-char-max-cqh: 160;
-  --qr-today-teaser-extra-gap-cqh: 11.06;
+  --qr-today-teaser-shift-y-cqh: 15;
+  --qr-today-char-max-cqw: 64;
+  --qr-today-char-max-cqh: 85;
+  --qr-today-teaser-extra-gap-cqh: 5.5;
 
   flex: 0 0 calc(681px * var(--qr-scale));
   width: 100%;
@@ -1113,8 +1358,8 @@
   align-items: stretch;
   justify-content: flex-start;
   gap: 0;
-  padding: calc(36px * var(--qr-scale)) calc(40px * var(--qr-scale))
-    calc(36px * var(--qr-scale));
+  /* キャラ足元をカード下端（内側）に接するため下パディングなし */
+  padding: calc(36px * var(--qr-scale)) calc(40px * var(--qr-scale)) 0;
   border-radius: var(--qr-frost-radius);
   background: var(--qr-frost-fill);
   backdrop-filter: blur(var(--qr-frost-blur));
@@ -1132,15 +1377,12 @@
   width: 100%;
   display: grid;
   grid-template-columns: 1fr;
-  /*
-   * 行1：見出し / 行2：キャラ専用。行2 の最小高さを max-cqh と揃えるため、
-   * 開発者指定のサイズどおりレイアウトできる（親の残余高だけで頭を潰さない）。
-   */
-  grid-template-rows: auto minmax(
-    calc(var(--qr-today-char-max-cqh, 82) * 1cqh),
-    1fr
+  grid-template-rows: auto minmax(0, 1fr);
+  row-gap: clamp(
+    calc(18px * var(--qr-scale)),
+    calc(var(--qr-today-teaser-extra-gap-cqh, 5.5) * 1cqh),
+    calc(42px * var(--qr-scale))
   );
-  row-gap: calc(var(--qr-today-teaser-extra-gap-cqh, 2.06) * 1cqh);
   align-items: stretch;
   justify-items: stretch;
   transform: translate(
@@ -1172,25 +1414,15 @@
     z-index: 2;
   }
 
-  /*
-   * フラット環境でも「キャラ用の縦」を確保（150 ≒ 既定82に対して比率で伸ばせるように）
-   * 係数 は --qr-today-char-max-cqh の数値に比例（コンテナクエリ換算ではない）。
-   */
   .qr-modal-today-character {
     flex: 1 1 0;
-    min-height: max(
-      calc(280px * var(--qr-scale)),
-      calc(var(--qr-today-char-max-cqh, 82) / 82 * 320px * var(--qr-scale))
-    );
+    min-height: calc(280px * var(--qr-scale));
     overflow: hidden;
   }
 
   .qr-modal-right--step2 .qr-modal-today-character-img {
-    max-height: calc(
-      560px * var(--qr-scale) *
-        min(2.75, calc(var(--qr-today-char-max-cqh, 82) / 82))
-    );
-    max-width: min(96%, calc(48% * var(--qr-today-char-max-cqw, 48) / 48));
+    max-height: calc(430px * var(--qr-scale));
+    max-width: min(96%, calc(64% * var(--qr-today-char-max-cqw, 64) / 64));
   }
 }
 
@@ -1203,6 +1435,7 @@
   letter-spacing: 0;
   line-height: 1.2;
   text-shadow: 0 1px 14px rgba(12, 60, 80, 0.25);
+  animation: qr-modal-today-heading-enter 0.48s ease 0.08s both;
 }
 
 @supports not (width: 1cqw) {
@@ -1213,7 +1446,7 @@
   }
 }
 
-/* グリッド2行目：開発者指定の縦サイズブロックは template-rows で確保済み */
+/* グリッド2行目：残り領域の下端にキャラを接する */
 .qr-modal-today-character {
   grid-row: 2;
   display: flex;
@@ -1233,6 +1466,7 @@
   max-width: calc(var(--qr-today-char-max-cqw, 48) * 1cqw);
   object-fit: contain;
   object-position: center bottom;
+  display: block;
   filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.12));
 }
 
@@ -1275,17 +1509,23 @@
 
 .qr-modal-today-character--animated img.character-figure.qr-modal-today-character-img {
   transform-origin: 50% 92%;
-  animation: qr-modal-today-character-idle 4.2s ease-in-out infinite;
+  animation:
+    qr-modal-today-character-rise 0.72s cubic-bezier(0.18, 0.74, 0.28, 1)
+      0.18s both,
+    qr-modal-today-character-idle 4.2s ease-in-out 1s infinite;
 }
 
 .qr-modal-today-character--animated
   .qr-modal-today-character-img.character-empty {
   transform-origin: 50% 90%;
-  animation: qr-modal-today-character-placeholder-idle 3.8s ease-in-out
-    infinite;
+  animation:
+    qr-modal-today-character-rise 0.72s cubic-bezier(0.18, 0.74, 0.28, 1)
+      0.18s both,
+    qr-modal-today-character-placeholder-idle 3.8s ease-in-out 1s infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .qr-modal-right--step2 .qr-modal-today-heading,
   .qr-modal-today-character--animated img.character-figure.qr-modal-today-character-img,
   .qr-modal-today-character--animated .qr-modal-today-character-img.character-empty {
     animation: none;
@@ -1295,27 +1535,6 @@
     opacity: 0.42;
     transform: none;
   }
-}
-
-/* Frame外：機能用（FigmaのFrame 44コンテンツ外に置くとSpecと整合） */
-.qr-modal-right-col .qr-modal-refresh-btn {
-  flex-shrink: 0;
-}
-
-.qr-modal-refresh-btn {
-  border: 1px solid rgba(255, 255, 255, 0.52);
-  border-radius: 999px;
-  padding: 8px 18px;
-  background: rgba(255, 255, 255, 0.22);
-  color: #ffffff;
-  font-size: 0.82rem;
-  font-weight: 700;
-  transition: background 0.15s;
-}
-
-.qr-modal-refresh-btn:hover,
-.qr-modal-refresh-btn:focus-visible {
-  background: rgba(255, 255, 255, 0.38);
 }
 
 .qr-modal-debug-actions {
@@ -1396,7 +1615,7 @@
   flex: 1;
   /* ヒーロー下端のグラデーション末尾に少し被せて自然につなぐ */
   margin-top: clamp(-20px, -2dvh, -12px);
-  padding: clamp(24px, 4.2dvh, 42px) clamp(14px, 4vw, 62px)
+  padding: clamp(24px, 4.2dvh, 42px) clamp(12px, 3.2vw, 54px)
     clamp(26px, 6dvh, 54px);
   border-radius: clamp(24px, 4vw, 36px) clamp(24px, 4vw, 36px) 0 0;
   background: #fdfdfd;
@@ -1407,8 +1626,10 @@
   position: relative;
   z-index: 4;
   display: flex;
+  flex-wrap: wrap;
   align-items: baseline;
   gap: clamp(20px, 3.8vw, 57px);
+  row-gap: 8px;
   margin-bottom: clamp(16px, 2.5vw, 28px);
   /* ヒーローより遅れてフェードアップ */
   animation: home-fade-up 0.5s ease 0.32s both;
@@ -1474,25 +1695,44 @@
 
 /* Figmaデザイン基準：カラム間隔は1512px幅で33px ≒ 2.18% */
 .home-collection-grid {
+  /* キャラ画像の一括レイアウト調整（ここだけ変更すれば全カードに反映） */
+  --home-char-x: 50%;
+  --home-char-y: -55%;
+  --home-char-height: 188%;
+  --home-char-scale: 0.7;
+
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(14px, 2.2vw, 33px);
+  gap: clamp(8px, 1.6vw, 24px);
   justify-content: stretch;
 }
 
-/* キャラクターカード：スロットごとに遅延フェードアップ（--card-anim-delayをJSXで注入） */
-.home-character-slot,
-.home-character-card.is-locked {
-  animation: home-fade-up 0.42s ease var(--card-anim-delay, 0ms) both;
+@media (max-width: 980px) {
+  .home-collection-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
+
+@media (max-width: 640px) {
+  .home-collection-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* キャラクターカード：スロットごとに遅延フェードアップ（--card-anim-delayをJSXで注入） */
 
 /* キャラクターカード（slotラッパで包んでハートボタンを重ねる） */
 /* 3Dチルト：--tilt-x / --tilt-y / --tilt-lift はJSのmousemoveハンドラで更新 */
 .home-character-slot {
+  --home-card-image-row: 66.4%;
+
   position: relative;
   display: grid;
-  /* container query unitsを使って、カード幅に応じてフォントなどをスケール */
-  container-type: inline-size;
+  min-width: 0;
+  /* 行の高さを常に確保（size containment のみのスロットが潰れるのを防ぐ） */
+  aspect-ratio: 300.65 / 416.8;
+  container-type: size;
+  animation: home-fade-up 0.42s ease var(--card-anim-delay, 0ms) both;
 
   /* チルト変数の初期値 */
   --tilt-x: 0deg;
@@ -1513,6 +1753,14 @@
   will-change: transform, filter;
 }
 
+/* 未獲得：チルト・影は不要（意図を明示） */
+.home-character-slot.is-locked-slot {
+  filter: none;
+  transform: none;
+  transition: none;
+  will-change: auto;
+}
+
 /* ホバー時：シャドウを強化（ドロップシャドウはtransformと合成されて自然に見える） */
 .home-character-slot:has(.home-character-card.is-acquired:hover),
 .home-character-slot:has(.home-character-card.is-acquired:focus-visible) {
@@ -1521,24 +1769,28 @@
 
 .home-character-slot > .home-character-card {
   width: 100%;
+  height: 100%;
 }
 
-/* Figmaデザイン基準：300×417 (≈ 5:7)、border-radius 33px (カード幅の11%) */
+/* Figma基準カード比率: 300.65 x 416.8。
+   どの表示環境でも縦横比が崩れないようaspect-ratioで固定する。 */
 .home-character-card {
+  --home-card-image-row: 66.4%;
+
   position: relative;
   min-height: 0;
-  aspect-ratio: 300 / 417;
+  aspect-ratio: 300.65 / 416.8;
   padding: 0;
-  border-radius: clamp(22px, 11cqw, 33px);
+  border-radius: clamp(18px, 2.2vw, 33px);
   background: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.4);
   box-shadow: 0 10px 22px rgba(63, 92, 96, 0.1);
   text-align: left;
+  container-type: size;
 }
 
 .home-character-card.is-acquired {
-  display: grid;
-  grid-template-rows: 1fr auto;
+  display: block;
   overflow: hidden;
 }
 
@@ -1633,6 +1885,35 @@
   animation: home-acquired-card-glitter 0.46s ease-out;
 }
 
+/* カード全体ではなくハートボタン円内だけにグロス帯（::after を inset:0 + 角丸でマスク） */
+.home-character-slot.is-heart-sparkling .home-favorite-heart::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    104deg,
+    rgba(255, 255, 255, 0) 34%,
+    rgba(255, 255, 255, 0.28) 44%,
+    rgba(255, 255, 255, 0.88) 50%,
+    rgba(255, 255, 255, 0.3) 56%,
+    rgba(255, 255, 255, 0) 66%
+  );
+  background-size: 280% 100%;
+  background-position: 118% 50%;
+  background-repeat: no-repeat;
+  mix-blend-mode: soft-light;
+  animation: home-heart-shine-sweep 0.5s cubic-bezier(0.2, 0.85, 0.28, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-character-slot.is-heart-sparkling .home-favorite-heart::after {
+    animation: none;
+    opacity: 0;
+  }
+}
+
 .home-character-card.is-locked {
   display: grid;
   place-items: center;
@@ -1661,57 +1942,62 @@
   pointer-events: none;
 }
 
-/* Figmaデザイン基準：プレビューはカード辺から13.18px (4.4%) inset、border-radius 26.36px (8.8%) */
+/* Figmaデザイン基準：プレビューはカード辺から13.18px(=4.38%) inset、
+   角丸26.36px(=8.77%)。比率で指定し、カードサイズ変更時も同率を維持する。 */
 .home-character-preview {
-  position: relative;
-  aspect-ratio: 1;
-  margin: clamp(9px, 4.4cqw, 13px) clamp(9px, 4.4cqw, 13px) 0;
-  border-radius: clamp(18px, 8.8cqw, 26px);
+  position: absolute;
+  left: 4.38cqw;
+  top: 3.16cqh;
+  width: 91.24cqw;
+  height: 66.40cqh;
+  min-height: 0;
+  border-radius: 8.77cqw;
   background: var(--home-character-soft-color, #d1d1d1);
   overflow: hidden;
 }
 
 .home-card-character {
-  --home-collection-character-scale: 1.6;
-  --home-collection-character-x: 0;
-  --home-collection-character-y: 70%;
-  --home-collection-character-position: center bottom;
-
-  width: 100%;
-  height: 100%;
+  position: absolute;
+  left: var(--home-char-x, 50%);
+  bottom: var(--home-char-y, -60%);
+  width: auto;
+  height: var(--home-char-height, 188%);
+  max-width: none;
   min-height: 0;
   object-fit: contain;
-  object-position: var(--home-collection-character-position);
+  object-position: center bottom;
   filter: drop-shadow(10px 12px 8px rgba(23, 31, 41, 0.28));
-  transform: translate(
-      var(--home-collection-character-x),
-      var(--home-collection-character-y)
-    )
-    scale(var(--home-collection-character-scale));
+  transform: translateX(-50%) scale(var(--home-char-scale, 1));
   transform-origin: center bottom;
 }
 
-/* 本文：横paddingはカード幅の8%、上7%、下10%。狭いカードでは詰める */
+/* 情報領域は画像領域とは別row。テキストが画像側へ押し上がらないようここで閉じる。 */
 .home-character-body {
-  position: relative;
-  z-index: 2;
-  display: grid;
-  gap: clamp(12px, 6.7cqw, 20px);
-  min-width: 0;
-  padding: clamp(12px, 7cqw, 21px) clamp(12px, 8cqw, 24px) clamp(18px, 10cqw, 30px);
+  display: contents;
 }
 
 /* キャラ名：Figma基準 26.36px (8.79%)。
    - 狭いカードでも溢れないようminを13px (0.82rem) まで下げる
    - 右側はハートサイズに合わせて padding-right を確保 */
 .home-character-name {
+  position: absolute;
+  left: 7.95cqw;
+  top: 74.70cqh;
+  width: 52.55cqw;
+  z-index: 3;
   margin: 0;
   min-width: 0;
-  padding-right: clamp(44px, 24cqw, 80px);
+  padding-right: 0;
   color: #000000;
-  font-size: clamp(0.82rem, 8.8cqw, 1.7rem);
+  display: -webkit-box;
+  line-clamp: 2;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: clamp(17px, 8.77cqw, 26.36px);
   font-weight: 700;
-  line-height: 1.2;
+  font-synthesis: weight;
+  line-height: clamp(21px, 7.44cqh, 31px);
   letter-spacing: 0;
   overflow-wrap: anywhere;
   word-break: keep-all;
@@ -1719,23 +2005,36 @@
 
 /* タグ列：gapもfluid化して狭いカードで圧縮 */
 .home-character-tags {
+  position: absolute;
+  left: 7.98cqw;
+  top: 86.66cqh;
+  z-index: 3;
   display: flex;
-  flex-wrap: wrap;
-  gap: clamp(5px, 2.7cqw, 8px);
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 2.66cqw;
   min-width: 0;
+  min-height: 0;
+  max-width: 84cqw;
+  overflow: hidden;
 }
 
 /* タグ：Figma SF Pro Bold 12px (4%)、padding 横8px (2.67%) 縦6px (2%)。
    狭いカードでもバランスが崩れないようpadding/フォント共にfluid化 */
 .home-tag {
-  padding: clamp(2px, 2cqw, 6px) clamp(5px, 2.7cqw, 8px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: clamp(20px, 6.24cqh, 26px);
+  padding: 0 clamp(6px, 2.66cqw, 8px);
   border-radius: 999px;
   color: var(--home-character-color, #53555a);
   background: color-mix(in srgb, var(--home-character-color, #53555a) 20%, #ffffff);
-  font-size: clamp(0.6rem, 4cqw, 0.78rem);
+  font-size: clamp(10px, 3.99cqw, 12px);
   font-weight: 700;
+  font-synthesis: weight;
   letter-spacing: 0;
-  line-height: 1.2;
+  line-height: clamp(12px, 3.36cqh, 14px);
   white-space: nowrap;
 }
 
@@ -1745,19 +2044,20 @@
    - off/on いずれもFigmaの「お気に入り」赤で、形状のみで状態を区別 */
 .home-favorite-heart {
   position: absolute;
-  top: 74.6%;
-  right: 5.9%;
+  /* Figma基準位置: x=238, y=311, size=40 (300.65x416.8内) */
+  top: 74.62cqh;
+  right: 7.53cqw;
   z-index: 3;
   display: grid;
   place-items: center;
-  width: clamp(32px, 16cqw, 56px);
-  height: clamp(32px, 16cqw, 56px);
+  width: clamp(28px, 13.31cqw, 40px);
+  height: clamp(28px, 13.31cqw, 40px);
   border: 0;
   border-radius: 999px;
   padding: 0;
   background: transparent;
   color: #ea4949;
-  font-size: clamp(1.5rem, 12cqw, 2.2rem);
+  font-size: clamp(22px, 8.77cqw, 32px);
   line-height: 1;
   transition:
     color 0.15s ease,
@@ -1783,10 +2083,82 @@
   color: #d63d3d;
 }
 
+/* container query非対応環境向けフォールバック。
+   cqw/cqhを使わず、同じ比率を%で維持する。 */
+@supports not (container-type: size) {
+  .home-character-preview {
+    left: 4.38%;
+    top: 3.16%;
+    width: 91.24%;
+    height: 66.4%;
+    border-radius: 8.77%;
+  }
+
+  .home-character-name {
+    left: 7.95%;
+    top: 74.7%;
+    width: 52.55%;
+    font-size: clamp(17px, 1.85vw, 26.36px);
+    line-height: clamp(21px, 2.2vw, 31px);
+  }
+
+  .home-character-tags {
+    left: 7.98%;
+    top: 86.66%;
+    gap: clamp(6px, 0.7vw, 10px);
+    max-width: 84%;
+  }
+
+  .home-tag {
+    height: clamp(20px, 2.1vw, 26px);
+    padding: 0 clamp(6px, 0.64vw, 8px);
+    font-size: clamp(10px, 0.85vw, 12px);
+    line-height: clamp(12px, 1vw, 14px);
+  }
+
+  .home-favorite-heart {
+    top: 74.62%;
+    right: 7.53%;
+    width: clamp(28px, 2.65vw, 40px);
+    height: clamp(28px, 2.65vw, 40px);
+    font-size: clamp(22px, 2.35vw, 32px);
+  }
+}
+
+/* 極端に狭い/低い画面では情報密度を少し圧縮して崩れを防ぐ。 */
+@media (max-width: 920px), (max-height: 760px) {
+  .home-character-name {
+    width: 56%;
+    font-size: clamp(15px, 1.6vw, 22px);
+    line-height: clamp(18px, 2vw, 28px);
+  }
+
+  .home-character-tags {
+    max-width: 86%;
+    gap: clamp(5px, 0.65vw, 9px);
+  }
+
+  .home-tag {
+    font-size: clamp(9.5px, 0.78vw, 11px);
+  }
+
+  .home-favorite-heart {
+    right: 6.4%;
+  }
+}
+
 .home-locked-slot {
-  font-size: clamp(3.2rem, 5vw, 5.8rem);
+  position: relative;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-size: clamp(1.9rem, 4.6vw, 5.8rem);
   font-weight: 900;
+  line-height: 1;
   letter-spacing: 0.03em;
+  font-variant-numeric: tabular-nums;
 }
 
 /* コレクション詳細ダイアログ */
@@ -1796,7 +2168,7 @@
   z-index: 2500;
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: clamp(1rem, 4vw, 1.5rem);
   background: rgba(16, 38, 46, 0.48);
 }
 
@@ -1807,10 +2179,10 @@
 
 .collection-detail-dialog {
   position: relative;
-  width: min(860px, 100%);
-  max-height: min(780px, calc(100vh - 48px));
+  width: min(53.75rem, 100%);
+  max-height: min(48.75rem, calc(100dvh - clamp(2rem, 8vw, 3rem)));
   overflow: auto;
-  border-radius: 30px;
+  border-radius: var(--app-radius-panel);
   background: transparent;
   border: 0;
   box-shadow: none;
@@ -1827,24 +2199,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 26px 24px 14px;
-}
-
-.collection-detail-eyebrow {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.94);
-  font-size: clamp(0.92rem, 1.5vw, 1rem);
-  font-weight: 800;
-  text-shadow: 0 2px 10px rgba(0, 40, 60, 0.18);
+  gap: clamp(0.5rem, 2vw, 0.75rem);
+  padding: clamp(1.25rem, 4vw, 1.625rem) clamp(1rem, 4vw, 1.5rem)
+    clamp(0.65rem, 2vw, 0.875rem);
 }
 
 .collection-detail-close {
   position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 36px;
-  height: 36px;
+  top: clamp(0.875rem, 3vw, 1.25rem);
+  right: clamp(0.875rem, 3vw, 1.25rem);
+  width: clamp(2rem, 8vw, 2.25rem);
+  height: clamp(2rem, 8vw, 2.25rem);
   border: 0;
   border-radius: 999px;
   display: grid;
@@ -1857,16 +2222,23 @@
   box-shadow: 0 8px 16px rgba(18, 54, 65, 0.18);
 }
 
-/* 白カード本体は result.css の .result-registered-card に統一 */
-.collection-detail-dialog .result-registered-card {
-  width: min(720px, calc(100% - 36px));
-  margin: 0 auto 16px;
+/* 白カード＋カード外アクションは result.css のブロックレイアウトに統一 */
+.collection-detail-dialog .result-registered-card-block {
+  width: min(calc(45rem + 64px + 22px), calc(100% - clamp(1.25rem, 6vw, 2.25rem)));
+  margin: 0 auto clamp(0.75rem, 3vw, 1rem);
+}
+
+.collection-detail-dialog .result-registered-card-block .result-registered-card {
+  width: min(45rem, 100%);
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 /* 共有対象外：ストーリーは白カードの下に配置 */
 .collection-detail-story-below {
-  width: min(720px, calc(100% - 36px));
-  margin: 0 auto 16px;
+  width: min(45rem, calc(100% - clamp(1.25rem, 6vw, 2.25rem)));
+  margin: 0 auto clamp(0.75rem, 3vw, 1rem);
   padding: clamp(14px, 2.5vw, 20px) clamp(16px, 3vw, 22px);
   border-radius: clamp(18px, 3vw, 24px);
   background: rgba(255, 255, 255, 0.96);
@@ -1890,9 +2262,9 @@
 }
 
 .collection-detail-share-feedback {
-  margin: 0 auto 12px;
+  margin: 0 auto clamp(0.5rem, 2vw, 0.75rem);
   min-height: 1.1rem;
-  max-width: min(720px, calc(100% - 36px));
+  max-width: min(45rem, calc(100% - clamp(1.25rem, 6vw, 2.25rem)));
   text-align: center;
   font-size: 0.78rem;
   font-weight: 700;

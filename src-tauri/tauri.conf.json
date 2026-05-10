@@ -14,8 +14,8 @@
     "windows": [
       {
         "title": "PiiiN",
-        "width": 1200,
-        "height": 800,
+        "width": 1000,
+        "height": 700,
         "minWidth": 720,
         "minHeight": 540
       }

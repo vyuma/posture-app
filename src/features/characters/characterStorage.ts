@@ -1,5 +1,4 @@
 import type { AcquiredCharacter } from "./types";
-import type { PostureTimelineSegment } from "../flow/types";
 import { normalizeCharacterId } from "./characterIds";
 
 const ACQUIRED_CHARACTERS_STORAGE_KEY = "posture.characters.acquired.v1";
@@ -56,50 +55,19 @@ function isAcquiredCharacter(value: unknown): value is AcquiredCharacter {
     typeof candidate.measurementId === "string" &&
     isOptionalNumber(candidate.activeMeasurementMs) &&
     isOptionalNumber(candidate.goodMs) &&
-    isOptionalNumber(candidate.goodRatio) &&
-    isOptionalPostureTimeline(candidate.postureTimeline)
+    isOptionalNumber(candidate.goodRatio)
   );
 }
 
-function isOptionalPostureTimeline(
-  value: unknown,
-): value is PostureTimelineSegment[] | undefined {
-  if (value === undefined) {
-    return true;
-  }
-  if (!Array.isArray(value)) {
-    return false;
-  }
-  return value.every(isPostureTimelineSegment);
-}
-
-function isPostureTimelineSegment(
-  value: unknown,
-): value is PostureTimelineSegment {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-  const candidate = value as Record<string, unknown>;
-  return (
-    typeof candidate.startMs === "number" &&
-    typeof candidate.endMs === "number" &&
-    typeof candidate.isGood === "boolean"
-  );
-}
-
-function normalizeAcquiredCharacter(
-  character: AcquiredCharacter,
-): AcquiredCharacter {
-  const next: AcquiredCharacter = {
-    ...character,
+function normalizeAcquiredCharacter(character: AcquiredCharacter): AcquiredCharacter {
+  return {
     characterId: normalizeCharacterId(character.characterId),
+    acquiredAt: character.acquiredAt,
+    measurementId: character.measurementId,
+    activeMeasurementMs: character.activeMeasurementMs,
+    goodMs: character.goodMs,
+    goodRatio: character.goodRatio,
   };
-  if (next.postureTimeline !== undefined) {
-    next.postureTimeline = next.postureTimeline.map((segment) => ({
-      ...segment,
-    }));
-  }
-  return next;
 }
 
 function dedupeAcquiredCharacters(characters: AcquiredCharacter[]) {
