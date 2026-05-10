@@ -28,13 +28,10 @@
    * 1 固定だと QHD 級で余白ばかりで「潰れた」印象になるため、緩い上限にする。
    * JS（useLiveFigmaPrScaleStyle）が main に --pr-scale を上書きする場合は visualViewport 基準で MobileConnect と一致。
    */
-  --pr-scale: max(
-    0.31,
-    min(
-      1.35,
-      calc(100vw / 1512px),
-      calc(100dvh / 982px)
-    )
+  --pr-scale: min(
+    1.35,
+    calc(100vw / 1512px),
+    calc(100dvh / 982px)
   );
 
   padding: var(--pr-fr1-block-top) 0 var(--pr-fr1-block-bottom);
@@ -1080,5 +1077,80 @@
 
   .warmup-veil--register .warmup-veil-ring-progress {
     transition: none;
+  }
+}
+
+/* 狭いビューポート：登録／コード読取と同型パネルを縦積み（モバイルブラウザ向け） */
+@media (max-width: 900px) {
+  .flow-screen.frame53-register-screen {
+    padding-left: max(12px, env(safe-area-inset-left, 0px));
+    padding-right: max(12px, env(safe-area-inset-right, 0px));
+    padding-bottom: max(
+      var(--pr-fr1-block-bottom),
+      calc(12px + env(safe-area-inset-bottom, 0px))
+    );
+  }
+
+  .frame53-register-screen .flow-brand {
+    left: max(
+      12px,
+      calc(var(--frame53-scene-offset-x) + 48px * var(--pr-scale)),
+      env(safe-area-inset-left, 0px)
+    );
+    top: max(
+      calc(var(--frame53-scene-offset-y) + 20px * var(--pr-scale)),
+      calc(10px + env(safe-area-inset-top, 0px))
+    );
+    width: calc(120px * var(--pr-scale));
+  }
+
+  .frame53-register-screen .frame53-header-close {
+    right: max(
+      12px,
+      calc(var(--frame53-scene-offset-x) + 56px * var(--pr-scale)),
+      env(safe-area-inset-right, 0px)
+    );
+    top: max(
+      calc(var(--frame53-scene-offset-y) + 44px * var(--pr-scale)),
+      calc(8px + env(safe-area-inset-top, 0px))
+    );
+  }
+
+  .frame53-panels-wrap {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-width: min(100%, calc(100vw - 24px));
+    gap: clamp(14px, 4vw, 28px);
+  }
+
+  .frame53-left {
+    flex: 0 1 auto;
+    flex-basis: auto;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: min(400px, 52dvh);
+    max-height: min(620px, 70dvh);
+  }
+
+  .frame53-camera-panel {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 1;
+    max-height: min(92vw, 48dvh);
+    align-self: center;
+  }
+
+  .frame53-primary {
+    min-height: max(48px, calc(77px * var(--pr-scale)));
+  }
+
+  .frame53-footer--pr-intro .frame53-primary {
+    min-height: max(48px, calc(77px * var(--pr-scale)));
+    height: max(48px, calc(77px * var(--pr-scale)));
   }
 }

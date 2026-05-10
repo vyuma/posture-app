@@ -5,7 +5,7 @@ import { computeFigmaScenePrScale } from "../utils/figmaSceneScale";
 
 /**
  * `visualViewport` 変化で `--pr-scale` を同期（Frame53 登録フロー用）。
- * CSS の fallback max/min と同じ clamp は computeFigmaScenePrScale 側で統一。
+ * スケールは 1512×982 が viewport に収まる raw を上限 1.35 で抑える（computeFigmaScenePrScale）。
  */
 export function useLiveFigmaPrScaleStyle(): CSSProperties {
   const [scale, setScale] = useState(computeFigmaScenePrScale);

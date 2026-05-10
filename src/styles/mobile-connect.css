@@ -8,7 +8,10 @@
   min-height: 100vh;
   min-height: 100dvh;
   padding: 0;
-  overflow: hidden;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  overflow-x: hidden;
+  /* スケール後シーンが縦にはみ出す端末でも CTA までスクロールできるようにする */
+  overflow-y: auto;
   background: linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
 }
 

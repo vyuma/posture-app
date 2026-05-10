@@ -3,8 +3,11 @@
 export const FIGMA_SCENE_WIDTH_PX = 1512;
 export const FIGMA_SCENE_HEIGHT_PX = 982;
 
-/** [.flow-screen.frame53-register-screen] 等と同じ下限・上限 */
-export const FIGMA_SCENE_PR_SCALE_MIN = 0.31;
+/**
+ * 旧デザイン互換・参照用。実スケールは viewport に収まるよう raw のみ clamp し、
+ * 横幅より大きい下限を付けるとモバイルではみ出すため使わない。
+ */
+export const FIGMA_SCENE_PR_SCALE_MIN = 0;
 export const FIGMA_SCENE_PR_SCALE_MAX = 1.35;
 
 /**

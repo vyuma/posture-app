@@ -736,18 +736,14 @@
    * 既定：cqw 非対応環境。cqw が使えるときは直下の @supports で上書き。
    * 横幅 1222 / 縦幅 681（Figma 行レイアウト）に収める等比。
    */
-  --qr-scale: max(
-    0.31,
-    min(
-      1,
-      calc((100vw - 2 * var(--qr-fr1-horizontal-inset) - 20px) / 1222px),
-      calc(
-        (
-            100dvh - var(--qr-fr1-block-top) - var(--qr-fr1-block-bottom) -
-              16px
-          ) /
-          681px
-      )
+  --qr-scale: min(
+    1,
+    calc((100vw - 2 * var(--qr-fr1-horizontal-inset) - 20px) / 1222px),
+    calc(
+      (
+          100dvh - var(--qr-fr1-block-top) - var(--qr-fr1-block-bottom) - 16px
+        ) /
+        681px
     )
   );
 
@@ -781,13 +777,10 @@
 
 @supports (width: 1cqw) {
   .qr-modal-overlay {
-    --qr-scale: max(
-      0.31,
-      min(
-        1,
-        calc((100cqw - 8px) / 1222px),
-        calc((100cqh - 8px) / 681px)
-      )
+    --qr-scale: min(
+      1,
+      calc((100cqw - 8px) / 1222px),
+      calc((100cqh - 8px) / 681px)
     );
   }
 }

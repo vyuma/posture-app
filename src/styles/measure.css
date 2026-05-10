@@ -23,13 +23,10 @@
 
   /* 登録画面と同じ --pr-scale 方針（無制限防止＋大画面で過度に縮まない緩上限）。 */
   /* JS（useLiveFigmaPrScaleStyle）が main に上書きする場合は visualViewport 基準で MobileConnect / Frame53 と一致。 */
-  --pr-scale: max(
-    0.31,
-    min(
-      1.35,
-      calc(100vw / 1512px),
-      calc(100dvh / 982px)
-    )
+  --pr-scale: min(
+    1.35,
+    calc(100vw / 1512px),
+    calc(100dvh / 982px)
   );
 
   background-color: #f3f3f3;
@@ -718,6 +715,72 @@
 
   .measure-placement-hint-emit-feedback {
     animation: none;
+  }
+}
+
+/* 狭いビューポート：横2列だと CTA が画面外になるため縦積み＋セーフエリア */
+@media (max-width: 900px) {
+  .measuring-screen {
+    padding-left: max(12px, env(safe-area-inset-left, 0px));
+    padding-right: max(12px, env(safe-area-inset-right, 0px));
+    padding-bottom: max(
+      var(--pr-fr1-block-bottom),
+      calc(12px + env(safe-area-inset-bottom, 0px))
+    );
+  }
+
+  .measuring-screen .flow-brand {
+    left: max(
+      12px,
+      calc(var(--frame53-scene-offset-x) + 48px * var(--pr-scale)),
+      env(safe-area-inset-left, 0px)
+    );
+    top: max(
+      calc(var(--frame53-scene-offset-y) + 20px * var(--pr-scale)),
+      calc(10px + env(safe-area-inset-top, 0px))
+    );
+    width: calc(120px * var(--pr-scale));
+  }
+
+  .measure-layout {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+    max-width: min(100%, calc(100vw - 24px));
+    gap: clamp(14px, 4vw, 28px);
+  }
+
+  .measure-control-card {
+    flex: 0 1 auto;
+    flex-basis: auto;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: min(420px, 58dvh);
+    max-height: min(640px, 72dvh);
+  }
+
+  .measure-camera-panel--figma {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 1;
+    max-height: min(92vw, 52dvh);
+    align-self: center;
+  }
+
+  .measure-reregister-cta {
+    max-width: 100%;
+    min-height: max(48px, calc(77px * var(--pr-scale)));
+  }
+
+  .measure-icon-btn {
+    width: max(44px, calc(64px * var(--pr-scale)));
+    height: max(44px, calc(64px * var(--pr-scale)));
+    min-width: max(44px, calc(64px * var(--pr-scale)));
+    min-height: max(44px, calc(64px * var(--pr-scale)));
   }
 }
 
