@@ -140,6 +140,22 @@ async function ensurePairedAndCameraPermission(
   return true;
 }
 
+/** 姿勢登録 intro 表示のみ：カメラはキャリブレーション開始時に ensurePairedAndCameraPermission で確認する */
+function ensureDesktopPairedForFlow(
+  isPairedLive: boolean,
+  setPermissionPopupMessage: (message: string | null) => void,
+  onPairingMissing?: () => void,
+): boolean {
+  if (isTauriRuntime() && !isPairedLive) {
+    setPermissionPopupMessage(
+      "スマートフォンとの接続を確認してください。ホームの「スマホと接続」で QR をスキャンし、接続が完了した状態で再度お試しください。",
+    );
+    onPairingMissing?.();
+    return false;
+  }
+  return true;
+}
+
 function App() {
   const [flowPhase, setFlowPhase] = useState<AppFlowPhase>(() =>
     hasCompletedOnboardingStory() ? "home" : "onboarding",
@@ -383,6 +399,37 @@ function App() {
       setIsPaused(false);
       setFlowPhase("measuring");
       void primeRecoverySound();
+    } finally {
+      setIsStartPending(false);
+    }
+  };
+
+  const handleGoToPostureRegisterIntro = async () => {
+    if (isStartPending) {
+      return;
+    }
+
+    setIsStartPending(true);
+
+    try {
+      const ok = ensureDesktopPairedForFlow(
+        isPairedLive,
+        setPermissionPopupMessage,
+        () => setFlowPhase("home"),
+      );
+      if (!ok) {
+        return;
+      }
+
+      measurementAccumulatorRef.current = createMeasurementAccumulator();
+      measurementStartedAtRef.current = null;
+      setMeasurementStats(EMPTY_MEASUREMENT_STATS);
+      setLastMeasurementResult(null);
+      setLastAcquiredCharacterId(null);
+      resetPostureEngine();
+      setIsPaused(false);
+      setPostureRegisterStep("intro");
+      setFlowPhase("postureRegister");
     } finally {
       setIsStartPending(false);
     }
@@ -811,6 +858,9 @@ function App() {
         onStartMeasurement={() => {
           void handleStartMeasurement();
         }}
+        onHomePostureFlowFromHero={() => {
+          void handleGoToPostureRegisterIntro();
+        }}
         onBeginPostureRegisterCalibrating={() => {
           void handleBeginPostureRegisterCalibrating();
         }}
@@ -823,9 +873,6 @@ function App() {
         onBackHome={() => setFlowPhase("home")}
         onFinishMeasurement={handleFinishMeasurement}
         onReRegisterPosture={handleReRegisterPostureFromMeasuring}
-        onMeasureAgain={() => {
-          void handleStartMeasurement();
-        }}
         onPauseToggle={() => setIsPaused((current) => !current)}
         onOverlayEnabledChange={setIsOverlayEnabled}
         onCharacterOverlayEnabledChange={setIsCharacterOverlayEnabled}

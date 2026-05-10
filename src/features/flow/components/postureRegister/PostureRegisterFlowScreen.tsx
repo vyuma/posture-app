@@ -205,7 +205,7 @@ export function PostureRegisterFlowScreen({
                 >
                   <img
                     className="frame53-pr-intro-mascot"
-                    src="/set1.png"
+                    src="/characters/anago/normal-nago/expressions/happy.png"
                     alt=""
                     draggable={false}
                   />
@@ -239,7 +239,7 @@ export function PostureRegisterFlowScreen({
                 >
                   <img
                     className="frame53-pr-cal-mascot"
-                    src="/set2.png"
+                    src="/characters/anago/normal-nago/expressions/happy.png"
                     alt=""
                     draggable={false}
                   />
@@ -274,7 +274,7 @@ export function PostureRegisterFlowScreen({
                 >
                   <img
                     className="frame53-pr-settings-mascot"
-                    src="/set3.png"
+                    src="/characters/anago/normal-nago/expressions/happy.png"
                     alt=""
                     draggable={false}
                   />

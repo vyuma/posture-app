@@ -58,13 +58,13 @@ type AppFlowRouterProps = {
   onDebugShowOnboarding: () => void;
   onCompleteOnboardingStory: () => void;
   onStartMeasurement: () => void;
+  onHomePostureFlowFromHero: () => void;
   onBeginPostureRegisterCalibrating: () => void;
   onBeginMeasurementAfterRegister: () => void;
   onPostureRegisterCalibratingComplete: () => void;
   onBackHome: () => void;
   onFinishMeasurement: () => void;
   onReRegisterPosture: () => void;
-  onMeasureAgain: () => void;
   onPauseToggle: () => void;
   onOverlayEnabledChange: (enabled: boolean) => void;
   onCharacterOverlayEnabledChange: (enabled: boolean) => void;
@@ -109,13 +109,13 @@ export function AppFlowRouter({
   onDebugShowOnboarding,
   onCompleteOnboardingStory,
   onStartMeasurement,
+  onHomePostureFlowFromHero,
   onBeginPostureRegisterCalibrating,
   onBeginMeasurementAfterRegister,
   onPostureRegisterCalibratingComplete,
   onBackHome,
   onFinishMeasurement,
   onReRegisterPosture,
-  onMeasureAgain,
   onPauseToggle,
   onOverlayEnabledChange,
   onCharacterOverlayEnabledChange,
@@ -147,7 +147,7 @@ export function AppFlowRouter({
           onPairingStatusRefresh={onPairingStatusRefresh}
           onContinueFromPaired={onContinueFromPaired}
           onDebugDisconnectPairingDevice={onDebugDisconnectPairingDevice}
-          onDebugStartMeasurement={onStartMeasurement}
+          onDebugStartMeasurement={onHomePostureFlowFromHero}
           onProfileCharacterSelect={onProfileCharacterSelect}
           onToggleFavoriteCharacter={onToggleFavoriteCharacter}
           onDebugClearAcquiredCharacters={onDebugClearAcquiredCharacters}
@@ -248,7 +248,7 @@ export function AppFlowRouter({
           onPairingStatusRefresh={onPairingStatusRefresh}
           onContinueFromPaired={onContinueFromPaired}
           onDebugDisconnectPairingDevice={onDebugDisconnectPairingDevice}
-          onDebugStartMeasurement={onMeasureAgain}
+          onDebugStartMeasurement={onHomePostureFlowFromHero}
           onProfileCharacterSelect={onProfileCharacterSelect}
           onToggleFavoriteCharacter={onToggleFavoriteCharacter}
           onDebugClearAcquiredCharacters={onDebugClearAcquiredCharacters}

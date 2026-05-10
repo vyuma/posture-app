@@ -174,12 +174,7 @@ export function RemotePairingApp({ config }: Props) {
     };
   }, [applyMessage, clearReconnect, wsUrl]);
 
-  const heroImage =
-    phase === "measuring"
-      ? "/set3.png"
-      : phase === "postureRegister"
-        ? "/set2.png"
-        : "/set1.png";
+  const heroImage = "/characters/anago/normal-nago/expressions/happy.png";
 
   const title =
     phase === "measuring"
