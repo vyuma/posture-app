@@ -594,16 +594,6 @@
     min(4.23vw, 6.52dvh),
     4.75rem
   );
-  --onboarding-story-arrow-mark-size: clamp(
-    1.25rem,
-    min(1.78vw, 2.74dvh),
-    2rem
-  );
-  --onboarding-story-arrow-stroke: clamp(
-    0.22rem,
-    min(0.32vw, 0.49dvh),
-    0.36rem
-  );
   --onboarding-story-dot-size: clamp(
     0.45rem,
     min(0.53vw, 0.81dvh),
@@ -1570,25 +1560,41 @@
     rotateY(var(--tilt-y))
     translateY(var(--tilt-lift));
   transform-origin: center top;
+  filter: none;
 }
 
-.onboarding-reward-artwork .onboarding-reward-home-slot:hover {
-  --tilt-lift: 0px;
-  filter: drop-shadow(0 18px 30px rgba(63, 92, 96, 0.18));
+.onboarding-stage--reward
+  .onboarding-reward-artwork
+  .onboarding-reward-home-slot:hover {
+  --tilt-lift: -8px;
+  filter: drop-shadow(0 30px 46px rgba(63, 92, 96, 0.24));
 }
 
 .onboarding-reward-artwork .onboarding-reward-home-card {
   overflow: hidden;
   cursor: default;
+  border: 0;
 }
 
 .onboarding-reward-artwork .onboarding-reward-home-card::before,
-.onboarding-reward-artwork .onboarding-reward-home-card::after {
+.onboarding-reward-artwork .onboarding-reward-home-card::after,
+.onboarding-final-artwork .onboarding-final-card::before,
+.onboarding-final-artwork .onboarding-final-card::after {
   display: none;
 }
 
-.onboarding-reward-artwork .onboarding-reward-home-card:hover,
-.onboarding-reward-artwork .onboarding-reward-home-card:focus-visible {
+.onboarding-stage--reward
+  .onboarding-reward-artwork
+  .onboarding-reward-home-card:hover,
+.onboarding-stage--reward
+  .onboarding-reward-artwork
+  .onboarding-reward-home-card:focus-visible,
+.onboarding-stage--final
+  .onboarding-final-artwork
+  .onboarding-final-card:hover,
+.onboarding-stage--final
+  .onboarding-final-artwork
+  .onboarding-final-card:focus-visible {
   outline: none;
 }
 
@@ -2323,6 +2329,16 @@
 
 .onboarding-stage--final .onboarding-final-card-slot {
   aspect-ratio: 207.27 / 287.34;
+  filter: none;
+}
+
+.onboarding-stage--final
+  .onboarding-final-card-strip
+  .onboarding-final-card-slot:hover,
+.onboarding-stage--final
+  .onboarding-final-card-strip
+  .onboarding-final-card-slot:focus-within {
+  filter: drop-shadow(0 34px 46px rgba(63, 92, 96, 0.24));
 }
 
 .onboarding-stage--final .onboarding-final-card {
@@ -2400,12 +2416,11 @@
 .onboarding-side-chevron {
   position: relative;
   z-index: 1;
-  width: clamp(20px, 2.5vw, 30px);
-  height: clamp(20px, 2.5vw, 30px);
-  border-top: clamp(3px, 0.42vw, 5px) solid currentColor;
-  border-right: clamp(3px, 0.42vw, 5px) solid currentColor;
-  border-radius: 3px;
-  filter: drop-shadow(0 4px 7px rgba(34, 72, 86, 0.28));
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
 }
 
 .onboarding-side-button--prev {
@@ -2422,9 +2437,10 @@
 .onboarding-screen.is-return-story .onboarding-side-button,
 .onboarding-screen.is-reward-story .onboarding-side-button,
 .onboarding-screen.is-final-story .onboarding-side-button {
-  top: var(--onboarding-story-text-center-y);
+  top: calc(var(--onboarding-story-text-center-y) + 2px);
   width: var(--onboarding-story-arrow-size);
   height: var(--onboarding-story-arrow-size);
+  color: #ffffff;
 }
 
 .onboarding-screen.is-story-intro .onboarding-side-button::before,
@@ -2460,24 +2476,16 @@
 .onboarding-screen.is-return-story .onboarding-side-chevron,
 .onboarding-screen.is-reward-story .onboarding-side-chevron,
 .onboarding-screen.is-final-story .onboarding-side-chevron {
-  width: var(--onboarding-story-arrow-mark-size);
-  height: var(--onboarding-story-arrow-mark-size);
-  border-top-width: var(--onboarding-story-arrow-stroke);
-  border-right-width: var(--onboarding-story-arrow-stroke);
-  filter: drop-shadow(
-    0
-    0
-    min(0.56vw, 0.87dvh)
-    rgba(0, 0, 0, 0.15)
-  );
+  width: 100%;
+  height: auto;
 }
 
 .onboarding-side-button--prev .onboarding-side-chevron {
-  transform: rotate(-135deg);
+  transform: none;
 }
 
 .onboarding-side-button--next .onboarding-side-chevron {
-  transform: rotate(45deg);
+  transform: rotate(180deg);
 }
 
 .onboarding-side-button:hover,
@@ -2819,6 +2827,18 @@
   text-align: center;
 }
 
+.onboarding-stage--message .onboarding-step,
+.onboarding-stage--warning .onboarding-step,
+.onboarding-stage--return .onboarding-step,
+.onboarding-stage--reward .onboarding-step,
+.onboarding-stage--final .onboarding-step,
+.onboarding-stage--reward .home-character-name,
+.onboarding-stage--reward .home-tag,
+.onboarding-stage--final .onboarding-final-card-name,
+.onboarding-stage--final .home-tag {
+  letter-spacing: 0;
+}
+
 .onboarding-screen.is-story-intro .onboarding-message,
 .onboarding-stage--message .onboarding-message,
 .onboarding-stage--warning .onboarding-message,
@@ -2891,7 +2911,7 @@
 
 .onboarding-stage--final .onboarding-final-character {
   position: absolute;
-  left: 50%;
+  left: var(--final-character-x, 50%);
   bottom: var(--final-character-y, -90%);
   width: auto;
   height: 188%;
@@ -2899,7 +2919,12 @@
   min-height: 0;
   object-fit: contain;
   object-position: center bottom;
-  transform: translateX(-50%) scale(var(--final-character-scale, 1));
+  transform:
+    translateX(-50%)
+    scale(
+      var(--final-character-scale-x, 1),
+      var(--final-character-scale-y, 1)
+    );
   transform-origin: center bottom;
 }
 
@@ -2947,8 +2972,6 @@
 @media (max-height: 680px) {
   .onboarding-screen {
     --onboarding-story-arrow-size: clamp(2rem, min(4.23vw, 6.52dvh), 4.75rem);
-    --onboarding-story-arrow-mark-size: clamp(0.75rem, min(1.78vw, 2.74dvh), 2rem);
-    --onboarding-story-arrow-stroke: clamp(0.13rem, min(0.32vw, 0.49dvh), 0.36rem);
     --onboarding-story-dot-size: clamp(0.25rem, min(0.53vw, 0.81dvh), 0.6rem);
   }
 

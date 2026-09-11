@@ -88,11 +88,20 @@ type FinalPageLayoutTuning = {
   rowMaxPx: number;
   cardGapPx: number;
   cardScale: number;
-  characterOffsetXPercent: number;
-  characterOffsetYPercent: number;
-  characterScale: number;
   hoverLiftPx: number;
   hoverScale: number;
+};
+
+type FinalCharacterCardTuning = {
+  characterId: CharacterDefinition["id"];
+  displayName: string;
+  personalityTags: readonly [string, string];
+  xPercent: number;
+  bottomPercent: number;
+  scaleX: number;
+  scaleY: number;
+  primaryColor: string;
+  previewColor: string;
 };
 
 function percent(value: number) {
@@ -249,9 +258,9 @@ const REWARD_PAGE_LAYOUT_TUNING: RewardPageLayoutTuning = {
   cardWidthMaxPx: 355,
   cardScale: 1,
   cardRotateDeg: 0,
-  characterOffsetXPercent: -50,
-  characterOffsetYPercent: -2,
-  characterScale: 1.5,
+  characterOffsetXPercent: -48.6,
+  characterOffsetYPercent: -6.8,
+  characterScale: 1.4,
   characterRotateDeg: 0,
 };
 
@@ -263,20 +272,77 @@ const FINAL_PAGE_LAYOUT_TUNING: FinalPageLayoutTuning = {
   rowMaxPx: 1362,
   cardGapPx: 24,
   cardScale: 1,
-  characterOffsetXPercent: 50,
-  characterOffsetYPercent: -90,
-  characterScale: 1,
   hoverLiftPx: 12,
   hoverScale: 1.02,
 };
 
-const FINAL_PAGE_CHARACTER_IDS: CharacterDefinition["id"][] = [
-  "shin-anago",
-  "oto-anago",
-  "kuro-anyago",
-  "dot-nago",
-  "moja-anago",
-  "hat-anago",
+const FINAL_PAGE_CHARACTER_LAYOUTS: FinalCharacterCardTuning[] = [
+  {
+    characterId: "shin-anago",
+    displayName: "シン・アナゴ",
+    personalityTags: ["頑張り屋さん", "負けず嫌い"],
+    xPercent: 49.5,
+    bottomPercent: -40,
+    scaleX: 0.68,
+    scaleY: 0.68,
+    primaryColor: "#ea4949",
+    previewColor: "rgba(234, 73, 73, 0.2)",
+  },
+  {
+    characterId: "oto-anago",
+    displayName: "オトアナゴ",
+    personalityTags: ["音楽好き", "クリエイティブ"],
+    xPercent: 55.8,
+    bottomPercent: -33,
+    scaleX: 0.646,
+    scaleY: 0.646,
+    primaryColor: "#505050",
+    previewColor: "#f8f8f8",
+  },
+  {
+    characterId: "kuro-anyago",
+    displayName: "クロアニャゴ",
+    personalityTags: ["クール", "ツンデレ"],
+    xPercent: 49.5,
+    bottomPercent: -68.5,
+    scaleX: 0.82,
+    scaleY: 0.82,
+    primaryColor: "#3b424f",
+    previewColor: "#d8d9dc",
+  },
+  {
+    characterId: "dot-nago",
+    displayName: "クマアナゴ",
+    personalityTags: ["おっとり", "天然"],
+    xPercent: 52.35,
+    bottomPercent: -56,
+    scaleX: 0.733,
+    scaleY: 0.733,
+    primaryColor: "#e0bf00",
+    previewColor: "#f9f2cc",
+  },
+  {
+    characterId: "moja-anago",
+    displayName: "モジャアナゴ",
+    personalityTags: ["くせもの", "こだわり強い"],
+    xPercent: 51.35,
+    bottomPercent: -50.3,
+    scaleX: 0.71,
+    scaleY: 0.71,
+    primaryColor: "#00962e",
+    previewColor: "#ccead5",
+  },
+  {
+    characterId: "hat-anago",
+    displayName: "ハットナゴ",
+    personalityTags: ["しっかり者", "リーダー気質"],
+    xPercent: 55.31,
+    bottomPercent: -60.8,
+    scaleX: 0.807,
+    scaleY: 0.793,
+    primaryColor: "#0055aa",
+    previewColor: "#ccddee",
+  },
 ];
 
 const STORY_SLIDES: StorySlide[] = [
@@ -531,7 +597,13 @@ export function OnboardingStoryScreen({ onComplete }: OnboardingStoryScreenProps
         disabled={slideIndex === 0}
         aria-label="前のストーリーへ"
       >
-        <span className="onboarding-side-chevron" aria-hidden="true" />
+        <img
+          className="onboarding-side-chevron"
+          src="/story/arrow-back.svg"
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+        />
       </button>
       <button
         type="button"
@@ -539,7 +611,13 @@ export function OnboardingStoryScreen({ onComplete }: OnboardingStoryScreenProps
         onClick={goNext}
         aria-label={isFinalSlide ? "ストーリーを終了" : "次のストーリーへ"}
       >
-        <span className="onboarding-side-chevron" aria-hidden="true" />
+        <img
+          className="onboarding-side-chevron"
+          src="/story/arrow-next.svg"
+          alt=""
+          aria-hidden="true"
+          draggable={false}
+        />
       </button>
 
       <footer className="onboarding-footer">
@@ -814,8 +892,8 @@ function RewardArtwork({
     }),
     zIndex: 2,
     "--card-anim-delay": "0ms",
-    "--home-character-color": character?.characterColor.primary ?? "#f05a63",
-    "--home-character-soft-color": character?.characterColor.soft ?? "#f6d2d4",
+    "--home-character-color": "#f78000",
+    "--home-character-soft-color": "rgba(247, 128, 0, 0.2)",
     "--reward-card-scale": REWARD_PAGE_LAYOUT_TUNING.cardScale,
     "--reward-card-rotate": `${REWARD_PAGE_LAYOUT_TUNING.cardRotateDeg}deg`,
   } as CSSProperties;
@@ -870,23 +948,20 @@ function FinalArtwork({ characters }: { characters: CharacterDefinition[] }) {
   const charactersById = new Map(
     characters.map((character) => [character.id, character]),
   );
-  const finalCharacters = FINAL_PAGE_CHARACTER_IDS.map(
-    (characterId) =>
-      charactersById.get(characterId) ??
-      CHARACTER_CATALOG.find((character) => character.id === characterId),
-  ).filter((character): character is CharacterDefinition => Boolean(character));
+  const finalCards = FINAL_PAGE_CHARACTER_LAYOUTS.flatMap((layout) => {
+    const character =
+      charactersById.get(layout.characterId) ??
+      CHARACTER_CATALOG.find(
+        (candidate) => candidate.id === layout.characterId,
+      );
+
+    return character ? [{ character, layout }] : [];
+  });
   const rowStyle = {
     "--final-card-row-top": percent(FINAL_PAGE_LAYOUT_TUNING.rowTopPercent),
     "--final-card-strip-width": `min(${FINAL_PAGE_LAYOUT_TUNING.rowWidthVw}vw, ${FINAL_PAGE_LAYOUT_TUNING.rowMaxPx}px)`,
     "--final-card-gap": px(FINAL_PAGE_LAYOUT_TUNING.cardGapPx),
     "--final-card-scale": FINAL_PAGE_LAYOUT_TUNING.cardScale,
-    "--final-character-x": percent(
-      FINAL_PAGE_LAYOUT_TUNING.characterOffsetXPercent,
-    ),
-    "--final-character-y": percent(
-      FINAL_PAGE_LAYOUT_TUNING.characterOffsetYPercent,
-    ),
-    "--final-character-scale": FINAL_PAGE_LAYOUT_TUNING.characterScale,
     "--final-card-hover-lift": px(FINAL_PAGE_LAYOUT_TUNING.hoverLiftPx),
     "--final-card-hover-scale": FINAL_PAGE_LAYOUT_TUNING.hoverScale,
   } as CSSProperties;
@@ -894,15 +969,19 @@ function FinalArtwork({ characters }: { characters: CharacterDefinition[] }) {
   return (
     <div className="onboarding-final-artwork" style={rowStyle} aria-hidden="true">
       <div className="onboarding-final-card-strip">
-        {finalCharacters.map((character, index) => (
+        {finalCards.map(({ character, layout }, index) => (
           <div
             className="home-character-slot onboarding-final-card-slot"
             key={character.id}
             style={
               {
                 "--card-anim-delay": `${index * 70}ms`,
-                "--home-character-color": character.characterColor.primary,
-                "--home-character-soft-color": character.characterColor.soft,
+                "--home-character-color": layout.primaryColor,
+                "--home-character-soft-color": layout.previewColor,
+                "--final-character-x": percent(layout.xPercent),
+                "--final-character-y": percent(layout.bottomPercent),
+                "--final-character-scale-x": layout.scaleX,
+                "--final-character-scale-y": layout.scaleY,
               } as CSSProperties
             }
           >
@@ -917,10 +996,10 @@ function FinalArtwork({ characters }: { characters: CharacterDefinition[] }) {
               </div>
               <div className="home-character-body onboarding-final-card-body">
                 <h3 className="home-character-name onboarding-final-card-name">
-                  {character.name}
+                  {layout.displayName}
                 </h3>
                 <div className="home-character-tags">
-                  {character.personalityTags.map((tag) => (
+                  {layout.personalityTags.map((tag) => (
                     <span className="home-tag" key={tag}>
                       {tag}
                     </span>
