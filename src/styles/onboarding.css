@@ -514,8 +514,7 @@
   10% {
     opacity: 0;
     transform:
-      translate3d(-4px, 6px, 0)
-      scale(0.94)
+      scale(1.9)
       rotate(var(--warning-sound-rotate));
   }
   18%,
@@ -537,14 +536,79 @@
 }
 
 .onboarding-screen {
-  --onboarding-main-logo-width: clamp(200px, 33vw, 360px);
+  --onboarding-main-logo-width: clamp(240px, 27vw, 408px);
   --onboarding-page-pad-x: clamp(32px, 5vw, 88px);
   --onboarding-stage-pad-top: clamp(84px, 13dvh, 132px);
   --onboarding-stage-pad-bottom: clamp(64px, 10dvh, 104px);
   --onboarding-scene-pad-top: clamp(118px, 21dvh, 260px);
-  --onboarding-scene-text-size: clamp(1.3rem, min(2.35vw, 4.8dvh), 2.85rem);
-  --onboarding-nav-bottom: clamp(8px, 1.8dvh, 18px);
-  --onboarding-side-button-top: 50%;
+  --onboarding-scene-text-size: clamp(1.32rem, min(2.35vw, 4.5dvh), 2.25rem);
+  --onboarding-nav-bottom: clamp(248px, 46.5dvh, 500px);
+  --onboarding-side-button-top: clamp(37%, 39.2%, 42%);
+  --onboarding-story-font-weight: 700;
+  /* ストーリー本文の行間・字間をまとめて調整するための共通変数 */
+  --onboarding-story-line-height: 2;
+  --onboarding-story-letter-spacing: 0;
+  --onboarding-splash-button-font-weight: 700;
+  --onboarding-splash-logo-top: min(23.02vw, 35.44dvh);
+  /* 「はじめる」ボタン巾と揃えるか少し広く見せる（--onboarding-splash-button-width より少し大きい） */
+  --onboarding-splash-logo-width: clamp(
+    17rem,
+    min(27.5vw, 42.35dvh),
+    28.5rem
+  );
+  --onboarding-splash-button-center-y: calc(
+    50% + min(12.07vw, 18.58dvh)
+  );
+  --onboarding-splash-button-width: clamp(
+    15rem,
+    min(26.46vw, 40.73dvh),
+    25rem
+  );
+  --onboarding-splash-button-height: clamp(
+    3.5rem,
+    min(4.56vw, 7.03dvh),
+    4.3125rem
+  );
+  --onboarding-story-side-x: clamp(
+    1.5rem,
+    min(5.29vw, 8.15dvh),
+    6rem
+  );
+  --onboarding-story-logo-top: min(2.65vw, 4.07dvh);
+  --onboarding-story-logo-width: min(8.86vw, 13.65dvh);
+  --onboarding-story-step-top: min(15.74vw, 24.24dvh);
+  --onboarding-story-text-center-y: min(25.46vw, 39.21dvh);
+  --onboarding-story-dots-top: min(31.81vw, 48.98dvh);
+  --onboarding-story-lineup-bottom: max(-2.58vw, -3.97dvh);
+  --onboarding-story-lineup-width: min(
+    min(83.53vw, 128.62dvh),
+    calc(100vw - (var(--onboarding-story-side-x) * 2))
+  );
+  --onboarding-story-lineup-height: min(26.46vw, 40.73dvh);
+  --onboarding-dock-story-dock-width: min(82.8vw, 127.49dvh);
+  --onboarding-dock-story-dock-bottom: min(3.17vw, 4.89dvh);
+  --onboarding-dock-story-character-width: min(11.71vw, 18.02dvh);
+  --onboarding-dock-story-character-bottom: min(3.9vw, 6.01dvh);
+  --onboarding-story-arrow-size: clamp(
+    3rem,
+    min(4.23vw, 6.52dvh),
+    4.75rem
+  );
+  --onboarding-story-arrow-mark-size: clamp(
+    1.25rem,
+    min(1.78vw, 2.74dvh),
+    2rem
+  );
+  --onboarding-story-arrow-stroke: clamp(
+    0.22rem,
+    min(0.32vw, 0.49dvh),
+    0.36rem
+  );
+  --onboarding-story-dot-size: clamp(
+    0.45rem,
+    min(0.53vw, 0.81dvh),
+    0.6rem
+  );
 
   position: relative;
   isolation: isolate;
@@ -573,6 +637,20 @@
   pointer-events: none;
 }
 
+.onboarding-screen.is-story-intro {
+  --onboarding-side-button-top: var(--onboarding-story-text-center-y);
+
+  background: linear-gradient(180deg, #13a2d7 0%, #f1edcc 100%);
+}
+
+.onboarding-screen.is-story-intro::before {
+  display: none;
+}
+
+.onboarding-screen.is-splash-active {
+  background: linear-gradient(180deg, #13a2d7 0%, #dce6cd 100%);
+}
+
 .onboarding-header {
   position: absolute;
   top: var(--flow-brand-offset-y);
@@ -590,6 +668,16 @@
   height: auto;
   filter: drop-shadow(0 8px 15px rgba(34, 81, 98, 0.16));
   user-select: none;
+}
+
+.onboarding-screen.is-story-intro .onboarding-header {
+  top: var(--onboarding-story-logo-top);
+  left: var(--onboarding-story-side-x);
+  right: var(--onboarding-story-side-x);
+}
+
+.onboarding-screen.is-story-intro .onboarding-logo {
+  width: var(--onboarding-story-logo-width);
 }
 
 .onboarding-skip,
@@ -631,8 +719,8 @@
 }
 
 .onboarding-screen.is-story-intro .onboarding-stage {
-  grid-template-rows: auto 1fr;
-  padding: var(--onboarding-scene-pad-top) var(--onboarding-page-pad-x) 0;
+  display: block;
+  padding: 0;
 }
 
 .onboarding-stage::before {
@@ -670,6 +758,14 @@
   animation: onboarding-slide-backward 0.42s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
+.onboarding-screen.is-story-intro .onboarding-slide-content {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  pointer-events: none;
+}
+
 /* アートワークラッパー：アートコンポーネントを包む */
 .onboarding-artwork-wrapper {
   position: relative;
@@ -692,16 +788,38 @@
 }
 
 .onboarding-step {
-  margin: 0 0 clamp(10px, 2dvh, 16px);
+  margin: clamp(20px, 3.2dvh, 40px) 0 clamp(12px, 2.2dvh, 20px);
+  justify-self: center;
   padding: 6px 11px;
   border-radius: 999px;
-  color: rgba(36, 83, 102, 0.78);
+  color: #ffffff;
   background: rgba(255, 255, 255, 0.42);
   font-size: 0.82rem;
-  font-weight: 900;
+  font-weight: var(--onboarding-story-font-weight);
   letter-spacing: 0;
   box-shadow: 0 8px 20px rgba(36, 83, 102, 0.08);
   backdrop-filter: blur(8px);
+}
+
+.onboarding-screen.is-story-intro .onboarding-step {
+  position: absolute;
+  left: 50%;
+  top: var(--onboarding-story-step-top);
+  min-width: min(4.3vw, 6.62dvh);
+  min-height: min(2.31vw, 3.56dvh);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding:
+    min(0.53vw, 0.81dvh)
+    min(1.06vw, 1.63dvh);
+  font-size: clamp(0.82rem, min(1.06vw, 1.63dvh), 1rem);
+  line-height: 1.2;
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: none;
+  backdrop-filter: none;
+  transform: translateX(-50%);
 }
 
 /* 吹き出しメッセージボックス */
@@ -764,31 +882,40 @@
   color: #203844;
   font-size: clamp(0.98rem, min(1.7vw, 3.1dvh), 1.28rem);
   line-height: 1.85;
-  font-weight: 900;
+  font-weight: var(--onboarding-story-font-weight);
   letter-spacing: 0;
   animation: onboarding-line-in 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) var(--line-delay, 0.14s) both;
 }
 
 .onboarding-screen.is-story-intro .onboarding-message {
+  position: absolute;
+  left: 50%;
+  top: var(--onboarding-story-text-center-y);
   min-width: 0;
-  max-width: min(760px, 100%);
+  width: min(
+    max(18rem, min(40.21vw, 61.91dvh)),
+    calc(100vw - (var(--onboarding-story-side-x) * 4))
+  );
+  max-width: none;
   padding: 0;
   border: 0;
   background: transparent;
   box-shadow: none;
   backdrop-filter: none;
+  transform: translate(-50%, -50%);
 }
 
 .onboarding-screen.is-story-intro .onboarding-message p {
   color: #ffffff;
-  font-size: clamp(1.32rem, min(2.35vw, 4.5dvh), 2.25rem);
-  line-height: 1.35;
-  font-weight: 900;
+  font-size: clamp(1.35rem, min(2.38vw, 3.67dvh), 2.25rem);
+  line-height: var(--onboarding-story-line-height);
+  letter-spacing: var(--onboarding-story-letter-spacing);
+  font-weight: 700;
   text-shadow: 0 4px 10px rgba(36, 83, 102, 0.18);
 }
 
 .onboarding-screen.is-story-intro .onboarding-message p + p {
-  margin-top: clamp(18px, 3dvh, 28px);
+  margin-top: 0;
 }
 
 .onboarding-screen.is-scene-story .onboarding-header {
@@ -799,6 +926,24 @@
 
 .onboarding-screen.is-scene-story .onboarding-logo {
   width: var(--flow-brand-display-width);
+}
+
+.onboarding-screen.is-dock-story .onboarding-header,
+.onboarding-screen.is-warning-story .onboarding-header,
+.onboarding-screen.is-return-story .onboarding-header,
+.onboarding-screen.is-reward-story .onboarding-header,
+.onboarding-screen.is-final-story .onboarding-header {
+  top: var(--onboarding-story-logo-top);
+  left: var(--onboarding-story-side-x);
+  right: var(--onboarding-story-side-x);
+}
+
+.onboarding-screen.is-dock-story .onboarding-logo,
+.onboarding-screen.is-warning-story .onboarding-logo,
+.onboarding-screen.is-return-story .onboarding-logo,
+.onboarding-screen.is-reward-story .onboarding-logo,
+.onboarding-screen.is-final-story .onboarding-logo {
+  width: var(--onboarding-story-logo-width);
 }
 
 .onboarding-stage--message,
@@ -834,6 +979,26 @@
   backdrop-filter: none;
 }
 
+.onboarding-stage--message .onboarding-message {
+  max-width: min(822px, calc(100vw - (var(--onboarding-page-pad-x) * 2)));
+}
+
+.onboarding-stage--warning .onboarding-message {
+  max-width: min(752px, calc(100vw - (var(--onboarding-page-pad-x) * 2)));
+}
+
+.onboarding-stage--return .onboarding-message {
+  max-width: min(499px, calc(100vw - (var(--onboarding-page-pad-x) * 2)));
+}
+
+.onboarding-stage--reward .onboarding-message {
+  max-width: min(575px, calc(100vw - (var(--onboarding-page-pad-x) * 2)));
+}
+
+.onboarding-stage--final .onboarding-message {
+  max-width: min(684px, calc(100vw - (var(--onboarding-page-pad-x) * 2)));
+}
+
 .onboarding-stage--message .onboarding-message p,
 .onboarding-stage--warning .onboarding-message p,
 .onboarding-stage--return .onboarding-message p,
@@ -842,7 +1007,7 @@
   color: #ffffff;
   font-size: var(--onboarding-scene-text-size);
   line-height: 1.35;
-  font-weight: 900;
+  font-weight: var(--onboarding-story-font-weight);
   text-shadow: 0 4px 10px rgba(36, 83, 102, 0.18);
 }
 
@@ -891,8 +1056,19 @@
 }
 
 .onboarding-screen.is-story-intro .onboarding-character-lineup {
-  width: min(1050px, calc(100vw - (var(--onboarding-page-pad-x) * 2)));
-  height: clamp(220px, 36dvh, 360px);
+  position: absolute;
+  left: calc(50% + min(1.75vw, 2.7dvh));
+  bottom: var(--onboarding-story-lineup-bottom);
+  width: var(--onboarding-story-lineup-width);
+  height: max(11rem, var(--onboarding-story-lineup-height));
+  transform: translateX(-50%);
+}
+
+.onboarding-screen.is-story-intro .onboarding-artwork-wrapper {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: visible;
 }
 
 .onboarding-lineup-character {
@@ -910,6 +1086,16 @@
   animation:
     onboarding-character-pop 0.46s cubic-bezier(0.22, 1, 0.36, 1) var(--character-delay) both,
     onboarding-float 3.1s ease-in-out calc(var(--character-delay) + 0.42s) infinite;
+}
+
+.onboarding-screen.is-story-intro .onboarding-lineup-character {
+  max-height: none;
+  filter: drop-shadow(
+    min(0.6vw, 0.92dvh)
+    min(0.93vw, 1.43dvh)
+    min(0.73vw, 1.12dvh)
+    rgba(27, 55, 67, 0.23)
+  );
 }
 
 .onboarding-inline-next {
@@ -933,16 +1119,16 @@
 }
 
 .onboarding-splash-next {
-  width: min(520px, calc(100vw - (var(--onboarding-page-pad-x) * 2)));
-  height: clamp(56px, 7dvh, 72px);
+  width: min(400px, calc(100vw - (var(--onboarding-page-pad-x) * 2)));
+  height: clamp(58px, 7dvh, 70px);
   margin-inline: auto;
-  margin-top: clamp(74px, 11dvh, 126px);
+  margin-top: clamp(64px, 9.8dvh, 110px);
   border: 0;
   border-radius: 999px;
   color: var(--app-home-gradient-start);
   background: #ffffff;
   font-size: clamp(1.1rem, 1.55vw, 1.42rem);
-  font-weight: 900;
+  font-weight: var(--onboarding-splash-button-font-weight);
   line-height: 1;
   box-shadow: 0 12px 24px rgba(13, 93, 117, 0.12);
 }
@@ -1038,35 +1224,28 @@
 /* ── Warning Artwork（4ページ）：dock＋badキャラ＋バイブ端末 ── */
 
 .onboarding-warning-artwork {
-  --warning-side-gap: clamp(56px, 9vw, 168px);
-  --warning-phone-width: clamp(170px, min(18vw, 32dvh), 260px);
-  --warning-dock-width: clamp(300px, min(29vw, 52dvh), 430px);
-  --warning-phone-left: calc(
-    var(--warning-side-gap) + (var(--warning-phone-width) / 2)
-  );
-  --warning-phone-bottom: clamp(40px, 9dvh, 104px);
-  --warning-dock-left: calc(
-    100% - var(--warning-side-gap) - (var(--warning-dock-width) / 2)
-  );
-  --warning-dock-bottom: clamp(18px, 4.2dvh, 52px);
-  --warning-character-offset-x: clamp(10px, 1.2vw, 24px);
-  --warning-character-left: calc(
-    var(--warning-dock-left) + var(--warning-character-offset-x)
-  );
-  --warning-character-bottom: clamp(58px, 11dvh, 128px);
-  --warning-character-width: clamp(150px, min(15.5vw, 34dvh), 270px);
-  --warning-character-scale: 0.94;
+  --warning-phone-left: calc(50% - min(13.27vw, 20.44dvh));
+  --warning-phone-bottom: min(3.64vw, 5.61dvh);
+  --warning-phone-width: min(15.65vw, 24.09dvh);
+  --warning-dock-left: calc(50% + min(10.82vw, 16.67dvh));
+  --warning-dock-bottom: min(3.64vw, 5.61dvh);
+  --warning-dock-width: min(21.78vw, 33.54dvh);
+  --warning-character-left: calc(50% + min(13.89vw, 21.38dvh));
+  --warning-character-bottom: min(8.27vw, 12.73dvh);
+  --warning-character-width: min(12.96vw, 19.96dvh);
+  --warning-character-scale: 1;
   --warning-character-sink-anticipation: -4%;
   --warning-character-sink-step: 18%;
   --warning-character-sink-near-end: 76%;
-  --warning-character-sink-distance: 110%;
+  --warning-character-sink-distance: 118%;
   --warning-character-sink-duration: 3.4s;
   --warning-character-sink-delay: 0.7s;
   --warning-character-shadow-bleed: clamp(24px, 2.4vw, 34px);
-  --warning-sound-top: 16px;
-  --warning-sound-right: -18%;
-  --warning-sound-size: clamp(1.1rem, min(4vw, 5dvh), 1.9rem);
-  --warning-sound-rotate: -20deg;
+  --warning-sound-left: 86.17%;
+  --warning-sound-top: 17.63%;
+  --warning-sound-width: min(6.77vw, 9.34dvh);
+  --warning-sound-size: clamp(1.15rem, min(1.59vw, 2.44dvh), 1.5rem);
+  --warning-sound-rotate: 19.52deg;
   --warning-sound-delay: var(--warning-character-sink-delay);
   --warning-sound-duration: 2.55s;
 
@@ -1084,7 +1263,7 @@
   width: var(--warning-phone-width);
   transform:
     translateX(-50%)
-    rotate(-0deg);
+    rotate(16.41deg);
   transform-origin: center center;
 }
 
@@ -1190,13 +1369,15 @@
 
 .onboarding-warning-sound {
   position: absolute;
+  left: var(--warning-sound-left);
   top: var(--warning-sound-top);
-  right: var(--warning-sound-right);
   z-index: 4;
+  width: var(--warning-sound-width);
   color: #ffffff;
   font-size: var(--warning-sound-size);
   font-weight: 900;
-  line-height: 1;
+  line-height: 1.2;
+  text-align: center;
   text-shadow: 0 4px 10px rgba(36, 83, 102, 0.16);
   transform-origin: center;
   animation: onboarding-warning-sound-pop var(--warning-sound-duration) ease var(--warning-sound-delay) both;
@@ -1564,7 +1745,7 @@
 
 .onboarding-final-artwork {
   --final-card-row-top: 34%;
-  --final-card-strip-width: min(90vw, 1780px);
+  --final-card-strip-width: min(75vw, 1132px);
   --final-card-gap: 30px;
   --final-card-scale: 1;
   --final-character-x: 0%;
@@ -1588,7 +1769,7 @@
   );
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: min(var(--final-card-gap), 1.8vw);
+  gap: min(var(--final-card-gap), 1.57vw);
   transform: translateX(-50%) scale(var(--final-card-scale));
   transform-origin: center top;
 }
@@ -1636,10 +1817,11 @@
   padding-right: 0;
 }
 
+/* home.css .home-card-character は --home-char-* のみ参照するため、親の --final-* を渡す */
 .onboarding-final-character {
-  --home-collection-character-x: var(--final-character-x);
-  --home-collection-character-y: var(--final-character-y);
-  --home-collection-character-scale: var(--final-character-scale);
+  --home-char-x: var(--final-character-x, 50%);
+  --home-char-y: var(--final-character-y, -60%);
+  --home-char-scale: var(--final-character-scale, 1);
 }
 
 @keyframes onboarding-final-character-peek {
@@ -1686,7 +1868,6 @@
 }
 
 @media (max-height: 860px) {
-  .onboarding-screen.is-story-intro .onboarding-stage,
   .onboarding-stage--message,
   .onboarding-stage--warning,
   .onboarding-stage--return,
@@ -1697,7 +1878,6 @@
 }
 
 @media (max-height: 760px) {
-  .onboarding-screen.is-story-intro .onboarding-stage,
   .onboarding-stage--message,
   .onboarding-stage--warning,
   .onboarding-stage--return,
@@ -1708,7 +1888,6 @@
 }
 
 @media (max-height: 680px) {
-  .onboarding-screen.is-story-intro .onboarding-stage,
   .onboarding-stage--message,
   .onboarding-stage--warning,
   .onboarding-stage--return,
@@ -1716,6 +1895,493 @@
   .onboarding-stage--final {
     padding-top: clamp(76px, 13dvh, 124px);
   }
+}
+
+.onboarding-stage--message {
+  display: block;
+  padding: 0;
+}
+
+.onboarding-stage--message .onboarding-slide-content,
+.onboarding-stage--message .onboarding-artwork-wrapper {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.onboarding-stage--message .onboarding-slide-content {
+  pointer-events: none;
+}
+
+.onboarding-stage--message .onboarding-step {
+  position: absolute;
+  left: 50%;
+  top: var(--onboarding-story-step-top);
+  min-width: min(4.43vw, 6.82dvh);
+  min-height: min(2.31vw, 3.56dvh);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding:
+    min(0.53vw, 0.81dvh)
+    min(1.06vw, 1.63dvh);
+  color: #ffffff;
+  font-size: clamp(0.82rem, min(1.06vw, 1.63dvh), 1rem);
+  font-weight: 700;
+  line-height: 1.2;
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: none;
+  backdrop-filter: none;
+  transform: translateX(-50%);
+}
+
+.onboarding-stage--message .onboarding-message {
+  position: absolute;
+  left: 50%;
+  top: var(--onboarding-story-text-center-y);
+  width: min(
+    max(22rem, min(54.37vw, 83.71dvh)),
+    calc(100vw - (var(--onboarding-story-side-x) * 4))
+  );
+  max-width: none;
+  transform: translate(-50%, -50%);
+}
+
+.onboarding-stage--message .onboarding-message p {
+  font-size: clamp(1.35rem, min(2.38vw, 3.67dvh), 2.25rem);
+  font-weight: 700;
+  line-height: var(--onboarding-story-line-height);
+  letter-spacing: var(--onboarding-story-letter-spacing);
+}
+
+.onboarding-stage--message .onboarding-message p + p {
+  margin-top: 0;
+}
+
+.onboarding-stage--message .onboarding-dock-stage {
+  bottom: var(--onboarding-dock-story-dock-bottom);
+  width: var(--onboarding-dock-story-dock-width);
+}
+
+.onboarding-stage--message .onboarding-dock-character-wrap {
+  left: 68.17%;
+  bottom: var(--onboarding-dock-story-character-bottom);
+  opacity: 1;
+  z-index: 2;
+  width: var(--onboarding-dock-story-character-width);
+  transform:
+    translateX(-50%)
+    rotate(var(--dock-character-rotate, 0deg))
+    scale(var(--dock-character-scale, 1));
+}
+
+.onboarding-stage--message .onboarding-dock-character-clip {
+  aspect-ratio: 636 / 1022;
+  clip-path: none;
+}
+
+.onboarding-stage--warning {
+  display: block;
+  padding: 0;
+}
+
+.onboarding-stage--warning .onboarding-slide-content,
+.onboarding-stage--warning .onboarding-artwork-wrapper {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.onboarding-stage--warning .onboarding-slide-content {
+  pointer-events: none;
+}
+
+.onboarding-stage--warning .onboarding-step {
+  position: absolute;
+  left: 50%;
+  top: var(--onboarding-story-step-top);
+  min-width: min(4.5vw, 6.92dvh);
+  min-height: min(2.31vw, 3.56dvh);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding:
+    min(0.53vw, 0.81dvh)
+    min(1.06vw, 1.63dvh);
+  color: #ffffff;
+  font-size: clamp(0.82rem, min(1.06vw, 1.63dvh), 1rem);
+  font-weight: 700;
+  line-height: 1.2;
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: none;
+  backdrop-filter: none;
+  transform: translateX(-50%);
+}
+
+.onboarding-stage--warning .onboarding-message {
+  position: absolute;
+  left: 50%;
+  top: var(--onboarding-story-text-center-y);
+  width: min(
+    max(21rem, min(49.74vw, 76.58dvh)),
+    calc(100vw - (var(--onboarding-story-side-x) * 4))
+  );
+  max-width: none;
+  transform: translate(-50%, -50%);
+}
+
+.onboarding-stage--warning .onboarding-message p {
+  font-size: clamp(1.35rem, min(2.38vw, 3.67dvh), 2.25rem);
+  font-weight: 700;
+  line-height: var(--onboarding-story-line-height);
+  letter-spacing: var(--onboarding-story-letter-spacing);
+}
+
+.onboarding-stage--warning .onboarding-message p + p {
+  margin-top: 0;
+}
+
+.onboarding-stage--return {
+  display: block;
+  padding: 0;
+}
+
+.onboarding-stage--return .onboarding-slide-content,
+.onboarding-stage--return .onboarding-artwork-wrapper {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.onboarding-stage--return .onboarding-slide-content {
+  pointer-events: none;
+}
+
+.onboarding-stage--return .onboarding-step {
+  position: absolute;
+  left: 50%;
+  top: var(--onboarding-story-step-top);
+  min-width: min(4.5vw, 6.92dvh);
+  min-height: min(2.31vw, 3.56dvh);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding:
+    min(0.53vw, 0.81dvh)
+    min(1.06vw, 1.63dvh);
+  color: #ffffff;
+  font-size: clamp(0.82rem, min(1.06vw, 1.63dvh), 1rem);
+  font-weight: 700;
+  line-height: 1.2;
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: none;
+  backdrop-filter: none;
+  transform: translateX(-50%);
+}
+
+.onboarding-stage--return .onboarding-message {
+  position: absolute;
+  left: 50%;
+  top: var(--onboarding-story-text-center-y);
+  width: min(
+    max(18rem, min(33vw, 50.81dvh)),
+    calc(100vw - (var(--onboarding-story-side-x) * 4))
+  );
+  max-width: none;
+  transform: translate(-50%, -50%);
+}
+
+.onboarding-stage--return .onboarding-message p {
+  font-size: clamp(1.35rem, min(2.38vw, 3.67dvh), 2.25rem);
+  font-weight: 700;
+  line-height: var(--onboarding-story-line-height);
+  letter-spacing: var(--onboarding-story-letter-spacing);
+}
+
+.onboarding-stage--return .onboarding-message p + p {
+  margin-top: 0;
+}
+
+.onboarding-stage--return .onboarding-return-dock-group {
+  left: 50%;
+  bottom: min(3.64vw, 5.61dvh);
+  width: min(21.78vw, 33.54dvh);
+}
+
+.onboarding-stage--return .onboarding-return-character-wrap {
+  left: 50%;
+  bottom: min(3.11vw, 4.79dvh);
+  width: min(11.71vw, 18.02dvh);
+  transform:
+    translateX(-50%)
+    rotate(0deg);
+}
+
+.onboarding-stage--return .onboarding-return-sound-text {
+  bottom: calc(100% + min(0.21vw, 0.32dvh));
+  width: min(10.7vw, 16.48dvh);
+}
+
+.onboarding-stage--reward {
+  display: block;
+  padding: 0;
+}
+
+.onboarding-stage--reward .onboarding-slide-content,
+.onboarding-stage--reward .onboarding-artwork-wrapper {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.onboarding-stage--reward .onboarding-slide-content {
+  pointer-events: none;
+}
+
+.onboarding-stage--reward .onboarding-step {
+  position: absolute;
+  left: 50%;
+  top: var(--onboarding-story-step-top);
+  min-width: min(4.5vw, 6.92dvh);
+  min-height: min(2.31vw, 3.56dvh);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding:
+    min(0.53vw, 0.81dvh)
+    min(1.06vw, 1.63dvh);
+  color: #ffffff;
+  font-size: clamp(0.82rem, min(1.06vw, 1.63dvh), 1rem);
+  font-weight: 700;
+  line-height: 1.2;
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: none;
+  backdrop-filter: none;
+  transform: translateX(-50%);
+}
+
+.onboarding-stage--reward .onboarding-message {
+  position: absolute;
+  left: 50%;
+  top: var(--onboarding-story-text-center-y);
+  width: min(
+    max(19rem, min(38.03vw, 58.55dvh)),
+    calc(100vw - (var(--onboarding-story-side-x) * 4))
+  );
+  max-width: none;
+  transform: translate(-50%, -50%);
+}
+
+.onboarding-stage--reward .onboarding-message p {
+  font-size: clamp(1.35rem, min(2.38vw, 3.67dvh), 2.25rem);
+  font-weight: 700;
+  line-height: var(--onboarding-story-line-height);
+  letter-spacing: var(--onboarding-story-letter-spacing);
+}
+
+.onboarding-stage--reward .onboarding-message p + p {
+  margin-top: 0;
+}
+
+.onboarding-stage--reward .onboarding-reward-artwork {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.onboarding-stage--reward .onboarding-reward-home-slot {
+  left: 50% !important;
+  top: auto !important;
+  bottom: min(4.25vw, 6.54dvh);
+  width: min(16.83vw, 25.92dvh) !important;
+  height: min(23.33vw, 35.93dvh);
+  transform:
+    translate(-50%, var(--reward-card-compact-y))
+    rotate(var(--reward-card-rotate, 0deg))
+    scale(calc(var(--reward-card-scale, 1) * var(--reward-card-compact-scale, 1)))
+    perspective(700px)
+    rotateX(var(--tilt-x))
+    rotateY(var(--tilt-y))
+    translateY(var(--tilt-lift));
+  transform-origin: center top;
+}
+
+.onboarding-stage--reward .onboarding-reward-home-card {
+  width: 100%;
+  height: 100%;
+  border-radius: min(1.84vw, 2.84dvh);
+  box-shadow: 0 0 min(0.56vw, 0.87dvh) rgba(0, 0, 0, 0.15);
+}
+
+.onboarding-stage--reward .onboarding-reward-preview {
+  left: 4.38cqw;
+  top: 3.16cqh;
+  width: 91.24cqw;
+  height: 66.40cqh;
+  border-radius: 8.77cqw;
+}
+
+.onboarding-stage--reward .onboarding-reward-character {
+  transform:
+    translate(
+      var(--reward-character-x, 0%),
+      var(--reward-character-y, 58%)
+    )
+    rotate(var(--reward-character-rotate, 0deg))
+    scale(var(--reward-character-scale, 1));
+}
+
+.onboarding-stage--reward .home-character-name {
+  left: 7.95cqw;
+  top: 74.70cqh;
+  width: 52.55cqw;
+  font-size: clamp(1rem, 8.77cqw, 1.4rem);
+  font-weight: 700;
+  font-synthesis: weight;
+  line-height: 1.2;
+}
+
+.onboarding-stage--reward .home-character-tags {
+  left: 7.98cqw;
+  top: 86.66cqh;
+  gap: 1.6cqw;
+}
+
+.onboarding-stage--reward .home-tag {
+  height: 6.28cqh;
+  padding-inline: 2.66cqw;
+  font-size: clamp(0.48rem, 3.99cqw, 0.64rem);
+  font-weight: 700;
+  font-synthesis: weight;
+  line-height: 1.2;
+}
+
+.onboarding-stage--final {
+  display: block;
+  padding: 0;
+}
+
+.onboarding-stage--final .onboarding-slide-content,
+.onboarding-stage--final .onboarding-artwork-wrapper {
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.onboarding-stage--final .onboarding-slide-content {
+  pointer-events: none;
+}
+
+.onboarding-stage--final .onboarding-step {
+  position: absolute;
+  left: 50%;
+  top: var(--onboarding-story-step-top);
+  min-width: min(4.5vw, 6.92dvh);
+  min-height: min(2.31vw, 3.56dvh);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding:
+    min(0.53vw, 0.81dvh)
+    min(1.06vw, 1.63dvh);
+  color: #ffffff;
+  font-size: clamp(0.82rem, min(1.06vw, 1.63dvh), 1rem);
+  font-weight: 700;
+  line-height: 1.2;
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: none;
+  backdrop-filter: none;
+  transform: translateX(-50%);
+}
+
+.onboarding-stage--final .onboarding-message {
+  position: absolute;
+  left: 50%;
+  top: var(--onboarding-story-text-center-y);
+  width: min(
+    max(22rem, min(45.24vw, 69.65dvh)),
+    calc(100vw - (var(--onboarding-story-side-x) * 4))
+  );
+  max-width: none;
+  transform: translate(-50%, -50%);
+}
+
+.onboarding-stage--final .onboarding-message p {
+  font-size: clamp(1.35rem, min(2.38vw, 3.67dvh), 2.25rem);
+  font-weight: 700;
+  line-height: var(--onboarding-story-line-height);
+  letter-spacing: var(--onboarding-story-letter-spacing);
+}
+
+.onboarding-stage--final .onboarding-message p + p {
+  margin-top: 0;
+}
+
+.onboarding-stage--final .onboarding-final-artwork {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: visible;
+}
+
+.onboarding-stage--final .onboarding-final-card-strip {
+  top: var(--final-card-row-top);
+  width: min(
+    var(--final-card-strip-width),
+    calc(100vw - min(9.92vw, 15.28dvh))
+  );
+  gap: min(var(--final-card-gap), min(1.57vw, 2.42dvh));
+}
+
+.onboarding-stage--final .onboarding-final-card-slot {
+  aspect-ratio: 207.27 / 287.34;
+}
+
+.onboarding-stage--final .onboarding-final-card {
+  width: 100%;
+  height: 100%;
+  border-radius: min(1.5vw, 2.31dvh);
+  border: 0;
+  box-shadow: 0 0 min(0.56vw, 0.87dvh) rgba(0, 0, 0, 0.15);
+}
+
+.onboarding-stage--final .onboarding-final-preview {
+  left: 4.38cqw;
+  top: 3.16cqh;
+  width: 91.24cqw;
+  height: 66.40cqh;
+  border-radius: 8.77cqw;
+}
+
+.onboarding-stage--final .onboarding-final-card-name {
+  left: 7.95cqw;
+  top: 74.70cqh;
+  width: 74cqw;
+  font-size: clamp(0.9rem, 8.77cqw, 1.14rem);
+  font-weight: 700;
+  font-synthesis: weight;
+  line-height: 1.2;
+}
+
+.onboarding-stage--final .home-character-tags {
+  left: 7.98cqw;
+  top: 86.17cqh;
+  gap: 2.22cqw;
+  max-width: 88cqw;
+}
+
+.onboarding-stage--final .home-tag {
+  height: 6.36cqh;
+  padding-inline: 2.66cqw;
+  font-size: clamp(0.46rem, 3.99cqw, 0.52rem);
+  font-weight: 700;
+  font-synthesis: weight;
+  line-height: 1.2;
 }
 
 .onboarding-side-button {
@@ -1760,11 +2426,67 @@
 }
 
 .onboarding-side-button--prev {
-  left: clamp(18px, 4vw, 58px);
+  left: var(--flow-brand-offset-x);
 }
 
 .onboarding-side-button--next {
-  right: clamp(18px, 4vw, 58px);
+  right: var(--flow-brand-offset-x);
+}
+
+.onboarding-screen.is-story-intro .onboarding-side-button,
+.onboarding-screen.is-dock-story .onboarding-side-button,
+.onboarding-screen.is-warning-story .onboarding-side-button,
+.onboarding-screen.is-return-story .onboarding-side-button,
+.onboarding-screen.is-reward-story .onboarding-side-button,
+.onboarding-screen.is-final-story .onboarding-side-button {
+  top: var(--onboarding-story-text-center-y);
+  width: var(--onboarding-story-arrow-size);
+  height: var(--onboarding-story-arrow-size);
+}
+
+.onboarding-screen.is-story-intro .onboarding-side-button::before,
+.onboarding-screen.is-dock-story .onboarding-side-button::before,
+.onboarding-screen.is-warning-story .onboarding-side-button::before,
+.onboarding-screen.is-return-story .onboarding-side-button::before,
+.onboarding-screen.is-reward-story .onboarding-side-button::before,
+.onboarding-screen.is-final-story .onboarding-side-button::before {
+  inset: 0;
+}
+
+.onboarding-screen.is-story-intro .onboarding-side-button--prev,
+.onboarding-screen.is-dock-story .onboarding-side-button--prev,
+.onboarding-screen.is-warning-story .onboarding-side-button--prev,
+.onboarding-screen.is-return-story .onboarding-side-button--prev,
+.onboarding-screen.is-reward-story .onboarding-side-button--prev,
+.onboarding-screen.is-final-story .onboarding-side-button--prev {
+  left: var(--onboarding-story-side-x);
+}
+
+.onboarding-screen.is-story-intro .onboarding-side-button--next,
+.onboarding-screen.is-dock-story .onboarding-side-button--next,
+.onboarding-screen.is-warning-story .onboarding-side-button--next,
+.onboarding-screen.is-return-story .onboarding-side-button--next,
+.onboarding-screen.is-reward-story .onboarding-side-button--next,
+.onboarding-screen.is-final-story .onboarding-side-button--next {
+  right: var(--onboarding-story-side-x);
+}
+
+.onboarding-screen.is-story-intro .onboarding-side-chevron,
+.onboarding-screen.is-dock-story .onboarding-side-chevron,
+.onboarding-screen.is-warning-story .onboarding-side-chevron,
+.onboarding-screen.is-return-story .onboarding-side-chevron,
+.onboarding-screen.is-reward-story .onboarding-side-chevron,
+.onboarding-screen.is-final-story .onboarding-side-chevron {
+  width: var(--onboarding-story-arrow-mark-size);
+  height: var(--onboarding-story-arrow-mark-size);
+  border-top-width: var(--onboarding-story-arrow-stroke);
+  border-right-width: var(--onboarding-story-arrow-stroke);
+  filter: drop-shadow(
+    0
+    0
+    min(0.56vw, 0.87dvh)
+    rgba(0, 0, 0, 0.15)
+  );
 }
 
 .onboarding-side-button--prev .onboarding-side-chevron {
@@ -1797,14 +2519,57 @@
 }
 
 .onboarding-screen.is-splash-active .onboarding-stage {
-  grid-template-rows: 1fr;
-  place-items: center;
-  padding: clamp(42px, 8dvh, 80px) clamp(18px, 6vw, 80px);
+  display: block;
+  padding: 0;
 }
 
 .onboarding-screen.is-splash-active .onboarding-slide-content {
-  justify-items: center;
-  align-content: center;
+  position: absolute;
+  inset: 0;
+  display: block;
+}
+
+.onboarding-screen.is-splash-active .onboarding-message {
+  position: absolute;
+  /* ボタンと同じくビューポート水平中心（left:50% + translateX(-50%)） */
+  left: 50%;
+  top: var(--onboarding-splash-logo-top);
+  display: block;
+  width: var(--onboarding-splash-logo-width);
+  max-width: calc(100vw - (var(--onboarding-page-pad-x) * 2));
+  transform: translateX(-50%);
+}
+
+.onboarding-screen.is-splash-active .onboarding-main-logo {
+  width: 100%;
+  max-width: none;
+}
+
+.onboarding-screen.is-splash-active .onboarding-splash-next {
+  position: absolute;
+  left: 50%;
+  top: var(--onboarding-splash-button-center-y);
+  z-index: 5;
+  width: min(
+    var(--onboarding-splash-button-width),
+    calc(100vw - (var(--onboarding-page-pad-x) * 2))
+  );
+  height: var(--onboarding-splash-button-height);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  padding: clamp(0.875rem, min(1.32vw, 2.04dvh), 1.25rem);
+  font-size: clamp(1.05rem, min(1.59vw, 2.44dvh), 1.5rem);
+  font-weight: 700;
+  line-height: 1.2;
+  box-shadow: 0 0 min(0.56vw, 0.87dvh) rgba(0, 0, 0, 0.15);
+  transform: translate(-50%, -50%);
+}
+
+.onboarding-screen.is-splash-active .onboarding-splash-next:hover,
+.onboarding-screen.is-splash-active .onboarding-splash-next:focus-visible {
+  transform: translate(-50%, calc(-50% - 1px));
 }
 
 .onboarding-screen.is-splash-active .onboarding-artwork-wrapper,
@@ -1817,11 +2582,27 @@
   bottom: var(--onboarding-nav-bottom);
 }
 
+.onboarding-screen.is-story-intro .onboarding-footer,
+.onboarding-screen.is-dock-story .onboarding-footer,
+.onboarding-screen.is-warning-story .onboarding-footer,
+.onboarding-screen.is-return-story .onboarding-footer,
+.onboarding-screen.is-reward-story .onboarding-footer,
+.onboarding-screen.is-final-story .onboarding-footer {
+  top: var(--onboarding-story-dots-top);
+  bottom: auto;
+  width: min(
+    min(26.59vw, 40.94dvh),
+    calc(100vw - (var(--onboarding-story-side-x) * 2))
+  );
+  height: min(2.91vw, 4.48dvh);
+}
+
 .onboarding-footer {
   position: absolute;
   left: 50%;
   bottom: var(--onboarding-nav-bottom);
   z-index: 6;
+  width: max-content;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1845,6 +2626,24 @@
   backdrop-filter: blur(6px);
 }
 
+.onboarding-screen.is-story-intro .onboarding-dots,
+.onboarding-screen.is-dock-story .onboarding-dots,
+.onboarding-screen.is-warning-story .onboarding-dots,
+.onboarding-screen.is-return-story .onboarding-dots,
+.onboarding-screen.is-reward-story .onboarding-dots,
+.onboarding-screen.is-final-story .onboarding-dots {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  gap: var(--onboarding-story-dot-size);
+  padding:
+    min(0.53vw, 0.81dvh)
+    min(0.79vw, 1.22dvh);
+  background: transparent;
+  backdrop-filter: none;
+  transform: translate(-50%, -50%);
+}
+
 .onboarding-dots button {
   width: 9px;
   height: 9px;
@@ -1861,6 +2660,18 @@
     transform 0.2s ease;
 }
 
+.onboarding-screen.is-story-intro .onboarding-dots button,
+.onboarding-screen.is-dock-story .onboarding-dots button,
+.onboarding-screen.is-warning-story .onboarding-dots button,
+.onboarding-screen.is-return-story .onboarding-dots button,
+.onboarding-screen.is-reward-story .onboarding-dots button,
+.onboarding-screen.is-final-story .onboarding-dots button {
+  width: var(--onboarding-story-dot-size);
+  height: var(--onboarding-story-dot-size);
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: none;
+}
+
 .onboarding-dots button:hover,
 .onboarding-dots button:focus-visible {
   background: rgba(255, 255, 255, 0.88);
@@ -1871,6 +2682,17 @@
   width: 28px;
   background: #ffffff;
   animation: onboarding-dot-active-pulse 1.85s ease-in-out infinite;
+}
+
+.onboarding-screen.is-story-intro .onboarding-dots button.is-active,
+.onboarding-screen.is-dock-story .onboarding-dots button.is-active,
+.onboarding-screen.is-warning-story .onboarding-dots button.is-active,
+.onboarding-screen.is-return-story .onboarding-dots button.is-active,
+.onboarding-screen.is-reward-story .onboarding-dots button.is-active,
+.onboarding-screen.is-final-story .onboarding-dots button.is-active {
+  width: var(--onboarding-story-dot-size);
+  background: #ffffff;
+  animation: none;
 }
 
 .onboarding-dots button:active {
@@ -1980,4 +2802,237 @@
   height: 9px;
   animation-delay: 6.4s;
   animation-duration: 10.8s, 3.2s;
+}
+
+/* 「ストーリ修正」最終フレームの共通仕様 */
+.onboarding-screen.is-dock-story,
+.onboarding-screen.is-warning-story,
+.onboarding-screen.is-return-story,
+.onboarding-screen.is-reward-story,
+.onboarding-screen.is-final-story {
+  background: linear-gradient(180deg, #13a2d7 0%, #f1edcc 100%);
+}
+
+.onboarding-screen.is-dock-story::before,
+.onboarding-screen.is-warning-story::before,
+.onboarding-screen.is-return-story::before,
+.onboarding-screen.is-reward-story::before,
+.onboarding-screen.is-final-story::before,
+.onboarding-screen.is-splash-active::before {
+  display: none;
+}
+
+.onboarding-screen.is-story-intro .onboarding-message p,
+.onboarding-stage--message .onboarding-message p,
+.onboarding-stage--warning .onboarding-message p,
+.onboarding-stage--return .onboarding-message p,
+.onboarding-stage--reward .onboarding-message p,
+.onboarding-stage--final .onboarding-message p {
+  font-size: clamp(1rem, min(2.38vw, 3.67dvh), 2.25rem);
+  font-weight: 700;
+  font-synthesis: weight;
+  line-height: 2;
+  letter-spacing: 0;
+  text-align: center;
+}
+
+.onboarding-screen.is-story-intro .onboarding-message,
+.onboarding-stage--message .onboarding-message,
+.onboarding-stage--warning .onboarding-message,
+.onboarding-stage--return .onboarding-message,
+.onboarding-stage--reward .onboarding-message,
+.onboarding-stage--final .onboarding-message {
+  width: min(80vw, calc(100vw - (var(--onboarding-story-side-x) * 4)));
+}
+
+.onboarding-reward-artwork,
+.onboarding-final-artwork {
+  pointer-events: none;
+}
+
+.onboarding-reward-artwork .onboarding-reward-home-card::before,
+.onboarding-reward-artwork .onboarding-reward-home-card::after,
+.onboarding-stage--final .onboarding-final-card::after {
+  display: none;
+}
+
+.onboarding-stage--reward .home-character-name {
+  font-size: clamp(0.5rem, 8.77cqw, 1.4rem);
+}
+
+.onboarding-stage--reward .home-tag {
+  font-size: clamp(0.3rem, 3.99cqw, 0.64rem);
+}
+
+.onboarding-stage--final .onboarding-final-card-name {
+  font-size: clamp(0.5rem, 8.77cqw, 1.14rem);
+}
+
+.onboarding-stage--final .home-tag {
+  font-size: clamp(0.3rem, 3.99cqw, 0.52rem);
+}
+
+/* Onboarding cards keep the Figma geometry without depending on Home screen layout. */
+.onboarding-stage--reward .onboarding-reward-home-slot,
+.onboarding-stage--final .onboarding-final-card-slot {
+  display: grid;
+  min-width: 0;
+  aspect-ratio: 300.65 / 416.8;
+  container-type: size;
+}
+
+.onboarding-stage--reward .onboarding-reward-home-card,
+.onboarding-stage--final .onboarding-final-card {
+  position: relative;
+  display: block;
+  min-height: 0;
+  padding: 0;
+  background: #ffffff;
+  text-align: left;
+  container-type: size;
+  overflow: hidden;
+}
+
+.onboarding-stage--reward .onboarding-reward-preview,
+.onboarding-stage--final .onboarding-final-preview {
+  position: absolute;
+  left: 4.38cqw;
+  top: 3.16cqh;
+  width: 91.24cqw;
+  height: 66.4cqh;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+.onboarding-stage--reward .onboarding-reward-character {
+  position: absolute;
+  left: 50%;
+  bottom: -60%;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  min-height: 0;
+  object-fit: contain;
+  object-position: center bottom;
+}
+
+.onboarding-stage--final .onboarding-final-character {
+  position: absolute;
+  left: 50%;
+  bottom: var(--final-character-y, -90%);
+  width: auto;
+  height: 188%;
+  max-width: none;
+  min-height: 0;
+  object-fit: contain;
+  object-position: center bottom;
+  transform: translateX(-50%) scale(var(--final-character-scale, 1));
+  transform-origin: center bottom;
+}
+
+.onboarding-stage--reward .home-character-body,
+.onboarding-stage--final .home-character-body {
+  display: contents;
+}
+
+.onboarding-stage--reward .home-character-name,
+.onboarding-stage--final .onboarding-final-card-name {
+  position: absolute;
+  z-index: 3;
+  margin: 0;
+  min-width: 0;
+  padding: 0;
+  color: #000000;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+
+.onboarding-stage--reward .home-character-tags,
+.onboarding-stage--final .home-character-tags {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  flex-flow: row nowrap;
+  align-items: center;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.onboarding-stage--reward .home-tag,
+.onboarding-stage--final .home-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-block: 0;
+  border-radius: 999px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+@media (max-height: 680px) {
+  .onboarding-screen {
+    --onboarding-story-arrow-size: clamp(2rem, min(4.23vw, 6.52dvh), 4.75rem);
+    --onboarding-story-arrow-mark-size: clamp(0.75rem, min(1.78vw, 2.74dvh), 2rem);
+    --onboarding-story-arrow-stroke: clamp(0.13rem, min(0.32vw, 0.49dvh), 0.36rem);
+    --onboarding-story-dot-size: clamp(0.25rem, min(0.53vw, 0.81dvh), 0.6rem);
+  }
+
+  .onboarding-stage--message .onboarding-message,
+  .onboarding-stage--warning .onboarding-message,
+  .onboarding-stage--return .onboarding-message,
+  .onboarding-stage--reward .onboarding-message,
+  .onboarding-stage--final .onboarding-message {
+    width: min(78vw, calc(100vw - (var(--onboarding-story-side-x) * 4)));
+  }
+
+  .onboarding-stage--message .onboarding-step,
+  .onboarding-stage--warning .onboarding-step,
+  .onboarding-stage--return .onboarding-step,
+  .onboarding-stage--reward .onboarding-step,
+  .onboarding-stage--final .onboarding-step {
+    font-size: clamp(0.625rem, min(1.06vw, 1.63dvh), 1rem);
+  }
+
+  .onboarding-stage--reward .onboarding-reward-home-slot {
+    --reward-card-compact-scale: 1;
+    --reward-card-compact-y: 0px;
+  }
+}
+
+@media (max-aspect-ratio: 5 / 4) {
+  .onboarding-screen {
+    --onboarding-story-side-x: clamp(1.25rem, 5vw, 3rem);
+    --onboarding-story-logo-top: 3dvh;
+    --onboarding-story-logo-width: min(25vw, 12dvh);
+    --onboarding-story-step-top: 15dvh;
+    --onboarding-story-text-center-y: 27dvh;
+    --onboarding-story-dots-top: 40dvh;
+  }
+
+  .onboarding-screen.is-story-intro .onboarding-message,
+  .onboarding-stage--message .onboarding-message,
+  .onboarding-stage--warning .onboarding-message,
+  .onboarding-stage--return .onboarding-message,
+  .onboarding-stage--reward .onboarding-message,
+  .onboarding-stage--final .onboarding-message {
+    width: min(
+      82vw,
+      calc(
+        100vw - (var(--onboarding-story-side-x) * 2) -
+          (var(--onboarding-story-arrow-size) * 2) - 1rem
+      )
+    );
+  }
+
+  .onboarding-screen.is-story-intro .onboarding-message p,
+  .onboarding-stage--message .onboarding-message p,
+  .onboarding-stage--warning .onboarding-message p,
+  .onboarding-stage--return .onboarding-message p,
+  .onboarding-stage--reward .onboarding-message p,
+  .onboarding-stage--final .onboarding-message p {
+    font-size: clamp(0.95rem, 4.4vw, 2.25rem);
+  }
 }
