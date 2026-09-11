@@ -2845,17 +2845,6 @@
   width: min(80vw, calc(100vw - (var(--onboarding-story-side-x) * 4)));
 }
 
-.onboarding-reward-artwork,
-.onboarding-final-artwork {
-  pointer-events: none;
-}
-
-.onboarding-reward-artwork .onboarding-reward-home-card::before,
-.onboarding-reward-artwork .onboarding-reward-home-card::after,
-.onboarding-stage--final .onboarding-final-card::after {
-  display: none;
-}
-
 .onboarding-stage--reward .home-character-name {
   font-size: clamp(0.5rem, 8.77cqw, 1.4rem);
 }

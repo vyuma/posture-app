@@ -443,6 +443,11 @@ export function OnboardingStoryScreen({ onComplete }: OnboardingStoryScreenProps
       }`}
       aria-labelledby="onboarding-heading"
     >
+      <div className="onboarding-bubbles" aria-hidden="true">
+        {Array.from({ length: 11 }, (_, index) => (
+          <span key={index} />
+        ))}
+      </div>
       {!isSplashSlide ? (
         <header className="onboarding-header">
           <img
@@ -839,6 +844,9 @@ function RewardArtwork({
                 style={characterStyle}
               />
             ) : null}
+            <span className="onboarding-reward-sparkle onboarding-reward-sparkle--1" />
+            <span className="onboarding-reward-sparkle onboarding-reward-sparkle--2" />
+            <span className="onboarding-reward-sparkle onboarding-reward-sparkle--3" />
           </div>
           <div className="home-character-body">
             <h3 className="home-character-name">
