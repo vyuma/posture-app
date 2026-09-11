@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_レイヤー_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 409.86 359.97">
+  <!-- Generator: Adobe Illustrator 30.8.1, SVG Export Plug-In . SVG Version: 2.1.4 Build 1)  -->
+  <defs>
+    <style>
+      .st0, .st1 {
+        fill: none;
+      }
+
+      .st2 {
+        fill: #505050;
+        stroke: #fff;
+        stroke-miterlimit: 10;
+        stroke-width: 1.66px;
+      }
+
+      .st3 {
+        clip-path: url(#clippath-1);
+      }
+
+      .st4 {
+        fill: #fff;
+      }
+
+      .st1 {
+        stroke: #f78000;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 58.7px;
+      }
+    </style>
+    <clipPath id="clippath-1">
+      <rect class="st0" x="47.45" y="118.04" width="312.1" height="241.93"/>
+    </clipPath>
+  </defs>
+  <g class="st3">
+    <g>
+      <path class="st1" d="M187.56,664.33V250.01s1.49-4.6,3.57-11.63c11.07-37.44,44.87-63.59,83.89-64.91h0"/>
+      <polygon class="st4" points="156.68 249.72 216.89 261.27 218.67 248.33 159.19 236.99 156.68 249.72"/>
+      <polygon class="st4" points="176.39 200.05 227.63 229.64 235.26 219.94 184.16 188.47 176.39 200.05"/>
+      <rect class="st4" x="157.78" y="286.31" width="59.37" height="12.97"/>
+      <rect class="st4" x="158.64" y="329.84" width="58.51" height="12.97"/>
+      <ellipse class="st2" cx="292.44" cy="180.68" rx="4.51" ry="2.26"/>
+      <ellipse class="st2" cx="273.71" cy="180.68" rx="4.51" ry="2.26"/>
+    </g>
+  </g>
+</svg>
