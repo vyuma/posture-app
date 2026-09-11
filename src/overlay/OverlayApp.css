@@ -108,95 +108,37 @@ button {
 }
 
 .overlay-character {
-  --overlay-character-scale: 0.5;
-
   position: absolute;
   right: 24px;
   bottom: 24px;
   z-index: 2;
   width: 184px;
+  aspect-ratio: 860 / 1022;
   transform-origin: 100% 100%;
-  transition: transform 0.44s cubic-bezier(0.2, 0.8, 0.2, 1);
-  will-change: transform;
   cursor: grab;
   touch-action: none;
 }
 
 .overlay-character--dragging {
   cursor: grabbing;
-  transition: none;
 }
 
-.overlay-character img {
-  display: block;
+.overlay-character > .web-inline-character-overlay {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 0;
+}
+
+.overlay-character .web-inline-character {
   width: 100%;
-  height: auto;
-  transform: scale(var(--overlay-character-scale));
-  transform-origin: 50% 100%;
-  user-select: none;
-  pointer-events: none;
-  filter: drop-shadow(10px 12px 14px rgba(0, 0, 0, 0.22));
-}
-
-.overlay-shell--good .overlay-character {
-  animation: character-rise 0.42s ease both, character-breathe 2.8s ease-in-out 0.42s infinite;
-}
-
-.overlay-shell--bad .overlay-character {
-  animation: character-worry 1.4s ease-in-out infinite;
-}
-
-.overlay-shell--paused .overlay-character {
-  animation: character-sleep 3.2s ease-in-out infinite;
-}
-
-@keyframes character-rise {
-  from {
-    opacity: 0;
-    translate: 0 34px;
-  }
-  to {
-    opacity: 1;
-    translate: 0 0;
-  }
-}
-
-@keyframes character-breathe {
-  0%,
-  100% {
-    scale: 1;
-  }
-  50% {
-    scale: 1.015;
-  }
-}
-
-@keyframes character-worry {
-  0%,
-  100% {
-    rotate: -1deg;
-  }
-  50% {
-    rotate: 1deg;
-  }
-}
-
-@keyframes character-sleep {
-  0%,
-  100% {
-    translate: 0 0;
-  }
-  50% {
-    translate: 0 5px;
-  }
 }
 
 /*
  * 配置ヒント吹き出し：右下キャラの上。「どこに配置する？」↔ホバーでクロスフェード。
  *
- * オーバーレイは小さい固定ウィンドウ（Rust: OVERLAY_WIDTH/HEIGHT）。キャラ DIV の layout 高さは
- * img の intrinsic に近く大きいが scale(0.5) は視覚だけなので、`bottom: calc(100% - …)` で
- * ヘッド付近へ置くと吹き出しがウィンドウ上端より外へ出てクリップされていた。
+ * オーバーレイは小さい固定ウィンドウ（Rust: OVERLAY_WIDTH/HEIGHT）。Lottieの比率に合わせた
+ * キャラ領域を基準に、吹き出しがウィンドウ上端でクリップされない位置へ固定する。
  * 横幅はコンテナ inset で抑え、`max-width: 85vw` 等での左はみ出しを避ける。
  */
 .overlay-placement-hint {
@@ -207,7 +149,7 @@ button {
   width: auto;
   max-width: none;
   /* 足下基準でもう少し上へ（頭上側の余裕） */
-  bottom: calc(184px * var(--overlay-character-scale, 0.5) + 70px);
+  bottom: 162px;
   z-index: 3;
   box-sizing: border-box;
   padding: 10px 12px;

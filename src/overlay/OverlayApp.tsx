@@ -5,6 +5,7 @@ import { invoke } from "@tauri-apps/api/core";
 import {
   OVERLAY_PLACEMENT_HINT_REFRESH_EVENT,
 } from "../features/overlay/overlayPlacementHintBridge";
+import { WebInlineCharacterOverlay } from "../features/overlay/WebInlineCharacterOverlay";
 import {
   clearPlacementHintDismissed,
   clampPositionOffset,
@@ -18,15 +19,6 @@ import {
   type PositionOffset,
 } from "../features/overlay/overlayState";
 
-const CHARACTER_SRC: Record<Exclude<OverlayMode, "hidden">, string> = {
-  good: "/characters/anago/normal-nago/expressions/good.png",
-  bad: "/characters/anago/normal-nago/expressions/bad.png",
-  paused: "/characters/anago/normal-nago/expressions/paused.png",
-};
-
-const BAD_SINK_MAX_PX = 136;
-const BAD_SINK_PX_PER_SECOND = 34;
-
 type DragState = {
   pointerId: number;
   startClientX: number;
@@ -37,7 +29,6 @@ type DragState = {
 export function OverlayApp() {
   const [overlayState, setOverlayState] =
     useState<OverlayStatePayload>(DEFAULT_OVERLAY_STATE);
-  const [badSinkPx, setBadSinkPx] = useState(0);
   const [positionOffset, setPositionOffset] = useState<PositionOffset>(() =>
     loadStoredPositionOffset(),
   );
@@ -110,27 +101,6 @@ export function OverlayApp() {
       void promise.then((unlisten) => unlisten());
     };
   }, []);
-
-  useEffect(() => {
-    if (overlayState.mode !== "bad") {
-      setBadSinkPx(0);
-      return;
-    }
-
-    const badStartedAt = performance.now();
-    setBadSinkPx(0);
-
-    const intervalId = window.setInterval(() => {
-      const elapsedSeconds = (performance.now() - badStartedAt) / 1000;
-      setBadSinkPx(
-        Math.min(BAD_SINK_MAX_PX, elapsedSeconds * BAD_SINK_PX_PER_SECOND),
-      );
-    }, 120);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  }, [overlayState.mode]);
 
   const displayMode: Exclude<OverlayMode, "hidden"> | null =
     overlayState.mode === "hidden" || overlayState.userHidden
@@ -254,7 +224,6 @@ export function OverlayApp() {
           </div>
           <div
             className={`overlay-character ${isDragging ? "overlay-character--dragging" : ""}`}
-            style={{ transform: `translateY(${badSinkPx}px)` }}
             onPointerDown={handleCharacterPointerDown}
             onPointerMove={handleCharacterPointerMove}
             onPointerUp={handleCharacterPointerEnd}
@@ -276,11 +245,7 @@ export function OverlayApp() {
                 </div>
               </div>
             ) : null}
-            <img
-              src={CHARACTER_SRC[displayMode]}
-              alt=""
-              draggable={false}
-            />
+            <WebInlineCharacterOverlay mode={displayMode} />
           </div>
         </>
       ) : null}

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_レイヤー_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 409.86 359.97">
+  <!-- Generator: Adobe Illustrator 30.8.1, SVG Export Plug-In . SVG Version: 2.1.4 Build 1)  -->
+  <defs>
+    <style>
+      .st0, .st1, .st2, .st3 {
+        fill: none;
+      }
+
+      .st1 {
+        stroke: #727272;
+        stroke-width: 2.19px;
+      }
+
+      .st1, .st2, .st3 {
+        stroke-linecap: round;
+      }
+
+      .st1, .st3 {
+        stroke-linejoin: round;
+      }
+
+      .st4 {
+        fill: #fff;
+      }
+
+      .st2 {
+        stroke: #fff;
+        stroke-miterlimit: 10;
+        stroke-width: 3.09px;
+      }
+
+      .st3 {
+        stroke: #f78000;
+        stroke-width: 77.14px;
+      }
+
+      .st5 {
+        clip-path: url(#clippath);
+      }
+    </style>
+    <clipPath id="clippath">
+      <rect class="st0" y="34.54" width="409.86" height="325.87"/>
+    </clipPath>
+  </defs>
+  <polyline class="st1" points="134.88 98.44 141.83 96.43 137.18 106.38 144.13 104.36"/>
+  <polyline class="st1" points="120.68 95.48 127.62 93.46 122.98 103.41 129.92 101.4"/>
+  <polyline class="st1" points="106.47 93.46 113.41 91.45 108.77 101.4 115.72 99.39"/>
+  <g class="st5">
+    <g>
+      <path class="st3" d="M230.94,792.82V180.84c0-30.77-14.77-59.67-39.71-77.69h0"/>
+      <rect class="st4" x="192.49" y="267.85" width="76.9" height="17.05"/>
+      <rect class="st4" x="192.49" y="210.64" width="76.9" height="17.05"/>
+      <rect class="st4" x="192.49" y="325.07" width="76.9" height="17.05"/>
+      <path class="st2" d="M162.01,98.44c2.16,2.52,4.36,2.96,5.93,2.96,1.32,0,4.1,0,5.93-2.96"/>
+      <path class="st2" d="M186.63,98.44c2.16,2.52,4.36,2.96,5.93,2.96,1.32,0,4.1,0,5.93-2.96"/>
+    </g>
+  </g>
+</svg>

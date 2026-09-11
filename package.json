@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "build:anago-lottie": "node scripts/build-anago-overlay-lottie.mjs",
+    "test:anago-lottie": "node --test scripts/anago-lottie.test.mjs",
     "build": "tsc && vite build",
     "build:debug-ui": "VITE_SHOW_DEBUG_UI=true tsc && vite build",
     "preview": "vite preview",
