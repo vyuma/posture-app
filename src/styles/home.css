@@ -2346,6 +2346,11 @@
   outline-offset: 2px;
 }
 
+.home-collection-reset.is-confirming {
+  color: #ffffff;
+  background: #939393;
+}
+
 .home-character-slot > .home-character-card {
   height: 100%;
 }

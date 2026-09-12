@@ -1552,6 +1552,7 @@ function CharacterCollection({
   onToggleFavoriteCharacter: (characterId: string) => void;
   onResetCollection: () => void;
 }) {
+  const [isResetConfirming, setIsResetConfirming] = useState(false);
   const acquiredCharactersById = new Map(
     acquiredCharacters.map((character) => [character.characterId, character]),
   );
@@ -1574,13 +1575,26 @@ function CharacterCollection({
     (slot) => slot.acquiredCharacter !== null,
   ).length;
 
-  function handleResetCollection() {
-    const shouldReset = window.confirm(
-      "コレクションをリセットしますか？\n獲得したピンアナゴ、お気に入り、プロフィール設定がすべて削除されます。",
-    );
-    if (shouldReset) {
-      onResetCollection();
+  useEffect(() => {
+    if (!isResetConfirming) {
+      return;
     }
+
+    const timeoutId = window.setTimeout(() => {
+      setIsResetConfirming(false);
+    }, 4000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isResetConfirming]);
+
+  function handleResetCollection() {
+    if (!isResetConfirming) {
+      setIsResetConfirming(true);
+      return;
+    }
+
+    setIsResetConfirming(false);
+    onResetCollection();
   }
 
   return (
@@ -1598,10 +1612,12 @@ function CharacterCollection({
         </div>
         <button
           type="button"
-          className="home-collection-reset"
+          className={`home-collection-reset ${
+            isResetConfirming ? "is-confirming" : ""
+          }`}
           onClick={handleResetCollection}
         >
-          コレクションをリセット
+          {isResetConfirming ? "もう一度押して確定" : "コレクションをリセット"}
         </button>
       </div>
       <div className="home-collection-grid">
