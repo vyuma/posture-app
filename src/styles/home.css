@@ -2245,3 +2245,64 @@
     align-self: center;
   }
 }
+
+/* Figma「ホーム画面」ヘッダー：紹介導線 116×38 とプロフィール 56×56。 */
+.home-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.home-nav-about {
+  width: 116px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 14px;
+  letter-spacing: 0;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.home-nav-about:hover,
+.home-nav-about:focus-visible {
+  background: rgba(255, 255, 255, 0.38);
+  outline: 2px solid rgba(255, 255, 255, 0.7);
+  outline-offset: 2px;
+}
+
+.home-nav .home-nav-profile {
+  width: 56px;
+  height: 56px;
+}
+
+@media (max-width: 900px) {
+  .home-nav .home-nav-profile {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+@media (max-width: 640px) {
+  .home-nav-actions {
+    gap: 10px;
+  }
+
+  .home-nav-about {
+    width: 98px;
+    height: 34px;
+    font-size: 11px;
+    line-height: 13px;
+  }
+
+  .home-nav .home-nav-profile {
+    width: 42px;
+    height: 42px;
+  }
+}

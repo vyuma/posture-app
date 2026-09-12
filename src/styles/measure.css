@@ -133,7 +133,7 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -144,7 +144,8 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: calc(12px * var(--pr-scale));
-  margin-bottom: calc(20px * var(--pr-scale));
+  min-height: calc(64px * var(--pr-scale));
+  margin-bottom: calc(16px * var(--pr-scale));
 }
 
 .measure-control-title {
@@ -157,11 +158,15 @@
 }
 
 .measure-control-status-hint {
-  margin: calc(6px * var(--pr-scale)) 0 0;
-  font-size: max(0.75rem, calc(14px * var(--pr-scale)));
-  font-weight: 600;
-  color: #666666;
-  line-height: 1.35;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .measure-control-icon-actions {
@@ -211,28 +216,28 @@
 .measure-metrics-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: calc(24px * var(--pr-scale));
+  gap: calc(16px * var(--pr-scale));
   min-width: 0;
-  margin-bottom: calc(20px * var(--pr-scale));
+  margin-bottom: calc(12px * var(--pr-scale));
 }
 
 .measure-card-rule {
   width: 100%;
   height: 0;
-  margin: 0 0 calc(20px * var(--pr-scale));
+  margin: 0 0 calc(10px * var(--pr-scale));
   border: 0;
-  border-top: calc(2px * var(--pr-scale)) solid #f5f5f5;
+  border-top: max(1px, calc(1px * var(--pr-scale))) solid #f5f5f5;
 }
 
 .measure-control-card .metric-tile {
-  min-height: calc(120px * var(--pr-scale));
+  min-height: calc(104px * var(--pr-scale));
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
   padding: calc(20px * var(--pr-scale)) calc(12px * var(--pr-scale))
-    calc(16px * var(--pr-scale));
+    calc(12px * var(--pr-scale));
   gap: calc(6px * var(--pr-scale));
   background: #f5f5f5;
   border: 0;
@@ -254,28 +259,32 @@
   gap: calc(2px * var(--pr-scale));
 }
 
-.measure-control-card .metric-tile strong {
+.measuring-screen .measure-control-card .metric-tile strong {
   margin: 0;
   color: #000000;
-  font-size: max(1.75rem, calc(48px * var(--pr-scale)));
+  font-size: max(1.75rem, calc(32px * var(--pr-scale)));
   font-weight: 700;
-  line-height: calc(57 / 48);
+  line-height: calc(38 / 32);
   letter-spacing: 0;
 }
 
 .measure-control-card .metric-tile-value-suffix {
   color: #000000;
-  font-size: max(1rem, calc(24px * var(--pr-scale)));
+  font-size: max(1.75rem, calc(32px * var(--pr-scale)));
   font-weight: 700;
-  line-height: calc(29 / 24);
+  line-height: calc(38 / 32);
 }
 
 .measure-control-card .frame53-toggle-strip {
-  margin-bottom: calc(16px * var(--pr-scale));
+  margin-bottom: 0;
+}
+
+.measure-control-card .frame53-toggle-strip + .frame53-toggle-strip {
+  margin-bottom: calc(5px * var(--pr-scale));
 }
 
 .measure-control-card .frame53-sound-card {
-  margin-bottom: calc(8px * var(--pr-scale));
+  margin-bottom: 0;
 }
 
 .measure-control-card-footer {
@@ -388,7 +397,7 @@
   min-width: 0;
   min-height: 0;
   padding: 0;
-  border-radius: calc(32px * var(--pr-scale));
+  border-radius: calc(40px * var(--pr-scale));
   /* 登録完了（.frame53-camera-panel）と同一のスロット見た目 */
   background: #a1a1a1;
   border: 0;
@@ -400,7 +409,7 @@
 .measure-camera-panel .measure-camera-stack {
   flex: 1;
   min-height: 0;
-  border-radius: calc(32px * var(--pr-scale));
+  border-radius: calc(40px * var(--pr-scale));
   overflow: hidden;
   background: #a1a1a1;
 }
@@ -448,7 +457,7 @@
   top: calc(24px * var(--pr-scale));
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100% - 132px * var(--pr-scale));
+  width: calc(100% - 120px * var(--pr-scale));
   max-width: calc(561px * var(--pr-scale));
   min-height: calc(80px * var(--pr-scale));
   z-index: 2500;
@@ -788,6 +797,16 @@
 
 /* 縦幅が狭いときは左カード内メトリクスを詰める */
 @media (max-height: 640px) {
+  .measure-control-scroll {
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+
+  .measure-control-scroll::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+
   .measure-control-title {
     font-size: clamp(1.05rem, 2vw, 1.4rem);
   }

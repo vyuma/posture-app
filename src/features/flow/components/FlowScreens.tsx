@@ -13,7 +13,6 @@ import {
 } from "../../overlay/overlayPlacementHintBridge";
 import {
   isDebugUiBuildEnabled,
-  isOverlayDebugUiEnabled,
   OVERLAY_DEBUG_UI_STORAGE_KEY,
 } from "../../overlay/overlayState";
 import { playSoundPreview } from "../../sound/services/recoverySound";
@@ -204,17 +203,26 @@ export function HomeScreen(props: HomeScreenProps) {
       {/* ナビゲーションバー */}
       <nav className="home-nav">
         <FlowBrand />
-        <button
-          type="button"
-          className="home-nav-profile"
-          aria-label="プロフィールキャラクターを変更"
-          onClick={() => setIsProfileDialogOpen(true)}
-        >
-          <CharacterFigure
-            character={props.profileCharacter}
-            className="home-nav-profile-character"
-          />
-        </button>
+        <div className="home-nav-actions">
+          <button
+            type="button"
+            className="home-nav-about"
+            onClick={props.onDebugShowOnboarding}
+          >
+            ピンアナゴとは
+          </button>
+          <button
+            type="button"
+            className="home-nav-profile"
+            aria-label="プロフィールキャラクターを変更"
+            onClick={() => setIsProfileDialogOpen(true)}
+          >
+            <CharacterFigure
+              character={props.profileCharacter}
+              className="home-nav-profile-character"
+            />
+          </button>
+        </div>
       </nav>
 
       {/* ヒーローセクション */}
@@ -462,7 +470,7 @@ export function CodeReadScreen({
             姿勢登録
           </h1>
           <p className="frame53-led">
-            肩の力を抜いて、背筋を伸ばしてください。
+            肩の力を抜いて、背筋を伸ばしてください
           </p>
           <hr className="frame53-rule" />
           <div className="frame53-toggle-strip">
@@ -629,7 +637,7 @@ export function MeasuringScreen({
 }: MeasuringScreenProps) {
   const isWarmup = !snapshot.baselineReady;
 
-  const showMeasureDevTools = isOverlayDebugUiEnabled();
+  const showMeasureDevTools = false;
 
   const volumePreviewTimerRef = useRef<number | null>(null);
   useEffect(() => {
@@ -710,7 +718,7 @@ export function MeasuringScreen({
           <header className="measure-control-head">
             <div>
               <h1 id={headingId} className="measure-control-title">
-                姿勢測定中
+                測定中
               </h1>
               <p id={statusHintId} className="measure-control-status-hint">
                 {isWarmup
@@ -784,8 +792,6 @@ export function MeasuringScreen({
               <span className="frame53-toggle-strip-switch-knob" aria-hidden />
             </button>
           </div>
-
-          <div className="measure-card-rule" role="presentation" />
 
           <div className="frame53-toggle-strip">
             <span
@@ -920,7 +926,7 @@ export function MeasuringScreen({
               className="measure-reregister-cta"
               onClick={onReRegisterPosture}
             >
-              姿勢を再登録する
+              姿勢を再測定する
             </button>
           </div>
         </aside>
