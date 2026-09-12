@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type RefObject } from "react";
 
 import type {
   AcquiredCharacter,
@@ -32,6 +32,11 @@ import {
 import type { MeasurementResult, MeasurementStats } from "../types";
 
 import { CharacterResultWhiteCard } from "./CharacterResultWhiteCard";
+import {
+  getDebugQrModalStep2Preview,
+  subscribeDebugQrModalStep2Preview,
+  toggleDebugQrModalStep2Preview,
+} from "./debugQrModalFlowPrefs";
 
 type HomeScreenProps = {
   characters: CharacterDefinition[];
@@ -143,8 +148,6 @@ function onResultCardMouseLeave(e: React.MouseEvent<HTMLElement>) {
   resetCardTilt(e.currentTarget);
 }
 
-const SHOW_DEBUG_COLLECTION_CONTROLS = SHOW_DEBUG_FLOW_CONTROLS;
-
 const DIALOG_CLOSE_DURATION_MS = 230;
 
 export function HomeScreen(props: HomeScreenProps) {
@@ -216,15 +219,6 @@ export function HomeScreen(props: HomeScreenProps) {
 
       {/* ヒーローセクション */}
       <section className="home-hero">
-        {SHOW_DEBUG_FLOW_CONTROLS ? (
-          <button
-            type="button"
-            className="home-single-debug-story"
-            onClick={props.onDebugShowOnboarding}
-          >
-            DEBUG: ストーリー
-          </button>
-        ) : null}
         <div className="home-hero-content">
           <div className="home-hero-copy">
             <h1>
@@ -261,10 +255,8 @@ export function HomeScreen(props: HomeScreenProps) {
         characters={props.characters}
         acquiredCharacters={props.acquiredCharacters}
         favoriteCharacterIds={props.favoriteCharacterIds}
-        resetTick={props.collectionResetTick}
         onCharacterDetailOpen={setCollectionDetailCharacterId}
         onToggleFavoriteCharacter={props.onToggleFavoriteCharacter}
-        onDebugClearAcquiredCharacters={props.onDebugClearAcquiredCharacters}
       />
 
       {/* QR接続モーダル */}
@@ -296,6 +288,17 @@ export function HomeScreen(props: HomeScreenProps) {
             closeProfileDialog();
           }}
           onClose={closeProfileDialog}
+          debugTools={
+            SHOW_DEBUG_FLOW_CONTROLS
+              ? {
+                  collectionResetTick: props.collectionResetTick,
+                  onShowOnboarding: props.onDebugShowOnboarding,
+                  onClearAcquiredCharacters: props.onDebugClearAcquiredCharacters,
+                  onPairingRefresh: props.onRefreshPairing,
+                  onPairingSkipContinue: props.onContinueFromPaired,
+                }
+              : undefined
+          }
         />
       ) : null}
       {collectionDetailCharacter && collectionDetailAcquiredCharacter ? (
@@ -1280,7 +1283,11 @@ function QrConnectionModal({
   onClose: () => void;
 }) {
   /* Figma Frame 53：1 = QR／接続済みでも 次へ で 2 へ進む（自動で飛ばさない） */
-  const [debugForceStep2, setDebugForceStep2] = useState(false);
+  const debugForceStep2 = useSyncExternalStore(
+    subscribeDebugQrModalStep2Preview,
+    getDebugQrModalStep2Preview,
+    getDebugQrModalStep2Preview,
+  );
   const [pairedAdvanceToStep2, setPairedAdvanceToStep2] = useState(false);
 
   useEffect(() => {
@@ -1486,24 +1493,6 @@ function QrConnectionModal({
         )}
       </div>
 
-      {SHOW_DEBUG_FLOW_CONTROLS ? (
-        <div className="qr-modal-debug-actions">
-          <button
-            type="button"
-            className="home-single-debug-skip qr-modal-debug-skip"
-            onClick={onNext}
-          >
-            DEBUG: QRスキップ
-          </button>
-          <button
-            type="button"
-            className="home-single-debug-skip qr-modal-debug-step2"
-            onClick={() => setDebugForceStep2((v) => !v)}
-          >
-            DEBUG: Step2 {debugForceStep2 ? "OFF" : "プレビュー"}
-          </button>
-        </div>
-      ) : null}
     </div>
   );
 }
@@ -1512,23 +1501,15 @@ function CharacterCollection({
   characters,
   acquiredCharacters,
   favoriteCharacterIds,
-  resetTick,
   onCharacterDetailOpen,
   onToggleFavoriteCharacter,
-  onDebugClearAcquiredCharacters,
 }: {
   characters: CharacterDefinition[];
   acquiredCharacters: AcquiredCharacter[];
   favoriteCharacterIds: Set<string>;
-  resetTick: number;
   onCharacterDetailOpen: (characterId: string) => void;
   onToggleFavoriteCharacter: (characterId: string) => void;
-  onDebugClearAcquiredCharacters: () => void;
 }) {
-  const [debugResetMessage, setDebugResetMessage] = useState<string | null>(
-    null,
-  );
-  const [isDebugResetConfirming, setIsDebugResetConfirming] = useState(false);
   const acquiredCharactersById = new Map(
     acquiredCharacters.map((character) => [character.characterId, character]),
   );
@@ -1551,35 +1532,6 @@ function CharacterCollection({
     (slot) => slot.acquiredCharacter !== null,
   ).length;
 
-  useEffect(() => {
-    setDebugResetMessage(null);
-    setIsDebugResetConfirming(false);
-  }, [resetTick]);
-
-  useEffect(() => {
-    if (!debugResetMessage) {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setDebugResetMessage(null);
-    }, 1800);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [debugResetMessage]);
-
-  useEffect(() => {
-    if (!isDebugResetConfirming) {
-      return;
-    }
-
-    const timeoutId = window.setTimeout(() => {
-      setIsDebugResetConfirming(false);
-    }, 2400);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [isDebugResetConfirming]);
-
   return (
     <section className="home-collection" aria-labelledby="collection-heading">
       <div className="home-collection-heading">
@@ -1588,34 +1540,6 @@ function CharacterCollection({
           {acquiredCount}
           <span> / {COLLECTION_TOTAL_COUNT}</span>
         </strong>
-        {SHOW_DEBUG_COLLECTION_CONTROLS ? (
-          <button
-            type="button"
-            className={`home-collection-debug-reset ${
-              isDebugResetConfirming ? "is-confirming" : ""
-            }`}
-            onClick={() => {
-              if (!isDebugResetConfirming) {
-                setIsDebugResetConfirming(true);
-                setDebugResetMessage("もう一度押すと削除");
-                return;
-              }
-
-              onDebugClearAcquiredCharacters();
-              setIsDebugResetConfirming(false);
-              setDebugResetMessage("削除しました");
-            }}
-          >
-            {isDebugResetConfirming
-              ? "DEBUG: もう一度押す"
-              : "DEBUG: 習得データ削除"}
-          </button>
-        ) : null}
-        {debugResetMessage ? (
-          <span className="home-collection-debug-message" role="status">
-            {debugResetMessage}
-          </span>
-        ) : null}
       </div>
       <div className="home-collection-grid">
         {collectionSlots.map(({ character, acquiredCharacter, number }, index) => {
@@ -1819,6 +1743,14 @@ function CollectionDetailDialog({
   );
 }
 
+type ProfileDialogDebugTools = {
+  collectionResetTick: number;
+  onShowOnboarding: () => void;
+  onClearAcquiredCharacters: () => void;
+  onPairingRefresh: () => void;
+  onPairingSkipContinue: () => void;
+};
+
 function ProfileSelectionDialog({
   isClosing,
   characters,
@@ -1826,6 +1758,7 @@ function ProfileSelectionDialog({
   selectedProfileCharacterId,
   onSelect,
   onClose,
+  debugTools,
 }: {
   isClosing: boolean;
   characters: CharacterDefinition[];
@@ -1833,6 +1766,7 @@ function ProfileSelectionDialog({
   selectedProfileCharacterId: string | null;
   onSelect: (characterId: string) => void;
   onClose: () => void;
+  debugTools?: ProfileDialogDebugTools;
 }) {
   const selectableCharacters = getAcquiredCharacterDefinitions(
     characters,
@@ -1897,8 +1831,118 @@ function ProfileSelectionDialog({
             まだピンアナゴを習得していません
           </p>
         )}
+        {debugTools ? (
+          <ProfileDialogDebugPanel debugTools={debugTools} />
+        ) : null}
       </div>
     </section>
+  );
+}
+
+function ProfileDialogDebugPanel({
+  debugTools,
+}: {
+  debugTools: ProfileDialogDebugTools;
+}) {
+  const [debugResetMessage, setDebugResetMessage] = useState<string | null>(
+    null,
+  );
+  const [isDebugResetConfirming, setIsDebugResetConfirming] = useState(false);
+  const debugQrStep2Preview = useSyncExternalStore(
+    subscribeDebugQrModalStep2Preview,
+    getDebugQrModalStep2Preview,
+    getDebugQrModalStep2Preview,
+  );
+
+  useEffect(() => {
+    setDebugResetMessage(null);
+    setIsDebugResetConfirming(false);
+  }, [debugTools.collectionResetTick]);
+
+  useEffect(() => {
+    if (!debugResetMessage) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setDebugResetMessage(null);
+    }, 1800);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [debugResetMessage]);
+
+  useEffect(() => {
+    if (!isDebugResetConfirming) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setIsDebugResetConfirming(false);
+    }, 2400);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isDebugResetConfirming]);
+
+  return (
+    <div className="profile-dialog-debug" aria-label="DEBUG">
+      <p className="profile-dialog-debug-label">DEBUG</p>
+      <div className="profile-dialog-debug-buttons">
+        <button
+          type="button"
+          className="home-single-debug-story profile-dialog-debug-btn"
+          onClick={debugTools.onShowOnboarding}
+        >
+          DEBUG: ストーリー
+        </button>
+        <button
+          type="button"
+          className={`home-collection-debug-reset profile-dialog-debug-btn ${
+            isDebugResetConfirming ? "is-confirming" : ""
+          }`}
+          onClick={() => {
+            if (!isDebugResetConfirming) {
+              setIsDebugResetConfirming(true);
+              setDebugResetMessage("もう一度押すと削除");
+              return;
+            }
+
+            debugTools.onClearAcquiredCharacters();
+            setIsDebugResetConfirming(false);
+            setDebugResetMessage("削除しました");
+          }}
+        >
+          {isDebugResetConfirming
+            ? "DEBUG: もう一度押す"
+            : "DEBUG: 獲得データ削除"}
+        </button>
+        <button
+          type="button"
+          className="secondary-pill profile-dialog-debug-btn"
+          onClick={debugTools.onPairingRefresh}
+        >
+          DEBUG: QR更新
+        </button>
+        <button
+          type="button"
+          className="primary-pill profile-dialog-debug-btn"
+          onClick={debugTools.onPairingSkipContinue}
+        >
+          DEBUG: QRスキップ
+        </button>
+        <button
+          type="button"
+          className="home-single-debug-skip profile-dialog-debug-btn"
+          onClick={toggleDebugQrModalStep2Preview}
+        >
+          DEBUG: Step2 {debugQrStep2Preview ? "OFF" : "プレビュー"}
+        </button>
+      </div>
+      {debugResetMessage ? (
+        <span className="home-collection-debug-message" role="status">
+          {debugResetMessage}
+        </span>
+      ) : null}
+    </div>
   );
 }
 
