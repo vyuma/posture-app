@@ -529,8 +529,8 @@
       0.31,
       min(
         1,
-        calc((100cqw - 8px) / 1222px),
-        calc((100cqh - 8px) / 681px)
+        calc(100cqw / 1222px),
+        calc(100cqh / 681px)
       )
     );
   }
@@ -1097,12 +1097,12 @@
   /* 見出し・キャラの cqw/cqh はこのパネル（コンテンツボックス）基準 */
   container-type: size;
   container-name: qr-step2;
-  --qr-today-heading-cqw: 6.32;
+  --qr-today-heading-cqw: 5.3;
   --qr-today-teaser-shift-x-cqw: 0;
-  --qr-today-teaser-shift-y-cqh: 20;
+  --qr-today-teaser-shift-y-cqh: 0;
   --qr-today-char-max-cqw: 48;
-  --qr-today-char-max-cqh: 160;
-  --qr-today-teaser-extra-gap-cqh: 11.06;
+  --qr-today-char-max-cqh: 82;
+  --qr-today-teaser-extra-gap-cqh: 2.06;
 
   flex: 0 0 calc(681px * var(--qr-scale));
   width: 100%;
@@ -1898,4 +1898,335 @@
   font-weight: 700;
   color: rgba(255, 255, 255, 0.92);
   text-shadow: 0 1px 6px rgba(0, 40, 60, 0.22);
+}
+
+/* Figma「ホーム画面」(461:877): 1512px 幅ではヒーロー 457px、5 列カード。 */
+.flow-screen.home-single {
+  --home-collection-bg-start: 457px;
+  --home-hero-character-space: 0px;
+  background-image: linear-gradient(
+    180deg,
+    #13a2d7 0,
+    #f2edcc var(--home-collection-bg-start),
+    #fdfdfd var(--home-collection-bg-start),
+    #fdfdfd 100%
+  );
+}
+
+.home-nav {
+  position: absolute;
+  top: 54px;
+  right: 0;
+  left: 0;
+  height: 56px;
+  padding: 0 80px;
+  background: transparent;
+}
+
+.home-hero {
+  min-height: 477px;
+  padding: 110px 80px 20px 96px;
+}
+
+.home-hero-content {
+  display: grid;
+  grid-template-columns: minmax(360px, 520px) 400px minmax(0, 1fr);
+  gap: 84px;
+  padding-right: 0;
+}
+
+.home-hero-actions {
+  width: 400px;
+  gap: 48px;
+  margin-right: 0;
+}
+
+.home-hero-action-btn {
+  width: 400px;
+  height: 69px;
+}
+
+.home-hero-anago {
+  right: 90px;
+  bottom: 0;
+  height: 390px;
+}
+
+.home-collection {
+  margin-top: -20px;
+  padding: 48px 52px 54px;
+  border-radius: 32px 32px 0 0;
+}
+
+.home-collection-heading {
+  margin-bottom: 20px;
+}
+
+.home-collection-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 26px;
+}
+
+.home-character-slot {
+  aspect-ratio: 260 / 350;
+}
+
+.home-character-card.is-locked {
+  aspect-ratio: 260 / 350;
+}
+
+@media (max-width: 1200px) {
+  .home-hero {
+    padding-inline: clamp(48px, 6.35vw, 76px);
+  }
+
+  .home-hero-content {
+    grid-template-columns: minmax(300px, 1fr) minmax(300px, 360px) 150px;
+    gap: clamp(28px, 4vw, 56px);
+  }
+
+  .home-hero-actions,
+  .home-hero-action-btn {
+    width: 100%;
+  }
+
+  .home-hero-anago {
+    right: clamp(28px, 7vw, 84px);
+    height: 300px;
+  }
+
+  .home-collection-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .flow-screen.home-single {
+    --home-collection-bg-start: 560px;
+  }
+
+  .home-nav {
+    top: 24px;
+    padding-inline: clamp(24px, 6vw, 52px);
+  }
+
+  .home-hero {
+    min-height: 580px;
+    padding: 112px clamp(24px, 6vw, 52px) 36px;
+  }
+
+  .home-hero-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 28px;
+    padding-right: clamp(108px, 22vw, 180px);
+  }
+
+  .home-hero-actions {
+    width: min(360px, 100%);
+    gap: 18px;
+  }
+
+  .home-hero-anago {
+    right: clamp(18px, 5vw, 48px);
+    height: clamp(230px, 46%, 300px);
+  }
+
+  .home-collection {
+    padding-inline: clamp(20px, 5vw, 42px);
+  }
+
+  .home-collection-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: clamp(14px, 3vw, 24px);
+  }
+}
+
+@media (max-width: 640px) {
+  .flow-screen.home-single {
+    --home-collection-bg-start: 540px;
+  }
+
+  .home-hero {
+    min-height: 560px;
+    padding-top: 104px;
+  }
+
+  .home-hero-content {
+    padding-right: clamp(72px, 20vw, 104px);
+  }
+
+  .home-hero-copy h1 {
+    font-size: clamp(1.1rem, 5.3vw, 1.35rem);
+    line-height: 1.55;
+  }
+
+  .home-hero-anago {
+    right: 10px;
+    height: clamp(190px, 39%, 230px);
+  }
+
+  .home-collection {
+    padding: 36px 16px 44px;
+  }
+
+  .home-collection-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+}
+
+@media (max-height: 620px) and (min-width: 761px) {
+  .flow-screen.home-single {
+    --home-collection-bg-start: 340px;
+  }
+
+  .home-nav {
+    top: 18px;
+  }
+
+  .home-hero {
+    min-height: 360px;
+    padding: 74px 48px 20px;
+  }
+
+  .home-hero-content {
+    display: grid;
+    grid-template-columns: minmax(260px, 1fr) minmax(260px, 340px) 120px;
+    gap: 28px;
+    padding-right: 0;
+  }
+
+  .home-hero-actions {
+    width: 100%;
+    gap: 12px;
+  }
+
+  .home-hero-action-btn {
+    height: 54px;
+  }
+
+  .home-hero-anago {
+    right: 34px;
+    height: 230px;
+  }
+}
+
+/* Frame 53 QR: 모바일 세로 화면에서는 읽을 수 있는 1열 카드로 전환한다. */
+@media (max-width: 700px) {
+  .qr-modal-overlay {
+    --qr-scale: 1 !important;
+    position: fixed;
+    min-height: 100dvh;
+    height: auto;
+    padding: 92px 18px 28px;
+    align-items: stretch;
+    overflow-y: auto;
+  }
+
+  .qr-modal-brand {
+    top: 18px;
+    left: 24px;
+  }
+
+  .qr-modal-brand .flow-brand {
+    width: 92px;
+  }
+
+  .qr-modal-close {
+    top: 22px;
+    right: 22px;
+    width: 42px;
+    height: 42px;
+  }
+
+  .qr-modal-panels {
+    flex: 0 0 auto;
+    flex-direction: column;
+    align-items: stretch;
+    width: min(500px, 100%);
+    gap: 18px;
+    margin-inline: auto;
+  }
+
+  .qr-modal-left {
+    flex: 0 0 auto;
+    width: 100%;
+    height: 560px;
+    min-height: 560px;
+    padding: 34px 28px 28px;
+    border-radius: 28px;
+  }
+
+  .qr-modal-title {
+    font-size: 28px;
+    line-height: 1.2;
+  }
+
+  .qr-modal-subtitle {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  .qr-modal-left--step1 .qr-modal-title,
+  .qr-modal-left--step2 .qr-modal-title {
+    margin-bottom: 20px;
+  }
+
+  .qr-modal-left--step1 .qr-modal-subtitle,
+  .qr-modal-left--step2 .qr-modal-subtitle {
+    margin-bottom: 24px;
+  }
+
+  .qr-modal-phone-img {
+    max-width: 250px;
+    max-height: 250px;
+  }
+
+  .qr-modal-next-btn {
+    width: 100%;
+    min-height: 64px;
+    height: 64px;
+    font-size: 20px;
+  }
+
+  .qr-modal-right-col,
+  .qr-modal-right-col .qr-modal-right--step2 {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .qr-modal-right--step1,
+  .qr-modal-right--step2,
+  .qr-modal-right-col .qr-modal-right--step2 {
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    border-radius: 28px;
+  }
+
+  .qr-modal-right--step1 {
+    padding: 14.5%;
+  }
+
+  .qr-modal-right--step2 {
+    padding: 28px 24px 0;
+  }
+
+  .qr-modal-right-col {
+    align-self: auto;
+  }
+
+  .qr-modal-refresh-btn {
+    align-self: center;
+  }
+
+  .qr-modal-debug-actions {
+    position: static;
+    margin-top: 18px;
+  }
 }

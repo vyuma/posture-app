@@ -59,8 +59,8 @@
       0.31,
       min(
         1,
-        calc((100cqw - 24px) / 1222px),
-        calc((100cqh - 40px) / 681px)
+        calc(100cqw / 1222px),
+        calc(100cqh / 681px)
       )
     );
   }
@@ -91,10 +91,20 @@
   align-items: stretch;
   background: #ffffff;
   border-radius: calc(40px * var(--pr-scale));
+  box-shadow: 0 0 calc(8.52px * var(--pr-scale)) rgba(0, 0, 0, 0.15);
   overflow-x: hidden;
   /* はみ出し時のみスクロール（通常はスクロールバー非表示に近い） */
   overflow-y: auto;
   /* 狭い幅スタック時は下のメディアで height:auto に切り替え */
+}
+
+/* Frame 53「姿勢登録」: タイトルから設定カードまでの縦位置を Figma に合わせる。 */
+.frame53-register-screen .frame53-heading {
+  margin-bottom: calc(24px * var(--pr-scale));
+}
+
+.frame53-register-screen .frame53-led {
+  margin-bottom: calc(32px * var(--pr-scale));
 }
 
 .frame53-heading {
@@ -152,6 +162,8 @@
 }
 
 .frame53-toggle-strip-label {
+  position: relative;
+  top: calc(-3px * var(--pr-scale));
   color: #666666;
   font-size: max(12px, calc(20px * var(--pr-scale)));
   font-weight: 700;
@@ -252,7 +264,7 @@
   align-self: center;
   width: min(calc(400px * var(--pr-scale)), 100%);
   margin-bottom: calc(24px * var(--pr-scale));
-  padding: calc(24px * var(--pr-scale)) calc(22px * var(--pr-scale));
+  padding: calc(18px * var(--pr-scale)) calc(20px * var(--pr-scale));
   box-sizing: border-box;
   border-radius: calc(16px * var(--pr-scale));
   background: #f5f5f5;
@@ -269,7 +281,7 @@
   display: flex;
   align-items: center;
   gap: calc(14px * var(--pr-scale));
-  margin-bottom: calc(20px * var(--pr-scale));
+  margin-bottom: calc(14px * var(--pr-scale));
 }
 
 .frame53-volume-visible-label {
@@ -283,7 +295,7 @@
 .frame53-volume-range {
   flex: 1 1 auto;
   min-width: 0;
-  height: calc(28px * var(--pr-scale));
+  height: calc(24px * var(--pr-scale));
   accent-color: var(--frame53-point);
 
   appearance: none;
@@ -396,8 +408,8 @@
   appearance: none;
   -webkit-appearance: none;
 
-  padding: calc(14px * var(--pr-scale)) calc(40px * var(--pr-scale))
-    calc(14px * var(--pr-scale)) calc(18px * var(--pr-scale));
+  padding: calc(10px * var(--pr-scale)) calc(40px * var(--pr-scale))
+    calc(10px * var(--pr-scale)) calc(18px * var(--pr-scale));
   border: 1px solid rgba(0, 0, 0, 0.06);
   border-radius: calc(14px * var(--pr-scale));
   background-color: #ffffff;
@@ -553,9 +565,14 @@
 }
 
 @media (max-width: 900px) {
+  .flow-screen.frame53-register-screen {
+    justify-content: flex-start;
+  }
+
   .frame53-panels-wrap {
+    flex: 0 0 auto;
     flex-wrap: wrap;
-    align-content: center;
+    align-content: flex-start;
     justify-content: center;
   }
 
@@ -576,5 +593,52 @@
     max-width: 100%;
     min-height: unset;
     height: clamp(260px, 42dvh, calc(681px * var(--pr-scale)));
+  }
+
+  .frame53-primary {
+    min-height: max(48px, calc(77px * var(--pr-scale)));
+    height: max(48px, calc(77px * var(--pr-scale)));
+  }
+}
+
+@media (max-width: 700px) {
+  .flow-screen.frame53-register-screen {
+    --pr-scale: 1 !important;
+    padding: 88px 16px 32px;
+    justify-content: flex-start;
+  }
+
+  .frame53-register-screen .flow-brand {
+    top: 18px;
+    left: 24px;
+    width: 92px;
+  }
+
+  .frame53-panels-wrap {
+    flex: 0 0 auto;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    width: min(500px, 100%);
+    gap: 18px;
+  }
+
+  .frame53-left {
+    order: 0;
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    padding: 28px 24px;
+    border-radius: 28px;
+  }
+
+  .frame53-camera-panel {
+    order: -1;
+    flex: 0 0 auto;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 1;
+    border-radius: 28px;
   }
 }

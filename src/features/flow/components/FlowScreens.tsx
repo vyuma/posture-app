@@ -78,6 +78,7 @@ type MeasuringScreenProps = {
   soundSettings: SoundSettings;
   onSoundSettingsChange: (next: SoundSettings) => void;
   onFinishMeasurement: () => void;
+  onReRegisterPosture: () => void;
   onPauseToggle: () => void;
   onOverlayEnabledChange: (enabled: boolean) => void;
   onCharacterOverlayEnabledChange: (enabled: boolean) => void;
@@ -229,7 +230,7 @@ export function HomeScreen(props: HomeScreenProps) {
             <h1>
               良い姿勢を継続して
               <br />
-              ピンアナゴをゲットしよう
+              ピンアナゴを獲得しよう
             </h1>
           </div>
           <div className="home-hero-actions">
@@ -616,6 +617,7 @@ export function MeasuringScreen({
   soundSettings,
   onSoundSettingsChange,
   onFinishMeasurement,
+  onReRegisterPosture,
   onPauseToggle,
   onOverlayEnabledChange,
   onCharacterOverlayEnabledChange,
@@ -623,10 +625,6 @@ export function MeasuringScreen({
   onResetCharacterPosition,
 }: MeasuringScreenProps) {
   const isWarmup = !snapshot.baselineReady;
-  const warmupSeconds = Math.max(
-    0,
-    Math.ceil(snapshot.warmupRemainingMs / 1000),
-  );
 
   const showMeasureDevTools = isOverlayDebugUiEnabled();
 
@@ -681,11 +679,13 @@ export function MeasuringScreen({
   }
 
   const headingId = "measuring-heading";
-  const title = isWarmup
-    ? "基準姿勢を測定中"
-    : isPaused
-      ? "一時停止中"
-      : "測定中";
+  const statusHintId = "measuring-status-hint";
+  const goodPercentWhole = Math.round(
+    Math.min(1, Math.max(0, stats.goodRatio)) * 100,
+  );
+  const warmupElapsedMs = isWarmup
+    ? Math.max(0, POSTURE_SPEC.warmupMs - snapshot.warmupRemainingMs)
+    : 0;
 
   const gaugePercent = isWarmup
     ? 0
@@ -697,13 +697,25 @@ export function MeasuringScreen({
   return (
     <main className="flow-screen measuring-screen">
       <FlowBrand />
-      <section className="measure-layout" aria-labelledby={headingId}>
+      <section
+        className="measure-layout"
+        aria-labelledby={headingId}
+        aria-describedby={statusHintId}
+      >
         <aside className="measure-control-card" aria-label="測定コントロール">
+          <div className="measure-control-scroll">
           <header className="measure-control-head">
             <div>
               <h1 id={headingId} className="measure-control-title">
-                {title}
+                姿勢測定中
               </h1>
+              <p id={statusHintId} className="measure-control-status-hint">
+                {isWarmup
+                  ? "基準線を学習しています…"
+                  : isPaused
+                    ? "一時停止中です"
+                    : "測定中です"}
+              </p>
             </div>
             <div className="measure-control-icon-actions">
               <button
@@ -733,18 +745,21 @@ export function MeasuringScreen({
 
           <div className="measure-metrics-row">
             <MetricTile
-              label={isWarmup ? "測定開始まで" : "測定時間"}
+              label="測定時間"
               value={
-                isWarmup ? `${warmupSeconds}s` : formatDuration(stats.activeMeasurementMs)
+                isWarmup
+                  ? formatDuration(warmupElapsedMs)
+                  : formatDuration(stats.activeMeasurementMs)
               }
             />
             <MetricTile
               label="良い姿勢率"
-              value={
-                isWarmup ? "—" : formatPercent(stats.goodRatio)
-              }
+              value={isWarmup ? "—" : String(goodPercentWhole)}
+              valueSuffix={isWarmup ? undefined : "%"}
             />
           </div>
+
+          <div className="measure-card-rule" role="presentation" />
 
           <div className="frame53-toggle-strip">
             <span
@@ -766,6 +781,8 @@ export function MeasuringScreen({
               <span className="frame53-toggle-strip-switch-knob" aria-hidden />
             </button>
           </div>
+
+          <div className="measure-card-rule" role="presentation" />
 
           <div className="frame53-toggle-strip">
             <span
@@ -892,6 +909,17 @@ export function MeasuringScreen({
               ) : null}
             </div>
           ) : null}
+          </div>
+
+          <div className="measure-control-card-footer">
+            <button
+              type="button"
+              className="measure-reregister-cta"
+              onClick={onReRegisterPosture}
+            >
+              姿勢を再登録する
+            </button>
+          </div>
         </aside>
 
         <div className="measure-camera-panel measure-camera-panel--figma">
@@ -945,7 +973,7 @@ export function PostureRegisteredScreen({
 }: PostureRegisteredScreenProps) {
   const wasSuccessful =
     Boolean(result.rewardQualified) && acquiredCharacter !== null;
-  const timelineVariant = wasSuccessful ? "success" : "fail";
+  const accentVariant = wasSuccessful ? "success" : "fail";
 
   const shareCaptureRef = useRef<HTMLElement>(null);
   const resultCardEnterTimerRef = useRef<number | null>(null);
@@ -976,7 +1004,6 @@ export function PostureRegisteredScreen({
       "--result-share-icon": acquiredCharacter.characterColor.primary,
       "--result-meta-icon": acquiredCharacter.characterColor.primary,
       "--result-portrait-bg": acquiredCharacter.characterColor.soft,
-      "--result-timeline-good": acquiredCharacter.characterColor.primary,
     } as CSSProperties;
   }, [wasSuccessful, acquiredCharacter]);
 
@@ -988,15 +1015,13 @@ export function PostureRegisteredScreen({
         "--result-share-icon": acquiredCharacter.characterColor.primary,
         "--result-meta-icon": acquiredCharacter.characterColor.primary,
         "--result-portrait-bg": acquiredCharacter.characterColor.soft,
-        "--result-timeline-good": acquiredCharacter.characterColor.primary,
       } as CSSProperties;
     }
     return {
-      "--result-stat-accent": "#8a9399",
-      "--result-share-icon": "#8a9399",
-      "--result-meta-icon": "#8a9399",
-      "--result-portrait-bg": "#eceff1",
-      "--result-timeline-good": "#8a9399",
+      "--result-stat-accent": "#979797",
+      "--result-share-icon": "#979797",
+      "--result-meta-icon": "#979797",
+      "--result-portrait-bg": "rgba(151, 151, 151, 0.2)",
     } as CSSProperties;
   }, [wasSuccessful, acquiredCharacter]);
 
@@ -1013,7 +1038,7 @@ export function PostureRegisteredScreen({
     setShareFeedback(null);
     try {
       const outcome = await shareResultCapture(shareCaptureRef.current, {
-        action,
+        action: action === "share" ? "auto" : "copy",
       });
       if (outcome === "downloaded") {
         const msg = "画像をダウンロードしました";
@@ -1125,7 +1150,7 @@ export function PostureRegisteredScreen({
 
   return (
     <main
-      className={`flow-screen result-screen result-screen--registered result-screen--accent-${timelineVariant}`}
+      className={`flow-screen result-screen result-screen--registered result-screen--accent-${accentVariant}`}
       style={characterThemeVars}
     >
       <FlowBrand />
@@ -1141,41 +1166,62 @@ export function PostureRegisteredScreen({
           </h1>
         </header>
 
-        <CharacterResultWhiteCard
-          ref={shareCaptureRef}
-          portraitMode={wasSuccessful ? "character" : "qr-fail"}
-          character={displayCharacter}
-          personalityTags={personalityTags}
-          goodDurationLabel={formatDuration(result.goodMs)}
-          goodRatioLabel={formatPercent(result.goodRatio)}
-          timelineSegments={result.postureTimeline}
-          timelineTotalMs={result.activeMeasurementMs}
-          timelineVariant={timelineVariant}
-          timelineGoodStrokeResolved={
-            wasSuccessful && acquiredCharacter !== null
-              ? acquiredCharacter.characterColor.primary
-              : "#8a9399"
-          }
-          acquiredAtLabel={formatAcquiredAt(result.endedAt)}
-          measurementDurationLabel={formatDuration(result.activeMeasurementMs)}
-          shareBusy={shareBusy}
-          shareBusyAction={shareBusyAction}
-          onShareClick={() => {
-            void handleShareResult("share");
-          }}
-          onCopyClick={() => {
-            void handleShareResult("copy");
-          }}
-          articleClassName={`${wasSuccessful ? "result-registered-card--acquired" : ""} ${
-            isResultCardEntering ? "is-entering" : ""
-          } ${
-            isResultCardTapped ? "is-tapped" : ""
-          }`.trim()}
-          articleStyle={shareCardThemeVars}
-          onArticleClick={handleResultCardTap}
-          onArticleMouseMove={wasSuccessful ? onResultCardMouseMove : undefined}
-          onArticleMouseLeave={wasSuccessful ? onResultCardMouseLeave : undefined}
-        />
+        <div className="result-registered-card-block">
+          <CharacterResultWhiteCard
+            ref={shareCaptureRef}
+            portraitMode={wasSuccessful ? "character" : "acquisition-fail"}
+            character={displayCharacter}
+            personalityTags={personalityTags}
+            goodDurationLabel={formatDuration(result.goodMs)}
+            goodRatioLabel={formatPercent(result.goodRatio)}
+            acquiredAtLabel={formatAcquiredAt(result.endedAt)}
+            measurementDurationLabel={formatDuration(result.activeMeasurementMs)}
+            characterStory={
+              wasSuccessful && displayCharacter !== null
+                ? displayCharacter.story
+                : "？？？？？？？？？"
+            }
+            articleClassName={`${
+              wasSuccessful
+                ? "result-registered-card--acquired"
+                : "result-registered-card--acquisition-fail"
+            } ${isResultCardEntering ? "is-entering" : ""} ${
+              isResultCardTapped ? "is-tapped" : ""
+            }`.trim()}
+            articleStyle={shareCardThemeVars}
+            onArticleClick={handleResultCardTap}
+            onArticleMouseMove={wasSuccessful ? onResultCardMouseMove : undefined}
+            onArticleMouseLeave={wasSuccessful ? onResultCardMouseLeave : undefined}
+          />
+          <div
+            className="result-registered-outside-actions"
+            role="toolbar"
+            aria-label="結果画像の共有と保存"
+          >
+            <button
+              type="button"
+              className={`result-registered-outside-action${shareBusy && shareBusyAction === "share" ? " is-busy" : ""}`}
+              aria-label="結果を画像で共有"
+              disabled={shareBusy}
+              onClick={() => {
+                void handleShareResult("share");
+              }}
+            >
+              <img src="/share.png" alt="" width={32} height={32} draggable={false} />
+            </button>
+            <button
+              type="button"
+              className={`result-registered-outside-action${shareBusy && shareBusyAction === "copy" ? " is-busy" : ""}`}
+              aria-label="結果を画像でコピー"
+              disabled={shareBusy}
+              onClick={() => {
+                void handleShareResult("copy");
+              }}
+            >
+              <img src="/download.png" alt="" width={32} height={32} draggable={false} />
+            </button>
+          </div>
+        </div>
       </div>
 
       <p
@@ -1285,8 +1331,10 @@ function QrConnectionModal({
                   aria-hidden="true"
                 />
               </div>
-              {pairingError ? (
-                <p className="qr-modal-error-label">{pairingError}</p>
+              {pairingError && !pairingError.includes("invoke") ? (
+                <p className="qr-modal-error-label">
+                  QRコードを準備できませんでした
+                </p>
               ) : null}
             </>
           ) : (
@@ -1898,11 +1946,28 @@ function CharacterFigure({
   );
 }
 
-function MetricTile({ label, value }: { label: string; value: string }) {
+function MetricTile({
+  label,
+  value,
+  valueSuffix,
+}: {
+  label: string;
+  value: string;
+  valueSuffix?: string;
+}) {
   return (
-    <div className="metric-tile">
+    <div
+      className={`metric-tile ${valueSuffix ? "metric-tile--with-suffix" : ""}`}
+    >
       <span>{label}</span>
-      <strong>{value}</strong>
+      <div className="metric-tile-value-row">
+        <strong>{value}</strong>
+        {valueSuffix ? (
+          <span className="metric-tile-value-suffix" aria-hidden="true">
+            {valueSuffix}
+          </span>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -1953,32 +2018,28 @@ function formatPercent(ratio: number) {
 
 function MeasurePauseIcon() {
   return (
-    <svg viewBox="0 0 24 24" width={22} height={22} aria-hidden="true">
-      <rect x="6" y="5" width="5" height="14" rx="1" fill="currentColor" />
-      <rect x="13" y="5" width="5" height="14" rx="1" fill="currentColor" />
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="32" cy="32" r="28" fill="none" stroke="#EA4949" strokeWidth="3" />
+      <rect x="23" y="22" width="6" height="20" rx="1.5" fill="#EA4949" />
+      <rect x="35" y="22" width="6" height="20" rx="1.5" fill="#EA4949" />
     </svg>
   );
 }
 
 function MeasurePlayIcon() {
   return (
-    <svg viewBox="0 0 24 24" width={22} height={22} aria-hidden="true">
-      <path fill="#16a34a" d="M9 6.5v11l10-5.5-10-5.5z" />
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="32" cy="32" r="28" fill="none" stroke="#EA4949" strokeWidth="3" />
+      <path fill="#EA4949" d="M28 20l16 12-16 12z" />
     </svg>
   );
 }
 
 function MeasureStopIcon() {
   return (
-    <svg viewBox="0 0 24 24" width={18} height={18} aria-hidden="true">
-      <rect
-        x="6"
-        y="6"
-        width="12"
-        height="12"
-        rx="1.5"
-        fill="currentColor"
-      />
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="32" cy="32" r="28" fill="none" stroke="#EA4949" strokeWidth="3" />
+      <rect x="24" y="24" width="16" height="16" rx="2.5" fill="#EA4949" />
     </svg>
   );
 }

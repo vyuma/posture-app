@@ -677,6 +677,7 @@ function App() {
     },
     onBackHome: () => setFlowPhase("home"),
     onFinishMeasurement: handleFinishMeasurement,
+    onReRegisterPosture: () => setFlowPhase("qrScanned"),
     onMeasureAgain: () => {
       void handleStartMeasurement();
     },
@@ -731,6 +732,7 @@ function renderFlowScreen({
   onStartMeasurement,
   onBackHome,
   onFinishMeasurement,
+  onReRegisterPosture,
   onMeasureAgain,
   onPauseToggle,
   onOverlayEnabledChange,
@@ -773,6 +775,7 @@ function renderFlowScreen({
   onStartMeasurement: () => void;
   onBackHome: () => void;
   onFinishMeasurement: () => void;
+  onReRegisterPosture: () => void;
   onMeasureAgain: () => void;
   onPauseToggle: () => void;
   onOverlayEnabledChange: (enabled: boolean) => void;
@@ -836,6 +839,7 @@ function renderFlowScreen({
           soundSettings={soundSettings}
           onSoundSettingsChange={onSoundSettingsChange}
           onFinishMeasurement={onFinishMeasurement}
+          onReRegisterPosture={onReRegisterPosture}
           onPauseToggle={onPauseToggle}
           onOverlayEnabledChange={onOverlayEnabledChange}
           onCharacterOverlayEnabledChange={onCharacterOverlayEnabledChange}

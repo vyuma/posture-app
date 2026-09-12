@@ -7,7 +7,9 @@
   justify-content: flex-start;
   box-sizing: border-box;
   min-height: 100dvh;
-  padding: clamp(48px, 8vh, 88px) clamp(16px, 3vw, 32px) clamp(24px, 4vh, 40px);
+  padding: clamp(3rem, 8svh, 5.5rem)
+    var(--app-viewport-inline, clamp(1rem, 4.25vw, 4rem))
+    clamp(1.5rem, 4svh, 2.5rem);
   overflow-y: auto;
   background: linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
 }
@@ -17,17 +19,13 @@
   --result-share-icon: #fd8c3e;
   --result-meta-icon: #fd8c3e;
   --result-portrait-bg: #ffe8dc;
-  --result-timeline-good: #fd8c3e;
-  --result-timeline-bad: #d4dbe0;
 }
 
 .result-screen--accent-fail {
-  --result-stat-accent: #8a9399;
-  --result-share-icon: #8a9399;
-  --result-meta-icon: #8a9399;
-  --result-portrait-bg: #eceff1;
-  --result-timeline-good: #8a9399;
-  --result-timeline-bad: #d4dbe0;
+  --result-stat-accent: #979797;
+  --result-share-icon: #979797;
+  --result-meta-icon: #979797;
+  --result-portrait-bg: rgba(151, 151, 151, 0.2);
 }
 
 .result-registered-hero {
@@ -70,7 +68,7 @@
   --result-card-radius: clamp(22px, 3.5vw, 32px);
 
   position: relative;
-  width: min(720px, 100%);
+  width: min(45rem, 100%);
   display: grid;
   grid-template-columns: minmax(140px, 38%) minmax(0, 1fr);
   gap: clamp(16px, 3vw, 28px);
@@ -415,21 +413,21 @@
   font-size: 0.82rem !important;
 }
 
-/* タイムライン SVG：固定 attribute(width=360) より優先して 100% 幅にする */
-.result-registered-card.is-share-capture .result-posture-timeline-svg {
-  width: 100% !important;
-  height: auto !important;
-  max-width: 100% !important;
-}
-
 /* 統計の数値が大きすぎてはみ出すのを防ぐ */
 .result-registered-card.is-share-capture .result-registered-stat-value {
   font-size: clamp(1.35rem, 3.4vw, 1.75rem) !important;
   word-break: keep-all !important;
 }
 
-.result-screen--accent-fail .result-registered-card {
+.result-screen--accent-fail .result-registered-card:not(.result-registered-card--acquisition-fail) {
   animation: result-fail-card-glow 2.4s ease-in-out infinite;
+}
+
+/* ピンアナゴ未獲得：静かなシャドウのみ（Figma カード詳細） */
+.result-screen--accent-fail .result-registered-card--acquisition-fail {
+  box-shadow:
+    0 0 8.52px rgba(0, 0, 0, 0.15),
+    0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 @keyframes result-fail-card-glow {
@@ -504,9 +502,9 @@
 .result-registered-figure--qr-fail {
   --result-fail-qr-width: 100%;
   --result-fail-qr-height: 100%;
-  --result-fail-qr-shift-x: -10px;
-  --result-fail-qr-shift-y: -330px;
-  --result-fail-qr-scale: 3.5;
+  --result-fail-qr-shift-x: clamp(-0.75rem, -1.4vw, -0.15rem);
+  --result-fail-qr-shift-y: clamp(-20.625rem, -42vw, -8rem);
+  --result-fail-qr-scale: 3.35;
 
   width: var(--result-fail-qr-width, 100%);
   height: var(--result-fail-qr-height, 100%);
@@ -518,6 +516,17 @@
     )
     scale(var(--result-fail-qr-scale, 1.02));
   filter: grayscale(1) saturate(0.15) brightness(0.9);
+}
+
+/* 未獲得時のグレーアナゴ（failed_nago.png） */
+.result-registered-figure--acquisition-fail {
+  --result-portrait-img-width: 88%;
+  --result-portrait-img-height: 88%;
+  --result-portrait-img-object-position: center center;
+  --result-portrait-img-shift-x: 0px;
+  --result-portrait-img-shift-y: 0px;
+  --result-portrait-img-scale: 1.08;
+  --result-portrait-img-transform-origin: center center;
 }
 
 .result-registered-portrait .character-empty {
@@ -587,56 +596,10 @@
   min-width: 0;
 }
 
-.result-registered-stats-header {
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-start;
-  gap: 8px;
-  min-height: 28px;
-}
-
-.result-registered-share {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  padding: 6px;
-  border: 1px solid color-mix(in srgb, var(--result-share-icon, #888888) 24%, transparent);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--result-share-icon, #888888) 10%, #ffffff);
-  color: var(--result-share-icon, #888888);
-  cursor: pointer;
-  transition:
-    opacity 0.14s ease,
-    transform 0.14s ease,
-    background 0.14s ease;
-}
-
-.result-registered-share:hover:not(:disabled) {
-  opacity: 0.92;
-  transform: translateY(-1px);
-  background: color-mix(in srgb, var(--result-share-icon, #888888) 15%, #ffffff);
-}
-
-.result-registered-share:disabled,
-.result-registered-share[aria-disabled="true"] {
-  opacity: 0.38;
-  cursor: not-allowed;
-}
-
-.result-registered-share.is-busy svg {
-  animation: result-share-spin 0.8s linear infinite;
-}
-
-@keyframes result-share-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .result-registered-share.is-busy svg {
+  .result-registered-outside-action.is-busy {
     animation: none;
+    opacity: 0.55;
   }
 
   .result-screen--accent-fail .result-registered-card,
@@ -674,7 +637,72 @@
 /* 共有用キャプチャ：結果カードと同じ枠・背景をそのまま使う（余計なグラデーションカードは付けない） */
 .result-registered-capture-root {
   width: 100%;
-  max-width: min(720px, 100%);
+  max-width: min(760px, 100%);
+}
+
+/* 白カードとカード外の共有・保存ボタン（Figma：カード右に縦並び） */
+.result-registered-card-block {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: center;
+  gap: clamp(14px, 2.2vw, 22px);
+  width: 100%;
+}
+
+.result-registered-outside-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  flex-shrink: 0;
+}
+
+.result-registered-outside-action {
+  display: grid;
+  place-items: center;
+  box-sizing: border-box;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border: 0;
+  border-radius: 100px;
+  background: rgba(255, 255, 255, 0.2);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease,
+    background 0.16s ease;
+}
+
+.result-registered-outside-action:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.32);
+  transform: translateY(-1px);
+}
+
+.result-registered-outside-action:disabled,
+.result-registered-outside-action[aria-disabled="true"] {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.result-registered-outside-action img {
+  display: block;
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.result-registered-outside-action.is-busy {
+  pointer-events: none;
+  animation: result-outside-action-busy 0.85s ease-in-out infinite;
+}
+
+@keyframes result-outside-action-busy {
+  50% {
+    opacity: 0.55;
+  }
 }
 
 .result-registered-stat-grid {
@@ -703,68 +731,178 @@
   letter-spacing: 0;
 }
 
-/* 姿勢タイムライン（SVG）ラッパー */
-.result-posture-timeline {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 6px;
+.result-registered-stat-value--ratio-parts {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.06em;
+}
+
+.result-registered-stat-value--ratio-parts .result-registered-stat-value-suffix {
+  font-size: 0.625em;
+  line-height: 1;
+}
+
+/* 白カード詳細レイアウト（Figma カード詳細・CharacterResultWhiteCard 共通） */
+.result-registered-card--detail {
+  width: min(670px, 100%);
+  max-width: min(670px, 100%);
+  padding: 24px;
+  gap: 24px;
+  grid-template-columns: 280px minmax(0, 1fr);
+  box-shadow: 0 0 8.52px rgba(0, 0, 0, 0.15);
+}
+
+.result-registered-card--acquired.result-registered-card--detail {
+  box-shadow: 0 0 8.52px rgba(0, 0, 0, 0.15);
+}
+
+.result-registered-card--acquired.result-registered-card--detail:hover {
+  box-shadow:
+    0 0 10px rgba(0, 0, 0, 0.18),
+    0 0 0 1px color-mix(in srgb, var(--result-stat-accent, #f78000) 22%, transparent);
+}
+
+.result-registered-card--acquired.result-registered-card--detail:active {
+  box-shadow: 0 0 8.52px rgba(0, 0, 0, 0.2);
+}
+
+.result-registered-card--detail .result-registered-portrait {
+  border-radius: 24px;
+  max-width: 280px;
+}
+
+.result-registered-card--detail .result-registered-name {
+  margin-top: 4px;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.result-registered-card--detail .result-registered-tag {
+  padding: 8px 10px;
+  font-size: 12px;
+  line-height: 1.15;
+  font-weight: 700;
+}
+
+.result-registered-card--detail .result-registered-stat-grid {
+  gap: clamp(8px, 2vw, 16px);
+}
+
+.result-registered-card--detail .result-registered-stat-cell {
+  text-align: center;
+}
+
+.result-registered-card--detail .result-registered-stat-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #666666;
+}
+
+.result-registered-card--detail .result-registered-stat-value {
+  margin-top: 8px;
+  font-size: 4rem;
+  line-height: 76px;
+  font-weight: 700;
+}
+
+.result-registered-card--detail .result-registered-stat-value--ratio-parts {
+  gap: 0.02em;
+}
+
+.result-registered-card--detail .result-registered-stat-value--ratio-parts .result-registered-stat-value-suffix {
+  font-size: 0.625em;
+  line-height: 48px;
+}
+
+.result-registered-card--detail .result-registered-col--stats {
   align-items: stretch;
-  min-width: 0;
 }
 
-.result-posture-timeline-axis {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding-block: 4px 10px;
-  font-size: 0.62rem;
-  font-weight: 900;
-  color: #8896a4;
+.result-registered-card--detail .result-registered-story {
+  margin-top: auto;
+  text-align: right;
 }
 
-.result-posture-timeline-svg {
-  display: block;
-  border-radius: 12px;
-  max-width: 100%;
+.result-registered-card--detail .result-registered-meta {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #dddddd;
 }
 
-.result-posture-timeline-line {
-  fill: none;
-  vector-effect: non-scaling-stroke;
+.result-registered-card--detail .result-registered-meta-row {
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
-.result-posture-timeline-lane-split {
-  fill: none;
-  stroke: rgba(0, 0, 0, 0.07);
-  stroke-width: 1;
-  stroke-dasharray: 4 4;
+.result-registered-card--detail .result-registered-meta-row:first-child {
+  border-bottom: 1px solid #dddddd;
+  padding-bottom: 10px;
+  margin-bottom: 6px;
 }
 
-.result-posture-timeline-connector {
-  stroke: rgba(72, 86, 98, 0.35);
-  stroke-linecap: round;
+.result-registered-card--detail .result-registered-meta-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #666666;
 }
 
-.result-posture-timeline-empty-text {
-  font-size: 11px;
-  font-weight: 800;
-  fill: #8896a4;
+.result-registered-card--detail .result-registered-meta-value {
+  font-size: 14px;
+  font-weight: 500;
+  color: #000000;
 }
 
-.result-posture-timeline--success .result-posture-timeline-line.is-good {
-  stroke: var(--result-timeline-good, #fd8c3e);
+.result-registered-story {
+  margin: 4px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #000000;
 }
 
-.result-posture-timeline--success .result-posture-timeline-line.is-bad {
-  stroke: #9aa7b5;
+/* 未獲得カード：Figma のラベル・数値・タグ色 */
+.result-registered-card--acquisition-fail .result-registered-tag {
+  color: #979797;
+  background: rgba(151, 151, 151, 0.2);
 }
 
-.result-posture-timeline--fail .result-posture-timeline-line.is-good {
-  stroke: var(--result-timeline-good, #13a2d7);
+.result-registered-card--acquisition-fail .result-registered-name {
+  color: #000000;
+  font-size: clamp(1.1rem, 2.6vw, 1.5rem);
+  font-weight: 700;
 }
 
-.result-posture-timeline--fail .result-posture-timeline-line.is-bad {
-  stroke: #9aa7b5;
+.result-registered-card--acquisition-fail.result-registered-card--detail .result-registered-name {
+  font-size: 1.5rem;
+  line-height: 1.2;
+}
+
+.result-registered-card--acquisition-fail.result-registered-card--detail
+  .result-registered-stat-value {
+  color: #979797;
+}
+
+.result-registered-card--acquisition-fail.result-registered-card--detail
+  .result-registered-meta-value {
+  color: #505050;
+}
+
+.result-screen--accent-success .result-registered-eyebrow {
+  font-size: clamp(1.25rem, 3.2vw, 2rem);
+}
+
+.result-screen--accent-success .result-registered-title:not(.is-fail) {
+  font-size: clamp(2.5rem, 7vw, 4rem);
+}
+
+.result-screen--accent-fail .result-registered-eyebrow {
+  font-size: clamp(1.25rem, 3.2vw, 2rem);
+}
+
+.result-screen--accent-fail .result-registered-title.is-fail {
+  font-size: clamp(2.5rem, 7vw, 4rem);
 }
 
 /* --- レガシー（他画面での tone フィルタ） --- */
@@ -836,7 +974,7 @@
 
 .result-registered-footer {
   margin-top: clamp(22px, 4vh, 36px);
-  width: min(420px, 100%);
+  width: min(26.25rem, 100%);
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -855,35 +993,77 @@
 }
 
 .result-registered-home.is-acquired {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--result-stat-accent, #fd8c3e) 70%, white) 0%,
-    var(--result-stat-accent, #fd8c3e) 100%
-  );
+  width: min(400px, 100%);
+  margin-inline: auto;
+  padding: 24px 32px;
+  min-height: 77px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  background: #f78000;
+  box-shadow: 0 0 8.52px rgba(0, 0, 0, 0.15);
 }
 
 .result-registered-home.is-miss {
-  background: linear-gradient(180deg, #39bfe8 0%, #1393c9 100%);
+  width: min(400px, 100%);
+  margin-inline: auto;
+  padding: 24px 32px;
+  min-height: 77px;
+  background: #979797;
+  font-weight: 700;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  box-shadow: 0 0 8.52px rgba(0, 0, 0, 0.15);
 }
 
 @media (max-width: 600px) {
+  .result-screen--registered {
+    padding-top: clamp(4.5rem, 10svh, 6rem);
+  }
+
+  .result-registered-card-block {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .result-registered-outside-actions {
+    flex-direction: row;
+    gap: 16px;
+  }
+
   .result-registered-card {
     grid-template-columns: 1fr;
-    max-width: 400px;
+    max-width: min(25rem, 100%);
+  }
+
+  .result-registered-card--detail {
+    max-width: min(25rem, 100%);
+    grid-template-columns: 1fr;
+    padding: clamp(18px, 4vw, 24px);
+  }
+
+  .result-registered-card--detail .result-registered-stat-value {
+    font-size: clamp(2rem, 9vw, 4rem);
+    line-height: 1.12;
+  }
+
+  .result-registered-card--detail .result-registered-stat-value--ratio-parts .result-registered-stat-value-suffix {
+    line-height: 1;
   }
 
   .result-registered-col--character {
-    max-width: 220px;
+    max-width: min(13.75rem, 70vw);
     margin-inline: auto;
   }
 
-  .result-posture-timeline-axis {
-    font-size: 0.56rem;
+  .result-registered-figure--qr-fail {
+    --result-fail-qr-shift-y: clamp(-13rem, -48vw, -7rem);
+    --result-fail-qr-scale: 2.65;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .result-registered-share {
+  .result-registered-outside-action {
     transition: none;
   }
 }
@@ -910,4 +1090,101 @@
 
 .tone-yellow {
   filter: hue-rotate(34deg) saturate(1.38) brightness(1.12);
+}
+
+/* コレクション詳細は既存の共有操作とタイムラインを維持する。 */
+.result-registered-stats-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  gap: 8px;
+  min-height: 28px;
+}
+
+.result-registered-share {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 6px;
+  border: 1px solid color-mix(in srgb, var(--result-share-icon, #888888) 24%, transparent);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--result-share-icon, #888888) 10%, #ffffff);
+  color: var(--result-share-icon, #888888);
+  cursor: pointer;
+}
+
+.result-registered-share:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+.result-registered-share.is-busy svg {
+  animation: result-share-spin 0.8s linear infinite;
+}
+
+@keyframes result-share-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.result-posture-timeline {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px;
+  align-items: stretch;
+  min-width: 0;
+}
+
+.result-posture-timeline-axis {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-block: 4px 10px;
+  font-size: 0.62rem;
+  font-weight: 900;
+  color: #8896a4;
+}
+
+.result-posture-timeline-svg {
+  display: block;
+  max-width: 100%;
+  border-radius: 12px;
+}
+
+.result-posture-timeline-line {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+}
+
+.result-posture-timeline-lane-split {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0.07);
+  stroke-width: 1;
+  stroke-dasharray: 4 4;
+}
+
+.result-posture-timeline-connector {
+  stroke: rgba(72, 86, 98, 0.35);
+  stroke-linecap: round;
+}
+
+.result-posture-timeline-empty-text {
+  font-size: 11px;
+  font-weight: 800;
+  fill: #8896a4;
+}
+
+.result-posture-timeline--success .result-posture-timeline-line.is-good {
+  stroke: var(--result-timeline-good, #fd8c3e);
+}
+
+.result-posture-timeline--success .result-posture-timeline-line.is-bad,
+.result-posture-timeline--fail .result-posture-timeline-line.is-bad {
+  stroke: #9aa7b5;
+}
+
+.result-posture-timeline--fail .result-posture-timeline-line.is-good {
+  stroke: var(--result-timeline-good, #13a2d7);
 }
