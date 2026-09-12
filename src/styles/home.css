@@ -2306,3 +2306,230 @@
     height: 42px;
   }
 }
+
+/* Figma Frame 53: 1512px 기준 헤더·리셋·카드 내부 비율. */
+.home-collection-header {
+  position: relative;
+  z-index: 4;
+  display: flex;
+  min-height: 48px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.home-collection-heading {
+  align-items: flex-start;
+  gap: clamp(28px, 5.75vw, 87px);
+  margin: 0 0 0 4px;
+}
+
+.home-collection-heading h2 {
+  font-size: clamp(18px, 1.59vw, 24px);
+  line-height: 1.2084;
+}
+
+.home-collection-count {
+  gap: 8px;
+  font-size: clamp(28px, 2.65vw, 40px);
+  line-height: 1.2;
+}
+
+.home-collection-count span {
+  font-size: clamp(13px, 1.06vw, 16px);
+  line-height: 1.2;
+}
+
+.home-collection-reset {
+  display: inline-flex;
+  flex: 0 0 164px;
+  align-items: center;
+  justify-content: center;
+  width: 164px;
+  height: 38px;
+  margin-right: -4px;
+  padding: 12px 16px;
+  border: 0;
+  border-radius: 999px;
+  color: #939393;
+  background: rgba(147, 147, 147, 0.2);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 14px;
+  letter-spacing: 0;
+  white-space: nowrap;
+  cursor: pointer;
+  transform: translateY(-1px);
+  transition: background 0.15s ease, color 0.15s ease;
+  animation: home-fade-up 0.5s ease 0.32s both;
+}
+
+.home-collection-reset:hover,
+.home-collection-reset:focus-visible {
+  color: #777777;
+  background: rgba(147, 147, 147, 0.3);
+  outline: 2px solid rgba(147, 147, 147, 0.32);
+  outline-offset: 2px;
+}
+
+.home-character-slot > .home-character-card {
+  height: 100%;
+}
+
+.home-collection-grid {
+  --home-char-x: 50%;
+  --home-char-y: -55%;
+  --home-char-height: 188%;
+  --home-char-scale: 0.7;
+}
+
+.home-character-card {
+  --home-card-image-row: 66.4%;
+  aspect-ratio: 300.65 / 416.8;
+  container-type: size;
+}
+
+.home-character-card.is-acquired {
+  display: block;
+}
+
+.home-character-preview {
+  position: absolute;
+  left: 4.38cqw;
+  top: 3.16cqh;
+  width: 91.24cqw;
+  height: 66.4cqh;
+  margin: 0;
+  aspect-ratio: auto;
+  border-radius: 8.77cqw;
+}
+
+.home-card-character {
+  position: absolute;
+  left: var(--home-char-x, 50%);
+  bottom: var(--home-char-y, -60%);
+  width: auto;
+  height: var(--home-char-height, 188%);
+  max-width: none;
+  object-fit: contain;
+  object-position: center bottom;
+  transform: translateX(-50%) scale(var(--home-char-scale, 1));
+  transform-origin: center bottom;
+}
+
+.home-character-body {
+  display: contents;
+  padding: 0;
+}
+
+.home-character-name {
+  position: absolute;
+  left: 5.38cqw;
+  top: 74.7cqh;
+  width: 60cqw;
+  z-index: 3;
+  padding: 0;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: clamp(14px, 6.15cqw, 16px);
+  line-height: 1.2;
+}
+
+.home-character-tags {
+  position: absolute;
+  left: 5.38cqw;
+  top: 86.66cqh;
+  z-index: 3;
+  flex-wrap: nowrap;
+  gap: 3.08cqw;
+  max-width: 84cqw;
+  overflow: hidden;
+}
+
+.home-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: clamp(20px, 6.86cqh, 24px);
+  padding: 0 clamp(6px, 3.08cqw, 8px);
+  font-size: clamp(10px, 4.62cqw, 12px);
+  line-height: 14px;
+}
+
+.home-favorite-heart {
+  top: 74.62cqh;
+  right: 5.38cqw;
+  width: clamp(28px, 13.31cqw, 35px);
+  height: clamp(28px, 13.31cqw, 35px);
+  font-size: clamp(22px, 9.23cqw, 24px);
+}
+
+.home-locked-slot {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  font-size: clamp(24px, 2.12vw, 32px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+@media (min-width: 1201px) {
+  .home-collection {
+    margin-top: -23px;
+    padding-right: 56px;
+  }
+
+  .home-collection-reset {
+    margin-right: -8px;
+  }
+}
+
+@media (max-width: 900px) {
+  .home-collection-header {
+    margin-bottom: 14px;
+  }
+
+  .home-collection-heading {
+    margin-left: 0;
+  }
+
+  .home-collection-reset {
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .home-collection-header {
+    min-height: 0;
+    flex-wrap: wrap;
+    gap: 14px 16px;
+  }
+
+  .home-collection-heading {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .home-collection-reset {
+    margin-left: auto;
+    transform: none;
+  }
+
+
+  .home-character-tags {
+    gap: 4px;
+    max-width: 88cqw;
+  }
+
+  .home-tag {
+    height: 19px;
+    padding-inline: 4px;
+    font-size: 9px;
+    line-height: 11px;
+  }
+}

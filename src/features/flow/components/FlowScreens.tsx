@@ -265,6 +265,7 @@ export function HomeScreen(props: HomeScreenProps) {
         favoriteCharacterIds={props.favoriteCharacterIds}
         onCharacterDetailOpen={setCollectionDetailCharacterId}
         onToggleFavoriteCharacter={props.onToggleFavoriteCharacter}
+        onResetCollection={props.onDebugClearAcquiredCharacters}
       />
 
       {/* QR接続モーダル */}
@@ -990,7 +991,7 @@ export function PostureRegisteredScreen({
   const resultCardTapResetTimerRef = useRef<number | null>(null);
   const [isResultCardEntering, setIsResultCardEntering] = useState(false);
   const [isResultCardTapped, setIsResultCardTapped] = useState(false);
-  const [shareBusyAction, setShareBusyAction] = useState<"share" | "copy" | null>(null);
+  const [shareBusyAction, setShareBusyAction] = useState<"share" | "download" | null>(null);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const shareBusy = shareBusyAction !== null;
 
@@ -1013,6 +1014,7 @@ export function PostureRegisteredScreen({
       "--result-share-icon": acquiredCharacter.characterColor.primary,
       "--result-meta-icon": acquiredCharacter.characterColor.primary,
       "--result-portrait-bg": acquiredCharacter.characterColor.soft,
+      "--result-home-color": acquiredCharacter.characterColor.primary,
     } as CSSProperties;
   }, [wasSuccessful, acquiredCharacter]);
 
@@ -1035,7 +1037,7 @@ export function PostureRegisteredScreen({
   }, [wasSuccessful, acquiredCharacter]);
 
   const handleShareResult = useCallback(async (
-    action: Extract<ShareResultAction, "share" | "copy">,
+    action: Extract<ShareResultAction, "share" | "download">,
   ) => {
     if (
       shareCaptureRef.current === null ||
@@ -1047,7 +1049,7 @@ export function PostureRegisteredScreen({
     setShareFeedback(null);
     try {
       const outcome = await shareResultCapture(shareCaptureRef.current, {
-        action: action === "share" ? "auto" : "copy",
+        action: action === "share" ? "auto" : "download",
       });
       if (outcome === "downloaded") {
         const msg = "画像をダウンロードしました";
@@ -1216,18 +1218,18 @@ export function PostureRegisteredScreen({
                 void handleShareResult("share");
               }}
             >
-              <img src="/share.png" alt="" width={32} height={32} draggable={false} />
+              <ResultShareGlyph />
             </button>
             <button
               type="button"
-              className={`result-registered-outside-action${shareBusy && shareBusyAction === "copy" ? " is-busy" : ""}`}
-              aria-label="結果を画像でコピー"
+              className={`result-registered-outside-action${shareBusy && shareBusyAction === "download" ? " is-busy" : ""}`}
+              aria-label="結果画像を保存"
               disabled={shareBusy}
               onClick={() => {
-                void handleShareResult("copy");
+                void handleShareResult("download");
               }}
             >
-              <img src="/download.png" alt="" width={32} height={32} draggable={false} />
+              <ResultDownloadGlyph />
             </button>
           </div>
         </div>
@@ -1251,6 +1253,38 @@ export function PostureRegisteredScreen({
         </button>
       </footer>
     </main>
+  );
+}
+
+function ResultShareGlyph() {
+  return (
+    <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+      <circle cx="8" cy="16" r="2.75" fill="currentColor" />
+      <circle cx="23" cy="8" r="2.75" fill="currentColor" />
+      <circle cx="23" cy="24" r="2.75" fill="currentColor" />
+      <path
+        d="m10.5 14.7 9.9-5.3M10.5 17.3l9.9 5.3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function ResultDownloadGlyph() {
+  return (
+    <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+      <path
+        d="M16 5v14m-5.5-5.5L16 19l5.5-5.5M7 22v4h18v-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
@@ -1509,12 +1543,14 @@ function CharacterCollection({
   favoriteCharacterIds,
   onCharacterDetailOpen,
   onToggleFavoriteCharacter,
+  onResetCollection,
 }: {
   characters: CharacterDefinition[];
   acquiredCharacters: AcquiredCharacter[];
   favoriteCharacterIds: Set<string>;
   onCharacterDetailOpen: (characterId: string) => void;
   onToggleFavoriteCharacter: (characterId: string) => void;
+  onResetCollection: () => void;
 }) {
   const acquiredCharactersById = new Map(
     acquiredCharacters.map((character) => [character.characterId, character]),
@@ -1538,14 +1574,32 @@ function CharacterCollection({
     (slot) => slot.acquiredCharacter !== null,
   ).length;
 
+  function handleResetCollection() {
+    const shouldReset = window.confirm(
+      "コレクションをリセットしますか？\n獲得したピンアナゴ、お気に入り、プロフィール設定がすべて削除されます。",
+    );
+    if (shouldReset) {
+      onResetCollection();
+    }
+  }
+
   return (
     <section className="home-collection" aria-labelledby="collection-heading">
-      <div className="home-collection-heading">
-        <h2 id="collection-heading">コレクション</h2>
-        <strong className="home-collection-count">
-          {acquiredCount}
-          <span> / {COLLECTION_TOTAL_COUNT}</span>
-        </strong>
+      <div className="home-collection-header">
+        <div className="home-collection-heading">
+          <h2 id="collection-heading">コレクション</h2>
+          <strong className="home-collection-count">
+            {acquiredCount}
+            <span> / {COLLECTION_TOTAL_COUNT}</span>
+          </strong>
+        </div>
+        <button
+          type="button"
+          className="home-collection-reset"
+          onClick={handleResetCollection}
+        >
+          コレクションをリセット
+        </button>
       </div>
       <div className="home-collection-grid">
         {collectionSlots.map(({ character, acquiredCharacter, number }, index) => {

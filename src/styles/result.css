@@ -687,11 +687,15 @@
   transform: none;
 }
 
-.result-registered-outside-action img {
+.result-registered-outside-action :is(img, svg) {
   display: block;
   width: 32px;
   height: 32px;
   object-fit: contain;
+}
+
+.result-registered-outside-action {
+  color: #ffffff;
 }
 
 .result-registered-outside-action.is-busy {
@@ -1117,7 +1121,7 @@
   font-size: 1.5rem;
   font-weight: 700;
   line-height: 1.2;
-  background: #f78000;
+  background: var(--result-home-color, #f78000);
   box-shadow: 0 0 8.52px rgba(0, 0, 0, 0.15);
 }
 
@@ -1164,7 +1168,7 @@
   }
 
   .result-screen--registered .result-registered-hero {
-    margin-bottom: 55px;
+    margin-bottom: 51px;
   }
 
   .result-screen--registered .result-registered-eyebrow {
@@ -1188,7 +1192,7 @@
   }
 
   .result-screen--registered .result-registered-footer {
-    margin-top: 38px;
+    margin-top: 40px;
   }
 
   .result-screen--registered.result-screen--accent-fail {
