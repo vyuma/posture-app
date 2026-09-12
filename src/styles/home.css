@@ -1851,14 +1851,6 @@
   padding: 26px 24px 14px;
 }
 
-.collection-detail-eyebrow {
-  margin: 0;
-  color: rgba(255, 255, 255, 0.94);
-  font-size: clamp(0.92rem, 1.5vw, 1rem);
-  font-weight: 800;
-  text-shadow: 0 2px 10px rgba(0, 40, 60, 0.18);
-}
-
 .collection-detail-close {
   position: absolute;
   top: 20px;
@@ -1877,36 +1869,17 @@
   box-shadow: 0 8px 16px rgba(18, 54, 65, 0.18);
 }
 
-/* 白カード本体は result.css の .result-registered-card に統一 */
-.collection-detail-dialog .result-registered-card {
-  width: min(720px, calc(100% - 36px));
+.collection-detail-dialog .result-registered-card-block {
+  width: min(758px, calc(100% - 36px));
+  gap: 24px;
   margin: 0 auto 16px;
 }
 
-/* 共有対象外：ストーリーは白カードの下に配置 */
-.collection-detail-story-below {
-  width: min(720px, calc(100% - 36px));
-  margin: 0 auto 16px;
-  padding: clamp(14px, 2.5vw, 20px) clamp(16px, 3vw, 22px);
-  border-radius: clamp(18px, 3vw, 24px);
-  background: rgba(255, 255, 255, 0.96);
-  box-sizing: border-box;
-}
-
-.collection-detail-story-below h3 {
-  margin: 0 0 8px;
-  color: #6b7580;
-  font-size: 0.8rem;
-  font-weight: 900;
-}
-
-.collection-detail-story {
+.collection-detail-dialog .result-registered-card-block .result-registered-card {
+  width: min(670px, 100%);
   margin: 0;
-  padding: 0;
-  color: #43515a;
-  font-size: 0.9rem;
-  font-weight: 800;
-  line-height: 1.55;
+  flex: 0 1 670px;
+  min-width: 0;
 }
 
 .collection-detail-share-feedback {

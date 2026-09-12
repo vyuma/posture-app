@@ -14,6 +14,15 @@
   background: linear-gradient(180deg, #13a2d7 0%, #f2edcc 100%);
 }
 
+.collection-detail-card-context.result-screen--registered {
+  display: block;
+  width: 100%;
+  min-height: 0;
+  padding: 0;
+  overflow: visible;
+  background: none;
+}
+
 .result-screen--accent-success {
   --result-stat-accent: #fd8c3e;
   --result-share-icon: #fd8c3e;

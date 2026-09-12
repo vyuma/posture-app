@@ -1691,14 +1691,9 @@ function CollectionDetailDialog({
   onClose: () => void;
 }) {
   const shareCaptureRef = useRef<HTMLElement>(null);
-  const [shareBusyAction, setShareBusyAction] = useState<"share" | "copy" | null>(null);
+  const [shareBusyAction, setShareBusyAction] = useState<"share" | "download" | null>(null);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const shareBusy = shareBusyAction !== null;
-
-  const hasTimelineData =
-    (acquiredCharacter.postureTimeline?.length ?? 0) > 0 &&
-    (acquiredCharacter.activeMeasurementMs ?? 0) > 0;
-  const timelineVariant = hasTimelineData ? "success" : "fail";
 
   const shareCardThemeVars = useMemo(() => {
     return {
@@ -1711,7 +1706,7 @@ function CollectionDetailDialog({
   }, [character]);
 
   const handleShareCollection = useCallback(async (
-    action: Extract<ShareResultAction, "share" | "copy">,
+    action: Extract<ShareResultAction, "share" | "download">,
   ) => {
     if (shareCaptureRef.current === null || shareBusy) {
       return;
@@ -1720,7 +1715,7 @@ function CollectionDetailDialog({
     setShareFeedback(null);
     try {
       const outcome = await shareResultCapture(shareCaptureRef.current, {
-        action,
+        action: action === "share" ? "auto" : "download",
       });
       if (outcome === "downloaded") {
         setShareFeedback("画像をダウンロードしました");
@@ -1750,7 +1745,6 @@ function CollectionDetailDialog({
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="collection-detail-header">
-          <p className="collection-detail-eyebrow">今日のピンアナゴ</p>
           <button
             type="button"
             className="collection-detail-close"
@@ -1760,40 +1754,59 @@ function CollectionDetailDialog({
             ×
           </button>
         </div>
-        <CharacterResultWhiteCard
-          ref={shareCaptureRef}
-          portraitMode="character"
-          character={character}
-          personalityTags={character.personalityTags}
-          goodDurationLabel={formatOptionalDuration(acquiredCharacter.goodMs)}
-          goodRatioLabel={formatOptionalPercent(acquiredCharacter.goodRatio)}
-          timelineSegments={acquiredCharacter.postureTimeline ?? []}
-          timelineTotalMs={acquiredCharacter.activeMeasurementMs ?? 0}
-          timelineVariant={timelineVariant}
-          timelineGoodStrokeResolved={
-            hasTimelineData ? character.characterColor.primary : "#8a9399"
-          }
-          acquiredAtLabel={formatAcquiredAt(acquiredCharacter.acquiredAt)}
-          measurementDurationLabel={formatOptionalDuration(
-            acquiredCharacter.activeMeasurementMs,
-          )}
-          shareBusy={shareBusy}
-          shareBusyAction={shareBusyAction}
-          onShareClick={() => {
-            void handleShareCollection("share");
-          }}
-          onCopyClick={() => {
-            void handleShareCollection("copy");
-          }}
-          articleStyle={shareCardThemeVars}
-          characterNameId="collection-detail-heading"
-        />
-        <div
-          className="collection-detail-story-below"
-          aria-labelledby="collection-detail-story-heading"
-        >
-          <h3 id="collection-detail-story-heading">ストーリー</h3>
-          <p className="collection-detail-story">{character.story}</p>
+        <div className="collection-detail-card-context result-screen--registered result-screen--accent-success">
+          <div className="result-registered-card-block">
+            <CharacterResultWhiteCard
+              ref={shareCaptureRef}
+              portraitMode="character"
+              character={character}
+              personalityTags={character.personalityTags}
+              goodDurationLabel={formatOptionalDuration(acquiredCharacter.goodMs)}
+              goodRatioLabel={formatOptionalPercent(acquiredCharacter.goodRatio)}
+              acquiredAtLabel={formatAcquiredAt(acquiredCharacter.acquiredAt)}
+              measurementDurationLabel={formatOptionalDuration(
+                acquiredCharacter.activeMeasurementMs,
+              )}
+              characterStory={character.story}
+              articleClassName="result-registered-card--acquired"
+              articleStyle={shareCardThemeVars}
+              characterNameId="collection-detail-heading"
+            />
+            <div
+              className="result-registered-outside-actions"
+              role="toolbar"
+              aria-label="結果画像の共有と保存"
+            >
+              <button
+                type="button"
+                className={`result-registered-outside-action${shareBusy && shareBusyAction === "share" ? " is-busy" : ""}`}
+                aria-label="結果を画像で共有"
+                title="結果を画像で共有（または保存）します"
+                disabled={shareBusy}
+                aria-disabled={shareBusy}
+                aria-busy={shareBusy && shareBusyAction === "share"}
+                onClick={() => {
+                  void handleShareCollection("share");
+                }}
+              >
+                <ResultShareGlyph />
+              </button>
+              <button
+                type="button"
+                className={`result-registered-outside-action${shareBusy && shareBusyAction === "download" ? " is-busy" : ""}`}
+                aria-label="結果画像を保存"
+                title="結果画像を保存"
+                disabled={shareBusy}
+                aria-disabled={shareBusy}
+                aria-busy={shareBusy && shareBusyAction === "download"}
+                onClick={() => {
+                  void handleShareCollection("download");
+                }}
+              >
+                <ResultDownloadGlyph />
+              </button>
+            </div>
+          </div>
         </div>
         <p className="collection-detail-share-feedback" role="status" aria-live="polite">
           {shareFeedback ?? ""}
