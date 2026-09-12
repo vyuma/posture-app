@@ -232,7 +232,7 @@ export function HomeScreen(props: HomeScreenProps) {
             <h1>
               良い姿勢を継続して
               <br />
-              ピンアナゴを獲得しよう
+              ピンアナゴをゲットしよう
             </h1>
           </div>
           <div className="home-hero-actions">
@@ -1589,8 +1589,11 @@ function CharacterCollection({
         <div className="home-collection-heading">
           <h2 id="collection-heading">コレクション</h2>
           <strong className="home-collection-count">
-            {acquiredCount}
-            <span> / {COLLECTION_TOTAL_COUNT}</span>
+            <span className="home-collection-count-main">{acquiredCount}</span>
+            <span className="home-collection-count-slash">/</span>
+            <span className="home-collection-count-total">
+              {COLLECTION_TOTAL_COUNT}
+            </span>
           </strong>
         </div>
         <button
@@ -1632,6 +1635,7 @@ function CharacterCollection({
             <div
               className="home-character-slot"
               key={character.id}
+              data-character-id={character.id}
               style={cardStyle}
               onMouseMove={onCardSlotMouseMove}
               onMouseLeave={onCardSlotMouseLeave}
