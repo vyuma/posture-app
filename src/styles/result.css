@@ -796,7 +796,7 @@
 
 .result-registered-card--detail .result-registered-stat-label {
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   color: #666666;
 }
 
@@ -852,6 +852,123 @@
   font-size: 14px;
   font-weight: 500;
   color: #000000;
+}
+
+/*
+ * Figma「ピンアナゴ獲得」(461:1109)・「ピンアナゴ未獲得」(461:1170) のカード内部。
+ * 外枠 670×419、portrait 280×280、キャラクター画像 約235×377 を基準にする。
+ */
+.result-screen--registered
+  .result-registered-card--detail
+  .result-registered-col--character {
+  gap: 14px;
+}
+
+.result-screen--accent-success
+  .result-registered-card--acquired
+  .result-registered-figure.character-figure {
+  --result-portrait-img-width: 83.9286%;
+  --result-portrait-img-height: auto;
+  --result-portrait-img-shift-x: -3.4%;
+  --result-portrait-img-shift-y: 13.5%;
+  --result-portrait-img-scale: 1;
+
+  max-width: none;
+  max-height: none;
+  align-self: start;
+  justify-self: center;
+}
+
+.result-screen--accent-fail
+  .result-registered-card--acquisition-fail
+  .result-registered-figure--acquisition-fail {
+  --result-portrait-img-width: 83.8429%;
+  --result-portrait-img-height: 134.6429%;
+  --result-portrait-img-object-position: center top;
+  --result-portrait-img-shift-x: -3.55%;
+  --result-portrait-img-shift-y: 14.32%;
+  --result-portrait-img-scale: 1;
+
+  max-width: none;
+  max-height: none;
+  align-self: start;
+  justify-self: center;
+}
+
+@media (min-width: 701px) {
+  .result-screen--registered .result-registered-card--detail {
+    height: 419px;
+  }
+
+  .result-screen--registered
+    .result-registered-card--detail
+    .result-registered-col--stats {
+    position: relative;
+    display: block;
+  }
+
+  .result-screen--registered
+    .result-registered-card--detail
+    .result-registered-stat-grid {
+    position: absolute;
+    top: 44px;
+    left: 0;
+    grid-template-columns: 135px 135px;
+    column-gap: 48px;
+    row-gap: 0;
+  }
+
+  .result-screen--registered
+    .result-registered-card--detail
+    .result-registered-stat-cell {
+    width: 135px;
+  }
+
+  .result-screen--registered
+    .result-registered-card--detail
+    .result-registered-stat-label {
+    line-height: 17px;
+  }
+
+  .result-screen--registered
+    .result-registered-card--detail
+    .result-registered-stat-value {
+    margin-top: 16px;
+  }
+
+  .result-screen--registered
+    .result-registered-card--detail
+    .result-registered-meta {
+    position: absolute;
+    top: 187px;
+    left: 0;
+    width: 100%;
+    margin: 0;
+    padding-top: 25px;
+    gap: 8px;
+  }
+
+  .result-screen--registered
+    .result-registered-card--detail
+    .result-registered-meta-row:first-child {
+    margin-bottom: 0;
+  }
+
+  .result-screen--registered
+    .result-registered-card--detail
+    .result-registered-meta-label {
+    line-height: 24px;
+  }
+
+  .result-screen--registered
+    .result-registered-card--detail
+    .result-registered-story {
+    position: absolute;
+    right: 0;
+    bottom: 5px;
+    width: 100%;
+    margin: 0;
+  }
 }
 
 .result-registered-story {
@@ -1014,6 +1131,162 @@
   font-size: 1.5rem;
   line-height: 1.2;
   box-shadow: 0 0 8.52px rgba(0, 0, 0, 0.15);
+}
+
+/* 1512×982 基準：カードを画面中央に置き、共有操作だけを右側へ配置する。 */
+@media (min-width: 901px) {
+  .result-screen--registered .result-registered-capture-root {
+    max-width: none;
+  }
+
+  .result-screen--registered .result-registered-card-block {
+    position: relative;
+    justify-content: center;
+  }
+
+  .result-screen--registered .result-registered-outside-actions {
+    position: absolute;
+    top: 0;
+    left: calc(50% + 359px);
+  }
+}
+
+@media (min-width: 901px) and (min-height: 800px) {
+  .result-screen--registered {
+    padding: 164px 64px 40px;
+  }
+
+  .result-screen--registered .flow-brand {
+    top: 40px;
+    left: 80px;
+    width: 134px;
+    height: 80px;
+  }
+
+  .result-screen--registered .result-registered-hero {
+    margin-bottom: 55px;
+  }
+
+  .result-screen--registered .result-registered-eyebrow {
+    margin-bottom: 16px;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 38px;
+    letter-spacing: 0;
+  }
+
+  .result-screen--registered .result-registered-title {
+    font-size: 64px;
+    font-weight: 700;
+    line-height: 77px;
+    letter-spacing: 0;
+  }
+
+  .result-screen--registered .result-registered-share-feedback:empty {
+    min-height: 0;
+    margin: 0;
+  }
+
+  .result-screen--registered .result-registered-footer {
+    margin-top: 38px;
+  }
+
+  .result-screen--registered.result-screen--accent-fail {
+    padding-top: 160px;
+  }
+
+  .result-screen--accent-fail .result-registered-hero {
+    margin-bottom: 39px;
+  }
+
+  .result-screen--accent-fail .result-registered-eyebrow {
+    margin-bottom: 32px;
+  }
+
+  .result-screen--accent-fail .result-registered-footer {
+    margin-top: 40px;
+  }
+}
+
+@media (min-width: 701px) and (max-width: 900px) {
+  .result-screen--registered {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .result-screen--registered .result-registered-capture-root {
+    max-width: 670px;
+  }
+
+  .result-screen--registered .result-registered-card-block {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .result-screen--registered .result-registered-outside-actions {
+    flex-direction: row;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 700px) {
+  .result-screen--registered .result-registered-card--detail {
+    height: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .result-screen--registered
+    .result-registered-card--detail
+    .result-registered-col--stats {
+    position: static;
+    display: flex;
+  }
+
+  .result-screen--registered
+    .result-registered-card--detail
+    .result-registered-stat-grid,
+  .result-screen--registered
+    .result-registered-card--detail
+    .result-registered-meta,
+  .result-screen--registered
+    .result-registered-card--detail
+    .result-registered-story {
+    position: static;
+    width: auto;
+  }
+
+  .result-screen--registered
+    .result-registered-card--detail
+    .result-registered-stat-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .result-screen--registered
+    .result-registered-card--detail
+    .result-registered-stat-cell {
+    width: auto;
+  }
+
+  .result-screen--registered
+    .result-registered-card--detail
+    .result-registered-stat-value {
+    margin-top: 8px;
+  }
+
+  .result-screen--registered
+    .result-registered-card--detail
+    .result-registered-meta {
+    margin-top: 8px;
+    padding-top: 12px;
+    gap: 12px;
+  }
+
+  .result-screen--registered
+    .result-registered-card--detail
+    .result-registered-story {
+    margin-top: auto;
+  }
 }
 
 @media (max-width: 600px) {
