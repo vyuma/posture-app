@@ -3,6 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import "./styles/index.css";
+import { DesktopUpdater } from "./features/updates/DesktopUpdater";
 import { CHARACTER_CATALOG, getNextUnacquiredCharacter } from "./features/characters/characterCatalog";
 import {
   clearAcquiredCharacters,
@@ -692,6 +693,7 @@ function App() {
     <>
       {screen}
       {permissionPopup}
+      <DesktopUpdater canInstall={flowPhase === "home" && !isStartPending && !permissionPopupMessage} />
     </>
   );
 }

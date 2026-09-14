@@ -25,3 +25,9 @@ dist-ssr
 
 
 z_plan
+
+# Release output and signing material must never be committed.
+release-artifacts/
+*.p12
+*.pfx
+*.key

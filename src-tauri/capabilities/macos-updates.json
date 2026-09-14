@@ -1,0 +1,8 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "macos-updates",
+  "description": "Signed updates for the main macOS window only",
+  "platforms": ["macOS"],
+  "windows": ["main"],
+  "permissions": ["updater:default", "process:allow-restart"]
+}

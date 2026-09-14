@@ -1,6 +1,8 @@
 mod commands;
 mod overlay;
 mod pairing;
+#[cfg(target_os = "macos")]
+mod updates;
 
 use commands::clipboard_commands::copy_share_image_to_clipboard;
 use commands::overlay_commands::{
@@ -24,6 +26,8 @@ pub fn run() {
         .manage(pairing_state)
         .manage(overlay_state)
         .setup(|app| {
+            #[cfg(target_os = "macos")]
+            updates::setup(app)?;
             if let Err(error) = ensure_overlay_window(&app.handle()) {
                 eprintln!("failed to initialize cat overlay window: {error}");
             }

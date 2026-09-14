@@ -1,0 +1,21 @@
+.desktop-update-dialog {
+  margin: auto;
+  width: min(440px, calc(100vw - 48px));
+  max-height: calc(100dvh - 48px);
+  overflow: auto;
+  padding: 28px;
+  border: 0;
+  border-radius: 24px;
+  color: #555;
+  background: #fff;
+  box-shadow: 0 16px 64px #16445a33;
+  font: inherit;
+}
+.desktop-update-dialog::backdrop { background: #12344566; }
+.desktop-update-dialog h2 { font-size: 20px; margin: 0 0 16px; }
+.desktop-update-dialog p { line-height: 1.8; }
+.desktop-update-dialog progress { width: 100%; accent-color: #09a6da; }
+.desktop-update-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+.desktop-update-actions button { border: 0; border-radius: 24px; padding: 12px 20px; min-height: 44px; background: #eee; color: #555; font: inherit; cursor: pointer; }
+.desktop-update-actions button.primary { background: #09a6da; color: #fff; }
+.desktop-update-actions button:focus-visible { outline: 3px solid #086c96; outline-offset: 3px; }
