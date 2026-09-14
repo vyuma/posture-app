@@ -37,7 +37,7 @@ GitHub Release のタグは `v<version>`。DMG、tar.gz、sig、latest.json、SH
 WebView2 は Microsoft 公式サイトから x64 Fixed Version を取得し、ライセンスへの同意後に展開する。展開時は `expand.exe <cab> -F:* <展開先>` を使う。ランタイム全体（第三者ライセンス通知を含む）を同梱する。新しい Store リリースごとにサポート中のランタイムへ更新する。
 
 Windows SDK、Rust MSVC、Bun のある Windows 環境で実行する。
-Windows PC がない場合は、main へ取り込んだ後に GitHub Actions の `Windows Store package` を手動実行する。ライセンスへの同意を済ませた Microsoft 公式 CAB URL と SHA256 を指定する。チェックサム・Microsoft 署名・x64 アーキテクチャを検査し、MSIX を検証用 Artifact として出力する。Store への申請・公開は自動実行しない。
+Windows PC がない場合は、main へ取り込んだ後に GitHub Actions の `Windows Store package` を手動実行する。既定値は所有者がライセンスへ同意して取得した x64 WebView2 `153.0.4234.32`。更新する場合は同意済みの Microsoft 公式 CAB URL と SHA256 の両方を指定する。チェックサム・Microsoft 署名・x64 アーキテクチャを検査し、MSIX を検証用 Artifact として出力する。Store への申請・公開は自動実行しない。
 
 ```powershell
 ./scripts/package-windows-store.ps1 `
@@ -45,6 +45,10 @@ Windows PC がない場合は、main へ取り込んだ後に GitHub Actions の
 ```
 
 スクリプトは Microsoft の署名を検査し、WebView2 の場所をアプリへ組み込み、Tauri exe とランタイム・アイコン・manifest を MSIX にする。最低 OS は Windows 10 2004。`release-artifacts/windows-<version>/` の unsigned MSIX を Store に提出する。Store 配信署名の代わりに自己署名証明書を一般利用者へインストールさせない。Windows には Tauri Updater プラグインを組み込まない。
+
+Store の先頭バージョンは 0 にできないため、MSIX バージョンはアプリの `major+1.minor.patch.0` に変換する。アプリ `0.1.1` は Store `1.1.1.0`。Tauri がビルド時に参照する `src-tauri/WebView2` はスクリプトが一時作成し、ビルド後に削除する。既存の同名ディレクトリがあれば上書きせず停止する。
+
+2026-09-14 に [Windows Store package の実行](https://github.com/vyuma/posture-app/actions/runs/34844361772)で MSIX 生成・MakeAppx 検証まで成功した。Store 登録状況と公開前の残件は [申請メモ](store-submission-notes.md)を参照する。
 
 `runFullTrust` は既存のデスクトップアプリを動かすために必要。審査にはカメラによる端末内の姿勢検出、デスクトップオーバーレイ、同じ LAN 上のモバイル連携を説明する。WebView2 のライセンス/データ収集告知、アプリのプライバシーポリシー、スクリーンショット、年齢区分を実際の処理に合わせて用意し、公開前に確認する。
 

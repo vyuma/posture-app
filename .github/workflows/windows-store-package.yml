@@ -1,10 +1,5 @@
 name: Windows Store package
 on:
-  push:
-    branches: [feat/desktop-release-updates]
-    paths:
-      - .github/workflows/windows-store-package.yml
-      - scripts/package-windows-store.ps1
   workflow_dispatch:
     inputs:
       runtime_url:
