@@ -48,8 +48,17 @@ $override = Join-Path $output 'tauri-store.json'
 @{ bundle = @{ createUpdaterArtifacts = $false; windows = @{ webviewInstallMode = @{ type = 'fixedRuntime'; path = 'WebView2' } } } } |
   ConvertTo-Json -Depth 8 | Set-Content $override -Encoding utf8
 $env:CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_RUSTFLAGS = '-C target-feature=+crt-static'
-bun run tauri build --target x86_64-pc-windows-msvc --no-bundle --config $override
-if ($LASTEXITCODE -ne 0) { throw 'Tauri Windows build failed.' }
+# Tauri resolves fixedRuntime relative to src-tauri at build time and relative
+# to the executable at runtime. Keep the same WebView2 name in both locations.
+$buildRuntime = Join-Path (Get-Location) 'src-tauri/WebView2'
+if (Test-Path $buildRuntime) { throw 'src-tauri/WebView2 already exists; move it before packaging.' }
+try {
+  Copy-Item $runtime $buildRuntime -Recurse
+  bun run tauri build --target x86_64-pc-windows-msvc --no-bundle --config $override
+  if ($LASTEXITCODE -ne 0) { throw 'Tauri Windows build failed.' }
+} finally {
+  if (Test-Path $buildRuntime) { Remove-Item $buildRuntime -Recurse -Force }
+}
 Copy-Item src-tauri/target/x86_64-pc-windows-msvc/release/posture-app.exe $stage
 Copy-Item $runtime "$stage/WebView2" -Recurse
 foreach ($logo in @('Square44x44Logo.png', 'Square150x150Logo.png', 'StoreLogo.png')) {
