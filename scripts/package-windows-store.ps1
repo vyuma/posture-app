@@ -33,6 +33,13 @@ if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notm
 $config = Get-Content src-tauri/tauri.conf.json -Raw | ConvertFrom-Json
 $version = $config.version
 if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'MSIX Store releases require a stable numeric version.' }
+# Store requires a nonzero major and reserves the fourth component. Always add
+# one to the app major so 0.x -> 1.x app releases remain monotonic in the Store.
+$appVersion = [Version]$version
+if ($appVersion.Major -ge 65535 -or $appVersion.Minor -gt 65535 -or $appVersion.Build -gt 65535) {
+  throw 'App version exceeds the MSIX version range.'
+}
+$storeVersion = "$($appVersion.Major + 1).$($appVersion.Minor).$($appVersion.Build).0"
 $output = Join-Path (Get-Location) "release-artifacts/windows-$version"
 if (Test-Path $output) { throw 'Release output already exists. Move the previous output before rebuilding.' }
 $stage = Join-Path $output 'package'
@@ -59,7 +66,7 @@ $publisherDisplayXml = EscapeXml $PublisherDisplayName
  xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
  IgnorableNamespaces="uap uap10 rescap">
- <Identity Name="$nameXml" Publisher="$publisherXml" Version="$version.0" ProcessorArchitecture="x64" />
+ <Identity Name="$nameXml" Publisher="$publisherXml" Version="$storeVersion" ProcessorArchitecture="x64" />
  <Properties><DisplayName>PiiiN</DisplayName><PublisherDisplayName>$publisherDisplayXml</PublisherDisplayName><Logo>Assets\StoreLogo.png</Logo></Properties>
  <Resources><Resource Language="ja-jp" /></Resources>
  <Dependencies><TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.19041.0" MaxVersionTested="10.0.26100.0" /></Dependencies>
