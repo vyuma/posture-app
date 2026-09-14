@@ -1,14 +1,19 @@
 name: Windows Store package
 on:
+  push:
+    branches: [feat/desktop-release-updates]
+    paths:
+      - .github/workflows/windows-store-package.yml
+      - scripts/package-windows-store.ps1
   workflow_dispatch:
     inputs:
       runtime_url:
         description: Official Microsoft x64 Fixed Version WebView2 CAB URL (license accepted)
-        required: true
+        required: false
         type: string
       runtime_sha256:
         description: SHA256 of the approved CAB
-        required: true
+        required: false
         type: string
 permissions:
   contents: read
@@ -27,8 +32,9 @@ jobs:
       - name: Download and verify the approved runtime
         shell: pwsh
         env:
-          RUNTIME_URL: ${{ inputs.runtime_url }}
-          RUNTIME_SHA256: ${{ inputs.runtime_sha256 }}
+          # Owner accepted the license and downloaded this x64 CAB on 2026-09-14.
+          RUNTIME_URL: ${{ inputs.runtime_url || 'https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/c3d95bc1-a0a7-4ca6-aaa1-fa0ac3dd1a37/Microsoft.WebView2.FixedVersionRuntime.153.0.4234.32.x64.cab' }}
+          RUNTIME_SHA256: ${{ inputs.runtime_sha256 || '2cb653a74426f0aa802c2396775c6bc674fd662d5396bd677f47bfa6e12eba9c' }}
         run: |
           $ErrorActionPreference = 'Stop'
           $uri = [uri]$env:RUNTIME_URL
