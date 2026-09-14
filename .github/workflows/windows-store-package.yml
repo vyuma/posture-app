@@ -1,0 +1,57 @@
+name: Windows Store package
+on:
+  workflow_dispatch:
+    inputs:
+      runtime_url:
+        description: Official Microsoft x64 Fixed Version WebView2 CAB URL (license accepted)
+        required: true
+        type: string
+      runtime_sha256:
+        description: SHA256 of the approved CAB
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.13
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+      - run: bun install --frozen-lockfile
+      - name: Download and verify the approved runtime
+        shell: pwsh
+        env:
+          RUNTIME_URL: ${{ inputs.runtime_url }}
+          RUNTIME_SHA256: ${{ inputs.runtime_sha256 }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $uri = [uri]$env:RUNTIME_URL
+          if ($uri.Scheme -ne 'https' -or !($uri.DnsSafeHost.EndsWith('.microsoft.com') -or $uri.DnsSafeHost.EndsWith('.azureedge.net'))) { throw 'Use an official Microsoft HTTPS download.' }
+          if ($env:RUNTIME_SHA256 -notmatch '^[a-fA-F0-9]{64}$') { throw 'A complete SHA256 digest is required.' }
+          New-Item -ItemType Directory "$env:RUNNER_TEMP/webview2" | Out-Null
+          $cab = "$env:RUNNER_TEMP/webview2.cab"
+          Invoke-WebRequest -Uri $uri -OutFile $cab
+          if ((Get-FileHash $cab -Algorithm SHA256).Hash -ne $env:RUNTIME_SHA256) { throw 'Runtime checksum mismatch.' }
+          expand.exe $cab '-F:*' "$env:RUNNER_TEMP/webview2"
+          if ($LASTEXITCODE -ne 0) { throw 'CAB extraction failed.' }
+          $runtime = @(Get-ChildItem "$env:RUNNER_TEMP/webview2" -Filter msedgewebview2.exe -Recurse)
+          if ($runtime.Count -ne 1) { throw 'Expected one WebView2 runtime in the CAB.' }
+          "RUNTIME_DIRECTORY=$($runtime[0].DirectoryName)" >> $env:GITHUB_ENV
+      - run: bun run test:updates
+      - name: Build MSIX for the registered PiiiN Store identity
+        shell: pwsh
+        run: ./scripts/package-windows-store.ps1 -WebView2Directory $env:RUNTIME_DIRECTORY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: piiin-store-submission
+          path: |
+            release-artifacts/windows-*/*.msix
+            release-artifacts/windows-*/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14

@@ -28,7 +28,7 @@ GitHub Release のタグは `v<version>`。DMG、tar.gz、sig、latest.json、SH
 
 ## Windows MSIX
 
-Store Developer の無料登録と本人確認を完了し、アプリ名を予約する。Partner Center に表示される次の値をそのまま利用する。推測した値では提出しない。
+2026-09-14 に Partner Center で `PiiiN` を予約済み。Store ID は `9NC4NF85BTNT`、製品は提出前の draft。`src-tauri/store-identity.json` に実際に割り当てられた公開識別子を保存してあり、パッケージスクリプトは既定でこれを利用する。予約画面によると 3 か月以内の提出が必要。別のアカウントへ配布先を変更するときは次の値を Partner Center で再確認する。
 
 - Package/Identity/Name
 - Package/Identity/Publisher
@@ -37,12 +37,10 @@ Store Developer の無料登録と本人確認を完了し、アプリ名を予�
 WebView2 は Microsoft 公式サイトから x64 Fixed Version を取得し、ライセンスへの同意後に展開する。展開時は `expand.exe <cab> -F:* <展開先>` を使う。ランタイム全体（第三者ライセンス通知を含む）を同梱する。新しい Store リリースごとにサポート中のランタイムへ更新する。
 
 Windows SDK、Rust MSVC、Bun のある Windows 環境で実行する。
+Windows PC がない場合は、main へ取り込んだ後に GitHub Actions の `Windows Store package` を手動実行する。ライセンスへの同意を済ませた Microsoft 公式 CAB URL と SHA256 を指定する。チェックサム・Microsoft 署名・x64 アーキテクチャを検査し、MSIX を検証用 Artifact として出力する。Store への申請・公開は自動実行しない。
 
 ```powershell
 ./scripts/package-windows-store.ps1 `
-  -IdentityName '<Store の Name>' `
-  -Publisher '<Store の CN=...>' `
-  -PublisherDisplayName '<登録済み公開名>' `
   -WebView2Directory '<msedgewebview2.exe が入った展開先>'
 ```
 

@@ -1,18 +1,31 @@
 param(
-  [Parameter(Mandatory)][string]$IdentityName,
-  [Parameter(Mandatory)][string]$Publisher,
-  [Parameter(Mandatory)][string]$PublisherDisplayName,
+  [string]$IdentityName,
+  [string]$Publisher,
+  [string]$PublisherDisplayName,
   [Parameter(Mandatory)][string]$WebView2Directory
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 Set-Location (Split-Path $PSScriptRoot -Parent)
+$storeIdentity = Get-Content src-tauri/store-identity.json -Raw | ConvertFrom-Json
+if (!$IdentityName) { $IdentityName = $storeIdentity.name }
+if (!$Publisher) { $Publisher = $storeIdentity.publisher }
+if (!$PublisherDisplayName) { $PublisherDisplayName = $storeIdentity.publisherDisplayName }
 if ($IdentityName -notmatch '^[A-Za-z0-9.-]{3,50}$' -or !$Publisher.StartsWith('CN=')) {
   throw 'Use the exact Package/Identity/Name and Publisher assigned by Partner Center.'
 }
 $runtime = (Resolve-Path $WebView2Directory).Path
 $runtimeExe = Join-Path $runtime 'msedgewebview2.exe'
 if (!(Test-Path $runtimeExe)) { throw 'Select the extracted x64 Fixed Version WebView2 directory.' }
+$reader = [System.IO.BinaryReader]::new([System.IO.File]::OpenRead($runtimeExe))
+try {
+  $reader.BaseStream.Position = 0x3c
+  $peOffset = $reader.ReadInt32()
+  $reader.BaseStream.Position = $peOffset
+  if ($reader.ReadUInt32() -ne 0x00004550 -or $reader.ReadUInt16() -ne 0x8664) {
+    throw 'WebView2 must be an x64 PE executable, matching the app package architecture.'
+  }
+} finally { $reader.Dispose() }
 $signature = Get-AuthenticodeSignature $runtimeExe
 if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notmatch 'O=Microsoft Corporation') {
   throw 'The WebView2 executable must have a valid Microsoft signature.'
