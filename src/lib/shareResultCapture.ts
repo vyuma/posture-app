@@ -10,7 +10,7 @@ export type ShareResultOutcome =
   | "downloaded"
   | "copied"
   | "aborted";
-export type ShareResultAction = "auto" | "share" | "copy";
+export type ShareResultAction = "auto" | "share" | "copy" | "download";
 
 const SHARE_CAPTURE_CLASS = "is-share-capture";
 /** キャプチャ用ステージの固定幅（CSS の .is-share-capture と一致させる） */
@@ -319,6 +319,12 @@ export async function shareResultCapture(
     type: "image/png",
   });
   const action = options.action ?? "auto";
+
+  if (action === "download") {
+    downloadBlob(blob, file.name);
+    return "downloaded";
+  }
+
   const shouldCopyBeforeWebShare =
     action === "copy" ||
     (action === "auto" && shouldPreferNativeClipboardShare());

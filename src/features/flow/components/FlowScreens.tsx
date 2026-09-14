@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type RefObject } from "react";
 
 import type {
   AcquiredCharacter,
@@ -13,7 +13,6 @@ import {
 } from "../../overlay/overlayPlacementHintBridge";
 import {
   isDebugUiBuildEnabled,
-  isOverlayDebugUiEnabled,
   OVERLAY_DEBUG_UI_STORAGE_KEY,
 } from "../../overlay/overlayState";
 import { playSoundPreview } from "../../sound/services/recoverySound";
@@ -32,6 +31,11 @@ import {
 import type { MeasurementResult, MeasurementStats } from "../types";
 
 import { CharacterResultWhiteCard } from "./CharacterResultWhiteCard";
+import {
+  getDebugQrModalStep2Preview,
+  subscribeDebugQrModalStep2Preview,
+  toggleDebugQrModalStep2Preview,
+} from "./debugQrModalFlowPrefs";
 
 type HomeScreenProps = {
   characters: CharacterDefinition[];
@@ -78,6 +82,7 @@ type MeasuringScreenProps = {
   soundSettings: SoundSettings;
   onSoundSettingsChange: (next: SoundSettings) => void;
   onFinishMeasurement: () => void;
+  onReRegisterPosture: () => void;
   onPauseToggle: () => void;
   onOverlayEnabledChange: (enabled: boolean) => void;
   onCharacterOverlayEnabledChange: (enabled: boolean) => void;
@@ -142,8 +147,6 @@ function onResultCardMouseLeave(e: React.MouseEvent<HTMLElement>) {
   resetCardTilt(e.currentTarget);
 }
 
-const SHOW_DEBUG_COLLECTION_CONTROLS = SHOW_DEBUG_FLOW_CONTROLS;
-
 const DIALOG_CLOSE_DURATION_MS = 230;
 
 export function HomeScreen(props: HomeScreenProps) {
@@ -200,30 +203,30 @@ export function HomeScreen(props: HomeScreenProps) {
       {/* ナビゲーションバー */}
       <nav className="home-nav">
         <FlowBrand />
-        <button
-          type="button"
-          className="home-nav-profile"
-          aria-label="プロフィールキャラクターを変更"
-          onClick={() => setIsProfileDialogOpen(true)}
-        >
-          <CharacterFigure
-            character={props.profileCharacter}
-            className="home-nav-profile-character"
-          />
-        </button>
+        <div className="home-nav-actions">
+          <button
+            type="button"
+            className="home-nav-about"
+            onClick={props.onDebugShowOnboarding}
+          >
+            ピンアナゴとは
+          </button>
+          <button
+            type="button"
+            className="home-nav-profile"
+            aria-label="プロフィールキャラクターを変更"
+            onClick={() => setIsProfileDialogOpen(true)}
+          >
+            <CharacterFigure
+              character={props.profileCharacter}
+              className="home-nav-profile-character"
+            />
+          </button>
+        </div>
       </nav>
 
       {/* ヒーローセクション */}
       <section className="home-hero">
-        {SHOW_DEBUG_FLOW_CONTROLS ? (
-          <button
-            type="button"
-            className="home-single-debug-story"
-            onClick={props.onDebugShowOnboarding}
-          >
-            DEBUG: ストーリー
-          </button>
-        ) : null}
         <div className="home-hero-content">
           <div className="home-hero-copy">
             <h1>
@@ -260,10 +263,9 @@ export function HomeScreen(props: HomeScreenProps) {
         characters={props.characters}
         acquiredCharacters={props.acquiredCharacters}
         favoriteCharacterIds={props.favoriteCharacterIds}
-        resetTick={props.collectionResetTick}
         onCharacterDetailOpen={setCollectionDetailCharacterId}
         onToggleFavoriteCharacter={props.onToggleFavoriteCharacter}
-        onDebugClearAcquiredCharacters={props.onDebugClearAcquiredCharacters}
+        onResetCollection={props.onDebugClearAcquiredCharacters}
       />
 
       {/* QR接続モーダル */}
@@ -295,6 +297,17 @@ export function HomeScreen(props: HomeScreenProps) {
             closeProfileDialog();
           }}
           onClose={closeProfileDialog}
+          debugTools={
+            SHOW_DEBUG_FLOW_CONTROLS
+              ? {
+                  collectionResetTick: props.collectionResetTick,
+                  onShowOnboarding: props.onDebugShowOnboarding,
+                  onClearAcquiredCharacters: props.onDebugClearAcquiredCharacters,
+                  onPairingRefresh: props.onRefreshPairing,
+                  onPairingSkipContinue: props.onContinueFromPaired,
+                }
+              : undefined
+          }
         />
       ) : null}
       {collectionDetailCharacter && collectionDetailAcquiredCharacter ? (
@@ -458,7 +471,7 @@ export function CodeReadScreen({
             姿勢登録
           </h1>
           <p className="frame53-led">
-            肩の力を抜いて、背筋を伸ばしてください。
+            肩の力を抜いて、背筋を伸ばしてください
           </p>
           <hr className="frame53-rule" />
           <div className="frame53-toggle-strip">
@@ -616,6 +629,7 @@ export function MeasuringScreen({
   soundSettings,
   onSoundSettingsChange,
   onFinishMeasurement,
+  onReRegisterPosture,
   onPauseToggle,
   onOverlayEnabledChange,
   onCharacterOverlayEnabledChange,
@@ -623,12 +637,8 @@ export function MeasuringScreen({
   onResetCharacterPosition,
 }: MeasuringScreenProps) {
   const isWarmup = !snapshot.baselineReady;
-  const warmupSeconds = Math.max(
-    0,
-    Math.ceil(snapshot.warmupRemainingMs / 1000),
-  );
 
-  const showMeasureDevTools = isOverlayDebugUiEnabled();
+  const showMeasureDevTools = false;
 
   const volumePreviewTimerRef = useRef<number | null>(null);
   useEffect(() => {
@@ -681,11 +691,13 @@ export function MeasuringScreen({
   }
 
   const headingId = "measuring-heading";
-  const title = isWarmup
-    ? "基準姿勢を測定中"
-    : isPaused
-      ? "一時停止中"
-      : "測定中";
+  const statusHintId = "measuring-status-hint";
+  const goodPercentWhole = Math.round(
+    Math.min(1, Math.max(0, stats.goodRatio)) * 100,
+  );
+  const warmupElapsedMs = isWarmup
+    ? Math.max(0, POSTURE_SPEC.warmupMs - snapshot.warmupRemainingMs)
+    : 0;
 
   const gaugePercent = isWarmup
     ? 0
@@ -697,13 +709,25 @@ export function MeasuringScreen({
   return (
     <main className="flow-screen measuring-screen">
       <FlowBrand />
-      <section className="measure-layout" aria-labelledby={headingId}>
+      <section
+        className="measure-layout"
+        aria-labelledby={headingId}
+        aria-describedby={statusHintId}
+      >
         <aside className="measure-control-card" aria-label="測定コントロール">
+          <div className="measure-control-scroll">
           <header className="measure-control-head">
             <div>
               <h1 id={headingId} className="measure-control-title">
-                {title}
+                測定中
               </h1>
+              <p id={statusHintId} className="measure-control-status-hint">
+                {isWarmup
+                  ? "基準線を学習しています…"
+                  : isPaused
+                    ? "一時停止中です"
+                    : "測定中です"}
+              </p>
             </div>
             <div className="measure-control-icon-actions">
               <button
@@ -733,18 +757,21 @@ export function MeasuringScreen({
 
           <div className="measure-metrics-row">
             <MetricTile
-              label={isWarmup ? "測定開始まで" : "測定時間"}
+              label="測定時間"
               value={
-                isWarmup ? `${warmupSeconds}s` : formatDuration(stats.activeMeasurementMs)
+                isWarmup
+                  ? formatDuration(warmupElapsedMs)
+                  : formatDuration(stats.activeMeasurementMs)
               }
             />
             <MetricTile
               label="良い姿勢率"
-              value={
-                isWarmup ? "—" : formatPercent(stats.goodRatio)
-              }
+              value={isWarmup ? "—" : String(goodPercentWhole)}
+              valueSuffix={isWarmup ? undefined : "%"}
             />
           </div>
+
+          <div className="measure-card-rule" role="presentation" />
 
           <div className="frame53-toggle-strip">
             <span
@@ -892,6 +919,17 @@ export function MeasuringScreen({
               ) : null}
             </div>
           ) : null}
+          </div>
+
+          <div className="measure-control-card-footer">
+            <button
+              type="button"
+              className="measure-reregister-cta"
+              onClick={onReRegisterPosture}
+            >
+              姿勢を再測定する
+            </button>
+          </div>
         </aside>
 
         <div className="measure-camera-panel measure-camera-panel--figma">
@@ -945,7 +983,7 @@ export function PostureRegisteredScreen({
 }: PostureRegisteredScreenProps) {
   const wasSuccessful =
     Boolean(result.rewardQualified) && acquiredCharacter !== null;
-  const timelineVariant = wasSuccessful ? "success" : "fail";
+  const accentVariant = wasSuccessful ? "success" : "fail";
 
   const shareCaptureRef = useRef<HTMLElement>(null);
   const resultCardEnterTimerRef = useRef<number | null>(null);
@@ -953,7 +991,7 @@ export function PostureRegisteredScreen({
   const resultCardTapResetTimerRef = useRef<number | null>(null);
   const [isResultCardEntering, setIsResultCardEntering] = useState(false);
   const [isResultCardTapped, setIsResultCardTapped] = useState(false);
-  const [shareBusyAction, setShareBusyAction] = useState<"share" | "copy" | null>(null);
+  const [shareBusyAction, setShareBusyAction] = useState<"share" | "download" | null>(null);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const shareBusy = shareBusyAction !== null;
 
@@ -976,7 +1014,7 @@ export function PostureRegisteredScreen({
       "--result-share-icon": acquiredCharacter.characterColor.primary,
       "--result-meta-icon": acquiredCharacter.characterColor.primary,
       "--result-portrait-bg": acquiredCharacter.characterColor.soft,
-      "--result-timeline-good": acquiredCharacter.characterColor.primary,
+      "--result-home-color": acquiredCharacter.characterColor.primary,
     } as CSSProperties;
   }, [wasSuccessful, acquiredCharacter]);
 
@@ -988,20 +1026,18 @@ export function PostureRegisteredScreen({
         "--result-share-icon": acquiredCharacter.characterColor.primary,
         "--result-meta-icon": acquiredCharacter.characterColor.primary,
         "--result-portrait-bg": acquiredCharacter.characterColor.soft,
-        "--result-timeline-good": acquiredCharacter.characterColor.primary,
       } as CSSProperties;
     }
     return {
-      "--result-stat-accent": "#8a9399",
-      "--result-share-icon": "#8a9399",
-      "--result-meta-icon": "#8a9399",
-      "--result-portrait-bg": "#eceff1",
-      "--result-timeline-good": "#8a9399",
+      "--result-stat-accent": "#979797",
+      "--result-share-icon": "#979797",
+      "--result-meta-icon": "#979797",
+      "--result-portrait-bg": "rgba(151, 151, 151, 0.2)",
     } as CSSProperties;
   }, [wasSuccessful, acquiredCharacter]);
 
   const handleShareResult = useCallback(async (
-    action: Extract<ShareResultAction, "share" | "copy">,
+    action: Extract<ShareResultAction, "share" | "download">,
   ) => {
     if (
       shareCaptureRef.current === null ||
@@ -1013,7 +1049,7 @@ export function PostureRegisteredScreen({
     setShareFeedback(null);
     try {
       const outcome = await shareResultCapture(shareCaptureRef.current, {
-        action,
+        action: action === "share" ? "auto" : "download",
       });
       if (outcome === "downloaded") {
         const msg = "画像をダウンロードしました";
@@ -1125,7 +1161,7 @@ export function PostureRegisteredScreen({
 
   return (
     <main
-      className={`flow-screen result-screen result-screen--registered result-screen--accent-${timelineVariant}`}
+      className={`flow-screen result-screen result-screen--registered result-screen--accent-${accentVariant}`}
       style={characterThemeVars}
     >
       <FlowBrand />
@@ -1141,41 +1177,62 @@ export function PostureRegisteredScreen({
           </h1>
         </header>
 
-        <CharacterResultWhiteCard
-          ref={shareCaptureRef}
-          portraitMode={wasSuccessful ? "character" : "qr-fail"}
-          character={displayCharacter}
-          personalityTags={personalityTags}
-          goodDurationLabel={formatDuration(result.goodMs)}
-          goodRatioLabel={formatPercent(result.goodRatio)}
-          timelineSegments={result.postureTimeline}
-          timelineTotalMs={result.activeMeasurementMs}
-          timelineVariant={timelineVariant}
-          timelineGoodStrokeResolved={
-            wasSuccessful && acquiredCharacter !== null
-              ? acquiredCharacter.characterColor.primary
-              : "#8a9399"
-          }
-          acquiredAtLabel={formatAcquiredAt(result.endedAt)}
-          measurementDurationLabel={formatDuration(result.activeMeasurementMs)}
-          shareBusy={shareBusy}
-          shareBusyAction={shareBusyAction}
-          onShareClick={() => {
-            void handleShareResult("share");
-          }}
-          onCopyClick={() => {
-            void handleShareResult("copy");
-          }}
-          articleClassName={`${wasSuccessful ? "result-registered-card--acquired" : ""} ${
-            isResultCardEntering ? "is-entering" : ""
-          } ${
-            isResultCardTapped ? "is-tapped" : ""
-          }`.trim()}
-          articleStyle={shareCardThemeVars}
-          onArticleClick={handleResultCardTap}
-          onArticleMouseMove={wasSuccessful ? onResultCardMouseMove : undefined}
-          onArticleMouseLeave={wasSuccessful ? onResultCardMouseLeave : undefined}
-        />
+        <div className="result-registered-card-block">
+          <CharacterResultWhiteCard
+            ref={shareCaptureRef}
+            portraitMode={wasSuccessful ? "character" : "acquisition-fail"}
+            character={displayCharacter}
+            personalityTags={personalityTags}
+            goodDurationLabel={formatDuration(result.goodMs)}
+            goodRatioLabel={formatPercent(result.goodRatio)}
+            acquiredAtLabel={formatAcquiredAt(result.endedAt)}
+            measurementDurationLabel={formatDuration(result.activeMeasurementMs)}
+            characterStory={
+              wasSuccessful && displayCharacter !== null
+                ? displayCharacter.story
+                : "？？？？？？？？？"
+            }
+            articleClassName={`${
+              wasSuccessful
+                ? "result-registered-card--acquired"
+                : "result-registered-card--acquisition-fail"
+            } ${isResultCardEntering ? "is-entering" : ""} ${
+              isResultCardTapped ? "is-tapped" : ""
+            }`.trim()}
+            articleStyle={shareCardThemeVars}
+            onArticleClick={handleResultCardTap}
+            onArticleMouseMove={wasSuccessful ? onResultCardMouseMove : undefined}
+            onArticleMouseLeave={wasSuccessful ? onResultCardMouseLeave : undefined}
+          />
+          <div
+            className="result-registered-outside-actions"
+            role="toolbar"
+            aria-label="結果画像の共有と保存"
+          >
+            <button
+              type="button"
+              className={`result-registered-outside-action${shareBusy && shareBusyAction === "share" ? " is-busy" : ""}`}
+              aria-label="結果を画像で共有"
+              disabled={shareBusy}
+              onClick={() => {
+                void handleShareResult("share");
+              }}
+            >
+              <ResultShareGlyph />
+            </button>
+            <button
+              type="button"
+              className={`result-registered-outside-action${shareBusy && shareBusyAction === "download" ? " is-busy" : ""}`}
+              aria-label="結果画像を保存"
+              disabled={shareBusy}
+              onClick={() => {
+                void handleShareResult("download");
+              }}
+            >
+              <ResultDownloadGlyph />
+            </button>
+          </div>
+        </div>
       </div>
 
       <p
@@ -1196,6 +1253,38 @@ export function PostureRegisteredScreen({
         </button>
       </footer>
     </main>
+  );
+}
+
+function ResultShareGlyph() {
+  return (
+    <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+      <circle cx="8" cy="16" r="2.75" fill="currentColor" />
+      <circle cx="23" cy="8" r="2.75" fill="currentColor" />
+      <circle cx="23" cy="24" r="2.75" fill="currentColor" />
+      <path
+        d="m10.5 14.7 9.9-5.3M10.5 17.3l9.9 5.3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function ResultDownloadGlyph() {
+  return (
+    <svg viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+      <path
+        d="M16 5v14m-5.5-5.5L16 19l5.5-5.5M7 22v4h18v-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   );
 }
 
@@ -1234,7 +1323,11 @@ function QrConnectionModal({
   onClose: () => void;
 }) {
   /* Figma Frame 53：1 = QR／接続済みでも 次へ で 2 へ進む（自動で飛ばさない） */
-  const [debugForceStep2, setDebugForceStep2] = useState(false);
+  const debugForceStep2 = useSyncExternalStore(
+    subscribeDebugQrModalStep2Preview,
+    getDebugQrModalStep2Preview,
+    getDebugQrModalStep2Preview,
+  );
   const [pairedAdvanceToStep2, setPairedAdvanceToStep2] = useState(false);
 
   useEffect(() => {
@@ -1285,8 +1378,10 @@ function QrConnectionModal({
                   aria-hidden="true"
                 />
               </div>
-              {pairingError ? (
-                <p className="qr-modal-error-label">{pairingError}</p>
+              {pairingError && !pairingError.includes("invoke") ? (
+                <p className="qr-modal-error-label">
+                  QRコードを準備できませんでした
+                </p>
               ) : null}
             </>
           ) : (
@@ -1438,24 +1533,6 @@ function QrConnectionModal({
         )}
       </div>
 
-      {SHOW_DEBUG_FLOW_CONTROLS ? (
-        <div className="qr-modal-debug-actions">
-          <button
-            type="button"
-            className="home-single-debug-skip qr-modal-debug-skip"
-            onClick={onNext}
-          >
-            DEBUG: QRスキップ
-          </button>
-          <button
-            type="button"
-            className="home-single-debug-skip qr-modal-debug-step2"
-            onClick={() => setDebugForceStep2((v) => !v)}
-          >
-            DEBUG: Step2 {debugForceStep2 ? "OFF" : "プレビュー"}
-          </button>
-        </div>
-      ) : null}
     </div>
   );
 }
@@ -1464,23 +1541,18 @@ function CharacterCollection({
   characters,
   acquiredCharacters,
   favoriteCharacterIds,
-  resetTick,
   onCharacterDetailOpen,
   onToggleFavoriteCharacter,
-  onDebugClearAcquiredCharacters,
+  onResetCollection,
 }: {
   characters: CharacterDefinition[];
   acquiredCharacters: AcquiredCharacter[];
   favoriteCharacterIds: Set<string>;
-  resetTick: number;
   onCharacterDetailOpen: (characterId: string) => void;
   onToggleFavoriteCharacter: (characterId: string) => void;
-  onDebugClearAcquiredCharacters: () => void;
+  onResetCollection: () => void;
 }) {
-  const [debugResetMessage, setDebugResetMessage] = useState<string | null>(
-    null,
-  );
-  const [isDebugResetConfirming, setIsDebugResetConfirming] = useState(false);
+  const [isResetConfirming, setIsResetConfirming] = useState(false);
   const acquiredCharactersById = new Map(
     acquiredCharacters.map((character) => [character.characterId, character]),
   );
@@ -1504,70 +1576,49 @@ function CharacterCollection({
   ).length;
 
   useEffect(() => {
-    setDebugResetMessage(null);
-    setIsDebugResetConfirming(false);
-  }, [resetTick]);
-
-  useEffect(() => {
-    if (!debugResetMessage) {
+    if (!isResetConfirming) {
       return;
     }
 
     const timeoutId = window.setTimeout(() => {
-      setDebugResetMessage(null);
-    }, 1800);
+      setIsResetConfirming(false);
+    }, 4000);
 
     return () => window.clearTimeout(timeoutId);
-  }, [debugResetMessage]);
+  }, [isResetConfirming]);
 
-  useEffect(() => {
-    if (!isDebugResetConfirming) {
+  function handleResetCollection() {
+    if (!isResetConfirming) {
+      setIsResetConfirming(true);
       return;
     }
 
-    const timeoutId = window.setTimeout(() => {
-      setIsDebugResetConfirming(false);
-    }, 2400);
-
-    return () => window.clearTimeout(timeoutId);
-  }, [isDebugResetConfirming]);
+    setIsResetConfirming(false);
+    onResetCollection();
+  }
 
   return (
     <section className="home-collection" aria-labelledby="collection-heading">
-      <div className="home-collection-heading">
-        <h2 id="collection-heading">コレクション</h2>
-        <strong className="home-collection-count">
-          {acquiredCount}
-          <span> / {COLLECTION_TOTAL_COUNT}</span>
-        </strong>
-        {SHOW_DEBUG_COLLECTION_CONTROLS ? (
-          <button
-            type="button"
-            className={`home-collection-debug-reset ${
-              isDebugResetConfirming ? "is-confirming" : ""
-            }`}
-            onClick={() => {
-              if (!isDebugResetConfirming) {
-                setIsDebugResetConfirming(true);
-                setDebugResetMessage("もう一度押すと削除");
-                return;
-              }
-
-              onDebugClearAcquiredCharacters();
-              setIsDebugResetConfirming(false);
-              setDebugResetMessage("削除しました");
-            }}
-          >
-            {isDebugResetConfirming
-              ? "DEBUG: もう一度押す"
-              : "DEBUG: 習得データ削除"}
-          </button>
-        ) : null}
-        {debugResetMessage ? (
-          <span className="home-collection-debug-message" role="status">
-            {debugResetMessage}
-          </span>
-        ) : null}
+      <div className="home-collection-header">
+        <div className="home-collection-heading">
+          <h2 id="collection-heading">コレクション</h2>
+          <strong className="home-collection-count">
+            <span className="home-collection-count-main">{acquiredCount}</span>
+            <span className="home-collection-count-slash">/</span>
+            <span className="home-collection-count-total">
+              {COLLECTION_TOTAL_COUNT}
+            </span>
+          </strong>
+        </div>
+        <button
+          type="button"
+          className={`home-collection-reset ${
+            isResetConfirming ? "is-confirming" : ""
+          }`}
+          onClick={handleResetCollection}
+        >
+          {isResetConfirming ? "もう一度押して確定" : "コレクションをリセット"}
+        </button>
       </div>
       <div className="home-collection-grid">
         {collectionSlots.map(({ character, acquiredCharacter, number }, index) => {
@@ -1600,6 +1651,7 @@ function CharacterCollection({
             <div
               className="home-character-slot"
               key={character.id}
+              data-character-id={character.id}
               style={cardStyle}
               onMouseMove={onCardSlotMouseMove}
               onMouseLeave={onCardSlotMouseLeave}
@@ -1659,14 +1711,9 @@ function CollectionDetailDialog({
   onClose: () => void;
 }) {
   const shareCaptureRef = useRef<HTMLElement>(null);
-  const [shareBusyAction, setShareBusyAction] = useState<"share" | "copy" | null>(null);
+  const [shareBusyAction, setShareBusyAction] = useState<"share" | "download" | null>(null);
   const [shareFeedback, setShareFeedback] = useState<string | null>(null);
   const shareBusy = shareBusyAction !== null;
-
-  const hasTimelineData =
-    (acquiredCharacter.postureTimeline?.length ?? 0) > 0 &&
-    (acquiredCharacter.activeMeasurementMs ?? 0) > 0;
-  const timelineVariant = hasTimelineData ? "success" : "fail";
 
   const shareCardThemeVars = useMemo(() => {
     return {
@@ -1679,7 +1726,7 @@ function CollectionDetailDialog({
   }, [character]);
 
   const handleShareCollection = useCallback(async (
-    action: Extract<ShareResultAction, "share" | "copy">,
+    action: Extract<ShareResultAction, "share" | "download">,
   ) => {
     if (shareCaptureRef.current === null || shareBusy) {
       return;
@@ -1688,7 +1735,7 @@ function CollectionDetailDialog({
     setShareFeedback(null);
     try {
       const outcome = await shareResultCapture(shareCaptureRef.current, {
-        action,
+        action: action === "share" ? "auto" : "download",
       });
       if (outcome === "downloaded") {
         setShareFeedback("画像をダウンロードしました");
@@ -1718,7 +1765,6 @@ function CollectionDetailDialog({
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="collection-detail-header">
-          <p className="collection-detail-eyebrow">今日のピンアナゴ</p>
           <button
             type="button"
             className="collection-detail-close"
@@ -1728,40 +1774,59 @@ function CollectionDetailDialog({
             ×
           </button>
         </div>
-        <CharacterResultWhiteCard
-          ref={shareCaptureRef}
-          portraitMode="character"
-          character={character}
-          personalityTags={character.personalityTags}
-          goodDurationLabel={formatOptionalDuration(acquiredCharacter.goodMs)}
-          goodRatioLabel={formatOptionalPercent(acquiredCharacter.goodRatio)}
-          timelineSegments={acquiredCharacter.postureTimeline ?? []}
-          timelineTotalMs={acquiredCharacter.activeMeasurementMs ?? 0}
-          timelineVariant={timelineVariant}
-          timelineGoodStrokeResolved={
-            hasTimelineData ? character.characterColor.primary : "#8a9399"
-          }
-          acquiredAtLabel={formatAcquiredAt(acquiredCharacter.acquiredAt)}
-          measurementDurationLabel={formatOptionalDuration(
-            acquiredCharacter.activeMeasurementMs,
-          )}
-          shareBusy={shareBusy}
-          shareBusyAction={shareBusyAction}
-          onShareClick={() => {
-            void handleShareCollection("share");
-          }}
-          onCopyClick={() => {
-            void handleShareCollection("copy");
-          }}
-          articleStyle={shareCardThemeVars}
-          characterNameId="collection-detail-heading"
-        />
-        <div
-          className="collection-detail-story-below"
-          aria-labelledby="collection-detail-story-heading"
-        >
-          <h3 id="collection-detail-story-heading">ストーリー</h3>
-          <p className="collection-detail-story">{character.story}</p>
+        <div className="collection-detail-card-context result-screen--registered result-screen--accent-success">
+          <div className="result-registered-card-block">
+            <CharacterResultWhiteCard
+              ref={shareCaptureRef}
+              portraitMode="character"
+              character={character}
+              personalityTags={character.personalityTags}
+              goodDurationLabel={formatOptionalDuration(acquiredCharacter.goodMs)}
+              goodRatioLabel={formatOptionalPercent(acquiredCharacter.goodRatio)}
+              acquiredAtLabel={formatAcquiredAt(acquiredCharacter.acquiredAt)}
+              measurementDurationLabel={formatOptionalDuration(
+                acquiredCharacter.activeMeasurementMs,
+              )}
+              characterStory={character.story}
+              articleClassName="result-registered-card--acquired"
+              articleStyle={shareCardThemeVars}
+              characterNameId="collection-detail-heading"
+            />
+            <div
+              className="result-registered-outside-actions"
+              role="toolbar"
+              aria-label="結果画像の共有と保存"
+            >
+              <button
+                type="button"
+                className={`result-registered-outside-action${shareBusy && shareBusyAction === "share" ? " is-busy" : ""}`}
+                aria-label="結果を画像で共有"
+                title="結果を画像で共有（または保存）します"
+                disabled={shareBusy}
+                aria-disabled={shareBusy}
+                aria-busy={shareBusy && shareBusyAction === "share"}
+                onClick={() => {
+                  void handleShareCollection("share");
+                }}
+              >
+                <ResultShareGlyph />
+              </button>
+              <button
+                type="button"
+                className={`result-registered-outside-action${shareBusy && shareBusyAction === "download" ? " is-busy" : ""}`}
+                aria-label="結果画像を保存"
+                title="結果画像を保存"
+                disabled={shareBusy}
+                aria-disabled={shareBusy}
+                aria-busy={shareBusy && shareBusyAction === "download"}
+                onClick={() => {
+                  void handleShareCollection("download");
+                }}
+              >
+                <ResultDownloadGlyph />
+              </button>
+            </div>
+          </div>
         </div>
         <p className="collection-detail-share-feedback" role="status" aria-live="polite">
           {shareFeedback ?? ""}
@@ -1771,6 +1836,14 @@ function CollectionDetailDialog({
   );
 }
 
+type ProfileDialogDebugTools = {
+  collectionResetTick: number;
+  onShowOnboarding: () => void;
+  onClearAcquiredCharacters: () => void;
+  onPairingRefresh: () => void;
+  onPairingSkipContinue: () => void;
+};
+
 function ProfileSelectionDialog({
   isClosing,
   characters,
@@ -1778,6 +1851,7 @@ function ProfileSelectionDialog({
   selectedProfileCharacterId,
   onSelect,
   onClose,
+  debugTools,
 }: {
   isClosing: boolean;
   characters: CharacterDefinition[];
@@ -1785,6 +1859,7 @@ function ProfileSelectionDialog({
   selectedProfileCharacterId: string | null;
   onSelect: (characterId: string) => void;
   onClose: () => void;
+  debugTools?: ProfileDialogDebugTools;
 }) {
   const selectableCharacters = getAcquiredCharacterDefinitions(
     characters,
@@ -1849,8 +1924,118 @@ function ProfileSelectionDialog({
             まだピンアナゴを習得していません
           </p>
         )}
+        {debugTools ? (
+          <ProfileDialogDebugPanel debugTools={debugTools} />
+        ) : null}
       </div>
     </section>
+  );
+}
+
+function ProfileDialogDebugPanel({
+  debugTools,
+}: {
+  debugTools: ProfileDialogDebugTools;
+}) {
+  const [debugResetMessage, setDebugResetMessage] = useState<string | null>(
+    null,
+  );
+  const [isDebugResetConfirming, setIsDebugResetConfirming] = useState(false);
+  const debugQrStep2Preview = useSyncExternalStore(
+    subscribeDebugQrModalStep2Preview,
+    getDebugQrModalStep2Preview,
+    getDebugQrModalStep2Preview,
+  );
+
+  useEffect(() => {
+    setDebugResetMessage(null);
+    setIsDebugResetConfirming(false);
+  }, [debugTools.collectionResetTick]);
+
+  useEffect(() => {
+    if (!debugResetMessage) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setDebugResetMessage(null);
+    }, 1800);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [debugResetMessage]);
+
+  useEffect(() => {
+    if (!isDebugResetConfirming) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setIsDebugResetConfirming(false);
+    }, 2400);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [isDebugResetConfirming]);
+
+  return (
+    <div className="profile-dialog-debug" aria-label="DEBUG">
+      <p className="profile-dialog-debug-label">DEBUG</p>
+      <div className="profile-dialog-debug-buttons">
+        <button
+          type="button"
+          className="home-single-debug-story profile-dialog-debug-btn"
+          onClick={debugTools.onShowOnboarding}
+        >
+          DEBUG: ストーリー
+        </button>
+        <button
+          type="button"
+          className={`home-collection-debug-reset profile-dialog-debug-btn ${
+            isDebugResetConfirming ? "is-confirming" : ""
+          }`}
+          onClick={() => {
+            if (!isDebugResetConfirming) {
+              setIsDebugResetConfirming(true);
+              setDebugResetMessage("もう一度押すと削除");
+              return;
+            }
+
+            debugTools.onClearAcquiredCharacters();
+            setIsDebugResetConfirming(false);
+            setDebugResetMessage("削除しました");
+          }}
+        >
+          {isDebugResetConfirming
+            ? "DEBUG: もう一度押す"
+            : "DEBUG: 獲得データ削除"}
+        </button>
+        <button
+          type="button"
+          className="secondary-pill profile-dialog-debug-btn"
+          onClick={debugTools.onPairingRefresh}
+        >
+          DEBUG: QR更新
+        </button>
+        <button
+          type="button"
+          className="primary-pill profile-dialog-debug-btn"
+          onClick={debugTools.onPairingSkipContinue}
+        >
+          DEBUG: QRスキップ
+        </button>
+        <button
+          type="button"
+          className="home-single-debug-skip profile-dialog-debug-btn"
+          onClick={toggleDebugQrModalStep2Preview}
+        >
+          DEBUG: Step2 {debugQrStep2Preview ? "OFF" : "プレビュー"}
+        </button>
+      </div>
+      {debugResetMessage ? (
+        <span className="home-collection-debug-message" role="status">
+          {debugResetMessage}
+        </span>
+      ) : null}
+    </div>
   );
 }
 
@@ -1898,11 +2083,28 @@ function CharacterFigure({
   );
 }
 
-function MetricTile({ label, value }: { label: string; value: string }) {
+function MetricTile({
+  label,
+  value,
+  valueSuffix,
+}: {
+  label: string;
+  value: string;
+  valueSuffix?: string;
+}) {
   return (
-    <div className="metric-tile">
+    <div
+      className={`metric-tile ${valueSuffix ? "metric-tile--with-suffix" : ""}`}
+    >
       <span>{label}</span>
-      <strong>{value}</strong>
+      <div className="metric-tile-value-row">
+        <strong>{value}</strong>
+        {valueSuffix ? (
+          <span className="metric-tile-value-suffix" aria-hidden="true">
+            {valueSuffix}
+          </span>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -1953,32 +2155,28 @@ function formatPercent(ratio: number) {
 
 function MeasurePauseIcon() {
   return (
-    <svg viewBox="0 0 24 24" width={22} height={22} aria-hidden="true">
-      <rect x="6" y="5" width="5" height="14" rx="1" fill="currentColor" />
-      <rect x="13" y="5" width="5" height="14" rx="1" fill="currentColor" />
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="32" cy="32" r="28" fill="none" stroke="#EA4949" strokeWidth="3" />
+      <rect x="23" y="22" width="6" height="20" rx="1.5" fill="#EA4949" />
+      <rect x="35" y="22" width="6" height="20" rx="1.5" fill="#EA4949" />
     </svg>
   );
 }
 
 function MeasurePlayIcon() {
   return (
-    <svg viewBox="0 0 24 24" width={22} height={22} aria-hidden="true">
-      <path fill="#16a34a" d="M9 6.5v11l10-5.5-10-5.5z" />
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="32" cy="32" r="28" fill="none" stroke="#EA4949" strokeWidth="3" />
+      <path fill="#EA4949" d="M28 20l16 12-16 12z" />
     </svg>
   );
 }
 
 function MeasureStopIcon() {
   return (
-    <svg viewBox="0 0 24 24" width={18} height={18} aria-hidden="true">
-      <rect
-        x="6"
-        y="6"
-        width="12"
-        height="12"
-        rx="1.5"
-        fill="currentColor"
-      />
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <circle cx="32" cy="32" r="28" fill="none" stroke="#EA4949" strokeWidth="3" />
+      <rect x="24" y="24" width="16" height="16" rx="2.5" fill="#EA4949" />
     </svg>
   );
 }
