@@ -23,12 +23,13 @@ import type {
   CharacterDefinition,
 } from "./features/characters/types";
 import {
-  CodeReadScreen,
   HomeScreen,
   MeasuringScreen,
   PostureRegisteredScreen,
 } from "./features/flow/components/FlowScreens";
+import { PostureRegisterFlowScreen } from "./features/flow/components/postureRegister/PostureRegisterFlowScreen";
 import type {
+  PostureRegisterStep,
   AppFlowPhase,
   MeasurementResult,
   MeasurementStats,
@@ -165,7 +166,8 @@ function App() {
     loadSoundSettings(),
   );
 
-  const trackingEnabled = flowPhase === "measuring";
+  const [postureRegisterStep, setPostureRegisterStep] = useState<PostureRegisterStep>("intro");
+  const trackingEnabled = flowPhase === "measuring" || (flowPhase === "qrScanned" && postureRegisterStep !== "intro");
   const {
     videoRef,
     canvasRef,
@@ -372,7 +374,8 @@ function App() {
       setLastAcquiredCharacterId(null);
       resetPostureEngine();
       setIsPaused(false);
-      setFlowPhase("measuring");
+      setPostureRegisterStep("calibrating");
+      setFlowPhase("qrScanned");
       void primeRecoverySound();
     } finally {
       setIsStartPending(false);
@@ -637,6 +640,20 @@ function App() {
     void preloadShareImageCache([...portraitSrcs, ...auxSrcs]);
   }, []);
 
+  const beginRegistration = () => {
+    setPostureRegisterStep("intro");
+    setIsPaused(false);
+    setFlowPhase("qrScanned");
+  };
+  const beginRegisteredMeasurement = () => {
+    if (!snapshot.baselineReady) return;
+    measurementAccumulatorRef.current = createMeasurementAccumulator();
+    measurementStartedAtRef.current = new Date().toISOString();
+    setMeasurementStats(EMPTY_MEASUREMENT_STATS);
+    setIsPaused(false);
+    setFlowPhase("measuring");
+  };
+
   const screen = renderFlowScreen({
     flowPhase,
     qrImageDataUrl,
@@ -666,21 +683,34 @@ function App() {
     onRefreshPairing: () => {
       void handleRefreshPairing();
     },
-    onContinueFromPaired: () => setFlowPhase("qrScanned"),
+    onContinueFromPaired: beginRegistration,
     onProfileCharacterSelect: handleProfileCharacterSelect,
     onToggleFavoriteCharacter: handleToggleFavoriteCharacter,
     onDebugClearAcquiredCharacters: handleDebugClearAcquiredCharacters,
     onDebugShowOnboarding: () => setFlowPhase("onboarding"),
     onCompleteOnboardingStory: handleCompleteOnboardingStory,
-    onStartMeasurement: () => {
-      void handleStartMeasurement();
-    },
+    onStartMeasurement: beginRegistration,
+    registrationScreen: (
+      <PostureRegisterFlowScreen
+        onBackHome={() => setFlowPhase("home")}
+        postureRegisterStep={postureRegisterStep}
+        videoRef={videoRef} canvasRef={canvasRef} snapshot={snapshot}
+        isBadPosture={effectiveBadPosture} isOverlayEnabled={isOverlayEnabled}
+        isCharacterOverlayEnabled={isCharacterOverlayEnabled}
+        soundSettings={soundSettings} onSoundSettingsChange={setSoundSettings}
+        onOverlayEnabledChange={setIsOverlayEnabled}
+        onCharacterOverlayEnabledChange={setIsCharacterOverlayEnabled}
+        isStartPending={isStartPending}
+        onRequestBeginCalibrating={handleStartMeasurement}
+        onCalibratingComplete={() => { setPostureRegisterStep("settings"); setIsPaused(true); }}
+        onBeginMeasurementAfterRegister={beginRegisteredMeasurement}
+        onResetCharacterPosition={handleResetCharacterPosition}
+      />
+    ),
     onBackHome: () => setFlowPhase("home"),
     onFinishMeasurement: handleFinishMeasurement,
-    onReRegisterPosture: () => setFlowPhase("qrScanned"),
-    onMeasureAgain: () => {
-      void handleStartMeasurement();
-    },
+    onReRegisterPosture: beginRegistration,
+    onMeasureAgain: beginRegistration,
     onPauseToggle: () => setIsPaused((current) => !current),
     onOverlayEnabledChange: setIsOverlayEnabled,
     onCharacterOverlayEnabledChange: setIsCharacterOverlayEnabled,
@@ -697,6 +727,7 @@ function App() {
 }
 
 function renderFlowScreen({
+  registrationScreen,
   flowPhase,
   qrImageDataUrl,
   isPairingLoading,
@@ -740,6 +771,7 @@ function renderFlowScreen({
   onShowCharacterOverlay,
   onResetCharacterPosition,
 }: {
+  registrationScreen: React.ReactNode;
   flowPhase: AppFlowPhase;
   qrImageDataUrl: string;
   isPairingLoading: boolean;
@@ -814,17 +846,7 @@ function renderFlowScreen({
         />
       );
     case "qrScanned":
-      return (
-        <CodeReadScreen
-          isStartPending={isStartPending}
-          soundSettings={soundSettings}
-          onSoundSettingsChange={onSoundSettingsChange}
-          isCharacterOverlayEnabled={isCharacterOverlayEnabled}
-          onCharacterOverlayEnabledChange={onCharacterOverlayEnabledChange}
-          onStartMeasurement={onStartMeasurement}
-          onBackHome={onBackHome}
-        />
-      );
+      return registrationScreen;
     case "measuring":
       return (
         <MeasuringScreen

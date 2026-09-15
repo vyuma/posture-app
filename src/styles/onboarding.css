@@ -3031,3 +3031,131 @@
     font-size: clamp(0.95rem, 4.4vw, 2.25rem);
   }
 }
+
+/* Story 5/6 share the 264 × 348 card geometry from the current prototype. */
+.onboarding-screen { --story-scale: min(calc(100vw / 1512px), calc(100dvh / 982px)); }
+.onboarding-stage--reward .onboarding-reward-home-slot {
+  top: calc(562px * var(--story-scale)) !important;
+  bottom: auto;
+  width: calc(264px * var(--story-scale)) !important;
+  height: calc(348px * var(--story-scale));
+}
+.onboarding-stage--final .onboarding-final-card-strip {
+  top: calc(587px * var(--story-scale));
+  width: calc(1769.6px * var(--story-scale));
+  max-width: none;
+  gap: calc(24px * var(--story-scale));
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+}
+.onboarding-stage--final .onboarding-final-card-slot { flex: 0 0 calc(200.2px * var(--story-scale)); height: calc(263.9px * var(--story-scale)); }
+.onboarding-stage--reward .onboarding-reward-home-slot,
+.onboarding-stage--final .onboarding-final-card-slot { aspect-ratio: 264 / 348; }
+.onboarding-stage--reward .onboarding-reward-home-card,
+.onboarding-stage--final .onboarding-final-card { border-radius: 12.121cqw; }
+.onboarding-stage--reward .onboarding-reward-preview,
+.onboarding-stage--final .onboarding-final-preview {
+  left: 6.0606cqw; top: 4.5977cqh;
+  width: 87.8788cqw; height: 66.6667cqh;
+  border-radius: 9.0909cqw;
+}
+.onboarding-stage--reward .onboarding-reward-character,
+.onboarding-stage--final .onboarding-final-character {
+  left: 9.48276%; top: 13.7931%; bottom: auto;
+  width: 81.03448%; height: 130.17241%;
+  object-fit: fill; object-position: center;
+  transform: none;
+}
+.onboarding-stage--reward .home-character-name,
+.onboarding-stage--final .onboarding-final-card-name {
+  left: 6.0606cqw; top: 75.8621cqh; width: 87.8788cqw;
+  font-size: 7.57576cqw; line-height: 1.2; font-weight: 700; letter-spacing: 0;
+}
+.onboarding-stage--reward .home-character-tags,
+.onboarding-stage--final .home-character-tags {
+  left: 6.0606cqw; top: 87.3563cqh; gap: 3.0303cqw;
+  max-width: 87.8788cqw;
+}
+.onboarding-stage--reward .home-tag,
+.onboarding-stage--final .home-tag {
+  height: 8.046cqh; padding: 3.0303cqw;
+  font-size: 3.78788cqw; line-height: 1.2; font-weight: 700; letter-spacing: 0;
+}
+@keyframes onboarding-final-character-peek {
+  0%, 100% { transform: translateY(0); }
+  45% { transform: translateY(-6%); }
+}
+@media (max-aspect-ratio: 5 / 4) {
+  .onboarding-stage--reward .onboarding-reward-home-slot {
+    top: 48dvh !important;
+    width: min(53vw, 32dvh) !important;
+    height: auto;
+  }
+  .onboarding-stage--final .onboarding-final-card-strip {
+    top: 51dvh; width: max-content; gap: 14px;
+  }
+  .onboarding-stage--final .onboarding-final-card-slot { flex-basis: min(40vw, 26dvh); width: min(40vw, 26dvh); height: auto; }
+}
+
+.onboarding-stage--final .onboarding-final-card-strip { left: calc(50% - 0.4px * var(--story-scale)); }
+.onboarding-stage--final .onboarding-final-card-slot { width: calc(200.2px * var(--story-scale)); }
+@media (max-aspect-ratio: 5 / 4) {
+  .onboarding-stage--final .onboarding-final-card-slot { width: min(40vw, 26dvh); }
+}
+
+@media (max-aspect-ratio: 5 / 4) {
+  :is(.onboarding-stage--reward, .onboarding-stage--final) .onboarding-message p { text-wrap: balance; }
+}
+
+.onboarding-copy-phrase { display: inline-block; white-space: nowrap; }
+
+/* Slow, seamless gallery drift; card hover motion remains on the card itself. */
+.onboarding-stage--final .onboarding-final-card-strip {
+  --final-loop-card-width: calc(200.2px * var(--story-scale));
+  --final-loop-gap: calc(24px * var(--story-scale));
+  display: flex;
+  width: max-content;
+  gap: 0;
+  outline: none;
+  animation: onboarding-gallery-drift 72s linear 0.9s infinite both;
+  will-change: transform;
+}
+.onboarding-final-card-group {
+  display: flex;
+  flex: none;
+  gap: var(--final-loop-gap);
+  padding-right: var(--final-loop-gap);
+}
+.onboarding-stage--final .onboarding-final-card-group .onboarding-final-card-slot {
+  flex: 0 0 var(--final-loop-card-width);
+  width: var(--final-loop-card-width);
+}
+@keyframes onboarding-gallery-drift {
+  from { transform: translateX(calc(-37.5% + var(--final-loop-gap) / 2)); }
+  to { transform: translateX(calc(-62.5% + var(--final-loop-gap) / 2)); }
+}
+.onboarding-stage--final .onboarding-final-card-strip:is(:focus-visible, .is-touch-held) {
+  animation-play-state: paused;
+}
+.onboarding-final-card-strip:focus-visible .onboarding-final-card {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+@media (hover: hover) {
+  .onboarding-stage--final .onboarding-final-card-strip:has(.onboarding-final-card-slot:hover) {
+    animation-play-state: paused;
+  }
+}
+@media (max-aspect-ratio: 5 / 4) {
+  .onboarding-stage--final .onboarding-final-card-strip {
+    --final-loop-card-width: min(40vw, 26dvh);
+    --final-loop-gap: 14px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .onboarding-stage--final .onboarding-final-card-strip {
+    animation: none;
+    transform: translateX(calc(-37.5% + var(--final-loop-gap) / 2));
+    will-change: auto;
+  }
+  .onboarding-stage--final .onboarding-final-character { animation: none !important; }
+}

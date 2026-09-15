@@ -13,8 +13,6 @@ export type ShareResultOutcome =
 export type ShareResultAction = "auto" | "share" | "copy" | "download";
 
 const SHARE_CAPTURE_CLASS = "is-share-capture";
-/** キャプチャ用ステージの固定幅（CSS の .is-share-capture と一致させる） */
-const CAPTURE_STAGE_WIDTH_PX = 720;
 /**
  * 画像インライン化後に painting cycle を確実に走らせるための強制ウェイト（ms）。
  * 短いと初回キャプチャで portrait が空のまま直列化される事故が起きるため、
@@ -39,7 +37,7 @@ async function waitForImageDecode(img: HTMLImageElement): Promise<void> {
   }
 
   await new Promise<void>((resolve) => {
-    if (img.complete && img.naturalWidth > 0) {
+    if (img.complete) {
       resolve();
       return;
     }
@@ -216,7 +214,7 @@ function downloadBlob(blob: Blob, fileName: string): void {
  *  - そのため画面内に置きつつ `transform: translate(...)` で画面外に押し出し、合成レイヤーを
  *    強制して painting を確実に走らせる。
  */
-function createOffscreenStage(): HTMLDivElement {
+function createOffscreenStage(width: number): HTMLDivElement {
   const stage = document.createElement("div");
   stage.setAttribute("aria-hidden", "true");
   stage.setAttribute("data-share-capture-stage", "true");
@@ -224,9 +222,9 @@ function createOffscreenStage(): HTMLDivElement {
     "position: fixed",
     "left: 0",
     "top: 0",
-    `width: ${CAPTURE_STAGE_WIDTH_PX}px`,
-    `min-width: ${CAPTURE_STAGE_WIDTH_PX}px`,
-    `max-width: ${CAPTURE_STAGE_WIDTH_PX}px`,
+    `width: ${width}px`,
+    `min-width: ${width}px`,
+    `max-width: ${width}px`,
     "padding: 0",
     "margin: 0",
     "background: transparent",
@@ -249,15 +247,30 @@ export async function shareResultCapture(
   element: HTMLElement,
   options: { action?: ShareResultAction } = {},
 ): Promise<ShareResultOutcome> {
-  const stage = createOffscreenStage();
+  await document.fonts.ready;
+  await Promise.all(Array.from(element.querySelectorAll("img"), waitForImageDecode));
+  const captureWidth = element.offsetWidth;
+  const captureHeight = element.offsetHeight;
+  const stage = createOffscreenStage(captureWidth);
   const clone = element.cloneNode(true) as HTMLElement;
 
-  // 共有用スタイルを有効化し、不要な動的状態クラスは取り除く
+  // Resolve styles while the source still has its screen/dialog ancestors.
+  // Moving the clone first loses inherited colors, portrait geometry and media layout.
+  const sourceNodes = [element, ...element.querySelectorAll<HTMLElement>("*")];
+  const cloneNodes = [clone, ...clone.querySelectorAll<HTMLElement>("*")];
+  sourceNodes.forEach((source, index) => {
+    const target = cloneNodes[index];
+    const computed = getComputedStyle(source);
+    for (const property of Array.from(computed)) {
+      target.style.setProperty(property, computed.getPropertyValue(property));
+    }
+    target.style.animation = "none";
+    target.style.transition = "none";
+  });
   clone.classList.add(SHARE_CAPTURE_CLASS);
   clone.classList.remove("is-entering", "is-tapped");
-
-  // 元 element に残っていたチルト用の inline transform をリセット（共有時は不要）
-  clone.style.removeProperty("transform");
+  clone.style.transform = "none";
+  clone.style.margin = "0";
 
   stage.appendChild(clone);
   document.body.appendChild(stage);
@@ -281,11 +294,6 @@ export async function shareResultCapture(
     await delay(POST_INLINE_PAINT_DELAY_MS);
     await waitForLayoutSettle();
 
-    const captureWidth = Math.max(
-      CAPTURE_STAGE_WIDTH_PX,
-      clone.offsetWidth,
-    );
-    const captureHeight = Math.max(1, clone.offsetHeight);
     const computedStyle = window.getComputedStyle(clone);
     blob = await toBlob(clone, {
       pixelRatio: 2,

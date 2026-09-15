@@ -1,0 +1,236 @@
+/* Prototype 580:7034: one scale for the 1512 × 982 registration/measurement scene. */
+.flow-screen:is(.frame53-register-screen, .measuring-screen) {
+  --pr-fr1-block-top: calc(var(--frame53-scene-offset-y) + 176px * var(--pr-scale));
+  --pr-fr1-block-bottom: calc(var(--frame53-scene-offset-y) + 112px * var(--pr-scale));
+  --frame53-camera-slot-size: 694px;
+  justify-content: flex-start;
+}
+:is(.frame53-panels-wrap, .measure-layout) {
+  width: calc(1336px * var(--pr-scale));
+  gap: calc(48px * var(--pr-scale));
+  transform: translateX(calc(8px * var(--pr-scale)));
+  flex: none; align-items: flex-start;
+}
+:is(.frame53-left, .measure-control-card) {
+  position: relative;
+  flex: 0 0 calc(594px * var(--pr-scale));
+  width: calc(594px * var(--pr-scale));
+  height: calc(694px * var(--pr-scale));
+  min-height: calc(694px * var(--pr-scale));
+  max-height: none;
+  padding: calc(48px * var(--pr-scale)) calc(56px * var(--pr-scale));
+  border-radius: calc(32px * var(--pr-scale));
+}
+:is(.frame53-camera-panel, .measure-camera-panel--figma) {
+  flex: 0 0 calc(694px * var(--pr-scale));
+  width: calc(694px * var(--pr-scale));
+  height: calc(694px * var(--pr-scale));
+  min-height: 0;
+  max-height: none;
+  border-radius: calc(32px * var(--pr-scale));
+}
+.frame53-left .frame53-heading, .measure-control-title {
+  margin: 0;
+  font-size: calc(36px * var(--pr-scale));
+  line-height: calc(43px * var(--pr-scale));
+  letter-spacing: 0;
+  font-weight: 700;
+}
+.frame53-left .frame53-led {
+  margin: calc(20px * var(--pr-scale)) 0 0;
+  font-size: calc(20px * var(--pr-scale));
+  line-height: calc(48px * var(--pr-scale));
+  letter-spacing: 0;
+}
+.frame53-left .frame53-led-note {
+  margin: calc(12px * var(--pr-scale)) 0 0;
+  font-size: calc(14px * var(--pr-scale));
+  line-height: calc(17px * var(--pr-scale));
+  color: #666;
+  font-weight: 510;
+}
+.frame53-left .frame53-pr-cal-mascot-wrap {
+  position: absolute;
+  top: calc(249px * var(--pr-scale));
+  left: calc(185px * var(--pr-scale));
+  width: calc(224px * var(--pr-scale));
+  height: calc(359px * var(--pr-scale));
+  margin: 0;
+  transform: none;
+  pointer-events: none;
+}
+.frame53-left .frame53-pr-cal-mascot {
+  position: static;
+  display: block;
+  width: 100%; height: 100%; max-width: none;
+  object-fit: contain;
+  transform: none; animation: none; filter: none;
+}
+.frame53-left :is(.frame53-footer--pr-intro, .frame53-footer--pr-calibrating, .frame53-footer--pr-settings-cta),
+.measure-control-card-footer {
+  position: absolute;
+  left: calc(56px * var(--pr-scale));
+  right: calc(56px * var(--pr-scale));
+  bottom: calc(48px * var(--pr-scale));
+  margin: 0; padding: 0;
+  display: block;
+}
+/* The mascot is positioned against the card, not the CTA footer. */
+.frame53-left .frame53-footer--pr-calibrating { position: static; }
+.frame53-footer--pr-calibrating .frame53-primary {
+  position: absolute;
+  bottom: calc(48px * var(--pr-scale));
+  left: calc(56px * var(--pr-scale));
+}
+.frame53-left .frame53-primary, .measure-reregister-cta {
+  width: calc(482px * var(--pr-scale));
+  height: calc(77px * var(--pr-scale));
+  min-height: 0; max-width: none;
+  padding: calc(24px * var(--pr-scale)) calc(32px * var(--pr-scale));
+  margin: 0;
+  border-radius: 100px;
+  font-size: calc(24px * var(--pr-scale));
+  line-height: calc(29px * var(--pr-scale));
+  font-weight: 700; letter-spacing: 0;
+  box-shadow: none;
+  background: #13a2d7;
+}
+.frame53-left--pr-intro .frame53-primary { background: #34add5; }
+.frame53-left .frame53-primary:disabled { background: #e6e6e6; color: #fff; }
+.frame53-pr-settings-scroll, .measure-control-scroll {
+  position: relative;
+  flex: none;
+  height: calc(493px * var(--pr-scale));
+  overflow: visible;
+  margin: 0; padding: 0;
+}
+.has-developer-tools :is(.frame53-pr-settings-scroll, .measure-control-scroll) { overflow-y: auto; overflow-x: hidden; }
+.frame53-left .frame53-settings-panel--register-complete {
+  position: absolute;
+  top: calc(212px * var(--pr-scale));
+  left: 0; right: 0;
+  display: block; margin: 0;
+}
+:is(.frame53-left, .measure-control-card) :is(.frame53-settings-figma-divider, .measure-card-rule) {
+  flex: none;
+  width: 100%; height: 0;
+  border: 0;
+  border-top: calc(2px * var(--pr-scale)) solid #f5f5f5;
+  margin: 0;
+}
+:is(.frame53-left, .measure-control-card) .frame53-toggle-strip {
+  height: calc(70px * var(--pr-scale));
+  margin: 0; padding: 0;
+  flex: none;
+}
+:is(.frame53-left, .measure-control-card) .frame53-toggle-strip-label {
+  top: 0;
+  font-size: calc(20px * var(--pr-scale));
+  line-height: calc(24px * var(--pr-scale));
+  font-weight: 700;
+}
+:is(.frame53-left, .measure-control-card) .frame53-toggle-strip-switch {
+  width: calc(60px * var(--pr-scale));
+  height: calc(32.25px * var(--pr-scale));
+}
+:is(.frame53-left, .measure-control-card) .frame53-toggle-strip-switch-knob {
+  width: calc(25.5px * var(--pr-scale));
+  height: calc(25.5px * var(--pr-scale));
+  left: calc(3.375px * var(--pr-scale));
+}
+:is(.frame53-left, .measure-control-card) .frame53-toggle-strip-switch.is-on .frame53-toggle-strip-switch-knob {
+  transform: translateY(-50%) translateX(calc(27.75px * var(--pr-scale)));
+}
+:is(.frame53-left, .measure-control-card) .frame53-sound-card {
+  position: relative; flex: none;
+  width: 100%; height: calc(137px * var(--pr-scale));
+  margin: 0; padding: 0;
+  border-radius: calc(16px * var(--pr-scale));
+}
+:is(.frame53-left, .measure-control-card) .frame53-volume-row {
+  position: absolute;
+  left: calc(24px * var(--pr-scale)); right: calc(24px * var(--pr-scale));
+  top: calc(24px * var(--pr-scale));
+  height: calc(24px * var(--pr-scale));
+  margin: 0; gap: calc(40px * var(--pr-scale));
+}
+:is(.frame53-left, .measure-control-card) :is(.frame53-volume-visible-label, .frame53-sfx-label, .frame53-sfx-select) {
+  font-size: calc(16px * var(--pr-scale));
+  line-height: calc(19px * var(--pr-scale));
+  font-weight: 700; letter-spacing: 0; color: #666;
+}
+:is(.frame53-left, .measure-control-card) .frame53-sfx-label {
+  position: absolute; top: calc(81px * var(--pr-scale)); left: calc(24px * var(--pr-scale)); margin: 0;
+}
+:is(.frame53-left, .measure-control-card) .frame53-sfx-shell {
+  position: absolute; top: calc(64px * var(--pr-scale)); left: calc(96px * var(--pr-scale)); right: calc(24px * var(--pr-scale));
+}
+:is(.frame53-left, .measure-control-card) .frame53-sfx-select {
+  height: calc(52px * var(--pr-scale));
+  padding: calc(8px * var(--pr-scale)) calc(44px * var(--pr-scale)) calc(8px * var(--pr-scale)) calc(24px * var(--pr-scale));
+  border: 0; border-radius: calc(16px * var(--pr-scale));
+}
+.measure-control-head {
+  height: calc(76px * var(--pr-scale));
+  flex: none; margin: 0; position: relative;
+}
+.measure-control-status-hint { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.measure-control-icon-actions { position: absolute; right: 0; top: calc(-10px * var(--pr-scale)); }
+.measure-icon-btn, .measure-icon-btn img {
+  width: calc(64px * var(--pr-scale)); height: calc(64px * var(--pr-scale));
+  min-width: 0; min-height: 0; display: block;
+}
+.measure-metrics-row { height: calc(120px * var(--pr-scale)); flex: none; margin: 0 0 calc(16px * var(--pr-scale)); }
+.measure-control-card .metric-tile { padding: calc(20px * var(--pr-scale)) 0 0; gap: calc(6px * var(--pr-scale)); }
+.measure-control-card .metric-tile > span { font-size: calc(14px * var(--pr-scale)); line-height: calc(17px * var(--pr-scale)); font-weight: 510; color: #666; }
+.measure-control-card .metric-tile strong { font-size: calc(48px * var(--pr-scale)); line-height: calc(58px * var(--pr-scale)); font-weight: 700; color: #000; }
+.measure-control-card .metric-tile .metric-tile-suffix { font-size: calc(24px * var(--pr-scale)); }
+.measure-debug-tools { flex: none; }
+.frame53-pr-settings-debug { margin-top: calc(370px * var(--pr-scale)); }
+.measure-posture-gauge { top: calc(24px * var(--pr-scale)); left: 50%; width: calc(561px * var(--pr-scale)); height: calc(80px * var(--pr-scale)); padding: calc(24px * var(--pr-scale)); border-radius: calc(24px * var(--pr-scale)); background: #0000001a; }
+.measure-posture-gauge-track { height: calc(32px * var(--pr-scale)); }
+.measure-posture-gauge-fill { background: linear-gradient(90deg,#fcf9c3,#56b9d4); }
+.measure-posture-gauge-end { font-size: calc(20px * var(--pr-scale)); }
+/* Portrait screens use a compact camera and full-width controls, retaining every action. */
+@media (max-width: 700px) {
+  :is(.flow-screen.frame53-register-screen, .flow-screen.measuring-screen) {
+    --pr-scale: min(0.82, calc((100vw - 32px) / 594px)) !important;
+    padding: 68px 16px 20px; min-height: 100dvh;
+  }
+  :is(.frame53-panels-wrap, .measure-layout) { width: 100%; gap: 12px; transform: none; flex-direction: column; }
+  :is(.frame53-left, .measure-control-card) { width: 100%; flex-basis: auto; padding: calc(48px * var(--pr-scale)) calc(56px * var(--pr-scale)); }
+  :is(.frame53-camera-panel, .measure-camera-panel--figma) { order: -1; flex-basis: auto; width: 100%; height: clamp(110px, 20dvh, 200px); aspect-ratio: auto; }
+  :is(.frame53-register-screen, .measuring-screen) .flow-brand { left: 24px; top: 8px; width: 92px; }
+  .measure-icon-btn { position: relative; }
+  .measure-icon-btn::after, .frame53-toggle-strip-switch::after { content: ''; position: absolute; inset: -8px; }
+}
+/* Narrow landscape windows keep both columns, scaled together. */
+@media (min-width: 701px) and (max-width: 900px) {
+  :is(.frame53-panels-wrap, .measure-layout) { flex-direction: row; }
+  :is(.frame53-register-screen, .measuring-screen) { padding-inline: 0; }
+}
+
+.frame53-left .frame53-settings-panel--register-complete > :is(hr, .frame53-toggle-strip) { margin: 0; }
+.frame53-pr-settings-scroll { display: block; }
+.frame53-left .frame53-footer--pr-intro { width: auto; }
+.frame53-left .frame53-primary { min-height: 0; }
+.measure-control-card .metric-tile-value-suffix { font-size: calc(24px * var(--pr-scale)); }
+.frame53-volume-range { background: transparent; --frame53-vol-thumb-size: calc(24px * var(--pr-scale)); }
+.frame53-register-screen .warmup-veil--register { background: transparent; }
+.frame53-register-screen .warmup-veil-register-stack { position: absolute; inset: 0; transform: none; display: block; }
+.frame53-register-screen .warmup-veil-inner--register { position: absolute; width: calc(320px * var(--pr-scale)); height: calc(320px * var(--pr-scale)); left: 50%; top: calc(138px * var(--pr-scale)); transform: translateX(-50%); }
+.frame53-register-screen .warmup-veil--register .warmup-veil-label { position: absolute; top: calc(513px * var(--pr-scale)); width: 100%; text-align: center; margin: 0; font-size: calc(36px * var(--pr-scale)); line-height: 43px; }
+
+.frame53-register-screen :is(.warmup-veil--register, .warmup-veil-register-stack, .warmup-veil-inner--register) { animation: none; }
+.frame53-register-screen .warmup-veil--register .warmup-veil-label { max-width: none; line-height: calc(43px * var(--pr-scale)); }
+.frame53-camera-stack:has(.warmup-veil--register) .viewer--measurement::after { display: none; }
+@media (max-width: 700px) {
+  .frame53-register-screen .warmup-veil-inner--register { width: 82px; height: 82px; top: 6px; }
+  .frame53-register-screen .warmup-veil-count { font-size: 36px; }
+  .frame53-register-screen .warmup-veil--register .warmup-veil-label { top: auto; bottom: 6px; font-size: 13px; line-height: 16px; }
+}
+
+.frame53-header-close img { display: block; width: 100%; height: 100%; }
+@media (max-width: 700px) {
+  .frame53-register-screen .frame53-header-close { top: 14px; right: 16px; width: 40px; height: 40px; }
+}
