@@ -15,7 +15,9 @@
       {
         "title": "PiiiN",
         "width": 1200,
-        "height": 800,
+        "height": 780,
+        "visible": false,
+        "resizable": true,
         "minWidth": 720,
         "minHeight": 540
       }

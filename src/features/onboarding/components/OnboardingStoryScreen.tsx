@@ -11,7 +11,7 @@ type StorySlide = {
   id: string;
   eyebrow: string;
   title?: string;
-  body: string[];
+  body: (string | readonly string[])[];
   variant: "splash" | "friends" | "message" | "warning" | "return" | "reward" | "final";
 };
 
@@ -93,6 +93,7 @@ type FinalPageLayoutTuning = {
 };
 
 type FinalCharacterCardTuning = {
+  imageSrc?: string;
   characterId: CharacterDefinition["id"];
   displayName: string;
   personalityTags: readonly [string, string];
@@ -277,6 +278,7 @@ const FINAL_PAGE_LAYOUT_TUNING: FinalPageLayoutTuning = {
 };
 
 const FINAL_PAGE_CHARACTER_LAYOUTS: FinalCharacterCardTuning[] = [
+  { imageSrc: "/figma/story-nasubi.png", characterId: "nasubi-nago", displayName: "ナスビナゴ", personalityTags: ["落ち着きがある", "お兄ちゃんキャラ"], xPercent: 50, bottomPercent: 0, scaleX: 1, scaleY: 1, primaryColor: "#715ba3", previewColor: "#e3deed" },
   {
     characterId: "shin-anago",
     displayName: "シン・アナゴ",
@@ -343,6 +345,7 @@ const FINAL_PAGE_CHARACTER_LAYOUTS: FinalCharacterCardTuning[] = [
     primaryColor: "#0055aa",
     previewColor: "#ccddee",
   },
+  { imageSrc: "/figma/story-twin.png", characterId: "twin-nago", displayName: "ツインナゴ", personalityTags: ["アイドル気質", "妹キャラ"], xPercent: 50, bottomPercent: 0, scaleX: 1, scaleY: 1, primaryColor: "#ed8cc4", previewColor: "#fbe8f3" },
 ];
 
 const STORY_SLIDES: StorySlide[] = [
@@ -389,7 +392,7 @@ const STORY_SLIDES: StorySlide[] = [
   {
     id: "reward",
     eyebrow: "5 / 6",
-    body: ["良い姿勢率が50%を達成すると", "新しいピンアナゴを獲得できるよ！"],
+    body: [["良い姿勢率が50%", "を達成すると"], ["新しいピンアナゴ", "を獲得できるよ！"]],
     variant: "reward",
   },
   {
@@ -397,7 +400,7 @@ const STORY_SLIDES: StorySlide[] = [
     eyebrow: "6 / 6",
     body: [
       "ピンアナゴは全部で111種類",
-      "全種類あつめて良い姿勢を習慣化しよう！",
+      ["全種類あつめて", "良い姿勢を", "習慣化しよう！"],
     ],
     variant: "final",
   },
@@ -563,10 +566,12 @@ export function OnboardingStoryScreen({ onComplete }: OnboardingStoryScreenProps
             )}
             {currentSlide.body.map((line, index) => (
               <p
-                key={line}
+                key={index}
                 style={{ "--line-delay": `${0.14 + index * 0.11}s` } as CSSProperties}
               >
-                {line}
+                {typeof line === "string" ? line : line.map((phrase) => (
+                  <span className="onboarding-copy-phrase" key={phrase}>{phrase}</span>
+                ))}
               </p>
             ))}
           </div>
@@ -945,6 +950,7 @@ function RewardArtwork({
 }
 
 function FinalArtwork({ characters }: { characters: CharacterDefinition[] }) {
+  const [isTouchHeld, setIsTouchHeld] = useState(false);
   const charactersById = new Map(
     characters.map((character) => [character.id, character]),
   );
@@ -955,7 +961,7 @@ function FinalArtwork({ characters }: { characters: CharacterDefinition[] }) {
         (candidate) => candidate.id === layout.characterId,
       );
 
-    return character ? [{ character, layout }] : [];
+    return character || layout.imageSrc ? [{ character, layout }] : [];
   });
   const rowStyle = {
     "--final-card-row-top": percent(FINAL_PAGE_LAYOUT_TUNING.rowTopPercent),
@@ -967,46 +973,63 @@ function FinalArtwork({ characters }: { characters: CharacterDefinition[] }) {
   } as CSSProperties;
 
   return (
-    <div className="onboarding-final-artwork" style={rowStyle} aria-hidden="true">
-      <div className="onboarding-final-card-strip">
-        {finalCards.map(({ character, layout }, index) => (
-          <div
-            className="home-character-slot onboarding-final-card-slot"
-            key={character.id}
-            style={
-              {
-                "--card-anim-delay": `${index * 70}ms`,
-                "--home-character-color": layout.primaryColor,
-                "--home-character-soft-color": layout.previewColor,
-                "--final-character-x": percent(layout.xPercent),
-                "--final-character-y": percent(layout.bottomPercent),
-                "--final-character-scale-x": layout.scaleX,
-                "--final-character-scale-y": layout.scaleY,
-              } as CSSProperties
-            }
-          >
-            <div className="home-character-card is-acquired onboarding-final-card">
-              <div className="home-character-preview onboarding-final-preview">
-                <img
-                  className="home-card-character onboarding-final-character"
-                  src={getCharacterImageSrc(character)}
-                  alt=""
-                  draggable={false}
-                />
-              </div>
-              <div className="home-character-body onboarding-final-card-body">
-                <h3 className="home-character-name onboarding-final-card-name">
-                  {layout.displayName}
-                </h3>
-                <div className="home-character-tags">
-                  {layout.personalityTags.map((tag) => (
-                    <span className="home-tag" key={tag}>
-                      {tag}
-                    </span>
-                  ))}
+    <div className="onboarding-final-artwork" style={rowStyle}>
+      <div
+        className={`onboarding-final-card-strip${isTouchHeld ? " is-touch-held" : ""}`}
+        tabIndex={0}
+        role="group"
+        aria-label="ピンアナゴのカード。フォーカス中、またはカードに触れている間は流れが止まります。"
+        onPointerDown={(event) => {
+          if (event.pointerType === "mouse") return;
+          event.currentTarget.setPointerCapture(event.pointerId);
+          setIsTouchHeld(true);
+        }}
+        onPointerUp={() => setIsTouchHeld(false)}
+        onPointerCancel={() => setIsTouchHeld(false)}
+        onLostPointerCapture={() => setIsTouchHeld(false)}
+      >
+        {[0, 1, 2, 3].map((copy) => (
+          <div className="onboarding-final-card-group" key={copy} aria-hidden="true">
+            {finalCards.map(({ character, layout }, index) => (
+              <div
+                className="home-character-slot onboarding-final-card-slot"
+                key={layout.characterId}
+                style={
+                  {
+                    "--card-anim-delay": `${index * 70}ms`,
+                    "--home-character-color": layout.primaryColor,
+                    "--home-character-soft-color": layout.previewColor,
+                    "--final-character-x": percent(layout.xPercent),
+                    "--final-character-y": percent(layout.bottomPercent),
+                    "--final-character-scale-x": layout.scaleX,
+                    "--final-character-scale-y": layout.scaleY,
+                  } as CSSProperties
+                }
+              >
+                <div className="home-character-card is-acquired onboarding-final-card">
+                  <div className="home-character-preview onboarding-final-preview">
+                    <img
+                      className="home-card-character onboarding-final-character"
+                      src={layout.imageSrc ?? (character ? getCharacterImageSrc(character) : undefined)}
+                      alt=""
+                      draggable={false}
+                    />
+                  </div>
+                  <div className="home-character-body onboarding-final-card-body">
+                    <h3 className="home-character-name onboarding-final-card-name">
+                      {layout.displayName}
+                    </h3>
+                    <div className="home-character-tags">
+                      {layout.personalityTags.map((tag) => (
+                        <span className="home-tag" key={tag}>
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            ))}
           </div>
         ))}
       </div>

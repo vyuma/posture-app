@@ -1,3 +1,4 @@
+import { useLiveFigmaPrScaleStyle } from "../hooks/useLiveFigmaPrScaleStyle";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type RefObject } from "react";
 
 import type {
@@ -13,7 +14,6 @@ import {
 } from "../../overlay/overlayPlacementHintBridge";
 import {
   isDebugUiBuildEnabled,
-  OVERLAY_DEBUG_UI_STORAGE_KEY,
 } from "../../overlay/overlayState";
 import { playSoundPreview } from "../../sound/services/recoverySound";
 import {
@@ -214,6 +214,7 @@ export function HomeScreen(props: HomeScreenProps) {
           <button
             type="button"
             className="home-nav-profile"
+            style={{ backgroundColor: props.profileCharacter?.id === "normal-nago" ? "#fde6cc" : props.profileCharacter?.characterColor?.soft ?? "#fde6cc" }}
             aria-label="プロフィールキャラクターを変更"
             onClick={() => setIsProfileDialogOpen(true)}
           >
@@ -254,7 +255,8 @@ export function HomeScreen(props: HomeScreenProps) {
           </div>
         </div>
         <CharacterFigure
-          character={props.qrCharacter ?? props.profileCharacter}
+          key={props.profileCharacter?.id ?? "empty-hero-character"}
+          character={props.profileCharacter}
           className="home-hero-anago"
         />
       </section>
@@ -636,6 +638,8 @@ export function MeasuringScreen({
   onShowCharacterOverlay,
   onResetCharacterPosition,
 }: MeasuringScreenProps) {
+  const figmaPrScaleStyle = useLiveFigmaPrScaleStyle();
+
   const isWarmup = !snapshot.baselineReady;
 
   const showMeasureDevTools = false;
@@ -707,7 +711,10 @@ export function MeasuringScreen({
   const pauseDisabled = isWarmup;
 
   return (
-    <main className="flow-screen measuring-screen">
+    <main
+      className={`flow-screen measuring-screen${showMeasureDevTools ? " has-developer-tools" : ""}`}
+      style={figmaPrScaleStyle}
+    >
       <FlowBrand />
       <section
         className="measure-layout"
@@ -719,7 +726,7 @@ export function MeasuringScreen({
           <header className="measure-control-head">
             <div>
               <h1 id={headingId} className="measure-control-title">
-                測定中
+                {isPaused ? "一時停止中" : "姿勢測定中"}
               </h1>
               <p id={statusHintId} className="measure-control-status-hint">
                 {isWarmup
@@ -748,7 +755,7 @@ export function MeasuringScreen({
                 className="measure-icon-btn measure-icon-btn--stop"
                 onClick={onFinishMeasurement}
                 disabled={stopDisabled}
-                aria-label="測定終了"
+                aria-label="測定を終了"
               >
                 <MeasureStopIcon />
               </button>
@@ -793,6 +800,8 @@ export function MeasuringScreen({
               <span className="frame53-toggle-strip-switch-knob" aria-hidden />
             </button>
           </div>
+
+          <div className="measure-card-rule" role="presentation" />
 
           <div className="frame53-toggle-strip">
             <span
@@ -896,27 +905,29 @@ export function MeasuringScreen({
                   キャラ表示
                 </button>
               ) : null}
-              <button
-                type="button"
-                className="tool-pill measure-tool-overlay-hint-debug"
-                title={`クリックでデスクトップオーバーレイへ配置ヒント再表示を送る（${OVERLAY_DEBUG_UI_STORAGE_KEY}）`}
-                onClick={() => void handleEmitOverlayPlacementHintRefresh()}
-              >
-                配置ヒント(debug)
-              </button>
-              <button type="button" className="tool-pill" onClick={onResetCharacterPosition}>
-                位置リセット
-              </button>
-              {placementHintEmitNotice ? (
-                <p
-                  className={`measure-placement-hint-emit-feedback measure-placement-hint-emit-feedback--${placementHintEmitNotice}`}
-                  role="status"
+              <div className="measure-debug-tools-tail">
+                <button
+                  type="button"
+                  className="tool-pill measure-tool-overlay-hint-debug"
+                  title="クリックでデスクトップオーバーレイへ配置ヒント再表示を送る"
+                  onClick={() => void handleEmitOverlayPlacementHintRefresh()}
                 >
-                  {placementHintEmitNotice === "ok"
-                    ? "配置ヒントをオーバーレイへ送りました。画面右下のキャラ付近を確認してください。"
-                    : "送信できませんでした（ブラウザでは Tauri がありません）。"}
-                </p>
-              ) : null}
+                  配置ヒント(debug)
+                </button>
+                <button type="button" className="tool-pill" onClick={onResetCharacterPosition}>
+                  位置リセット
+                </button>
+                {placementHintEmitNotice ? (
+                  <p
+                    className={`measure-placement-hint-emit-feedback measure-placement-hint-emit-feedback--${placementHintEmitNotice}`}
+                    role="status"
+                  >
+                    {placementHintEmitNotice === "ok"
+                      ? "配置ヒントをオーバーレイへ送りました。画面右下のキャラ付近を確認してください。"
+                      : "送信できませんでした（ブラウザでは Tauri がありません）。"}
+                  </p>
+                ) : null}
+              </div>
             </div>
           ) : null}
           </div>
@@ -927,7 +938,7 @@ export function MeasuringScreen({
               className="measure-reregister-cta"
               onClick={onReRegisterPosture}
             >
-              姿勢を再測定する
+              姿勢を再登録する
             </button>
           </div>
         </aside>
@@ -2090,6 +2101,7 @@ function MetricTile({
 }: {
   label: string;
   value: string;
+  /** 例: 良い姿勢率の「%」を小さく横に並べる */
   valueSuffix?: string;
 }) {
   return (
@@ -2108,6 +2120,7 @@ function MetricTile({
     </div>
   );
 }
+
 
 function formatCollectionNumber(number: number) {
   return String(number).padStart(3, "0");
@@ -2153,33 +2166,11 @@ function formatPercent(ratio: number) {
   return `${Math.round(Math.max(0, Math.min(1, ratio)) * 100)}%`;
 }
 
-function MeasurePauseIcon() {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true">
-      <circle cx="32" cy="32" r="28" fill="none" stroke="#EA4949" strokeWidth="3" />
-      <rect x="23" y="22" width="6" height="20" rx="1.5" fill="#EA4949" />
-      <rect x="35" y="22" width="6" height="20" rx="1.5" fill="#EA4949" />
-    </svg>
-  );
-}
+function MeasurePauseIcon() { return <img src="/figma/measure-pause.svg" alt="" width={64} height={64} aria-hidden="true" />; }
 
-function MeasurePlayIcon() {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true">
-      <circle cx="32" cy="32" r="28" fill="none" stroke="#EA4949" strokeWidth="3" />
-      <path fill="#EA4949" d="M28 20l16 12-16 12z" />
-    </svg>
-  );
-}
+function MeasurePlayIcon() { return <img src="/figma/measure-play.svg" alt="" width={64} height={64} aria-hidden="true" />; }
 
-function MeasureStopIcon() {
-  return (
-    <svg viewBox="0 0 64 64" aria-hidden="true">
-      <circle cx="32" cy="32" r="28" fill="none" stroke="#EA4949" strokeWidth="3" />
-      <rect x="24" y="24" width="16" height="16" rx="2.5" fill="#EA4949" />
-    </svg>
-  );
-}
+function MeasureStopIcon() { return <img src="/figma/measure-stop.svg" alt="" width={64} height={64} aria-hidden="true" />; }
 
 /**
  * 5秒ウォームアップ用の暗幕＋円弧プログレス。
