@@ -358,75 +358,10 @@
   }
 }
 
-/* 共有キャプチャ中：影・mix-blend・画像 filter を無効化して描画欠けを防ぐ */
-.result-registered-card.is-share-capture {
-  box-shadow: none !important;
-  transform: none !important;
-  filter: none !important;
-  animation: none !important;
-  transition: none !important;
-  /* 共有時は幅を固定し、計算揺れで右端が切れるのを防ぐ */
-  width: 720px !important;
-  max-width: 720px !important;
-  min-width: 720px !important;
-  /* オフスクリーンで撮影するためダイアログ等のレイアウト影響を打ち消す */
-  margin: 0 !important;
-  box-sizing: border-box !important;
-}
-
-.result-registered-card.is-share-capture.result-registered-card--acquired::before,
-.result-registered-card.is-share-capture.result-registered-card--acquired::after {
-  opacity: 0 !important;
-  content: none !important;
-}
-
-.result-registered-card.is-share-capture .result-registered-figure,
-.result-registered-card.is-share-capture .result-registered-portrait img {
-  /* キャラクターのトーン用 hue-rotate などは保持し、共有後の見た目を一致させる */
-  transform: translate(
-      var(--result-portrait-img-shift-x, 0px),
-      var(--result-portrait-img-shift-y, 0px)
-    )
-    scale(var(--result-portrait-img-scale, 1)) !important;
-}
-
-/* 共有時はキャラを枠の中央に大きく見せる（元の 1.35 拡大は維持） */
-.result-registered-card.is-share-capture .result-registered-portrait {
-  --result-portrait-img-width: 92%;
-  --result-portrait-img-height: 92%;
-  --result-portrait-img-shift-x: 0px;
-  --result-portrait-img-shift-y: 0px;
-  --result-portrait-img-scale: 1.35;
-}
-
-.result-registered-card.is-share-capture .result-registered-col--stats {
-  min-width: 0 !important;
-}
-
-/* メタ行（獲得日／測定時間）：ラベルと値を 2 カラムで確実に収める */
-.result-registered-card.is-share-capture .result-registered-meta-row {
-  grid-template-columns: minmax(96px, max-content) minmax(0, 1fr) !important;
-}
-
-.result-registered-card.is-share-capture .result-registered-meta-label {
-  white-space: nowrap !important;
-}
-
-.result-registered-card.is-share-capture .result-registered-meta-value {
-  justify-self: end !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: clip !important;
-  min-width: 0 !important;
-  max-width: 100% !important;
-  font-size: 0.82rem !important;
-}
-
-/* 統計の数値が大きすぎてはみ出すのを防ぐ */
-.result-registered-card.is-share-capture .result-registered-stat-value {
-  font-size: clamp(1.35rem, 3.4vw, 1.75rem) !important;
-  word-break: keep-all !important;
-}
+/* Capture keeps the resolved on-screen geometry; only transient effects stop. */
+.result-registered-card.is-share-capture { box-shadow: none !important; transform: none !important; animation: none !important; }
+.result-registered-card.is-share-capture::before,
+.result-registered-card.is-share-capture::after { content: none !important; }
 
 .result-screen--accent-fail .result-registered-card:not(.result-registered-card--acquisition-fail) {
   animation: result-fail-card-glow 2.4s ease-in-out infinite;
@@ -1473,4 +1408,43 @@
 
 .result-posture-timeline--fail .result-posture-timeline-line.is-good {
   stroke: var(--result-timeline-good, #13a2d7);
+}
+
+/* Card detail 580:8164: image bounds apply equally on screen and in PNG capture. */
+.result-registered-card--detail .result-registered-portrait { position: relative; }
+.result-registered-card--detail .result-registered-figure:is(.character-figure, .result-registered-figure--acquisition-fail) {
+  position: absolute;
+  top: 19.285714%; left: 5.103571%;
+  width: 83.928571%; height: 135%;
+  max-width: none; max-height: none;
+  object-fit: fill; transform: none;
+}
+.result-registered-card--detail .result-registered-figure--acquisition-fail {
+  width: 83.844286%; height: 134.642857%;
+}
+.result-registered-card[data-character-id="normal-nago"] {
+  --result-stat-accent: #f78000 !important;
+  --result-meta-icon: #f78000 !important;
+  --result-portrait-bg: #fde6cc !important;
+}
+.result-screen:has([data-character-id="normal-nago"]) .result-registered-home.is-acquired { background: #f78000; }
+@media (min-width: 701px) {
+  .result-screen--registered .result-registered-card--detail .result-registered-stat-grid { top: 49px; column-gap: 45px; }
+  .result-screen--registered .result-registered-card--detail .result-registered-stat-cell { text-align: left; }
+  .result-screen--registered .result-registered-card--detail .result-registered-stat-value--ratio-parts { justify-content: flex-start; }
+  .result-screen--registered .result-registered-card--detail .result-registered-meta {
+    left: -2px; top: 216px; width: 310px; border-top: 0; padding-top: 0; gap: 8px;
+  }
+  .result-screen--registered .result-registered-card--detail .result-registered-meta-row { height: 32px; padding: 0; }
+  .result-screen--registered .result-registered-card--detail .result-registered-meta-row:first-child { padding-bottom: 8px; }
+  .result-screen--registered .result-registered-card--detail .result-registered-story { bottom: 5px; text-align: left; line-height: 1.2; }
+  .result-screen--registered .result-registered-card--detail .result-registered-name { margin: 2px 0 0; }
+  .result-screen--registered .result-registered-card--detail .result-registered-tags { margin-top: 2px; gap: 8px; }
+  .result-screen--registered .result-registered-card--detail .result-registered-tag { padding: 8px; }
+}
+
+.result-registered-card--acquired .result-registered-name { color: #000; }
+.result-registered-card--acquired .result-registered-tag {
+  color: var(--result-stat-accent);
+  background: color-mix(in srgb, var(--result-stat-accent) 20%, white);
 }

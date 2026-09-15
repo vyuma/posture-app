@@ -31,3 +31,5 @@ export type MeasurementResult = MeasurementStats & {
   acquiredCharacterId: string | null;
   postureTimeline: PostureTimelineSegment[];
 };
+
+export type PostureRegisterStep = "intro" | "calibrating" | "settings";

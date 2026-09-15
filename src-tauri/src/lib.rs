@@ -1,4 +1,6 @@
 mod commands;
+#[cfg(desktop)]
+mod main_window;
 mod overlay;
 mod pairing;
 #[cfg(target_os = "macos")]
@@ -14,6 +16,8 @@ use commands::pairing_commands::{emit_posture_signal, get_pairing_info, get_pair
 use overlay::state::OverlayStateHandle;
 use overlay::window::ensure_overlay_window;
 use pairing::{start_pairing_server, PairingStateHandle};
+#[cfg(desktop)]
+use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -28,6 +32,14 @@ pub fn run() {
         .setup(|app| {
             #[cfg(target_os = "macos")]
             updates::setup(app)?;
+            #[cfg(desktop)]
+            if let Some(window) = app.get_webview_window("main") {
+                if let Err(error) = main_window::fit_initial_window(&window) {
+                    eprintln!("failed to fit main window to display: {error}");
+                }
+                // Show only after fitting, so small displays do not flash an oversized window.
+                window.show()?;
+            }
             if let Err(error) = ensure_overlay_window(&app.handle()) {
                 eprintln!("failed to initialize cat overlay window: {error}");
             }

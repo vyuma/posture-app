@@ -96,7 +96,7 @@ export const CharacterResultWhiteCard = forwardRef<
     portraitMode === "acquisition-fail" ? (
       <img
         className="result-registered-figure result-registered-figure--acquisition-fail"
-        src="/failed_nago.png"
+        src="/figma/result-unacquired.png"
         alt=""
         draggable={false}
       />
@@ -126,6 +126,7 @@ export const CharacterResultWhiteCard = forwardRef<
   return (
     <article
       ref={ref}
+      data-character-id={portraitMode === "character" ? character?.id : undefined}
       className={`result-registered-card result-registered-card--detail ${articleClassName}`.trim()}
       aria-label="測定結果"
       style={articleStyle}
