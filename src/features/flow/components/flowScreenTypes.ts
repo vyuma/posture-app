@@ -21,4 +21,3 @@ export type PostureRegisterFlowScreenProps = {
   onCalibratingComplete: () => void;
   onResetCharacterPosition: () => void;
 };
-
