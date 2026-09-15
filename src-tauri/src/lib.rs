@@ -3,6 +3,8 @@ mod commands;
 mod main_window;
 mod overlay;
 mod pairing;
+#[cfg(target_os = "macos")]
+mod updates;
 
 use commands::clipboard_commands::copy_share_image_to_clipboard;
 use commands::overlay_commands::{
@@ -28,6 +30,8 @@ pub fn run() {
         .manage(pairing_state)
         .manage(overlay_state)
         .setup(|app| {
+            #[cfg(target_os = "macos")]
+            updates::setup(app)?;
             #[cfg(desktop)]
             if let Some(window) = app.get_webview_window("main") {
                 if let Err(error) = main_window::fit_initial_window(&window) {

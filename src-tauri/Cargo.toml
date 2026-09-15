@@ -1,6 +1,6 @@
 [package]
 name = "posture-app"
-version = "0.1.0"
+version = "0.1.2"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
@@ -25,3 +25,7 @@ sha1 = "0.10"
 base64 = "0.22"
 arboard = "3.6"
 image = { version = "0.25", default-features = false, features = ["png"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+tauri-plugin-updater = "2"
+tauri-plugin-process = "2"

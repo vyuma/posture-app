@@ -1,7 +1,7 @@
 {
   "name": "posture-app",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -11,11 +11,15 @@
     "build:debug-ui": "VITE_SHOW_DEBUG_UI=true tsc && vite build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "tauri:debug-ui": "VITE_SHOW_DEBUG_UI=true bun run tauri build"
+    "tauri:debug-ui": "VITE_SHOW_DEBUG_UI=true bun run tauri build",
+    "release:macos": "node scripts/release-macos.mjs",
+    "test:updates": "bun test scripts/desktop-updater.test.tsx"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.34",
     "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-process": "^2.3.1",
+    "@tauri-apps/plugin-updater": "^2.11.0",
     "canvas-confetti": "^1.9.4",
     "html-to-image": "^1.11.13",
     "lottie-web": "^5.13.0",
@@ -30,6 +34,7 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
+    "happy-dom": "^20.14.5",
     "typescript": "~5.8.3",
     "vite": "^7.0.4"
   }
