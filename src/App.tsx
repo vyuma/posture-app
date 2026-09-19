@@ -1,3 +1,5 @@
+import { saveCompletedMeasurement, readCompletedMeasurements, publishCompletedMeasurement } from "./features/pairing/services/measurementDelivery";
+import type { AcquiredCharacterEventInput } from "./features/pairing/services/desktopBridge";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -51,7 +53,7 @@ import {
 } from "./features/overlay/overlayState";
 import { usePairingState } from "./features/pairing";
 import { buildPairingLink } from "./features/pairing/services/pairingLink";
-import { sendPostureSignal } from "./features/pairing/services/desktopBridge";
+import { sendPostureSignal, syncPairingMeasuringSession, syncPairingGoodPostureRegistration } from "./features/pairing/services/desktopBridge";
 import {
   usePostureTracking,
   usePostureTransitionEffects,
@@ -168,6 +170,41 @@ function App() {
   );
 
   const [postureRegisterStep, setPostureRegisterStep] = useState<PostureRegisterStep>("intro");
+  const measurementIdRef = useRef<string | null>(null);
+  const finishedMeasurementRef = useRef<string | null>(null);
+  useEffect(() => {
+    const accepted = new Set<string>();
+    let running = false;
+    let cancelled = false;
+    const replay = async () => {
+      if (running) return;
+      running = true;
+      try {
+        for (const result of readCompletedMeasurements()) {
+          if (cancelled) break;
+          if (!accepted.has(result.id)) {
+            await publishCompletedMeasurement(result);
+            accepted.add(result.id);
+          }
+        }
+      } catch (error) {
+        console.error(error);
+        setPermissionPopupMessage("結果の保存・送信を再試行しています。PCアプリを閉じないでください。");
+      } finally { running = false; }
+    };
+    void replay();
+    const timer = window.setInterval(() => void replay(), 2000);
+    return () => { cancelled = true; window.clearInterval(timer); };
+  }, []);
+  const isMeasuringPhase = flowPhase === "measuring";
+  const isRegistering = flowPhase === "qrScanned" && postureRegisterStep !== "intro";
+  useEffect(() => {
+    void syncPairingMeasuringSession(isMeasuringPhase, measurementIdRef.current).catch(console.error);
+  }, [isMeasuringPhase]);
+  useEffect(() => {
+    void syncPairingGoodPostureRegistration(isRegistering).catch(console.error);
+  }, [isRegistering]);
+
   const trackingEnabled = flowPhase === "measuring" || (flowPhase === "qrScanned" && postureRegisterStep !== "intro");
   const {
     videoRef,
@@ -369,7 +406,8 @@ function App() {
       }
 
       measurementAccumulatorRef.current = createMeasurementAccumulator();
-      measurementStartedAtRef.current = new Date().toISOString();
+      measurementIdRef.current = crypto.randomUUID();
+    measurementStartedAtRef.current = new Date().toISOString();
       setMeasurementStats(EMPTY_MEASUREMENT_STATS);
       setLastMeasurementResult(null);
       setLastAcquiredCharacterId(null);
@@ -389,12 +427,15 @@ function App() {
       measurementAccumulatorRef.current.postureTimeline,
       finalStats.activeMeasurementMs,
     );
-    const measurementId = `measurement-${Date.now()}`;
+    const measurementId = measurementIdRef.current ?? crypto.randomUUID();
+    if (finishedMeasurementRef.current === measurementId) return;
+    finishedMeasurementRef.current = measurementId;
     const endedAt = new Date().toISOString();
     const rewardQualified =
       finalStats.activeMeasurementMs >= REWARD_RULE.minDurationMs &&
       finalStats.goodRatio >= REWARD_RULE.minGoodRatio;
     let acquiredCharacterId: string | null = null;
+    let deliveryCharacter: AcquiredCharacterEventInput | undefined;
 
     if (rewardQualified) {
       const nextRewardCharacter = getNextUnacquiredCharacter(
@@ -417,10 +458,19 @@ function App() {
         acquiredCharacterId = nextRewardCharacter.id;
         setAcquiredCharacters(nextAcquiredCharacters);
         saveAcquiredCharacters(nextAcquiredCharacters);
+        deliveryCharacter = {
+          measurementId, acquiredAt: endedAt,
+          characterId: nextRewardCharacter.id, characterName: nextRewardCharacter.name,
+          rarity: nextRewardCharacter.rarity, ...finalStats,
+          postureTimeline: timelineForResult,
+          story: nextRewardCharacter.story, portraitSrc: nextRewardCharacter.portraitSrc,
+          personalityTags: nextRewardCharacter.personalityTags,
+          characterColor: nextRewardCharacter.characterColor, toneClass: nextRewardCharacter.toneClass,
+        };
       }
     }
 
-    setLastMeasurementResult({
+    const completedResult: MeasurementResult = {
       id: measurementId,
       startedAt: measurementStartedAtRef.current ?? endedAt,
       endedAt,
@@ -430,7 +480,14 @@ function App() {
       rewardQualified,
       acquiredCharacterId,
       postureTimeline: timelineForResult,
-    });
+    };
+    try {
+      saveCompletedMeasurement(completedResult, deliveryCharacter);
+    } catch (error) {
+      console.error(error);
+      setPermissionPopupMessage("測定は終了しましたが結果を保存できませんでした。アプリを閉じず、ストレージの空き容量を確認してください。");
+    }
+    setLastMeasurementResult(completedResult);
     setLastAcquiredCharacterId(acquiredCharacterId);
     setIsPaused(false);
     setFlowPhase("postureRegistered");
@@ -649,6 +706,7 @@ function App() {
   const beginRegisteredMeasurement = () => {
     if (!snapshot.baselineReady) return;
     measurementAccumulatorRef.current = createMeasurementAccumulator();
+    measurementIdRef.current = crypto.randomUUID();
     measurementStartedAtRef.current = new Date().toISOString();
     setMeasurementStats(EMPTY_MEASUREMENT_STATS);
     setIsPaused(false);
