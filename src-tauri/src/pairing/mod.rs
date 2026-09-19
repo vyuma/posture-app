@@ -3,11 +3,11 @@ mod state;
 mod types;
 
 pub use server::{
-    broadcast_ws_acquired_event, broadcast_ws_completed_event, broadcast_ws_state_event,
+    broadcast_ws_collection_reset, broadcast_ws_acquired_event, broadcast_ws_completed_event, broadcast_ws_state_event,
     disconnect_ws_clients, start_pairing_server, ws_connected_client_count,
 };
 pub use state::{
-    AcquiredCharacterPayload, CharacterColorPayload, CompletedMeasurement, PairingStateHandle,
+    CollectionReset, AcquiredCharacterPayload, CharacterColorPayload, CompletedMeasurement, PairingStateHandle,
     PostureTimelineSegmentPayload,
 };
 pub use types::{DesktopPairingStatus, PairingInfo};
