@@ -1,3 +1,4 @@
+import { readCollectionReset, saveCollectionReset, type CollectionReset } from "../../characters/collectionResetStorage";
 import type { MeasurementResult } from "../../flow/types";
 import type { AcquiredCharacterEventInput } from "./desktopBridge";
 import { invoke } from "@tauri-apps/api/core";
@@ -37,3 +38,21 @@ export function readCompletedMeasurements(): CompletedMeasurement[] {
 export async function publishCompletedMeasurement(result: CompletedMeasurement): Promise<void> {
   await invoke("emit_completed_measurement", { result });
 }
+
+// Persist before clearing local UI; startup filtering completes an interrupted reset.
+export function resetCollection(measurementIds: string[]): CollectionReset {
+  const records = readCompletedMeasurements();
+  const previous = readCollectionReset();
+  const sourceId = cachedSourceId ?? localStorage.getItem(SOURCE_KEY) ?? crypto.randomUUID();
+  localStorage.setItem(SOURCE_KEY, sourceId);
+  cachedSourceId = sourceId;
+  const reset = { sourceId, measurementIds: [...new Set([
+    ...(previous?.measurementIds ?? []), ...measurementIds, ...records.map(result => result.id),
+  ])] };
+  saveCollectionReset(reset);
+  return reset;
+}
+export async function publishCollectionReset(reset: CollectionReset): Promise<void> {
+  await invoke("emit_acquired_characters_cleared", { reset });
+}
+export { readCollectionReset };

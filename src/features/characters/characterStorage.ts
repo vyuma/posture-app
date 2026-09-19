@@ -1,3 +1,4 @@
+import { readCollectionReset } from "./collectionResetStorage";
 import type { AcquiredCharacter } from "./types";
 import type { PostureTimelineSegment } from "../flow/types";
 import { normalizeCharacterId } from "./characterIds";
@@ -17,7 +18,7 @@ export function loadAcquiredCharacters(): AcquiredCharacter[] {
     }
 
     return dedupeAcquiredCharacters(
-      parsedValue.filter(isAcquiredCharacter).map(normalizeAcquiredCharacter),
+      parsedValue.filter(isAcquiredCharacter).filter(card => !readCollectionReset()?.measurementIds.includes(card.measurementId)).map(normalizeAcquiredCharacter),
     );
   } catch {
     return [];
