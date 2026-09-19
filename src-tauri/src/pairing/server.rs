@@ -259,6 +259,15 @@ pub fn broadcast_ws_acquired_event(state: &PairingStateHandle, payload: Acquired
     }
 }
 
+pub fn broadcast_ws_collection_reset(state: &PairingStateHandle, reset: super::state::CollectionReset) {
+    let event = state.create_collection_reset_event(reset);
+    state.mark_acquired_event_sent(&event.event_id);
+    if let Some(sink) = WS_SINK.get() {
+        let sink = sink.clone();
+        thread::spawn(move || broadcast_ws_event(&sink, &event));
+    }
+}
+
 pub fn broadcast_ws_completed_event(
     state: &PairingStateHandle,
     result: super::state::CompletedMeasurement,
@@ -757,6 +766,30 @@ mod tests {
         socket.write_all(&frame(json!({"type":"ping"}))).unwrap();
         while event(&mut socket)["type"] != "pong" {}
         assert!(state.build_pending_resend_events().is_empty());
+        // Phone offline during reset: snapshot and reliable replay both carry durable reset IDs.
+        socket.shutdown(std::net::Shutdown::Both).unwrap();
+        broadcast_ws_collection_reset(&state, super::super::state::CollectionReset {
+            source_id: "test-pc".into(), measurement_ids: vec!["test-measurement".into()],
+        });
+        let mut socket = ws(info.port, &info.token);
+        let snapshot = event(&mut socket);
+        assert_eq!(snapshot["collectionReset"]["measurementIds"][0], "test-measurement");
+        assert_eq!(snapshot["measurementId"], "measurement-B");
+        assert_eq!(snapshot["measuringSessionActive"], true);
+        let reset = event(&mut socket);
+        assert_eq!(reset["type"], "collection_reset");
+        assert_eq!(reset["requiresAck"], true);
+        assert!(!state.ack_event(reset["eventId"].as_str().unwrap(), 0));
+        let retry = state.build_retry_due_events(timestamp_string().parse::<u64>().unwrap() + 6, 5, 5);
+        assert!(retry.iter().any(|event| event.event_id == reset["eventId"].as_str().unwrap()));
+        socket.write_all(&frame(json!({"type":"ack_event", "ackEventId":reset["eventId"], "ackSequence":reset["sequence"], "status":"stored"}))).unwrap();
+        socket.write_all(&frame(json!({"type":"ping"}))).unwrap();
+        while event(&mut socket)["type"] != "pong" {}
+        assert!(state.build_pending_resend_events().is_empty());
+        // ACK must not remove the reset from snapshots for a later app launch.
+        socket.shutdown(std::net::Shutdown::Both).unwrap();
+        let mut socket = ws(info.port, &info.token);
+        assert_eq!(event(&mut socket)["collectionReset"]["measurementIds"][0], "test-measurement");
         let mut http = connect(info.port);
         write!(
             http,

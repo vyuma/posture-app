@@ -50,10 +50,6 @@ export type AcquiredCharacterEventInput = {
   postureTimeline?: { startMs: number; endMs: number; isGood: boolean }[];
 };
 
-export async function sendAcquiredCharactersCleared(): Promise<void> {
-  await invoke("emit_acquired_characters_cleared");
-}
-
 export async function sendAcquiredCharacterEvent(
   input: AcquiredCharacterEventInput,
 ): Promise<void> {

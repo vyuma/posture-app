@@ -30,6 +30,7 @@ struct PairingState {
     /// PC で良い姿勢登録（キャリブレーション）中は true（スマホの登録中 UI と同期）
     good_posture_registration_active: bool,
     pending_acks: HashMap<String, PendingAckRecord>,
+    collection_reset: Option<CollectionReset>,
 }
 
 #[derive(Clone)]
@@ -90,6 +91,14 @@ pub struct WsEvent {
     measuring_session_active: bool,
     is_bad_posture: bool,
     good_posture_registration_active: bool,
+    collection_reset: Option<CollectionReset>,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CollectionReset {
+    pub source_id: String,
+    pub measurement_ids: Vec<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -168,6 +177,7 @@ pub struct ReliableWsEvent {
     good_posture_registration_active: bool,
     payload: Option<AcquiredCharacterPayload>,
     result: Option<CompletedMeasurement>,
+    collection_reset: Option<CollectionReset>,
 }
 
 impl PairingStateHandle {
@@ -186,6 +196,7 @@ impl PairingStateHandle {
                 is_bad_posture: false,
                 good_posture_registration_active: false,
                 pending_acks: HashMap::new(),
+                collection_reset: None,
             })),
         }
     }
@@ -327,6 +338,7 @@ impl PairingStateHandle {
         let good_posture_registration_active = state.good_posture_registration_active;
         let event = ReliableWsEvent {
             r#type: event_type.to_string(),
+            collection_reset: state.collection_reset.clone(),
             event_id: event_id.clone(),
             sequence,
             requires_ack: true,
@@ -396,6 +408,7 @@ impl PairingStateHandle {
                 }
                 ReliableWsEvent {
                     r#type: record.event_type.clone(),
+                    collection_reset: state.collection_reset.clone(),
                     event_id: record.event_id.clone(),
                     sequence: record.sequence,
                     requires_ack: true,
@@ -458,6 +471,7 @@ impl PairingStateHandle {
             }
             due_events.push(ReliableWsEvent {
                 r#type: record.event_type.clone(),
+                collection_reset: state.collection_reset.clone(),
                 event_id: record.event_id,
                 sequence: record.sequence,
                 requires_ack: true,
@@ -484,21 +498,27 @@ impl PairingStateHandle {
         }
     }
 
-    pub fn bump_sequence(&self) {
-        let mut state = self.inner.lock().expect("pairing state poisoned");
-        state.last_sequence += 1;
-    }
-
-    /** PC 側でコレクションを全消去したとき、モバイルへ同期し保留中の獲得イベントも破棄する */
-    pub fn clear_pending_acquired_events(&self) {
-        let mut state = self.inner.lock().expect("pairing state poisoned");
-        state.pending_acks.clear();
+    pub fn create_collection_reset_event(&self, mut reset: CollectionReset) -> ReliableWsEvent {
+        {
+            let mut state = self.inner.lock().expect("pairing state poisoned");
+            if let Some(previous) = &state.collection_reset {
+                if previous.source_id == reset.source_id {
+                    reset.measurement_ids.extend(previous.measurement_ids.clone());
+                }
+            }
+            reset.measurement_ids.sort();
+            reset.measurement_ids.dedup();
+            state.collection_reset = Some(reset);
+        }
+        // Keep completed results: only collection ownership is reset, not measurement history.
+        self.create_reliable_event("collection_reset", None, None)
     }
 
     pub fn build_ws_event(&self, event_type: &str) -> WsEvent {
         let state = self.inner.lock().expect("pairing state poisoned");
         WsEvent {
             r#type: event_type.to_string(),
+            collection_reset: state.collection_reset.clone(),
             sequence: state.last_sequence,
             paired: state.paired,
             device_name: state.device_name.clone(),
