@@ -26,8 +26,12 @@ const defaultState: PairingState = {
   error: null,
 };
 
-const readPairingSnapshot = () =>
-  Promise.all([getPairingInfo(), getDesktopPairingStatus()]);
+let pendingSnapshot: Promise<[PairingInfo, DesktopPairingStatus]> | undefined;
+const readPairingSnapshot = () => pendingSnapshot ??= (async (): Promise<[PairingInfo, DesktopPairingStatus]> => {
+  // The public relay creates the PC's owner cookie when info is first requested.
+  const info = await getPairingInfo();
+  return [info, await getDesktopPairingStatus()];
+})().finally(() => { pendingSnapshot = undefined; });
 
 export function usePairingState() {
   const [state, setState] = useState<PairingState>(defaultState);
@@ -70,7 +74,7 @@ export function usePairingState() {
 
     const intervalId = window.setInterval(async () => {
       try {
-        const status = await getDesktopPairingStatus();
+        const [pairingInfo, status] = await readPairingSnapshot();
 
         if (!isMountedRef.current) {
           return;
@@ -78,6 +82,7 @@ export function usePairingState() {
 
         setState((prev) => ({
           ...prev,
+          pairingInfo,
           status,
           error: null,
         }));
@@ -105,6 +110,7 @@ export function usePairingState() {
   return {
     ...state,
     refresh: async () => {
+      setState((previous) => ({ ...previous, isLoading: true }));
       try {
         const [pairingInfo, status] = await readPairingSnapshot();
 

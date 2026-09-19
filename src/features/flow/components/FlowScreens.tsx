@@ -44,6 +44,7 @@ type HomeScreenProps = {
   selectedProfileCharacterId: string | null;
   favoriteCharacterIds: Set<string>;
   collectionResetTick: number;
+  pairingLink: string;
   qrImageDataUrl: string;
   isPairingLoading: boolean;
   pairingError: string | null;
@@ -273,6 +274,7 @@ export function HomeScreen(props: HomeScreenProps) {
       {/* QR接続モーダル */}
       {isQrModalOpen ? (
         <QrConnectionModal
+          pairingLink={props.pairingLink}
           qrImageDataUrl={props.qrImageDataUrl}
           isPairingLoading={props.isPairingLoading}
           pairingError={props.pairingError}
@@ -1313,6 +1315,7 @@ function FlowBrand() {
 }
 
 function QrConnectionModal({
+  pairingLink,
   qrImageDataUrl,
   isPairingLoading,
   pairingError,
@@ -1323,6 +1326,7 @@ function QrConnectionModal({
   onNext,
   onClose,
 }: {
+  pairingLink: string;
   qrImageDataUrl: string;
   isPairingLoading: boolean;
   pairingError: string | null;
@@ -1389,9 +1393,9 @@ function QrConnectionModal({
                   aria-hidden="true"
                 />
               </div>
-              {pairingError && !pairingError.includes("invoke") ? (
-                <p className="qr-modal-error-label">
-                  QRコードを準備できませんでした
+              {pairingError ? (
+                <p className="qr-modal-error-label" role="alert">
+                  {pairingError}
                 </p>
               ) : null}
             </>
@@ -1401,7 +1405,7 @@ function QrConnectionModal({
                 接続完了
               </h2>
               <p className="qr-modal-subtitle">
-                スマホの触覚をONにしてください
+                {pairingLink.startsWith("http") ? "スマートフォン側で通知を有効にしてください" : "スマホの触覚をONにしてください"}
               </p>
               <div className="qr-modal-sound-haptic-toggle-row">
                 <span className="qr-modal-sound-haptic-toggle-label" id="qr-haptic-toggle-label">
@@ -1512,15 +1516,19 @@ function QrConnectionModal({
                 </div>
               </div>
             </div>
-            {qrImageDataUrl ? (
               <button
                 type="button"
                 className="qr-modal-refresh-btn"
                 onClick={onRefresh}
+                disabled={isPairingLoading}
               >
-                QRを更新
+                {isPairingLoading ? "準備中…" : qrImageDataUrl ? "QRを更新" : "もう一度試す"}
               </button>
-            ) : null}
+              {pairingLink.startsWith("http") && (
+                <a className="qr-modal-refresh-btn" href={pairingLink} target="_blank" rel="noreferrer">
+                  このPCでWeb版Vibeを開く
+                </a>
+              )}
           </div>
         ) : (
           <div className="qr-modal-right-col qr-modal-right-col--step2">

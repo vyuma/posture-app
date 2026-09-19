@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, isTauri } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -52,6 +52,7 @@ import {
 import { usePairingState } from "./features/pairing";
 import { buildPairingLink } from "./features/pairing/services/pairingLink";
 import { sendPostureSignal } from "./features/pairing/services/desktopBridge";
+import { useBrowserPairingSession } from "./features/pairing/hooks/useBrowserPairingSession";
 import {
   usePostureTracking,
   usePostureTransitionEffects,
@@ -193,6 +194,7 @@ function App() {
   const pairingLink = buildPairingLink(pairingInfo);
   const qrImageDataUrl = useQrDataUrl(pairingLink, qrRegenerationTick);
   const isPaired = pairingStatus?.paired ?? false;
+  useBrowserPairingSession(flowPhase === "measuring" && !isPaused, flowPhase === "qrScanned");
   const acquiredCharacterIds = useMemo(
     () => new Set(acquiredCharacters.map((character) => character.characterId)),
     [acquiredCharacters],
@@ -482,7 +484,7 @@ function App() {
 
   const handlePostureChanged = useCallback(async (isBad: boolean) => {
     await sendPostureSignal(isBad).catch(() => {
-      // Browser preview cannot reach the native pairing bridge.
+      // A temporary connection failure must not interrupt posture tracking.
     });
   }, []);
 
@@ -501,6 +503,7 @@ function App() {
   });
 
   useEffect(() => {
+    if (!isTauri()) return;
     let disposed = false;
 
     const applyOverlayState = (state: OverlayStatePayload) => {
@@ -526,7 +529,7 @@ function App() {
 
     return () => {
       disposed = true;
-      void unlistenPromise.then((unlisten) => unlisten());
+      void unlistenPromise.then((unlisten) => unlisten()).catch(() => {});
     };
   }, []);
 
@@ -588,7 +591,7 @@ function App() {
     }
 
     void sendPostureSignal(false).catch(() => {
-      // Browser preview cannot reach the native pairing bridge.
+      // The receiver may already be disconnected.
     });
   }, [isPaused]);
 
@@ -657,6 +660,7 @@ function App() {
 
   const screen = renderFlowScreen({
     flowPhase,
+    pairingLink,
     qrImageDataUrl,
     isPairingLoading,
     pairingError,
@@ -731,6 +735,7 @@ function App() {
 function renderFlowScreen({
   registrationScreen,
   flowPhase,
+  pairingLink,
   qrImageDataUrl,
   isPairingLoading,
   pairingError,
@@ -775,6 +780,7 @@ function renderFlowScreen({
 }: {
   registrationScreen: React.ReactNode;
   flowPhase: AppFlowPhase;
+  pairingLink: string;
   qrImageDataUrl: string;
   isPairingLoading: boolean;
   pairingError: string | null;
@@ -831,6 +837,7 @@ function renderFlowScreen({
           selectedProfileCharacterId={selectedProfileCharacterId}
           favoriteCharacterIds={favoriteCharacterIds}
           collectionResetTick={collectionResetTick}
+          pairingLink={pairingLink}
           qrImageDataUrl={qrImageDataUrl}
           isPairingLoading={isPairingLoading}
           pairingError={pairingError}
@@ -887,6 +894,7 @@ function renderFlowScreen({
           selectedProfileCharacterId={selectedProfileCharacterId}
           favoriteCharacterIds={favoriteCharacterIds}
           collectionResetTick={collectionResetTick}
+          pairingLink={pairingLink}
           qrImageDataUrl={qrImageDataUrl}
           isPairingLoading={isPairingLoading}
           pairingError={pairingError}

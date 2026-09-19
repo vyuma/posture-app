@@ -5,6 +5,8 @@ export function buildPairingLink(pairingInfo: PairingInfo | null): string {
     return "";
   }
 
+  if (pairingInfo.browserUrl) return pairingInfo.browserUrl;
+
   const params = new URLSearchParams({
     host: pairingInfo.host,
     port: String(pairingInfo.port),

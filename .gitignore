@@ -31,3 +31,8 @@ release-artifacts/
 *.p12
 *.pfx
 *.key
+
+.vercel/
+.env
+.env.*
+!.env.example

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "bun install --frozen-lockfile",
+  "buildCommand": "bun run typecheck:server && bun run build",
+  "outputDirectory": "dist",
+  "fluid": true,
+  "functions": {
+    "api/relay.ts": { "maxDuration": 300 }
+  },
+  "rewrites": [
+    { "source": "/api/pairing/:action", "destination": "/api/relay?action=:action" }
+  ],
+  "headers": [
+    { "source": "/(.*)", "headers": [{ "key": "Referrer-Policy", "value": "no-referrer" }] }
+  ]
+}
