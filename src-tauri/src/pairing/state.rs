@@ -4,7 +4,8 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 use super::types::{DesktopPairingStatus, PairingInfo};
 
@@ -22,6 +23,26 @@ struct PairingState {
     device_name: Option<String>,
     last_seen_at: Option<String>,
     last_sequence: u64,
+    /// PC フローが measuring の間 true（スマホ側の「測定中」表示と同期）
+    measurement_id: Option<String>,
+    measuring_session_active: bool,
+    is_bad_posture: bool,
+    /// PC で良い姿勢登録（キャリブレーション）中は true（スマホの登録中 UI と同期）
+    good_posture_registration_active: bool,
+    pending_acks: HashMap<String, PendingAckRecord>,
+}
+
+#[derive(Clone)]
+struct PendingAckRecord {
+    event_type: String,
+    event_id: String,
+    sequence: u64,
+    payload: Option<AcquiredCharacterPayload>,
+    result: Option<CompletedMeasurement>,
+    sent_count: u32,
+    last_sent_at: Option<String>,
+    created_at: String,
+    failed_at: Option<String>,
 }
 
 #[derive(Serialize)]
@@ -65,6 +86,88 @@ pub struct WsEvent {
     device_name: Option<String>,
     last_seen_at: Option<String>,
     created_at: String,
+    measurement_id: Option<String>,
+    measuring_session_active: bool,
+    is_bad_posture: bool,
+    good_posture_registration_active: bool,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CharacterColorPayload {
+    pub primary: String,
+    pub soft: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PostureTimelineSegmentPayload {
+    pub start_ms: f64,
+    pub end_ms: f64,
+    pub is_good: bool,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AcquiredCharacterPayload {
+    pub measurement_id: String,
+    pub acquired_at: String,
+    pub character_id: String,
+    pub character_name: String,
+    pub rarity: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub active_measurement_ms: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub good_ms: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub good_ratio: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub posture_timeline: Option<Vec<PostureTimelineSegmentPayload>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub story: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub portrait_src: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub personality_tags: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub character_color: Option<CharacterColorPayload>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tone_class: Option<String>,
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CompletedMeasurement {
+    pub id: String,
+    pub source_id: String,
+    pub started_at: String,
+    pub ended_at: String,
+    pub active_measurement_ms: f64,
+    pub good_ms: f64,
+    pub good_ratio: f64,
+    pub reward_qualified: bool,
+    pub acquired_character_id: Option<String>,
+    pub posture_timeline: Vec<PostureTimelineSegmentPayload>,
+    pub character: Option<AcquiredCharacterPayload>,
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ReliableWsEvent {
+    r#type: String,
+    pub event_id: String,
+    sequence: u64,
+    requires_ack: bool,
+    paired: bool,
+    device_name: Option<String>,
+    last_seen_at: Option<String>,
+    created_at: String,
+    measurement_id: Option<String>,
+    measuring_session_active: bool,
+    is_bad_posture: bool,
+    good_posture_registration_active: bool,
+    payload: Option<AcquiredCharacterPayload>,
+    result: Option<CompletedMeasurement>,
 }
 
 impl PairingStateHandle {
@@ -78,6 +181,11 @@ impl PairingStateHandle {
                 device_name: None,
                 last_seen_at: None,
                 last_sequence: 0,
+                measurement_id: None,
+                measuring_session_active: false,
+                is_bad_posture: false,
+                good_posture_registration_active: false,
+                pending_acks: HashMap::new(),
             })),
         }
     }
@@ -104,7 +212,14 @@ impl PairingStateHandle {
             paired: state.paired,
             device_name: state.device_name.clone(),
             last_seen_at: state.last_seen_at.clone(),
+            ws_client_count: 0,
         }
+    }
+
+    /// 診断・将来コマンド用（WS 切断時はペア状態を維持するため server 側では未使用）
+    #[allow(dead_code)]
+    pub fn is_paired(&self) -> bool {
+        self.inner.lock().expect("pairing state poisoned").paired
     }
 
     pub fn matches_token(&self, token: &str) -> bool {
@@ -145,9 +260,221 @@ impl PairingStateHandle {
         }
     }
 
+    pub fn set_posture(&self, is_bad: bool) {
+        self.inner
+            .lock()
+            .expect("pairing state poisoned")
+            .is_bad_posture = is_bad;
+    }
+
     pub fn mark_posture_signal(&self) {
         let mut state = self.inner.lock().expect("pairing state poisoned");
         state.last_sequence += 1;
+    }
+
+    pub fn set_measurement_id(&self, id: Option<String>) {
+        self.inner
+            .lock()
+            .expect("pairing state poisoned")
+            .measurement_id = id;
+    }
+
+    pub fn set_measuring_session_active(&self, active: bool) {
+        let mut state = self.inner.lock().expect("pairing state poisoned");
+        state.measuring_session_active = active;
+        if !active {
+            state.is_bad_posture = false;
+        }
+        if active {
+            state.good_posture_registration_active = false;
+        }
+    }
+
+    pub fn set_good_posture_registration_active(&self, active: bool) {
+        let mut state = self.inner.lock().expect("pairing state poisoned");
+        if active {
+            state.good_posture_registration_active = true;
+            state.measuring_session_active = false;
+        } else {
+            state.good_posture_registration_active = false;
+        }
+    }
+
+    pub fn create_acquired_event(&self, payload: AcquiredCharacterPayload) -> ReliableWsEvent {
+        self.create_reliable_event("acquired_character", Some(payload), None)
+    }
+
+    pub fn create_completed_event(&self, result: CompletedMeasurement) -> ReliableWsEvent {
+        self.create_reliable_event(
+            "measurement_completed",
+            result.character.clone(),
+            Some(result),
+        )
+    }
+
+    fn create_reliable_event(
+        &self,
+        event_type: &str,
+        payload: Option<AcquiredCharacterPayload>,
+        result: Option<CompletedMeasurement>,
+    ) -> ReliableWsEvent {
+        let mut state = self.inner.lock().expect("pairing state poisoned");
+        state.last_sequence += 1;
+        let sequence = state.last_sequence;
+        let created_at = timestamp_string();
+        let event_id = format!("evt-{}-{}", created_at, sequence);
+        let measuring_session_active = state.measuring_session_active;
+        let good_posture_registration_active = state.good_posture_registration_active;
+        let event = ReliableWsEvent {
+            r#type: event_type.to_string(),
+            event_id: event_id.clone(),
+            sequence,
+            requires_ack: true,
+            paired: state.paired,
+            device_name: state.device_name.clone(),
+            last_seen_at: state.last_seen_at.clone(),
+            created_at: created_at.clone(),
+            measurement_id: state.measurement_id.clone(),
+            measuring_session_active,
+            is_bad_posture: state.is_bad_posture,
+            good_posture_registration_active,
+            payload: payload.clone(),
+            result: result.clone(),
+        };
+        state.pending_acks.insert(
+            event_id.clone(),
+            PendingAckRecord {
+                event_type: event_type.to_string(),
+                result: result.clone(),
+                event_id,
+                sequence,
+                payload,
+                sent_count: 0,
+                last_sent_at: None,
+                created_at,
+                failed_at: None,
+            },
+        );
+        event
+    }
+
+    pub fn mark_acquired_event_sent(&self, event_id: &str) {
+        let mut state = self.inner.lock().expect("pairing state poisoned");
+        if let Some(record) = state.pending_acks.get_mut(event_id) {
+            record.sent_count = record.sent_count.saturating_add(1);
+            record.last_sent_at = Some(timestamp_string());
+            record.failed_at = None;
+        }
+    }
+
+    pub fn ack_event(&self, event_id: &str, sequence: u64) -> bool {
+        let mut state = self.inner.lock().expect("pairing state poisoned");
+        match state.pending_acks.get(event_id) {
+            Some(record) if record.sequence == sequence => {
+                state.pending_acks.remove(event_id);
+                true
+            }
+            _ => false,
+        }
+    }
+
+    pub fn build_pending_resend_events(&self) -> Vec<ReliableWsEvent> {
+        let mut state = self.inner.lock().expect("pairing state poisoned");
+        let paired = state.paired;
+        let device_name = state.device_name.clone();
+        let last_seen_at = state.last_seen_at.clone();
+        let mut records: Vec<PendingAckRecord> = state.pending_acks.values().cloned().collect();
+        records.sort_by_key(|record| record.sequence);
+
+        records
+            .iter()
+            .map(|record| {
+                if let Some(pending) = state.pending_acks.get_mut(&record.event_id) {
+                    pending.sent_count = pending.sent_count.saturating_add(1);
+                    pending.last_sent_at = Some(timestamp_string());
+                    pending.failed_at = None;
+                }
+                ReliableWsEvent {
+                    r#type: record.event_type.clone(),
+                    event_id: record.event_id.clone(),
+                    sequence: record.sequence,
+                    requires_ack: true,
+                    paired,
+                    device_name: device_name.clone(),
+                    last_seen_at: last_seen_at.clone(),
+                    created_at: record.created_at.clone(),
+                    measurement_id: state.measurement_id.clone(),
+                    measuring_session_active: state.measuring_session_active,
+                    is_bad_posture: state.is_bad_posture,
+                    good_posture_registration_active: state.good_posture_registration_active,
+                    payload: record.payload.clone(),
+                    result: record.result.clone(),
+                }
+            })
+            .collect()
+    }
+
+    pub fn build_retry_due_events(
+        &self,
+        now_epoch_sec: u64,
+        ack_timeout_sec: u64,
+        max_retry: u32,
+    ) -> Vec<ReliableWsEvent> {
+        let mut state = self.inner.lock().expect("pairing state poisoned");
+        let paired = state.paired;
+        let device_name = state.device_name.clone();
+        let last_seen_at = state.last_seen_at.clone();
+        let measuring_session_active = state.measuring_session_active;
+        let good_posture_registration_active = state.good_posture_registration_active;
+        let mut records: Vec<PendingAckRecord> = state.pending_acks.values().cloned().collect();
+        records.sort_by_key(|record| record.sequence);
+
+        let now = now_epoch_sec.to_string();
+        let mut due_events = Vec::new();
+
+        for record in records {
+            let should_retry = match &record.last_sent_at {
+                Some(last_sent) => {
+                    let last_epoch = last_sent.parse::<u64>().unwrap_or_default();
+                    now_epoch_sec.saturating_sub(last_epoch) >= ack_timeout_sec
+                }
+                None => true,
+            };
+            if !should_retry {
+                continue;
+            }
+            if record.sent_count >= max_retry {
+                if let Some(pending) = state.pending_acks.get_mut(&record.event_id) {
+                    if pending.failed_at.is_none() {
+                        pending.failed_at = Some(now.clone());
+                    }
+                }
+                continue;
+            }
+            if let Some(pending) = state.pending_acks.get_mut(&record.event_id) {
+                pending.sent_count = pending.sent_count.saturating_add(1);
+                pending.last_sent_at = Some(now.clone());
+                pending.failed_at = None;
+            }
+            due_events.push(ReliableWsEvent {
+                r#type: record.event_type.clone(),
+                event_id: record.event_id,
+                sequence: record.sequence,
+                requires_ack: true,
+                paired,
+                device_name: device_name.clone(),
+                last_seen_at: last_seen_at.clone(),
+                created_at: record.created_at,
+                measurement_id: state.measurement_id.clone(),
+                measuring_session_active,
+                is_bad_posture: state.is_bad_posture,
+                good_posture_registration_active,
+                payload: record.payload,
+                result: record.result,
+            });
+        }
+
+        due_events
     }
 
     pub fn build_health_response(&self) -> HealthResponse {
@@ -155,6 +482,17 @@ impl PairingStateHandle {
             ok: true,
             server_time: timestamp_string(),
         }
+    }
+
+    pub fn bump_sequence(&self) {
+        let mut state = self.inner.lock().expect("pairing state poisoned");
+        state.last_sequence += 1;
+    }
+
+    /** PC 側でコレクションを全消去したとき、モバイルへ同期し保留中の獲得イベントも破棄する */
+    pub fn clear_pending_acquired_events(&self) {
+        let mut state = self.inner.lock().expect("pairing state poisoned");
+        state.pending_acks.clear();
     }
 
     pub fn build_ws_event(&self, event_type: &str) -> WsEvent {
@@ -166,6 +504,10 @@ impl PairingStateHandle {
             device_name: state.device_name.clone(),
             last_seen_at: state.last_seen_at.clone(),
             created_at: timestamp_string(),
+            measurement_id: state.measurement_id.clone(),
+            measuring_session_active: state.measuring_session_active,
+            is_bad_posture: state.is_bad_posture,
+            good_posture_registration_active: state.good_posture_registration_active,
         }
     }
 
@@ -192,7 +534,6 @@ impl PairingStateHandle {
             message: "deviceName が指定されていません".to_string(),
         }
     }
-
 }
 
 pub fn timestamp_string() -> String {

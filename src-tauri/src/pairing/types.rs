@@ -14,4 +14,6 @@ pub struct DesktopPairingStatus {
     pub paired: bool,
     pub device_name: Option<String>,
     pub last_seen_at: Option<String>,
+    /// アクティブな WebSocket クライアント数（ペアリング通知用）
+    pub ws_client_count: usize,
 }

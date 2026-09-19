@@ -1,12 +1,15 @@
-const LEGACY_CHARACTER_ID_MAP: Record<string, string> = {
+// Historical IDs already used by the desktop/mobile apps. Keep both parsers compatible.
+const CHARACTER_ID_ALIASES: Record<string, string> = {
   "shin-akao": "shin-anago",
   "kuro-nyago": "kuro-anyago",
+  "kuro-anago": "kuro-anyago",
   "hat-nyago": "hat-anago",
   "oto-nyago": "oto-anago",
   "kiri-nago": "dot-nago",
   broccoli: "moja-anago",
 };
 
-export function normalizeCharacterId(characterId: string) {
-  return LEGACY_CHARACTER_ID_MAP[characterId] ?? characterId;
+export function normalizeCharacterId(characterId: string): string {
+  const normalized = characterId.trim().toLowerCase();
+  return CHARACTER_ID_ALIASES[normalized] ?? normalized;
 }
