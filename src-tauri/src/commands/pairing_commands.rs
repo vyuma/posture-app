@@ -90,10 +90,8 @@ pub fn emit_posture_signal(is_bad: bool, state: State<'_, PairingStateHandle>) {
 }
 
 #[tauri::command]
-pub fn emit_acquired_characters_cleared(state: State<'_, PairingStateHandle>) {
-    state.clear_pending_acquired_events();
-    state.bump_sequence();
-    broadcast_ws_state_event(&state, "acquired_characters_cleared");
+pub fn emit_acquired_characters_cleared(reset: crate::pairing::CollectionReset, state: State<'_, PairingStateHandle>) {
+    crate::pairing::broadcast_ws_collection_reset(&state, reset);
 }
 
 #[tauri::command]

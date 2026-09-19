@@ -1,4 +1,4 @@
-import { saveCompletedMeasurement, readCompletedMeasurements, publishCompletedMeasurement } from "./features/pairing/services/measurementDelivery";
+import { saveCompletedMeasurement, readCompletedMeasurements, publishCompletedMeasurement, resetCollection, readCollectionReset, publishCollectionReset } from "./features/pairing/services/measurementDelivery";
 import type { AcquiredCharacterEventInput } from "./features/pairing/services/desktopBridge";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
@@ -174,12 +174,18 @@ function App() {
   const finishedMeasurementRef = useRef<string | null>(null);
   useEffect(() => {
     const accepted = new Set<string>();
+    let acceptedReset = "";
     let running = false;
     let cancelled = false;
     const replay = async () => {
       if (running) return;
       running = true;
       try {
+        const reset = readCollectionReset();
+        if (reset && JSON.stringify(reset) !== acceptedReset) {
+          await publishCollectionReset(reset);
+          acceptedReset = JSON.stringify(reset);
+        }
         for (const result of readCompletedMeasurements()) {
           if (cancelled) break;
           if (!accepted.has(result.id)) {
@@ -521,6 +527,13 @@ function App() {
   );
 
   const handleDebugClearAcquiredCharacters = useCallback(() => {
+    try {
+      resetCollection(acquiredCharacters.map(card => card.measurementId));
+    } catch (error) {
+      console.error(error);
+      setPermissionPopupMessage("リセットを保存できませんでした。空き容量を確認して再試行してください。");
+      return;
+    }
     clearAcquiredCharacters();
     saveAcquiredCharacters([]);
     setAcquiredCharacters([]);
@@ -530,7 +543,7 @@ function App() {
     saveFavoriteCharacterIds(new Set());
     setCollectionResetTick((current) => current + 1);
     saveSelectedProfileCharacterId(null);
-  }, []);
+  }, [acquiredCharacters]);
 
   const handleCompleteOnboardingStory = useCallback(() => {
     saveOnboardingStoryCompleted();
