@@ -31,3 +31,12 @@ PC 0.1.4 と対応する新TestFlightビルドに更新し、Metroを停止し�
 6. 過去の測定時間・姿勢結果が履歴として残り、進行中の別測定が古い通知で終了しないこと。
 
 画面ロック中の即時実行・通知は保証しない。復帰時のLAN同期によって反映する。公開/インストール完了と実機検証完了は分けて記録する。
+
+## 配布結果（2026-09-19）
+
+- PC 0.1.4: https://github.com/vyuma/posture-app/releases/tag/v0.1.4 — Universal app/DMGの署名、公証、staple、Gatekeeper、SHA-256検証成功。公開latest.jsonも0.1.4を返すことを確認。このMacで新パッケージを起動し既存コレクション1/111が保持されていることをUIで確認。コレクションリセット自体は実データ保護のため操作していない。
+- Mobile 1.0.0 (5): https://expo.dev/accounts/kyoung9/projects/vibe-app/builds/a2197f80-ca56-4162-862b-1ec6582d7151 — EASビルド成功、Appleアップロード成功。App Store Connectで処理終了・Team (Expo)グループへの割当を確認。
+- Submission: https://expo.dev/accounts/kyoung9/projects/vibe-app/submissions/59de10ae-7467-4882-bf89-11dea61816f5
+- PCコード: https://github.com/vyuma/posture-app/pull/22 （配布コミット843ef2e）
+- Mobileコード: https://github.com/vyuma/vibe-app/pull/9 （配布コミット2849163）
+- iPhoneでの新ビルドのインストール、実際のリセット・ロック・再接続は未検証。PCを再起動したため、必要に応じ新しいQRで再ペアリングする。
