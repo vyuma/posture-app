@@ -502,6 +502,11 @@
   container-type: size;
   container-name: qr-overlay;
 
+  /* Figma「プロトタイプ」1512×982 を中央に等比配置するための基準。 */
+  --qr-scene-scale: min(calc(100vw / 1512px), calc(100dvh / 982px));
+  --qr-scene-offset-x: calc((100vw - 1512px * var(--qr-scene-scale)) / 2);
+  --qr-scene-offset-y: calc((100dvh - 982px * var(--qr-scene-scale)) / 2);
+
   /* base.css と整合（--qr-scale より前に宣言） */
   --qr-fr1-horizontal-inset: clamp(16px, 9.591vw, 145px);
   --qr-fr1-block-top: clamp(72px, 15.274dvh, 150px);
@@ -567,44 +572,49 @@
   }
 }
 
-/* Figma 「1」のロゴ左上：コンテナ原点から56,24／幅約80 */
+/* Figma 580:7561 / 580:7638: (80, 40), 134×80. */
 .qr-modal-brand {
   position: absolute;
-  top: var(--flow-brand-offset-y);
-  left: var(--flow-brand-offset-x);
+  top: calc(var(--qr-scene-offset-y) + 40px * var(--qr-scene-scale));
+  left: calc(var(--qr-scene-offset-x) + 80px * var(--qr-scene-scale));
   z-index: 11;
+  width: calc(134px * var(--qr-scene-scale));
+  height: calc(80px * var(--qr-scene-scale));
 }
 
 .qr-modal-brand .flow-brand {
   position: static;
   padding: 0;
-  width: var(--flow-brand-display-width);
+  width: 100%;
   line-height: 0;
 }
 
-/* 右上・ロゴと対称になるよう同じインデックスで配置 */
+/* Figma 580:7589 / 580:7689: (1376, 56), 56×56. */
 .qr-modal-close {
   position: absolute;
-  top: var(--flow-brand-offset-y);
-  right: var(--flow-brand-offset-x);
+  top: calc(var(--qr-scene-offset-y) + 56px * var(--qr-scene-scale));
+  right: calc(var(--qr-scene-offset-x) + 80px * var(--qr-scene-scale));
   z-index: 11;
-  width: clamp(36px, 4dvh, 46px);
-  height: clamp(36px, 4dvh, 46px);
-  display: grid;
-  place-items: center;
+  width: calc(56px * var(--qr-scene-scale));
+  height: calc(56px * var(--qr-scene-scale));
+  display: block;
+  padding: 0;
   border: 0;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.28);
-  color: #ffffff;
-  font-size: 1.3rem;
-  font-weight: 900;
-  line-height: 1;
-  transition: background 0.15s;
+  background: transparent;
+  line-height: 0;
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
 .qr-modal-close:hover,
 .qr-modal-close:focus-visible {
-  background: rgba(255, 255, 255, 0.46);
+  opacity: 0.78;
+  transform: scale(1.04);
+}
+
+.qr-modal-close-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 /*
@@ -1115,26 +1125,13 @@
   box-sizing: border-box;
 }
 
-/* Figma Frame 53「2」右列：681 角丸ガラス内に見出し＋キャラ（左は接続完了・触覚案内）
- * 開発者が見た目を確定する場所：
- * --qr-today-heading-cqw … 見出しの font-size = 係数 × 1cqw（パネル幅基準、cqw未対応は下のフォールバック）
- * --qr-today-teaser-shift-x-cqw / -y-cqh … ティザーブロック全体の translate
- * --qr-today-char-max-cqw / -cqh … キャラ画像の max-width / max-height
- * --qr-today-teaser-extra-gap-cqh … 見出しとキャラの間隔
- * layout: キャラの目標の高さ = --qr-today-char-max-cqh × 1cqh でグリッド2行を分け、
- *   「残り領域」で画像を勝手に潰さない（見出しと画像の縦オーバーラップのみ防止）
- */
+/* Figma 580:7639: 見出しとキャラを右カードの座標比率で固定する。 */
 .qr-modal-right--step2 {
-  /* 見出し・キャラの cqw/cqh はこのパネル（コンテンツボックス）基準 */
   container-type: size;
   container-name: qr-step2;
   --qr-today-heading-cqw: 5.3;
-  --qr-today-teaser-shift-x-cqw: 0;
-  --qr-today-teaser-shift-y-cqh: 0;
-  --qr-today-char-max-cqw: 48;
-  --qr-today-char-max-cqh: 82;
-  --qr-today-teaser-extra-gap-cqh: 2.06;
 
+  position: relative;
   flex: 0 0 calc(681px * var(--qr-scale));
   width: 100%;
   height: calc(681px * var(--qr-scale));
@@ -1144,8 +1141,7 @@
   align-items: stretch;
   justify-content: flex-start;
   gap: 0;
-  padding: calc(36px * var(--qr-scale)) calc(40px * var(--qr-scale))
-    calc(36px * var(--qr-scale));
+  padding: 0;
   border-radius: var(--qr-frost-radius);
   background: var(--qr-frost-fill);
   backdrop-filter: blur(var(--qr-frost-blur));
@@ -1157,77 +1153,22 @@
 }
 
 .qr-modal-today-teaser {
-  flex: 1 1 auto;
+  position: absolute;
+  inset: 0;
   box-sizing: border-box;
-  min-height: 0;
-  width: 100%;
-  display: grid;
-  grid-template-columns: 1fr;
-  /*
-   * 行1：見出し / 行2：キャラ専用。行2 の最小高さを max-cqh と揃えるため、
-   * 開発者指定のサイズどおりレイアウトできる（親の残余高だけで頭を潰さない）。
-   */
-  grid-template-rows: auto minmax(
-    calc(var(--qr-today-char-max-cqh, 82) * 1cqh),
-    1fr
-  );
-  row-gap: calc(var(--qr-today-teaser-extra-gap-cqh, 2.06) * 1cqh);
-  align-items: stretch;
-  justify-items: stretch;
-  transform: translate(
-    calc(var(--qr-today-teaser-shift-x-cqw, 0) * 1cqw),
-    calc(var(--qr-today-teaser-shift-y-cqh, 0) * 1cqh)
-  );
-}
-
-/* グリッド1行目：見出し。縮ませず、キャラ側のゆらぎより手前に */
-.qr-modal-today-teaser > .qr-modal-today-heading {
-  grid-row: 1;
-  position: relative;
-  z-index: 2;
-}
-
-@supports not (width: 1cqw) {
-  /* cqw/h 無し：フラットな近似（開発者調整は主に上のコンテナクエリ路） */
-  .qr-modal-today-teaser {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: flex-start;
-    gap: calc(14px * var(--qr-scale));
-    transform: none;
-  }
-
-  .qr-modal-today-teaser > .qr-modal-today-heading {
-    flex-shrink: 0;
-    z-index: 2;
-  }
-
-  /*
-   * フラット環境でも「キャラ用の縦」を確保（150 ≒ 既定82に対して比率で伸ばせるように）
-   * 係数 は --qr-today-char-max-cqh の数値に比例（コンテナクエリ換算ではない）。
-   */
-  .qr-modal-today-character {
-    flex: 1 1 0;
-    min-height: max(
-      calc(280px * var(--qr-scale)),
-      calc(var(--qr-today-char-max-cqh, 82) / 82 * 320px * var(--qr-scale))
-    );
-    overflow: hidden;
-  }
-
-  .qr-modal-right--step2 .qr-modal-today-character-img {
-    max-height: calc(
-      560px * var(--qr-scale) *
-        min(2.75, calc(var(--qr-today-char-max-cqh, 82) / 82))
-    );
-    max-width: min(96%, calc(48% * var(--qr-today-char-max-cqw, 48) / 48));
-  }
+  display: block;
 }
 
 .qr-modal-right--step2 .qr-modal-today-heading {
+  position: absolute;
+  top: 20.41%;
+  left: 50%;
+  width: 37.68%;
   margin: 0;
-  justify-self: center;
+  transform: translateX(-50%);
+  text-align: center;
+  white-space: nowrap;
+  justify-self: auto;
   color: #ffffff;
   font-size: max(1rem, calc(var(--qr-today-heading-cqw, 5.32) * 1cqw));
   font-weight: 700;
@@ -1244,24 +1185,26 @@
   }
 }
 
-/* グリッド2行目：開発者指定の縦サイズブロックは template-rows で確保済み */
 .qr-modal-today-character {
-  grid-row: 2;
+  position: absolute;
+  top: 36.02%;
+  left: 25.36%;
+  width: 47.55%;
+  height: 76.37%;
   display: flex;
-  align-items: flex-end;
+  align-items: stretch;
   justify-content: center;
   box-sizing: border-box;
   min-height: 0;
-  width: 100%;
   overflow: hidden;
-  position: relative;
   z-index: 1;
 }
 
 .qr-modal-right--step2 .qr-modal-today-character-img {
-  max-height: calc(var(--qr-today-char-max-cqh, 82) * 1cqh);
-  width: auto;
-  max-width: calc(var(--qr-today-char-max-cqw, 48) * 1cqw);
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
   object-fit: contain;
   object-position: center bottom;
   filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.12));
@@ -1276,55 +1219,6 @@
   .qr-modal-right--step2 .qr-modal-today-character-img.character-empty {
     min-height: calc(120px * var(--qr-scale));
     width: min(calc(200px * var(--qr-scale)), 40%);
-  }
-}
-
-/* 予告キャラのゆらぎ（idle／足元基点） */
-@keyframes qr-modal-today-character-idle {
-  0%,
-  100% {
-    transform: translateY(0) rotate(-0.25deg);
-  }
-
-  50% {
-    transform: translateY(calc(-4px * var(--qr-scale))) rotate(0.45deg);
-  }
-}
-
-@keyframes qr-modal-today-character-placeholder-idle {
-  0%,
-  100% {
-    opacity: 0.38;
-    transform: translateY(0) scale(1);
-  }
-
-  50% {
-    opacity: 0.62;
-    transform: translateY(calc(-3px * var(--qr-scale))) scale(1.03);
-  }
-}
-
-.qr-modal-today-character--animated img.character-figure.qr-modal-today-character-img {
-  transform-origin: 50% 92%;
-  animation: qr-modal-today-character-idle 4.2s ease-in-out infinite;
-}
-
-.qr-modal-today-character--animated
-  .qr-modal-today-character-img.character-empty {
-  transform-origin: 50% 90%;
-  animation: qr-modal-today-character-placeholder-idle 3.8s ease-in-out
-    infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .qr-modal-today-character--animated img.character-figure.qr-modal-today-character-img,
-  .qr-modal-today-character--animated .qr-modal-today-character-img.character-empty {
-    animation: none;
-  }
-
-  .qr-modal-today-character--animated .qr-modal-today-character-img.character-empty {
-    opacity: 0.42;
-    transform: none;
   }
 }
 

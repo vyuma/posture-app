@@ -1368,7 +1368,13 @@ function QrConnectionModal({
         onClick={onClose}
         aria-label="閉じる"
       >
-        ×
+        <img
+          src="/icons/close-white.svg"
+          alt=""
+          className="qr-modal-close-icon"
+          draggable={false}
+          aria-hidden="true"
+        />
       </button>
       <div className="qr-modal-panels">
         <div className={`qr-modal-left qr-modal-left--step${step}`}>
@@ -1532,7 +1538,7 @@ function QrConnectionModal({
               */}
               <div id="qr-today-teaser" className="qr-modal-today-teaser">
                 <p className="qr-modal-today-heading">今日のピンアナゴ</p>
-                <div className="qr-modal-today-character qr-modal-today-character--animated">
+                <div className="qr-modal-today-character">
                   <CharacterFigure
                     character={featuredCharacter}
                     className="qr-modal-today-character-img"
