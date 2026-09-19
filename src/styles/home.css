@@ -1063,7 +1063,7 @@
   position: absolute;
   inset: 0;
   z-index: 20;
-  border-radius: calc(90px * var(--qr-scale));
+  border-radius: 18.63354%; /* 90 / 483: preserve the QR corners at narrow widths */
   background: #ffffff;
 }
 
@@ -1100,7 +1100,7 @@
   width: min(100%, calc(var(--qr-pattern-width-pct-of-inner, 100) * 1%));
   max-width: 100%;
   height: auto;
-  border-radius: calc(90px * var(--qr-scale));
+  border-radius: 18.63354%; /* 90 / 483: preserve the QR corners at narrow widths */
 }
 
 .qr-modal-qr-placeholder {
