@@ -1,3 +1,8 @@
+use serde::{Deserialize, Serialize};
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc,
+};
 use tauri::window::Color;
 use tauri::{
     AppHandle, Emitter, Manager, PhysicalPosition, Position, WebviewUrl, WebviewWindow,
@@ -16,7 +21,6 @@ const OVERLAY_MARGIN_Y: i32 = 0;
 
 pub fn ensure_overlay_window(app: &AppHandle) -> Result<WebviewWindow, String> {
     if let Some(window) = app.get_webview_window(OVERLAY_LABEL) {
-        let _ = window.set_ignore_cursor_events(false);
         return Ok(window);
     }
 
@@ -25,6 +29,7 @@ pub fn ensure_overlay_window(app: &AppHandle) -> Result<WebviewWindow, String> {
             .title("character-overlay")
             .decorations(false)
             .always_on_top(true)
+            .visible_on_all_workspaces(true)
             .shadow(false)
             .resizable(false)
             .skip_taskbar(true)
@@ -38,6 +43,22 @@ pub fn ensure_overlay_window(app: &AppHandle) -> Result<WebviewWindow, String> {
     let window = builder.build().map_err(|error| error.to_string())?;
 
     let _ = window.set_ignore_cursor_events(false);
+    #[cfg(target_os = "macos")]
+    {
+        let overlay = window.clone();
+        window
+            .run_on_main_thread(move || {
+                if let Ok(pointer) = overlay.ns_window() {
+                    // Tauri owns this NSWindow; AppKit access stays on the main thread.
+                    let native = unsafe { &*pointer.cast::<objc2_app_kit::NSWindow>() };
+                    let behavior = native.collectionBehavior();
+                    native.setCollectionBehavior(
+                        behavior | objc2_app_kit::NSWindowCollectionBehavior::FullScreenAuxiliary,
+                    );
+                }
+            })
+            .map_err(|error| error.to_string())?;
+    }
 
     position_window_bottom_right(
         &window,
@@ -49,6 +70,18 @@ pub fn ensure_overlay_window(app: &AppHandle) -> Result<WebviewWindow, String> {
         },
     )?;
 
+    let ready = Arc::new(AtomicBool::new(false));
+    app.manage(PlacementReady(ready.clone()));
+    let app_handle = app.clone();
+    window.on_window_event(move |event| {
+        if let tauri::WindowEvent::Moved(position) = event {
+            if ready.load(Ordering::Acquire) {
+                if let Err(error) = save_position(&app_handle, *position) {
+                    eprintln!("failed to save pet position: {error}");
+                }
+            }
+        }
+    });
     Ok(window)
 }
 
@@ -107,8 +140,9 @@ fn apply_snapshot(app: &AppHandle, snapshot: OverlayStateSnapshot) -> Result<(),
     let window = ensure_overlay_window(app)?;
 
     if snapshot.is_visible() {
-        position_window_bottom_right(&window, snapshot)?;
-        window.show().map_err(|error| error.to_string())?;
+        if !window.is_visible().map_err(|error| error.to_string())? {
+            window.show().map_err(|error| error.to_string())?;
+        }
     } else {
         let _ = window.hide();
     }
@@ -130,8 +164,69 @@ pub fn apply_position_offset(
     let snapshot = state.set_position_offset(offset_x, offset_y);
     let window = ensure_overlay_window(app)?;
     position_window_bottom_right(&window, snapshot)?;
+    save_position(
+        app,
+        window.outer_position().map_err(|error| error.to_string())?,
+    )?;
     emit_state(app, snapshot)?;
     Ok(snapshot)
+}
+
+struct PlacementReady(Arc<AtomicBool>);
+
+#[derive(Debug, Serialize, Deserialize, PartialEq)]
+struct SavedPosition {
+    x: i32,
+    y: i32,
+}
+
+fn position_path(app: &AppHandle) -> Result<std::path::PathBuf, String> {
+    Ok(app
+        .path()
+        .app_data_dir()
+        .map_err(|error| error.to_string())?
+        .join("pet-position-v2.json"))
+}
+
+fn save_position(app: &AppHandle, position: PhysicalPosition<i32>) -> Result<(), String> {
+    let path = position_path(app)?;
+    std::fs::create_dir_all(path.parent().unwrap()).map_err(|error| error.to_string())?;
+    let bytes = serde_json::to_vec(&SavedPosition {
+        x: position.x,
+        y: position.y,
+    })
+    .map_err(|error| error.to_string())?;
+    std::fs::write(path, bytes).map_err(|error| error.to_string())
+}
+
+// Called once by the overlay after it has read the old localStorage offsets.
+// A v2 absolute coordinate always takes precedence over those legacy offsets.
+pub fn restore_position(app: &AppHandle, offset_x: i32, offset_y: i32) -> Result<(), String> {
+    let window = ensure_overlay_window(app)?;
+    let ready = app.state::<PlacementReady>();
+    if ready.0.load(Ordering::Acquire) {
+        return Ok(());
+    }
+    let path = position_path(app)?;
+    let saved = std::fs::read(path)
+        .ok()
+        .and_then(|bytes| serde_json::from_slice::<SavedPosition>(&bytes).ok());
+    if let Some(position) = saved {
+        window
+            .set_position(PhysicalPosition::new(position.x, position.y))
+            .map_err(|error| error.to_string())?;
+    } else {
+        let snapshot = app
+            .state::<OverlayStateHandle>()
+            .set_position_offset(offset_x, offset_y);
+        position_window_bottom_right(&window, snapshot)?;
+    }
+    save_position(
+        app,
+        window.outer_position().map_err(|error| error.to_string())?,
+    )?;
+    ready.0.store(true, Ordering::Release);
+    Ok(())
 }
 
 fn position_window_bottom_right(

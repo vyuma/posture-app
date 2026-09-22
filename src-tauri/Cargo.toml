@@ -27,5 +27,6 @@ arboard = "3.6"
 image = { version = "0.25", default-features = false, features = ["png"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
+objc2-app-kit = { version = "0.3", default-features = false, features = ["NSWindow"] }
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"

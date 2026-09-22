@@ -48,7 +48,6 @@ const OVERLAY_OFFSET_STORAGE_KEY = "posture.overlay.positionOffset.v1";
 /** キャラクター配置ヘルプ吹き出しを「初回ドラッグ完了」で消すためのキー */
 const OVERLAY_PLACEMENT_HINT_DISMISSED_KEY =
   "posture.overlay.placementHint.dismissed.v1";
-const OFFSET_LIMIT_PX = 520;
 const DEFAULT_POSITION_OFFSET: PositionOffset = { x: 0, y: 0 };
 
 export function loadCharacterOverlayEnabled() {
@@ -146,5 +145,5 @@ function clampOffsetValue(value: number) {
     return 0;
   }
 
-  return Math.max(-OFFSET_LIMIT_PX, Math.min(OFFSET_LIMIT_PX, Math.round(value)));
+  return Math.max(-2147483648, Math.min(2147483647, Math.round(value)));
 }

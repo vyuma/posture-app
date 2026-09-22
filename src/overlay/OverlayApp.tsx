@@ -1,6 +1,7 @@
 import { type PointerEvent, useEffect, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
-import { invoke } from "@tauri-apps/api/core";
+import { invoke, isTauri } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import {
   OVERLAY_PLACEMENT_HINT_REFRESH_EVENT,
@@ -8,43 +9,22 @@ import {
 import { WebInlineCharacterOverlay } from "../features/overlay/WebInlineCharacterOverlay";
 import {
   clearPlacementHintDismissed,
-  clampPositionOffset,
   DEFAULT_OVERLAY_STATE,
   loadPlacementHintDismissed,
   loadStoredPositionOffset,
   savePlacementHintDismissed,
-  storePositionOffset,
   type OverlayMode,
   type OverlayStatePayload,
-  type PositionOffset,
 } from "../features/overlay/overlayState";
 
-type DragState = {
-  pointerId: number;
-  startClientX: number;
-  startClientY: number;
-  startOffset: PositionOffset;
-};
-
 export function OverlayApp() {
+  const dragRequested = useRef(false);
   const [overlayState, setOverlayState] =
     useState<OverlayStatePayload>(DEFAULT_OVERLAY_STATE);
-  const [positionOffset, setPositionOffset] = useState<PositionOffset>(() =>
-    loadStoredPositionOffset(),
-  );
-  const [isDragging, setIsDragging] = useState(false);
   /** 配置説明の吹き出し：初回はフキダシ表示。ドラッグで実際に動かしたら以後非表示。 */
   const [isPlacementHintVisible, setIsPlacementHintVisible] = useState(
     () => !loadPlacementHintDismissed(),
   );
-  const dragStateRef = useRef<DragState | null>(null);
-  const dragMovedRef = useRef(false);
-  const positionOffsetRef = useRef(positionOffset);
-
-  useEffect(() => {
-    positionOffsetRef.current = positionOffset;
-  }, [positionOffset]);
-
   useEffect(() => {
     let disposed = false;
 
@@ -58,10 +38,9 @@ export function OverlayApp() {
       .then((state) => {
         applyState(state);
         const storedOffset = loadStoredPositionOffset();
-        setPositionOffset(storedOffset);
-        void syncPositionOffset(storedOffset).catch(() => {
-          // Browser preview cannot reach native position commands.
-        });
+        void invoke("overlay_restore_position", {
+          offsetX: storedOffset.x, offsetY: storedOffset.y,
+        }).catch(() => {});
       })
       .catch(() => {
         // The overlay can still render once the next state event arrives.
@@ -71,9 +50,6 @@ export function OverlayApp() {
       "overlay:state",
       ({ payload }) => {
         applyState(payload);
-        const nextOffset = { x: payload.offsetX, y: payload.offsetY };
-        setPositionOffset(nextOffset);
-        storePositionOffset(nextOffset);
       },
     );
 
@@ -119,73 +95,25 @@ export function OverlayApp() {
     });
   };
 
-  const handleCharacterPointerDown = (
-    event: PointerEvent<HTMLDivElement>,
-  ) => {
-    if (event.button !== 0) {
-      return;
-    }
-
+  const handleCharacterPointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (event.button !== 0 || !isTauri()) return;
     event.preventDefault();
-    event.currentTarget.setPointerCapture(event.pointerId);
-    dragStateRef.current = {
-      pointerId: event.pointerId,
-      startClientX: event.clientX,
-      startClientY: event.clientY,
-      startOffset: positionOffsetRef.current,
-    };
-    dragMovedRef.current = false;
-    setIsDragging(true);
+    // Native dragging keeps physical/logical coordinates consistent across displays.
+    // Do not capture the pointer: the OS owns the drag until mouse-up.
+    dragRequested.current = true;
+    void getCurrentWindow().startDragging().catch(() => { dragRequested.current = false; });
   };
 
-  const handleCharacterPointerMove = (
-    event: PointerEvent<HTMLDivElement>,
-  ) => {
-    const dragState = dragStateRef.current;
-    if (!dragState || dragState.pointerId !== event.pointerId) {
-      return;
-    }
-
-    const nextOffset = clampPositionOffset({
-      x: dragState.startOffset.x + event.clientX - dragState.startClientX,
-      y: dragState.startOffset.y + event.clientY - dragState.startClientY,
-    });
-
-    if (
-      nextOffset.x !== dragState.startOffset.x ||
-      nextOffset.y !== dragState.startOffset.y
-    ) {
-      dragMovedRef.current = true;
-    }
-
-    setPositionOffset(nextOffset);
-    storePositionOffset(nextOffset);
-    void syncPositionOffset(nextOffset).catch(() => {
-      // Ignore transient native bridge failures while dragging.
-    });
-  };
-
-  const handleCharacterPointerEnd = (
-    event: PointerEvent<HTMLDivElement>,
-  ) => {
-    const dragState = dragStateRef.current;
-    if (!dragState || dragState.pointerId !== event.pointerId) {
-      return;
-    }
-
-    dragStateRef.current = null;
-    setIsDragging(false);
-
-    if (dragMovedRef.current && isPlacementHintVisible) {
+  useEffect(() => {
+    if (!isTauri()) return;
+    const promise = getCurrentWindow().onMoved(() => {
+      if (!dragRequested.current) return;
+      dragRequested.current = false;
       setIsPlacementHintVisible(false);
       savePlacementHintDismissed();
-    }
-    dragMovedRef.current = false;
-
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-  };
+    });
+    return () => { void promise.then((unlisten) => unlisten()); };
+  }, []);
 
   return (
     <main
@@ -223,11 +151,8 @@ export function OverlayApp() {
             </button>
           </div>
           <div
-            className={`overlay-character ${isDragging ? "overlay-character--dragging" : ""}`}
+            className="overlay-character"
             onPointerDown={handleCharacterPointerDown}
-            onPointerMove={handleCharacterPointerMove}
-            onPointerUp={handleCharacterPointerEnd}
-            onPointerCancel={handleCharacterPointerEnd}
           >
             {isPlacementHintVisible ? (
               <div
@@ -251,13 +176,6 @@ export function OverlayApp() {
       ) : null}
     </main>
   );
-}
-
-async function syncPositionOffset(offset: PositionOffset) {
-  await invoke("overlay_set_position_offset", {
-    offsetX: offset.x,
-    offsetY: offset.y,
-  });
 }
 
 function EyeOffIcon() {

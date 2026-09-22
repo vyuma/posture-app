@@ -3,7 +3,7 @@ use tauri::{AppHandle, State};
 use crate::overlay::state::{OverlayStateHandle, OverlayStateSnapshot};
 use crate::overlay::window::{
     apply_mode_change, apply_position_offset, apply_posture_change, hide_character,
-    open_main_window, show_character,
+    open_main_window, restore_position, show_character,
 };
 
 #[tauri::command]
@@ -66,4 +66,13 @@ pub fn overlay_on_posture_change(
     state: State<'_, OverlayStateHandle>,
 ) -> Result<OverlayStateSnapshot, String> {
     apply_posture_change(&app, &state, is_bad)
+}
+
+#[tauri::command]
+pub fn overlay_restore_position(
+    app: AppHandle,
+    offset_x: i32,
+    offset_y: i32,
+) -> Result<(), String> {
+    restore_position(&app, offset_x, offset_y)
 }
