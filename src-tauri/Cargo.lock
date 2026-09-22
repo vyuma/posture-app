@@ -2591,6 +2591,7 @@ dependencies = [
  "arboard",
  "base64 0.22.1",
  "image",
+ "objc2",
  "objc2-app-kit",
  "serde",
  "serde_json",

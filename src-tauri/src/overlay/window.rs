@@ -51,10 +51,17 @@ pub fn ensure_overlay_window(app: &AppHandle) -> Result<WebviewWindow, String> {
                 if let Ok(pointer) = overlay.ns_window() {
                     // Tauri owns this NSWindow; AppKit access stays on the main thread.
                     let native = unsafe { &*pointer.cast::<objc2_app_kit::NSWindow>() };
-                    let behavior = native.collectionBehavior();
-                    native.setCollectionBehavior(
-                        behavior | objc2_app_kit::NSWindowCollectionBehavior::FullScreenAuxiliary,
-                    );
+                    use objc2_app_kit::NSWindowCollectionBehavior as Behavior;
+                    let mut behavior = native.collectionBehavior();
+                    behavior.remove(Behavior::FullScreenPrimary | Behavior::FullScreenNone);
+                    behavior.insert(Behavior::CanJoinAllSpaces | Behavior::FullScreenAuxiliary);
+                    // FullScreenAuxiliary alone describes this app's full-screen windows.
+                    // macOS 13+ explicitly supports joining other apps' full-screen Spaces.
+                    if objc2::available!(macos = 13.0) {
+                        behavior.remove(Behavior::Primary | Behavior::Auxiliary);
+                        behavior.insert(Behavior::CanJoinAllApplications);
+                    }
+                    native.setCollectionBehavior(behavior);
                 }
             })
             .map_err(|error| error.to_string())?;

@@ -19,6 +19,7 @@ import {
 
 export function OverlayApp() {
   const dragRequested = useRef(false);
+  const pointerGesture = useRef<{id: number; x: number; y: number} | null>(null);
   const [overlayState, setOverlayState] =
     useState<OverlayStatePayload>(DEFAULT_OVERLAY_STATE);
   /** 配置説明の吹き出し：初回はフキダシ表示。ドラッグで実際に動かしたら以後非表示。 */
@@ -96,12 +97,34 @@ export function OverlayApp() {
   };
 
   const handleCharacterPointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0 || !isTauri()) return;
+    if (event.button !== 0) return;
     event.preventDefault();
-    // Native dragging keeps physical/logical coordinates consistent across displays.
-    // Do not capture the pointer: the OS owns the drag until mouse-up.
+    pointerGesture.current = { id: event.pointerId, x: event.screenX, y: event.screenY };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handleCharacterPointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    const gesture = pointerGesture.current;
+    if (!gesture || gesture.id !== event.pointerId) return;
+    if (Math.hypot(event.screenX - gesture.x, event.screenY - gesture.y) < 4) return;
+    // A drag consumes the gesture: native mouse-up must never open the main app.
+    pointerGesture.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    if (!isTauri()) return;
     dragRequested.current = true;
     void getCurrentWindow().startDragging().catch(() => { dragRequested.current = false; });
+  };
+
+  const handleCharacterPointerUp = (event: PointerEvent<HTMLDivElement>) => {
+    const gesture = pointerGesture.current;
+    if (!gesture || gesture.id !== event.pointerId) return;
+    pointerGesture.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    if (Math.hypot(event.screenX - gesture.x, event.screenY - gesture.y) < 4) handleOpenApp();
   };
 
   useEffect(() => {
@@ -152,7 +175,19 @@ export function OverlayApp() {
           </div>
           <div
             className="overlay-character"
+            role="button"
+            tabIndex={0}
+            aria-label="PiiiNを開く。ドラッグで位置を変更"
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                handleOpenApp();
+              }
+            }}
             onPointerDown={handleCharacterPointerDown}
+            onPointerMove={handleCharacterPointerMove}
+            onPointerUp={handleCharacterPointerUp}
+            onPointerCancel={() => { pointerGesture.current = null; }}
           >
             {isPlacementHintVisible ? (
               <div
