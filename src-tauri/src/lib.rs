@@ -9,7 +9,7 @@ mod updates;
 use commands::clipboard_commands::copy_share_image_to_clipboard;
 use commands::overlay_commands::{
     overlay_get_state, overlay_hide_character, overlay_on_posture_change, overlay_open_main_window,
-    overlay_reset_position_offset, overlay_set_mode, overlay_set_position_offset,
+    overlay_restore_position, overlay_reset_position_offset, overlay_set_mode, overlay_set_position_offset,
     overlay_show_character,
 };
 use commands::pairing_commands::{emit_completed_measurement, emit_posture_signal, get_pairing_info, get_pairing_status, sync_pairing_measuring_session, sync_pairing_good_posture_registration, emit_acquired_character_event, emit_acquired_characters_cleared, disconnect_pairing_device};
@@ -59,6 +59,7 @@ pub fn run() {
             overlay_get_state,
             overlay_hide_character,
             overlay_show_character,
+            overlay_restore_position,
             overlay_set_position_offset,
             overlay_reset_position_offset,
             overlay_open_main_window,

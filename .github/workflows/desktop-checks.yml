@@ -23,6 +23,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - run: bun install --frozen-lockfile
       - run: bun run test:updates
+      - run: bun run test:overlay-position
       - run: bun run build
       - if: runner.os == 'Windows'
         name: Validate MSIX packaging script syntax
