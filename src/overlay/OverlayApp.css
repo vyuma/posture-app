@@ -41,22 +41,21 @@ button {
   z-index: 4;
   display: flex;
   gap: 14px;
-  transform: translateX(-50%) translateY(8px);
+  transform: translateX(-50%);
   opacity: 0;
   pointer-events: none;
-  transition:
-    opacity 0.18s ease,
-    transform 0.18s ease;
+  transition: opacity 0.18s ease;
 }
 
-/* キャラへホバーしたときのみ表示（透明ウィンドウで shell 全体へ hover が乗らない対策）。 */
+/* Keep the menu visible when it takes hover from the character below it.
+   Moving the hit area on hover causes an enter/leave feedback loop. */
 .overlay-shell:not(.overlay-shell--placement-hint):has(
-    .overlay-character:hover
+    .overlay-character:hover,
+    .overlay-actions:hover
   )
   .overlay-actions,
 .overlay-shell:not(.overlay-shell--placement-hint)
   .overlay-actions:focus-within {
-  transform: translateX(-50%) translateY(0);
   opacity: 1;
   pointer-events: auto;
 }
@@ -65,7 +64,7 @@ button {
 .overlay-shell--placement-hint .overlay-actions {
   opacity: 0;
   pointer-events: none;
-  transform: translateX(-50%) translateY(8px);
+  transform: translateX(-50%);
 }
 
 .overlay-action {
@@ -91,7 +90,6 @@ button {
 .overlay-action:focus-visible {
   color: #0f172a;
   outline: none;
-  transform: translateY(-1px);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.42)),
     rgba(224, 235, 252, 0.7);
