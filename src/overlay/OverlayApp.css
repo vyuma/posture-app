@@ -109,12 +109,13 @@ button {
 
 .overlay-character {
   position: absolute;
-  right: 24px;
+  left: 50%;
   bottom: 24px;
+  transform: translateX(-50%);
   z-index: 2;
   width: 184px;
   aspect-ratio: 860 / 1022;
-  transform-origin: 100% 100%;
+  transform-origin: 50% 100%;
   cursor: grab;
   touch-action: none;
 }
@@ -125,13 +126,22 @@ button {
 
 .overlay-character > .web-inline-character-overlay {
   position: absolute;
-  right: 0;
-  bottom: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   padding: 0;
 }
 
+.overlay-character .web-inline-character-sink,
 .overlay-character .web-inline-character {
   width: 100%;
+}
+
+/* The good-pose silhouette is centered at x=96px in the 220px window,
+   although its 860px Lottie canvas is centered at x=110px. Compensate the
+   artwork's transparent margins without changing the animation's pivot. */
+.overlay-character .web-inline-character-lottie {
+  translate: 14px 0;
 }
 
 /*
@@ -211,14 +221,13 @@ button {
 .overlay-placement-hint::after {
   content: "";
   position: absolute;
-  /* 右寄せキャラ向けに尾を右寄りへ（narrow レイアウト） */
-  right: 26px;
+  left: 50%;
   bottom: -8px;
   width: 16px;
   height: 16px;
   background: inherit;
   border-bottom-right-radius: 4px;
-  transform: rotate(45deg);
+  transform: translateX(-50%) rotate(45deg);
   box-shadow: 4px 4px 8px rgba(0, 0, 0, 0.08);
   z-index: -1;
 }
