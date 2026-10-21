@@ -1,7 +1,6 @@
 import { type PointerEvent, useEffect, useRef, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
 import { invoke, isTauri } from "@tauri-apps/api/core";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import {
   OVERLAY_PLACEMENT_HINT_REFRESH_EVENT,
@@ -114,7 +113,7 @@ export function OverlayApp() {
     }
     if (!isTauri()) return;
     dragRequested.current = true;
-    void getCurrentWindow().startDragging().catch(() => { dragRequested.current = false; });
+    void invoke("overlay_start_drag").catch(() => { dragRequested.current = false; });
   };
 
   const handleCharacterPointerUp = (event: PointerEvent<HTMLDivElement>) => {
@@ -129,7 +128,7 @@ export function OverlayApp() {
 
   useEffect(() => {
     if (!isTauri()) return;
-    const promise = getCurrentWindow().onMoved(() => {
+    const promise = listen("overlay:dragged", () => {
       if (!dragRequested.current) return;
       dragRequested.current = false;
       setIsPlacementHintVisible(false);

@@ -76,3 +76,14 @@ pub fn overlay_restore_position(
 ) -> Result<(), String> {
     restore_position(&app, offset_x, offset_y)
 }
+
+#[tauri::command]
+pub async fn overlay_start_drag(
+    app: AppHandle,
+    window: tauri::WebviewWindow,
+) -> Result<(), String> {
+    if window.label() != "cat_overlay" {
+        return Err("only the pet window can start a pet drag".into());
+    }
+    crate::overlay::window::start_drag(&app)
+}

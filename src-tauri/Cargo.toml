@@ -1,6 +1,6 @@
 [package]
 name = "posture-app"
-version = "0.1.7"
+version = "0.1.8"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
@@ -28,6 +28,8 @@ image = { version = "0.25", default-features = false, features = ["png"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"
-objc2-app-kit = { version = "0.3", default-features = false, features = ["NSWindow"] }
+block2 = "0.6"
+objc2-foundation = { version = "0.3", default-features = false, features = ["NSNotification", "NSOperation", "NSProcessInfo", "block2"] }
+objc2-app-kit = { version = "0.3", default-features = false, features = ["NSWindow", "NSPanel", "NSView", "NSColor", "NSScreen", "NSGraphics", "NSGraphicsContext", "NSEvent", "NSWorkspace"] }
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"

@@ -5,8 +5,7 @@ use std::sync::{
 };
 use tauri::window::Color;
 use tauri::{
-    AppHandle, Emitter, Manager, PhysicalPosition, Position, WebviewUrl, WebviewWindow,
-    WebviewWindowBuilder,
+    AppHandle, Emitter, Manager, PhysicalPosition, WebviewUrl, WebviewWindow, WebviewWindowBuilder,
 };
 
 use super::state::{OverlayMode, OverlayStateHandle, OverlayStateSnapshot};
@@ -16,7 +15,8 @@ const OVERLAY_LABEL: &str = "cat_overlay";
 const OVERLAY_PAGE: &str = "overlay.html";
 const OVERLAY_WIDTH: f64 = 220.0;
 const OVERLAY_HEIGHT: f64 = 238.0;
-const OVERLAY_MARGIN_X: i32 = 22;
+pub(super) const OVERLAY_MARGIN_X: i32 = 22;
+#[cfg(not(target_os = "macos"))]
 const OVERLAY_MARGIN_Y: i32 = 0;
 
 pub fn ensure_overlay_window(app: &AppHandle) -> Result<WebviewWindow, String> {
@@ -44,28 +44,7 @@ pub fn ensure_overlay_window(app: &AppHandle) -> Result<WebviewWindow, String> {
 
     let _ = window.set_ignore_cursor_events(false);
     #[cfg(target_os = "macos")]
-    {
-        let overlay = window.clone();
-        window
-            .run_on_main_thread(move || {
-                if let Ok(pointer) = overlay.ns_window() {
-                    // Tauri owns this NSWindow; AppKit access stays on the main thread.
-                    let native = unsafe { &*pointer.cast::<objc2_app_kit::NSWindow>() };
-                    use objc2_app_kit::NSWindowCollectionBehavior as Behavior;
-                    let mut behavior = native.collectionBehavior();
-                    behavior.remove(Behavior::FullScreenPrimary | Behavior::FullScreenNone);
-                    behavior.insert(Behavior::CanJoinAllSpaces | Behavior::FullScreenAuxiliary);
-                    // FullScreenAuxiliary alone describes this app's full-screen windows.
-                    // macOS 13+ explicitly supports joining other apps' full-screen Spaces.
-                    if objc2::available!(macos = 13.0) {
-                        behavior.remove(Behavior::Primary | Behavior::Auxiliary);
-                        behavior.insert(Behavior::CanJoinAllApplications);
-                    }
-                    native.setCollectionBehavior(behavior);
-                }
-            })
-            .map_err(|error| error.to_string())?;
-    }
+    super::native_macos::create(&window)?;
 
     position_window_bottom_right(
         &window,
@@ -79,10 +58,13 @@ pub fn ensure_overlay_window(app: &AppHandle) -> Result<WebviewWindow, String> {
 
     let ready = Arc::new(AtomicBool::new(false));
     app.manage(PlacementReady(ready.clone()));
+    #[cfg(not(target_os = "macos"))]
     let app_handle = app.clone();
+    #[cfg(not(target_os = "macos"))]
     window.on_window_event(move |event| {
         if let tauri::WindowEvent::Moved(position) = event {
             if ready.load(Ordering::Acquire) {
+                let _ = app_handle.emit("overlay:dragged", ());
                 if let Err(error) = save_position(&app_handle, *position) {
                     eprintln!("failed to save pet position: {error}");
                 }
@@ -146,6 +128,9 @@ pub fn open_main_window(app: &AppHandle) -> Result<(), String> {
 fn apply_snapshot(app: &AppHandle, snapshot: OverlayStateSnapshot) -> Result<(), String> {
     let window = ensure_overlay_window(app)?;
 
+    #[cfg(target_os = "macos")]
+    super::native_macos::set_visible(app, snapshot.is_visible())?;
+    #[cfg(not(target_os = "macos"))]
     if snapshot.is_visible() {
         if !window.is_visible().map_err(|error| error.to_string())? {
             window.show().map_err(|error| error.to_string())?;
@@ -153,6 +138,8 @@ fn apply_snapshot(app: &AppHandle, snapshot: OverlayStateSnapshot) -> Result<(),
     } else {
         let _ = window.hide();
     }
+    #[cfg(target_os = "macos")]
+    let _ = window; // The Tauri host stays hidden; only the native panel is shown.
 
     Ok(())
 }
@@ -171,10 +158,7 @@ pub fn apply_position_offset(
     let snapshot = state.set_position_offset(offset_x, offset_y);
     let window = ensure_overlay_window(app)?;
     position_window_bottom_right(&window, snapshot)?;
-    save_position(
-        app,
-        window.outer_position().map_err(|error| error.to_string())?,
-    )?;
+    save_position(app, overlay_position(&window)?)?;
     emit_state(app, snapshot)?;
     Ok(snapshot)
 }
@@ -195,7 +179,10 @@ fn position_path(app: &AppHandle) -> Result<std::path::PathBuf, String> {
         .join("pet-position-v2.json"))
 }
 
-fn save_position(app: &AppHandle, position: PhysicalPosition<i32>) -> Result<(), String> {
+pub(super) fn save_position(
+    app: &AppHandle,
+    position: PhysicalPosition<i32>,
+) -> Result<(), String> {
     let path = position_path(app)?;
     std::fs::create_dir_all(path.parent().unwrap()).map_err(|error| error.to_string())?;
     let bytes = serde_json::to_vec(&SavedPosition {
@@ -219,8 +206,12 @@ pub fn restore_position(app: &AppHandle, offset_x: i32, offset_y: i32) -> Result
         .ok()
         .and_then(|bytes| serde_json::from_slice::<SavedPosition>(&bytes).ok());
     if let Some(position) = saved {
+        let position = PhysicalPosition::new(position.x, position.y);
+        #[cfg(target_os = "macos")]
+        super::native_macos::set_position(app, position)?;
+        #[cfg(not(target_os = "macos"))]
         window
-            .set_position(PhysicalPosition::new(position.x, position.y))
+            .set_position(position)
             .map_err(|error| error.to_string())?;
     } else {
         let snapshot = app
@@ -228,14 +219,12 @@ pub fn restore_position(app: &AppHandle, offset_x: i32, offset_y: i32) -> Result
             .set_position_offset(offset_x, offset_y);
         position_window_bottom_right(&window, snapshot)?;
     }
-    save_position(
-        app,
-        window.outer_position().map_err(|error| error.to_string())?,
-    )?;
+    save_position(app, overlay_position(&window)?)?;
     ready.0.store(true, Ordering::Release);
     Ok(())
 }
 
+#[cfg(not(target_os = "macos"))]
 fn position_window_bottom_right(
     window: &WebviewWindow,
     snapshot: OverlayStateSnapshot,
@@ -266,6 +255,34 @@ fn position_window_bottom_right(
         + snapshot.offset_y;
 
     window
-        .set_position(Position::Physical(PhysicalPosition::new(x, y)))
+        .set_position(tauri::Position::Physical(PhysicalPosition::new(x, y)))
+        .map_err(|error| error.to_string())
+}
+
+#[cfg(target_os = "macos")]
+fn position_window_bottom_right(
+    window: &WebviewWindow,
+    snapshot: OverlayStateSnapshot,
+) -> Result<(), String> {
+    super::native_macos::position_bottom_right(
+        window.app_handle(),
+        snapshot.offset_x,
+        snapshot.offset_y,
+    )
+}
+
+fn overlay_position(window: &WebviewWindow) -> Result<PhysicalPosition<i32>, String> {
+    #[cfg(target_os = "macos")]
+    return super::native_macos::position(window.app_handle());
+    #[cfg(not(target_os = "macos"))]
+    window.outer_position().map_err(|error| error.to_string())
+}
+
+pub fn start_drag(app: &AppHandle) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    return super::native_macos::start_drag(app);
+    #[cfg(not(target_os = "macos"))]
+    ensure_overlay_window(app)?
+        .start_dragging()
         .map_err(|error| error.to_string())
 }
