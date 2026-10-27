@@ -136,11 +136,11 @@
   .work-picker-grid .work-card-copy .work-tags>span{font-size:7px;line-height:9px;padding:5px 6px}
 }
 
-/* Restore main's home-hero-anago-idle rhythm; keep the portrait centered in its floor mask. */
+/* Animate a separate wrapper so WebKit keeps percentage-based centering correct after resize. */
 @keyframes work-home-pet-breathe {
-  0%, 100% { transform:translateX(-50%) translateY(0) rotate(-.15deg) scale(1); }
-  50% { transform:translateX(-50%) translateY(-8px) rotate(.3deg) scale(1.006); }
+  0%, 100% { transform:translateY(0) rotate(-.15deg) scale(1); }
+  50% { transform:translateY(-8px) rotate(.3deg) scale(1.006); }
 }
-.work-home-pet .work-portrait{transform-origin:center bottom;animation:work-home-pet-breathe 4s ease-in-out .9s infinite;animation-play-state:paused}
-.work-home-pet[data-moving="true"] .work-portrait{animation-play-state:running}
-@media(prefers-reduced-motion:reduce){.work-home-pet .work-portrait{animation:none;transform:translateX(-50%)}}
+.work-home-pet-motion{position:absolute;inset:0;transform-origin:center bottom;animation:work-home-pet-breathe 4s ease-in-out .9s infinite;animation-play-state:paused}
+.work-home-pet[data-moving="true"] .work-home-pet-motion{animation-play-state:running}
+@media(prefers-reduced-motion:reduce){.work-home-pet-motion{animation:none;transform:none}}

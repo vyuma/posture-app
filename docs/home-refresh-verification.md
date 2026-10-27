@@ -126,3 +126,7 @@ Web `Kyoung9/PiiiN` とデスクトップ `vyuma/posture-app` を更新した。
 マージ前の検証: 両側build、workテスト14件/52アサーション、Webのstory/expression/Lottieテスト12件、デスクトップ同10件、Rust cargo checkとSQLite原子的保存テスト1件が成功。大きいバンドル・Lottie eval・休止中ペアリングの既存警告は残る。
 
 macOSの実機QAウィンドウ（720×512）でも2時点のフレームを保存して待機動作を確認。デスクトップの画面入口を変更しても既存のDesktopUpdaterとそのCSSを保持し、計測・ダイアログ表示中にはインストールを許可しない。既存の更新テスト4件、位置復元テスト1件も成功。
+
+実機のウィンドウ縮小で、中央寄せの百分率translateXをアニメーションと同じtransformに入れると頭の左側が切れる現象を確認。固定マスク／アニメーション用ラッパー／静的な画像中央寄せを分離し、同じ軌道を保ったまま修正した。
+
+分離後の最終確認: macOS実機1200→720→1200→720pxで頭の欠けなし。2時点のフレームで呼吸を再確認。Webの1512×982／720×512／390×844でも床Y=454／360／490px、横オーバーフローなし、画面外paused／復帰runningを再確認。両側build成功。最終証跡はWeb側の `home-breathing-final-metrics.json`、`home-breathing-final-{1512,720,390}.png`、`home-breathing-native-fixed-{a,b,resize}.png`。

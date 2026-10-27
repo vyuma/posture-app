@@ -22,7 +22,7 @@ function HomePet({ id }: { id: string }) {
     update();
     return () => { observer.disconnect(); document.removeEventListener('visibilitychange', update); };
   }, []);
-  return <div ref={ref} className="work-home-pet" data-moving={moving}><Portrait id={id} /></div>;
+  return <div ref={ref} className="work-home-pet" data-moving={moving}><div className="work-home-pet-motion"><Portrait id={id} /></div></div>;
 }
 
 export function Home({ collection, onStart, onPick, onCard, onReset, onStory, onSound }: { collection: Collection; onStart: () => void; onPick: () => void; onCard: (card: Card) => void; onReset: () => void; onStory: () => void; onSound: () => void }) {
