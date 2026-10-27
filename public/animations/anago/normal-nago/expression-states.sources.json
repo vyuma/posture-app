@@ -1,0 +1,114 @@
+{
+  "files": {
+    "good": {
+      "sha256": "ccc597bc5c9e0a6d64d980f069fdabbb58172fc1d2ed1c01ce4337463dd1d102",
+      "viewBox": [
+        0,
+        0,
+        162.96,
+        812.88
+      ]
+    },
+    "bad": {
+      "sha256": "479410a18c9de533d00d780a9c48b859d7a562343944e059ec539625e051a22e",
+      "viewBox": [
+        0,
+        0,
+        409.86,
+        359.97
+      ]
+    },
+    "paused": {
+      "sha256": "e222746e245f4b2f11a28c76ca9c885a3f215ef99539c3c422d415c6d6c59f6e",
+      "viewBox": [
+        0,
+        0,
+        409.86,
+        359.97
+      ]
+    },
+    "happy": {
+      "sha256": "d6379e9f7d10cf76bb7a52a1101cfb975d7a3f499ccdb009f6dca34bf23d5abb",
+      "viewBox": [
+        0,
+        0,
+        409.86,
+        359.97
+      ]
+    },
+    "rest": {
+      "sha256": "c2a1627a32bab5892e9641cb9b199ed7a84bb8eefcc435814749c21cff6ca2c5",
+      "viewBox": [
+        0,
+        0,
+        219.64,
+        255.12
+      ]
+    },
+    "angry": {
+      "sha256": "17c64babc286b6a50b466eaf3787788b0606b959bc07544d17494dce655755ba",
+      "viewBox": [
+        0,
+        0,
+        158.74,
+        255.12
+      ]
+    }
+  },
+  "transforms": {
+    "good": {
+      "scale": 2.929738138449572,
+      "offset": [
+        115.98159191081152,
+        24.409385532797444
+      ]
+    },
+    "bad": {
+      "scale": 3.8500851788756387,
+      "offset": [
+        -332.12197614991476,
+        -363.9151618398637
+      ]
+    },
+    "paused": {
+      "scale": 2.929738138449572,
+      "offset": [
+        -286.59372569354423,
+        -120.20248898107337
+      ]
+    },
+    "happy": {
+      "scale": 3.5428750587866435,
+      "offset": [
+        -333.13622824894185,
+        -253.32873491142823
+      ]
+    },
+    "rest": {
+      "scale": 3.986593755512436,
+      "offset": [
+        -322.2049744222968,
+        4.94020109366727
+      ]
+    },
+    "angry": {
+      "scale": 3.986593755512436,
+      "offset": [
+        32.243076380313994,
+        0.8093138119596688
+      ]
+    }
+  },
+  "stateSources": {
+    "good": "good.svg",
+    "bad": "angry.svg",
+    "paused": "rest.svg",
+    "recovery": "happy.svg"
+  },
+  "bodyWidth": 226,
+  "viewportTranslation": [
+    260,
+    0
+  ],
+  "shadow": "Existing platform CSS shadow; original SVG filters are retained in source files only"
+}

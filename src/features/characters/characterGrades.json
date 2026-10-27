@@ -1,0 +1,28 @@
+{
+  "tiers": [
+    { "stars": 1, "id": "normal", "label": "ノーマル" },
+    { "stars": 2, "id": "rare", "label": "レア" },
+    { "stars": 3, "id": "super-rare", "label": "スーパーレア" },
+    { "stars": 4, "id": "ultra-rare", "label": "ウルトラレア" },
+    { "stars": 5, "id": "ultra-super-rare", "label": "ウルトラスーパーレア" }
+  ],
+  "characters": {
+    "normal-nago": 1,
+    "shin-anago": 1,
+    "kuro-anyago": 1,
+    "dot-nago": 1,
+    "moja-anago": 1,
+    "oto-anago": 1,
+    "hat-anago": 1,
+    "nasubi-nago": 1,
+    "twin-nago": 1,
+    "nami-anago": 1,
+    "futaba-nago": 1,
+    "pan-nago": 1,
+    "yozora-nago": 1,
+    "koi-anago": 1,
+    "pain-nago": 1,
+    "wan-anago": 1,
+    "ryuu-anago": 1
+  }
+}

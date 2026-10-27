@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build:anago-lottie": "node scripts/build-anago-overlay-lottie.mjs",
+    "build:anago-lottie": "node scripts/build-anago-overlay-lottie.mjs && node scripts/build-anago-expression-lottie.mjs",
     "test:anago-lottie": "node --test scripts/anago-lottie.test.mjs",
     "build": "tsc && vite build",
     "build:debug-ui": "VITE_SHOW_DEBUG_UI=true tsc && vite build",
@@ -14,7 +14,8 @@
     "tauri:debug-ui": "VITE_SHOW_DEBUG_UI=true bun run tauri build",
     "release:macos": "node scripts/release-macos.mjs",
     "test:updates": "bun test scripts/desktop-updater.test.tsx",
-    "test:overlay-position": "bun test scripts/overlay-position.test.tsx"
+    "test:overlay-position": "bun test scripts/overlay-position.test.tsx",
+    "test:work": "bun test scripts/work-session.test.ts"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.34",
@@ -35,6 +36,7 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
+    "fake-indexeddb": "^6.2.6",
     "happy-dom": "^20.14.5",
     "typescript": "~5.8.3",
     "vite": "^7.0.4"

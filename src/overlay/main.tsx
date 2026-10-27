@@ -1,7 +1,3 @@
 import { createRoot } from "react-dom/client";
-import { OverlayApp } from "./OverlayApp";
-import "./OverlayApp.css";
-
-createRoot(document.getElementById("root") as HTMLElement).render(
-  <OverlayApp />,
-);
+import { WorkOverlayApp } from "./WorkOverlayApp";
+createRoot(document.getElementById("root") as HTMLElement).render(<WorkOverlayApp />);

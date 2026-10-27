@@ -267,6 +267,7 @@ export async function shareResultCapture(
     target.style.animation = "none";
     target.style.transition = "none";
   });
+  clone.querySelectorAll("[data-export-exclude]").forEach(node => node.remove());
   clone.classList.add(SHARE_CAPTURE_CLASS);
   clone.classList.remove("is-entering", "is-tapped");
   clone.style.transform = "none";

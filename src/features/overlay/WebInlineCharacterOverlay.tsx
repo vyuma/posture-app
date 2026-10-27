@@ -7,7 +7,7 @@ import type { OverlayMode } from "./overlayState";
 type VisibleOverlayMode = Exclude<OverlayMode, "hidden">;
 type TransitionKey = `${VisibleOverlayMode}:${VisibleOverlayMode}`;
 
-const ANIMATION_PATH = "/animations/anago/normal-nago/overlay.json";
+const ANIMATION_PATH = "/animations/anago/normal-nago/expression-states.json";
 
 const STATE_FRAMES: Record<VisibleOverlayMode, number> = {
   good: 0,
@@ -276,7 +276,7 @@ export function WebInlineCharacterOverlay({ mode, sinkEnabled = true }: WebInlin
   useEffect(() => {
     if (mode === null) return;
 
-    if (mode !== "bad" || !sinkEnabled) {
+    if (mode !== "bad" || !sinkEnabled || prefersReducedMotion) {
       setBadSinkPx(0);
       return;
     }
@@ -296,7 +296,7 @@ export function WebInlineCharacterOverlay({ mode, sinkEnabled = true }: WebInlin
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [mode, settledMode, sinkEnabled]);
+  }, [mode, settledMode, sinkEnabled, prefersReducedMotion]);
 
   if (!shouldRender) return null;
 
@@ -304,7 +304,7 @@ export function WebInlineCharacterOverlay({ mode, sinkEnabled = true }: WebInlin
   const sinkStyle: CSSProperties = {
     transform: `translateY(${badSinkPx}px)`,
     transition:
-      mode === "bad"
+      prefersReducedMotion ? "none" : mode === "bad"
         ? "transform 140ms linear"
         : "transform 720ms cubic-bezier(0.22, 1, 0.36, 1)",
   };

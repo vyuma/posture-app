@@ -1,4 +1,3 @@
-/* global console */
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -193,13 +192,16 @@ function setLids(pose, openness) {
   pose.closedEyesOpacity = 100 - pose.openEyesOpacity;
 }
 
-function actingPose(from, to, t, marker) {
+export function actingPose(from, to, t, marker) {
+  for (const pose of [from, to]) {
+    if (!bandBindings.has(pose)) bandBindings.set(pose, pose.stripes.map((band, index) => bindBand(pose, band, index)));
+  }
   if (t === 0) return from;
   if (t === 1) return to;
-  const fallingAsleep = marker.endsWith("to_paused");
-  const waking = marker.startsWith("paused_to");
+  const fallingAsleep = /to_(paused|rest)$/.test(marker);
+  const waking = /^(paused|rest)_to/.test(marker);
   const expressionOnly = marker === "good_to_paused" || marker === "paused_to_good";
-  const recovering = marker === "bad_to_happy" || marker === "bad_to_paused";
+  const recovering = ["bad_to_happy", "bad_to_paused", "angry_to_happy", "angry_to_rest", "rest_to_good"].includes(marker);
   const pose = expressionOnly
     ? interpolateValue(from, to, ramp(t, 0.15, 0.6))
     : bendPose(from, to, t, recovering, marker === "happy_to_good");
@@ -217,7 +219,7 @@ function actingPose(from, to, t, marker) {
     pose.zOpacity = 0;
   }
   setLids(pose, openness);
-  if (marker === "bad_to_happy") {
+  if (["bad_to_happy", "angry_to_happy"].includes(marker)) {
     pose.cheekOpacity = to.cheekOpacity * ramp(t, 0.38, 0.85);
   }
   return pose;
@@ -233,7 +235,7 @@ function actingSegment(name, marker, start, end, from, to) {
   };
 }
 
-const SEGMENTS = [
+export const SEGMENTS = [
   { name: "State / Good", marker: "state_good", start: 0, end: 0, poses: [POSES.good] },
   { name: "State / Bad", marker: "state_bad", start: 1, end: 1, poses: [POSES.bad] },
   { name: "State / Paused", marker: "state_paused", start: 2, end: 2, poses: [POSES.paused] },
@@ -437,7 +439,12 @@ function pathGroup(name, pathProperty, style, opacityProperty = staticProperty(1
   };
 }
 
-function ellipseGroup(name, positions, sizes, opacity, times, eases, color, outline) {
+function ellipseGroup(name, positions, sizes, opacity, times, eases, color, outline, rotations) {
+  const transform = groupTransform(property(opacity, times, eases));
+  if (rotations?.some(Boolean)) {
+    transform.a = transform.p = property(positions, times, eases);
+    transform.r = property(rotations, times, eases);
+  }
   return {
     ty: "gr",
     nm: name,
@@ -451,7 +458,7 @@ function ellipseGroup(name, positions, sizes, opacity, times, eases, color, outl
       },
       ...(outline ? [stroke(COLORS.stripe, property(outline, times, eases), `${name} Outline`)] : []),
       fill(color, `${name} Fill`),
-      groupTransform(property(opacity, times, eases)),
+      transform,
     ],
   };
 }
@@ -463,13 +470,13 @@ function sleepZValues(segment, poses, times, zIndex) {
     let opacity = poses[index].zOpacity;
     let dx = 0;
     let dy = 0;
-    if (segment.marker.endsWith("to_paused")) {
+    if (/to_(paused|rest)$/.test(segment.marker)) {
       const start = 0.54 + (2 - zIndex) * 0.095;
       const amount = ramp(t, start, start + 0.24);
       opacity = amount * 100;
       dx = 7 * (1 - amount);
       dy = 16 * (1 - amount);
-    } else if (segment.marker.startsWith("paused_to")) {
+    } else if (/^(paused|rest)_to/.test(segment.marker)) {
       const amount = ramp(t, zIndex * 0.035, 0.24 + zIndex * 0.035);
       opacity = 100 * (1 - amount);
       dx = -5 * amount;
@@ -480,7 +487,7 @@ function sleepZValues(segment, poses, times, zIndex) {
   });
 }
 
-function makeSegmentLayers(segment, nextIndex) {
+export function makeSegmentLayers(segment, nextIndex) {
   const times = timesFor(segment);
   const eases = easesFor(segment);
   const poses = segment.poses;
@@ -491,7 +498,7 @@ function makeSegmentLayers(segment, nextIndex) {
     return pathGroup(
       `Sleep Z ${zIndex + 1}`,
       property(values.map((value) => value.shape), times, eases, { shape: true }),
-      stroke(COLORS.sleep, poses[0].zStroke, `Sleep Z ${zIndex + 1} Stroke`),
+      stroke(COLORS.sleep, property(poses.map(pose => pose.zStroke), times, eases), `Sleep Z ${zIndex + 1} Stroke`),
       property(values.map((value) => value.opacity), times, eases),
     );
   });
@@ -521,6 +528,7 @@ function makeSegmentLayers(segment, nextIndex) {
       eases,
       COLORS.pupil,
       poses.map(pose => pose.eyeStroke),
+      poses.map(pose => pose.eyeRotations?.[eyeIndex] ?? 0),
     ),
   );
   layers.push(layer("Eyes", eyeGroups, segment, nextIndex()));
@@ -529,7 +537,7 @@ function makeSegmentLayers(segment, nextIndex) {
     pathGroup(
       `Closed Eye ${eyeIndex + 1}`,
       property(poses.map((pose) => pose.closedEyes[eyeIndex]), times, eases, { shape: true }),
-      stroke(COLORS.stripe, poses[0].closedEyeStroke, `Closed Eye ${eyeIndex + 1} Stroke`),
+      stroke(COLORS.stripe, property(poses.map(pose => pose.closedEyeStroke), times, eases), `Closed Eye ${eyeIndex + 1} Stroke`),
       property(poses.map((pose) => pose.closedEyesOpacity), times, eases),
     ),
   );
@@ -554,9 +562,10 @@ function makeSegmentLayers(segment, nextIndex) {
       "Body Stroke",
     ),
   );
+  bodyGroup.it[1].c = property(poses.map(pose => pose.bodyColor ?? COLORS.body), times, eases);
   layers.push(layer("Body", [bodyGroup], segment, nextIndex()));
 
-  if (segment.times && bodyGroup.it[0].ks.a === 1) {
+  if (segment.clipBands || (segment.times && bodyGroup.it[0].ks.a === 1)) {
     const matte = layer("Band silhouette", [clone(bodyGroup)], segment, nextIndex());
     matte.td = 1;
     layers[layers.length - 2].tt = 1;
@@ -617,10 +626,9 @@ function validateWebKeyframes(value, location = "animation") {
 
 validateWebKeyframes(animation);
 
-mkdirSync(dirname(outputPath), { recursive: true });
-writeFileSync(outputPath, `${JSON.stringify(animation)}\n`);
-writeFileSync(resolve(dirname(outputPath), "source-manifest.json"), `${JSON.stringify(SOURCE_MANIFEST, null, 2)}\n`);
-
-console.log(
-  `Wrote ${outputPath} (${animation.layers.length} layers, ${animation.op} frames)`,
-);
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  mkdirSync(dirname(outputPath), { recursive: true });
+  writeFileSync(outputPath, `${JSON.stringify(animation)}\n`);
+  writeFileSync(resolve(dirname(outputPath), "source-manifest.json"), `${JSON.stringify(SOURCE_MANIFEST, null, 2)}\n`);
+  console.log(`Wrote ${outputPath} (${animation.layers.length} layers, ${animation.op} frames)`);
+}

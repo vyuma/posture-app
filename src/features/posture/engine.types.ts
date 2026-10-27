@@ -133,6 +133,8 @@ export type PostureFrameResult = {
 
 export type PostureEngineState = {
   warmupStartMs: number | null;
+  warmupValidMs: number;
+  warmupLastValidMs: number | null;
   warmupSamples: Record<FeatureKey, number[]>;
   headWidthWarmupSamples: number[];
   baseline: BaselineStats | null;

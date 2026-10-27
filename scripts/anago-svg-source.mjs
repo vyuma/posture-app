@@ -1,4 +1,3 @@
-/* global URL, structuredClone */
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -25,10 +24,10 @@ function attributes(text) {
   return Object.fromEntries([...text.matchAll(/([\w:-]+)="([^"]*)"/g)].map(m => [m[1], m[2]]));
 }
 
-function readSource(name) {
+export function readSource(name) {
   const file = fileURLToPath(new URL(`../public/characters/anago/normal-nago/expressions/${name}.svg`, import.meta.url));
   const text = readFileSync(file, "utf8");
-  if (!text.includes("<svg") || /<(?:image|text|use)\b|\btransform=/.test(text)) {
+  if (!text.includes("<svg") || /<(?:image|text|use)\b|<g\b[^>]*\btransform=/.test(text)) {
     throw new Error(`Unsupported source geometry: ${file}`);
   }
   const rules = [];
@@ -54,7 +53,7 @@ function readSource(name) {
   return { file, text, viewBox, elements, hash: createHash("sha256").update(text).digest("hex") };
 }
 
-function cubicPath(d) {
+export function cubicPath(d) {
   const tokens = d.match(/[a-zA-Z]|[-+]?(?:\d*\.\d+|\d+\.?\d*)(?:[eE][-+]?\d+)?/g);
   let index = 0;
   let command;
@@ -91,14 +90,14 @@ function cubicPath(d) {
   return segments;
 }
 
-function splitCubic([a, b, c, d], t = 0.5) {
+export function splitCubic([a, b, c, d], t = 0.5) {
   const ab = mix(a, b, t), bc = mix(b, c, t), cd = mix(c, d, t);
   const abc = mix(ab, bc, t), bcd = mix(bc, cd, t);
   const mid = mix(abc, bcd, t);
   return [[a, ab, abc, mid], [mid, bcd, cd, d]];
 }
 
-function toLottie(segments) {
+export function toLottie(segments) {
   const vertices = [segments[0][0], ...segments.map(s => s[3])];
   const result = path(vertices);
   segments.forEach((s, i) => {
@@ -117,7 +116,7 @@ export function transformPath(shape, scale = 1, offset = [0, 0]) {
   };
 }
 
-function bodyPath(element, scale, offset) {
+export function bodyPath(element, scale, offset) {
   const raw = cubicPath(element.attrs.d);
   // Merge the redundant, collinear vertical commands from good.svg exactly.
   let count = 0;
@@ -136,9 +135,9 @@ function bodyPath(element, scale, offset) {
   return transformPath(toLottie([...splitCubic(vertical, t), ...crown]), scale, offset);
 }
 
-const number = (element, key) => Number(element.attrs[key]);
-const strokeWidth = element => parseFloat(element.style["stroke-width"]);
-const color = hex => {
+const number = (element, key) => Number(element.attrs[key] ?? 0);
+export const strokeWidth = element => parseFloat(element.style["stroke-width"]);
+export const color = hex => {
   const value = hex.slice(1);
   const full = value.length === 3 ? [...value].map(c => c + c).join("") : value;
   return [0, 2, 4].map(i => parseInt(full.slice(i, i + 2), 16) / 255).concat(1);
@@ -163,7 +162,7 @@ const transforms = {
   happy: { scale: happyScale, offset: [ROOT_X - sourceRoot("happy")[0] * happyScale, HEIGHT - sources.happy.viewBox[3] * happyScale] },
 };
 
-function bands(source, { scale, offset }) {
+export function bands(source, { scale, offset }) {
   return source.elements.filter(e => ["rect", "polygon"].includes(e.tag) && e.style.fill === "#fff").map(e => {
     let vertices;
     if (e.tag === "rect") {
@@ -182,7 +181,7 @@ function bands(source, { scale, offset }) {
       vertices = [...vertices.slice(first), ...vertices.slice(0, first)];
     }
     if (vertices.length !== 4) throw new Error("Expected a four-point designer band");
-    return { path: transformPath(path(vertices, undefined, undefined, true), scale, offset), opacity: 100 };
+    return { path: transformPath(path(vertices.map(p => svgPoint(p, e.attrs.transform)), undefined, undefined, true), scale, offset), opacity: 100 };
   }).sort((a, b) => Math.min(...a.path.v.map(p => p[1])) - Math.min(...b.path.v.map(p => p[1])));
 }
 
@@ -261,3 +260,18 @@ export const SOURCE_MANIFEST = {
   rootX: ROOT_X,
   pausedBody: "good.svg (position held by product requirement)",
 };
+
+// SVG transform lists compose right to left. Only rigid transforms used by the
+// supplied Illustrator artwork are accepted; unsupported operations fail loudly.
+export function svgPoint(point, transform = "") {
+  const operations = [...transform.matchAll(/(\w+)\(([^)]+)\)/g)];
+  return operations.reverse().reduce(([x, y], [, name, values]) => {
+    const n = values.trim().split(/[\s,]+/).map(Number);
+    if (name === "translate") return [x + n[0], y + (n[1] ?? 0)];
+    if (name === "rotate") {
+      const a = n[0] * Math.PI / 180, cx = n[1] ?? 0, cy = n[2] ?? 0;
+      return [cx + (x-cx)*Math.cos(a) - (y-cy)*Math.sin(a), cy + (x-cx)*Math.sin(a) + (y-cy)*Math.cos(a)];
+    }
+    throw new Error(`Unsupported SVG transform: ${name}`);
+  }, point);
+}
