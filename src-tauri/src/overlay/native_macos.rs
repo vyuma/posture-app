@@ -209,6 +209,25 @@ pub fn set_visible(app: &AppHandle, visible: bool) -> Result<(), String> {
     })
 }
 
+pub fn resize_work_widget(app: &AppHandle, width: f64, height: f64) -> Result<(), String> {
+    on_main(app, move |mtm| {
+        let panel = panel()?;
+        let old = panel.native.frame();
+        let screen = panel.native.screen().or_else(|| NSScreen::mainScreen(mtm)).ok_or("screen unavailable")?;
+        let area = screen.visibleFrame();
+        let size = objc2_foundation::NSSize::new(width.min(area.size.width), height.min(area.size.height));
+        let x = (old.origin.x + (old.size.width - size.width) / 2.0).clamp(area.origin.x, area.origin.x + area.size.width - size.width);
+        let y = old.origin.y.clamp(area.origin.y, area.origin.y + area.size.height - size.height);
+        let frame = objc2_foundation::NSRect::new(NSPoint::new(x, y), size);
+        panel.target.set(frame.origin);
+        panel.native.setFrame_display(frame, true);
+        if let Some(content) = panel.native.contentView() {
+            for child in content.subviews() { child.setFrame(objc2_foundation::NSRect::new(NSPoint::new(0.0, 0.0), size)); }
+        }
+        Ok(())
+    })
+}
+
 pub fn position(app: &AppHandle) -> Result<PhysicalPosition<i32>, String> {
     on_main(app, |mtm| Ok(panel()?.position(mtm)))
 }

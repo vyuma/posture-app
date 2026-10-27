@@ -1,0 +1,104 @@
+{
+  "normal-nago": {
+    "color": "#f78000",
+    "background": "#fde6cc",
+    "artWidth": 81,
+    "artTop": 13.36
+  },
+  "shin-anago": {
+    "color": "#ea4949",
+    "background": "#fbdbdb",
+    "artWidth": 81,
+    "artTop": 13.36
+  },
+  "kuro-anyago": {
+    "color": "#3b424f",
+    "background": "#d8d9dc",
+    "artWidth": 81,
+    "artTop": 13.36
+  },
+  "dot-nago": {
+    "color": "#e0bf00",
+    "background": "#f9f2cc",
+    "artWidth": 81,
+    "artTop": 13.36
+  },
+  "moja-anago": {
+    "color": "#00962e",
+    "background": "#ccead5",
+    "artWidth": 81,
+    "artTop": 13.36
+  },
+  "oto-anago": {
+    "color": "#505050",
+    "background": "#f8f8f8",
+    "artWidth": 94.8,
+    "artTop": 11.2
+  },
+  "hat-anago": {
+    "color": "#0055aa",
+    "background": "#ccddee",
+    "artWidth": 81,
+    "artTop": 13.36
+  },
+  "nasubi-nago": {
+    "color": "#715ba3",
+    "background": "#e3deed",
+    "artWidth": 81,
+    "artTop": 13.36
+  },
+  "twin-nago": {
+    "color": "#ed8cc4",
+    "background": "#fbe8f3",
+    "artWidth": 81,
+    "artTop": 13.36
+  },
+  "nami-anago": {
+    "color": "#31bbdb",
+    "background": "#d6f1f8",
+    "artWidth": 81,
+    "artTop": 13.36
+  },
+  "futaba-nago": {
+    "color": "#82c443",
+    "background": "#e6f3d9",
+    "artWidth": 81,
+    "artTop": 13.36
+  },
+  "pan-nago": {
+    "color": "#c17d1a",
+    "background": "#f3e5d1",
+    "artWidth": 81,
+    "artTop": 13.36
+  },
+  "yozora-nago": {
+    "color": "#042d68",
+    "background": "#cdd5e1",
+    "artWidth": 81,
+    "artTop": 13.36
+  },
+  "koi-anago": {
+    "color": "#ce4646",
+    "background": "#f5dada",
+    "artWidth": 81,
+    "artTop": 13.36
+  },
+  "pain-nago": {
+    "color": "#e0bf00",
+    "background": "#f9f2cc",
+    "artWidth": 81,
+    "artTop": 13.36
+  },
+  "wan-anago": {
+    "color": "#ea9139",
+    "background": "#fbe9d8",
+    "artWidth": 81,
+    "artTop": 13.36
+  },
+  "ryuu-anago": {
+    "color": "#0055aa",
+    "background": "#ccddee",
+    "artWidth": 81,
+    "artTop": 13.36
+  }
+}

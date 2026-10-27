@@ -23,7 +23,7 @@ import {
   POSTURE_SPEC,
 } from "../engine.spec";
 import { drawPoseOverlay } from "../services/drawPoseOverlay";
-import type { PostureExperimentMetrics } from "../engine.types";
+import type { BaselineStats, PostureExperimentMetrics } from "../engine.types";
 import type {
   PostureExperimentSample,
   RuntimeSnapshot,
@@ -34,6 +34,7 @@ const EXPERIMENT_HISTORY_LIMIT = 600;
 const EXPERIMENT_SMOOTHING_WINDOW = 8;
 
 const DEFAULT_SNAPSHOT: RuntimeSnapshot = {
+  observedAtMs: 0,
   postureState: "hold",
   qualityOk: false,
   view: "unknown",
@@ -571,6 +572,7 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
         if (now - lastUiUpdateAtRef.current >= uiUpdateIntervalMs) {
           lastUiUpdateAtRef.current = now;
           setSnapshot({
+            observedAtMs: now,
             postureState: result.postureState,
             qualityOk: result.eval.qualityOk,
             view: result.eval.view,
@@ -646,15 +648,6 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
         setReady(true);
         setStatus("姿勢を追跡中です。");
 
-        if (
-          typeof Notification !== "undefined" &&
-          Notification.permission === "default"
-        ) {
-          void Notification.requestPermission().catch(() => {
-            // 許可ダイアログを表示できない環境では無視する。
-          });
-        }
-
         scheduleNext(0, () => {
           void trackOnce();
         });
@@ -689,7 +682,18 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
     };
   }, [clearTrackingTimer, enabled]);
 
+  const captureBaseline = useCallback(() => {
+    const state = engineStateRef.current;
+    return state.baseline ? structuredClone({ stats: state.baseline, headWidthRatio: state.baselineHeadWidthRatio }) : null;
+  }, []);
+  const restoreBaseline = useCallback((baseline: { stats: BaselineStats; headWidthRatio: number | null }) => {
+    resetPostureEngine();
+    engineStateRef.current = { ...createPostureEngineState(), baseline: structuredClone(baseline.stats), baselineHeadWidthRatio: baseline.headWidthRatio };
+    setSnapshot({ ...DEFAULT_SNAPSHOT, baselineReady: true, warmupRemainingMs: 0 });
+  }, [resetPostureEngine]);
+
   return {
+    captureBaseline, restoreBaseline,
     videoRef,
     canvasRef,
     ready,

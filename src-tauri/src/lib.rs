@@ -15,7 +15,7 @@ use commands::overlay_commands::{
 use commands::pairing_commands::{emit_completed_measurement, emit_posture_signal, get_pairing_info, get_pairing_status, sync_pairing_measuring_session, sync_pairing_good_posture_registration, emit_acquired_character_event, emit_acquired_characters_cleared, disconnect_pairing_device};
 use overlay::state::OverlayStateHandle;
 use overlay::window::ensure_overlay_window;
-use pairing::{start_pairing_server, PairingStateHandle};
+use pairing::PairingStateHandle;
 #[cfg(desktop)]
 use tauri::Manager;
 
@@ -24,11 +24,12 @@ pub fn run() {
     let pairing_state = PairingStateHandle::new();
     let overlay_state = OverlayStateHandle::new();
 
-    start_pairing_server(pairing_state.clone()).expect("failed to start desktop pairing server");
+    // Pairing is dormant. Reintroducing it requires an explicit product entry point.
 
     tauri::Builder::default()
         .manage(pairing_state)
         .manage(overlay_state)
+        .manage(commands::work_widget_commands::WorkWidgetState::default())
         .setup(|app| {
             #[cfg(target_os = "macos")]
             updates::setup(app)?;
@@ -46,6 +47,11 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            commands::work_commands::work_database,
+            commands::work_widget_commands::work_widget_update,
+            commands::work_widget_commands::work_widget_get,
+            commands::work_widget_commands::work_preview_window,
+            commands::work_widget_commands::work_widget_action,
             get_pairing_info,
             get_pairing_status,
             emit_completed_measurement,

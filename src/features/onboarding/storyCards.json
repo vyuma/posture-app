@@ -1,0 +1,90 @@
+[
+  {
+    "characterId": "nasubi-nago",
+    "name": "ナスビナゴ",
+    "src": "/figma/story-nasubi.png",
+    "color": "#715ba3",
+    "background": "#e3deed",
+    "tags": [
+      "落ち着きがある",
+      "お兄ちゃんキャラ"
+    ]
+  },
+  {
+    "characterId": "shin-anago",
+    "name": "シン・アナゴ",
+    "src": "/characters/anago/shin-anago/portrait.png",
+    "color": "#ea4949",
+    "background": "#fbdada",
+    "tags": [
+      "頑張り屋さん",
+      "負けず嫌い"
+    ]
+  },
+  {
+    "characterId": "oto-anago",
+    "name": "オトアナゴ",
+    "src": "/characters/anago/oto-anago/portrait.png",
+    "color": "#505050",
+    "background": "#f8f8f8",
+    "tags": [
+      "音楽好き",
+      "クリエイティブ"
+    ]
+  },
+  {
+    "characterId": "kuro-anyago",
+    "name": "クロアニャゴ",
+    "src": "/characters/anago/kuro-anyago/portrait.png",
+    "color": "#505050",
+    "background": "#d8d9dc",
+    "tags": [
+      "クール",
+      "ツンデレ"
+    ]
+  },
+  {
+    "characterId": "dot-nago",
+    "name": "クマアナゴ",
+    "src": "/characters/anago/dot-nago/portrait.png",
+    "color": "#e0bf00",
+    "background": "#f9f2cc",
+    "tags": [
+      "おっとり",
+      "天然"
+    ]
+  },
+  {
+    "characterId": "moja-anago",
+    "name": "モジャアナゴ",
+    "src": "/characters/anago/moja-anago/portrait.png",
+    "color": "#00962e",
+    "background": "#ccead5",
+    "tags": [
+      "くせもの",
+      "こだわり強い"
+    ]
+  },
+  {
+    "characterId": "hat-anago",
+    "name": "ハットナゴ",
+    "src": "/characters/anago/hat-anago/portrait.png",
+    "color": "#0055aa",
+    "background": "#ccddee",
+    "tags": [
+      "しっかり者",
+      "リーダー気質"
+    ]
+  },
+  {
+    "characterId": "twin-nago",
+    "name": "ツインナゴ",
+    "src": "/figma/story-twin.png",
+    "color": "#ed8cc4",
+    "background": "#fbe8f3",
+    "tags": [
+      "アイドル気質",
+      "妹キャラ"
+    ]
+  }
+]

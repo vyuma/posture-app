@@ -15,6 +15,34 @@ const OVERLAY_LABEL: &str = "cat_overlay";
 const OVERLAY_PAGE: &str = "overlay.html";
 const OVERLAY_WIDTH: f64 = 220.0;
 const OVERLAY_HEIGHT: f64 = 238.0;
+
+/// Expand around the timer's bottom-center, keeping its screen anchor stable.
+pub fn set_work_widget(app: &AppHandle, visible: bool, bad: bool) -> Result<(), String> {
+    let window = ensure_overlay_window(app)?;
+    let (width, height) = if bad { (420.0, 390.0) } else { (220.0, 238.0) };
+    #[cfg(target_os = "macos")]
+    {
+        let _ = window;
+        super::native_macos::resize_work_widget(app, width, height)?;
+        super::native_macos::set_visible(app, visible)
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        let scale = window.scale_factor().map_err(|e| e.to_string())?;
+        let old = window.outer_size().map_err(|e| e.to_string())?;
+        let position = window.outer_position().map_err(|e| e.to_string())?;
+        let mut x = position.x + (old.width as i32 - (width * scale) as i32) / 2;
+        let mut y = position.y + old.height as i32 - (height * scale) as i32;
+        if let Some(monitor) = window.current_monitor().map_err(|e| e.to_string())? {
+            let area = monitor.work_area();
+            x = x.clamp(area.position.x, (area.position.x + area.size.width as i32 - (width * scale) as i32).max(area.position.x));
+            y = y.clamp(area.position.y, (area.position.y + area.size.height as i32 - (height * scale) as i32).max(area.position.y));
+        }
+        window.set_size(tauri::LogicalSize::new(width, height)).map_err(|e| e.to_string())?;
+        window.set_position(PhysicalPosition::new(x, y)).map_err(|e| e.to_string())?;
+        if visible { window.show() } else { window.hide() }.map_err(|e| e.to_string())
+    }
+}
 pub(super) const OVERLAY_MARGIN_X: i32 = 22;
 #[cfg(not(target_os = "macos"))]
 const OVERLAY_MARGIN_Y: i32 = 0;

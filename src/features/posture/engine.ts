@@ -53,6 +53,8 @@ import { isFiniteNumber } from "./utils/math";
 export function createPostureEngineState(): PostureEngineState {
   return {
     warmupStartMs: null,
+    warmupValidMs: 0,
+    warmupLastValidMs: null,
     warmupSamples: {
       headLateralOffsetRatio: [],
       earShoulderDistanceRatio: [],
@@ -248,7 +250,7 @@ export function evaluatePostureFrame(
   landmarks: NormalizedLandmark[] | null,
   worldLandmarks: Landmark[] | null,
 ): { state: PostureEngineState; result: PostureFrameResult } {
-  const initializedStartMs = previous.warmupStartMs ?? nowMs;
+
   const selected = pickLandmarkSet(landmarks, worldLandmarks);
   const selected2d = pickLandmarkSetFromSource(
     landmarks,
@@ -263,10 +265,16 @@ export function evaluatePostureFrame(
   const shouldersVisible = areBothShouldersUsable(selected);
   const extracted = extractFeaturesFromSelection(selected2d, selected3d);
   const experiment = computePostureExperiment(selected, extracted);
+  // Only observed, valid intervals count toward the five-second calibration.
+  const warmupDelta = extracted.qualityOk && previous.warmupLastValidMs !== null ? nowMs - previous.warmupLastValidMs : 0;
+  const warmupValidMs = previous.warmupValidMs + (warmupDelta <= 1500 ? Math.max(0, warmupDelta) : 0);
+  const initializedStartMs = previous.baseline ? previous.warmupStartMs ?? nowMs : nowMs - warmupValidMs;
 
   let next: PostureEngineState = {
     ...previous,
     warmupStartMs: initializedStartMs,
+    warmupValidMs,
+    warmupLastValidMs: extracted.qualityOk ? nowMs : null,
   };
   next = updateShoulderDropMonitor(next, shouldersVisible, nowMs);
 

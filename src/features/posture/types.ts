@@ -14,6 +14,7 @@ export type PostureExperimentSample = {
 };
 
 export type RuntimeSnapshot = {
+  observedAtMs?: number;
   postureState: PostureState;
   qualityOk: boolean;
   view: ViewClass;
