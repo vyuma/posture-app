@@ -1,0 +1,78 @@
+/* Home detail 4057:5766 (911.39×517); acquisition comparison uses 721×409.
+   cqw keeps the original 721-unit composition proportional to the card itself. */
+.work-dialog.work-detail-dialog{width:min(1040px,calc(100vw - 24px));max-height:calc(100dvh - 24px);padding:64px 20px 20px;border-radius:0;background:transparent;box-shadow:none;overflow:auto}
+.work-detail-dialog::backdrop{background:rgba(16,38,46,.48)}
+.work-detail-dialog>.work-close{top:8px;right:20px;width:36px;height:36px;color:#1a2730;background:#ffffffd1;box-shadow:0 8px 16px #1236412e}
+.work-detail-dialog>.work-close:hover,.work-detail-dialog>.work-close:focus-visible{background:#fff;outline:2px solid #ffffffb8;outline-offset:2px}
+.work-result{display:grid;grid-template-columns:minmax(0,911.39px) 64px;column-gap:24px;row-gap:12px;width:999.39px;max-width:100%;margin:0 auto;text-align:left;font-family:'SF Pro',-apple-system,BlinkMacSystemFont,'Noto Sans JP',sans-serif;letter-spacing:0}
+.work-result-frame{min-width:0}
+.work-detail-card{position:relative;container-type:inline-size;display:grid;grid-template-columns:2.8724% 36.6963% 1.4854% 55.6172% 3.3287%;width:100%;min-height:0;padding:2.91262% 0 3.6061%;border-radius:4.40788% / 7.7704%;background:#fff;color:#000;box-shadow:0 0 8.52px #00000026;overflow:hidden}
+.work-detail-character{grid-column:2;min-width:0}
+.work-detail-art{position:relative;width:100%;aspect-ratio:264.58/266.96;border-radius:3.52631cqw;background:var(--character-bg,#eee);overflow:hidden}
+.work-detail-art .work-portrait{position:absolute;left:50%;top:var(--art-top);width:var(--art-width);height:auto;max-width:none;transform:translateX(-50%)}
+/* This asset is the same 636×1021 PNG used in Figma, including its transparent bounds. */
+.work-detail-art .work-portrait[data-character="oto-anago"]{left:11.45%;top:13.86%;width:76.72%;transform:none}
+.work-unacquired{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.work-detail-character>.work-card-number{display:block;margin:1.3925cqw 0 0 .3176cqw;font-size:1.83653cqw;font-weight:590;line-height:2.21914cqw;letter-spacing:0;color:#848484}
+.work-detail-name{display:flex;align-items:center;justify-content:space-between;gap:.6cqw;min-height:4.02219cqw;margin:.1387cqw 0 1.52566cqw}
+.work-detail-card .work-detail-name h2{font-size:3.32871cqw;line-height:4.02219cqw;font-weight:700;white-space:nowrap;margin:0}
+.work-detail-name .character-stars{gap:.1387cqw;flex:none}
+.work-detail-name .character-stars svg{width:2.77393cqw;height:2.77393cqw}
+.work-detail-card .work-tags{gap:1.10957cqw;flex-wrap:wrap}
+.work-detail-card .work-tags>span{font-size:1.38696cqw;font-weight:700;line-height:1.66436cqw;padding:1.10957cqw;color:var(--character-color);white-space:normal;max-width:100%;overflow-wrap:anywhere}
+.work-detail-body{grid-column:4;position:relative;min-width:0;display:flex;flex-direction:column}
+.work-detail-body time{display:block;margin-right:1.66436cqw;text-align:right;font-size:2.19849cqw;font-weight:590;line-height:2.63523cqw;color:#505050}
+.work-result-metrics{display:flex;justify-content:space-between;gap:1cqw;margin:3.19001cqw 6.79612cqw 0 4.29958cqw}
+.work-result-metrics>div{display:grid;grid-template-columns:max-content max-content;grid-template-rows:3.32871cqw 10.54092cqw;color:#13a2d7;font-weight:700;white-space:nowrap}
+.work-result-metrics>div+div{color:#f78000}
+.work-result-metrics>div>span{grid-column:1;grid-row:1;text-align:center;font-size:2.77393cqw;line-height:3.32871cqw}
+.work-result-metrics strong{grid-column:1;grid-row:2;text-align:center;font-size:8.87656cqw;line-height:10.54092cqw;font-weight:700;letter-spacing:0}
+.work-result-metrics small{grid-column:2;grid-row:2;align-self:start;margin-top:3.19001cqw;font-size:5.54785cqw;line-height:6.65742cqw;font-weight:700}
+.work-graph{position:relative;margin-top:1.66436cqw}
+.work-graph h3{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.work-graph svg{display:block;width:100%;overflow:visible;touch-action:pan-y}
+.work-graph svg text{font-family:inherit;font-size:9px;fill:#777}
+.work-graph-tooltip{position:absolute;top:22px;right:10px;max-width:calc(100% - 20px);background:#333;color:white;padding:10px 14px;border-radius:10px;font-size:12px;pointer-events:none;z-index:5;box-shadow:0 4px 12px #0002}
+.work-graph-tooltip span{display:block;margin-top:5px}
+.work-graph-keyboard{position:absolute;bottom:0;left:0;width:100%;height:14px;opacity:0}
+.work-graph-keyboard:focus{opacity:1}
+.work-no-graph{display:grid;place-items:center;aspect-ratio:401/164;background:#fafafa;color:#777;font-size:14px;border-radius:12px}
+.work-detail-card .work-detail-body>p{margin:2.91262cqw 0 0 4.29958cqw;font-size:1.98026cqw;font-weight:700;line-height:2.35742cqw;text-align:center;text-wrap:balance;overflow-wrap:anywhere}
+.work-result-actions{display:flex;flex-direction:column;gap:24px;padding-top:7px}
+.work-result-actions>button{display:grid;place-items:center;flex:none;width:64px;height:64px;padding:0;border:0;border-radius:100px;background:#fff3;color:#fff;cursor:pointer;transition:opacity .16s ease,transform .16s ease,background .16s ease}
+.work-result-actions>button:hover:not(:disabled){background:#ffffff52;transform:translateY(-1px)}
+.work-result-actions>button:disabled{opacity:.4;cursor:wait;transform:none}
+.work-result-actions svg{display:block;width:32px;height:32px}
+.work-result-feedback{grid-column:1/-1;min-height:20px;text-align:center;color:#fff;font-size:14px;line-height:1.5}
+@media(max-width:800px){
+  .work-dialog.work-detail-dialog{padding:52px 8px 12px}
+  .work-result{grid-template-columns:minmax(0,1fr);width:721px}
+  .work-result-actions{flex-direction:row;justify-content:center;padding-top:4px}
+  .work-result-actions>button{width:56px;height:56px}
+}
+/* Reflow the actual text instead of reducing the whole card to unreadable type. */
+@media(max-width:540px){
+  .work-detail-card{display:flex;flex-direction:column;padding:20px;border-radius:28px;gap:24px}
+  .work-detail-art{max-width:300px;margin-inline:auto;border-radius:24px}
+  .work-detail-character>.work-card-number{font-size:13px;line-height:18px;margin:10px 0 0}
+  .work-detail-name{min-height:29px;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+  .work-detail-card .work-detail-name h2{font-size:24px;line-height:29px}
+  .work-detail-name .character-stars{gap:1px}
+  .work-detail-name .character-stars svg{width:18px;height:18px}
+  .work-detail-card .work-tags{gap:8px}
+  .work-detail-card .work-tags>span{font-size:10px;line-height:12px;padding:8px}
+  .work-detail-body time{font-size:14px;line-height:19px;margin:0}
+  .work-result-metrics{gap:12px;margin:24px 0 0;justify-content:space-around}
+  .work-result-metrics>div{grid-template-rows:20px 56px}
+  .work-result-metrics>div>span{font-size:16px;line-height:20px}
+  .work-result-metrics strong{font-size:44px;line-height:56px}
+  .work-result-metrics small{font-size:24px;line-height:30px;margin-top:17px}
+  .work-graph{margin-top:12px}
+  .work-detail-card .work-detail-body>p{font-size:14px;line-height:1.6;margin:20px 0 0}
+}
+@media(max-width:360px){
+  .work-detail-card{padding:16px}
+  .work-result-metrics strong{font-size:36px}
+  .work-result-metrics>div>span{font-size:14px}
+  .work-result-metrics small{font-size:20px}
+}

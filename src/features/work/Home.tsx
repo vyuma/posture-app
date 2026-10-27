@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import type { Collection, Card } from './model';
 import { catalog, character, CharacterCard, Portrait } from './CharacterCard';
 import { Icon } from './Dialog';
+import { CollectionSort, type CollectionOrder } from './CollectionSort';
+import './home-layout.css';
 
 export function Brand() { return <img className="work-brand" src="/logo/logo_white.png" alt="PiiiN" />; }
 
@@ -26,14 +28,14 @@ function HomePet({ id }: { id: string }) {
 }
 
 export function Home({ collection, onStart, onPick, onCard, onReset, onStory, onSound }: { collection: Collection; onStart: () => void; onPick: () => void; onCard: (card: Card) => void; onReset: () => void; onStory: () => void; onSound: () => void }) {
-  const [menu, setMenu] = useState(false); const [order, setOrder] = useState('number');
+  const [menu, setMenu] = useState(false); const [order, setOrder] = useState<CollectionOrder>('number');
   const owned = new Map(collection.cards.map(card => [card.characterId, card]));
   const slots = Array.from({ length: 111 }, (_, index) => ({ index, id: catalog[index]?.id }));
   if (order === 'acquired') slots.sort((a, b) => { const ai = collection.cards.findIndex(card => card.characterId === a.id); const bi = collection.cards.findIndex(card => card.characterId === b.id); return (ai < 0 ? 1000 + a.index : ai) - (bi < 0 ? 1000 + b.index : bi); });
   const selected = character(collection.selectedId);
   return <main className="work-home"><header className="work-home-hero"><Brand /><div className="work-profile-wrap"><button className="work-about" onClick={onStory}>ピンアナゴとは</button><button className="work-profile" aria-label="プロフィールメニュー" aria-expanded={menu} onClick={() => setMenu(!menu)}><Portrait id={selected.id} /></button>{menu && <nav className="work-profile-menu" aria-label="プロフィール"><button onClick={() => { setMenu(false); onSound(); }}>サウンド設定</button><button onClick={() => { setMenu(false); onStory(); }}>ストーリーを見る</button><button onClick={() => { setMenu(false); onReset(); }}>コレクションを初期化</button></nav>}</div>
     <h1>正しい姿勢を継続して<br />ピンアナゴをゲットしよう！</h1><div className="work-hero-actions"><button className="work-button orange" onClick={onStart}>作業スタート</button><button className="work-button white" onClick={onPick}>ピンアナゴを変更</button></div><HomePet key={selected.id} id={selected.id} /></header>
-    <section className="work-collection" aria-label="コレクション"><div className="work-collection-heading"><h2>コレクション <span><b>{collection.cards.length}</b> / 111</span></h2><label className="work-sort"><svg className="work-sort-arrow" viewBox="0 0 14 14" aria-hidden="true"><path d="M0 0h14L7 14Z" fill="currentColor" /></svg><select aria-label="コレクションの並び順" value={order} onChange={event => setOrder(event.target.value)}><option value="number">番号順</option><option value="acquired">獲得順</option></select></label></div>
+    <section className="work-collection" aria-label="コレクション"><div className="work-collection-heading"><h2>コレクション <span><b>{collection.cards.length}</b> / 111</span></h2><CollectionSort value={order} onChange={setOrder} /></div>
       <div className="work-card-grid">{slots.map(({ index, id }) => <CharacterCard key={index} index={index} id={id && owned.has(id) ? id : undefined} onClick={id && owned.has(id) ? () => onCard(owned.get(id)!) : undefined} />)}</div>
     </section></main>;
 }

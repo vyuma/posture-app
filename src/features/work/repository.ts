@@ -1,5 +1,5 @@
 import { normalizeCharacterId } from '../characters/characterIds';
-import { chooseReward, DEFAULT_TIMER, EMPTY_COLLECTION, type Card, type Collection, type Session, type TimerSettings } from './model';
+import { chooseReward, DEFAULT_TIMER, EMPTY_COLLECTION, normalizeTimer, type Card, type Collection, type Session, type TimerSettings } from './model';
 
 export interface WorkDriver {
   collection(): Promise<Collection | null>;
@@ -111,7 +111,7 @@ export class WorkRepository {
     throw new Error('別の画面で更新されています。もう一度お試しください。');
   }
   select(id: string) { return this.update(value => ({ ...value, selectedId: value.cards.some(card => card.characterId === id) ? id : value.selectedId })); }
-  timer(timer: TimerSettings | null) { return this.update(value => ({ ...value, timer })); }
+  timer(timer: TimerSettings | null) { return this.update(value => ({ ...value, timer: timer && normalizeTimer(timer) })); }
   reset() { return this.update(value => ({ ...value, generation: value.generation + 1, cards: [], selectedId: null })); }
   async finish(input: Session, catalogIds: string[]) {
     for (let attempt = 0; attempt < 8; attempt++) {

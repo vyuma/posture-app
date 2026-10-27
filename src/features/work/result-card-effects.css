@@ -1,0 +1,124 @@
+/* Existing collection-card effects from styles/result.css, isolated from its legacy layout. */
+.work-detail-card--acquired {
+  --tilt-x: 0deg;
+  --tilt-y: 0deg;
+  --tilt-lift: 0px;
+  --tilt-shine-x: 50%;
+  --tilt-shine-y: 50%;
+  --result-card-press-y: 0px;
+  --result-card-scale: 1;
+
+  cursor: pointer;
+  transform:
+    perspective(900px)
+    rotateX(var(--tilt-x))
+    rotateY(var(--tilt-y))
+    translateY(calc(var(--tilt-lift) + var(--result-card-press-y)))
+    scale(var(--result-card-scale));
+  transform-style: preserve-3d;
+  transition:
+    transform 0.34s cubic-bezier(0.23, 1, 0.32, 1),
+    filter 0.34s cubic-bezier(0.23, 1, 0.32, 1),
+    box-shadow 0.34s cubic-bezier(0.23, 1, 0.32, 1);
+  will-change: transform, filter, box-shadow;
+}
+
+.work-detail-card--acquired:hover {
+  --result-card-press-y: 2px;
+  --result-card-scale: 0.996;
+
+  filter: saturate(1.03);
+  box-shadow:
+    0 18px 42px rgba(19, 100, 120, 0.2),
+    0 0 0 1px color-mix(in srgb, var(--result-stat-accent, #fd8c3e) 24%, transparent),
+    0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
+.work-detail-card--acquired:active {
+  --result-card-press-y: 7px;
+  --result-card-scale: 0.982;
+
+  transition-duration: 0.08s;
+}
+
+.work-detail-card--acquired::before {
+  content: "";
+  position: absolute;
+  inset: -36%;
+  z-index: 3;
+  /* 自身も角丸を持たせ、回転後でも矩形コーナーが残らないようにする */
+  border-radius: inherit;
+  background: linear-gradient(
+    112deg,
+    transparent 28%,
+    rgba(255, 255, 255, 0.1) 43%,
+    rgba(255, 255, 255, 0.54) 49%,
+    rgba(255, 255, 255, 0.14) 56%,
+    transparent 72%
+  );
+  transform: translateX(-56%) rotate(5deg);
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0;
+  animation: work-detail-card-shine 3.2s ease-in-out infinite;
+}
+
+.work-detail-card--acquired::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  border-radius: inherit;
+  background:
+    radial-gradient(
+      circle at var(--tilt-shine-x, 50%) var(--tilt-shine-y, 50%),
+      rgba(255, 255, 255, 0.48) 0%,
+      rgba(255, 255, 255, 0.22) 24%,
+      rgba(255, 255, 255, 0) 62%
+    ),
+    linear-gradient(
+      118deg,
+      rgba(255, 255, 255, 0.28) 0%,
+      rgba(255, 255, 255, 0) 34%
+    ),
+    linear-gradient(
+      300deg,
+      color-mix(in srgb, var(--result-stat-accent, #fd8c3e) 14%, transparent) 12%,
+      rgba(255, 255, 255, 0) 58%
+    );
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--result-stat-accent, #fd8c3e) 12%, #ffffff),
+    inset 0 0 24px color-mix(in srgb, var(--result-stat-accent, #fd8c3e) 10%, transparent);
+  mix-blend-mode: screen;
+  opacity: 0.44;
+  transition: opacity 0.26s ease;
+}
+
+.work-detail-card--acquired:hover::after {
+  opacity: 0.92;
+}
+
+@keyframes work-detail-card-shine {
+  0%,
+  54% {
+    transform: translateX(-58%) rotate(5deg);
+    opacity: 0;
+  }
+  64% {
+    opacity: 0.9;
+  }
+  84% {
+    transform: translateX(58%) rotate(5deg);
+    opacity: 0.24;
+  }
+  100% {
+    transform: translateX(58%) rotate(5deg);
+    opacity: 0;
+  }
+}
+
+
+.work-detail-card.is-share-capture{box-shadow:none!important;transform:none!important;animation:none!important}
+.work-detail-card.is-share-capture::before,.work-detail-card.is-share-capture::after{content:none!important}
+@media(prefers-reduced-motion:reduce){.work-detail-card--acquired,.work-detail-card--acquired::before,.work-detail-card--acquired::after{animation:none!important;transition:none!important;transform:none!important}}
