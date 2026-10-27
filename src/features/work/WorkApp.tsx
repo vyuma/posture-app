@@ -15,11 +15,12 @@ import { catalog } from './CharacterCard';
 import { isDesktop, openWorkRepository, publishWidget, subscribeWidgetActions } from './platform';
 import type { WorkRepository } from './repository';
 import { acquireMeasurementLock } from './measurementLock';
-import { advanceSession, beginCalibration, createSession, DEFAULT_TIMER, endCalibration, finishSession, pauseSession, resumeSession, NO_READING, type Baseline, type Card, type Collection, type Reading, type Session, type TimerSettings as Settings } from './model';
+import { beginCalibration, createSession, DEFAULT_TIMER, endCalibration, finishSession, pauseSession, resumeSession, NO_READING, type Baseline, type Card, type Collection, type Reading, type Session, type TimerSettings as Settings } from './model';
 import '../../styles/base.css';
 import '../../styles/onboarding.css';
 import '../../styles/updates.css';
 import './work.css';
+import { advanceWithRestCue } from './sessionSound';
 
 type Screen = 'home' | 'story' | 'picker' | 'timer' | MeasureStage | 'result';
 const catalogIds = catalog.map(item => item.id);
@@ -69,35 +70,32 @@ export default function WorkApp() {
   const finalize = useCallback(async () => {
     const current = live.current; if (!current || !repository.current || finalizePending.current) return;
     finalizePending.current = true; setBusy(true); setError('');
-    try { const result = await enqueue(() => repository.current!.finish(structuredClone(current), catalogIds)); live.current = result.session; setSession(result.session); setCollection(result.collection); setDialog(null); setScreen('result'); releaseMeasurement(); void publishWidget(null).catch(report); playRecoverySound(); }
+    try { const result = await enqueue(() => repository.current!.finish(structuredClone(current), catalogIds)); live.current = result.session; setSession(result.session); setCollection(result.collection); setDialog(null); setScreen('result'); releaseMeasurement(); void publishWidget(null).catch(report); }
     catch (cause) { report(cause); }
     finally { finalizePending.current = false; setBusy(false); }
   }, [enqueue, report, releaseMeasurement]);
   useEffect(() => {
     const interval = setInterval(() => { const current = live.current; if (!current || current.status === 'interrupted') return; if (current.status === 'completed') return;
-      const previousPhase = current.phase; const previousEvents = current.events.length;
-      advanceSession(current, performance.now(), reading()); refresh();
+      const previousEvents = current.events.length;
+      advanceWithRestCue(current, performance.now(), reading(), playRecoverySound); refresh();
       if (current.status as Session['status'] === 'completed') void finalize();
-      else if (current.events.length !== previousEvents) { checkpoint(); if (current.phase !== previousPhase) playRecoverySound(); }
+      else if (current.events.length !== previousEvents) { checkpoint(); }
     }, 250);
     return () => clearInterval(interval);
   }, [checkpoint, finalize, reading, refresh]);
 
-  const pause = useCallback(() => { const current = live.current; if (!current || stageRef.current !== 'active') return; advanceSession(current, performance.now(), reading()); if (current.status === 'completed') { void finalize(); return; } if (current.status === 'paused') resumeSession(current); else pauseSession(current, reading()); refresh(); checkpoint(); }, [checkpoint, finalize, reading, refresh]);
+  const pause = useCallback(() => { const current = live.current; if (!current || stageRef.current !== 'active') return; advanceWithRestCue(current, performance.now(), reading(), playRecoverySound); if (current.status === 'completed') { void finalize(); return; } if (current.status === 'paused') resumeSession(current); else pauseSession(current, reading()); refresh(); checkpoint(); }, [checkpoint, finalize, reading, refresh]);
   const action = useCallback((name: WidgetAction) => { if (name === 'pause' || name === 'resume') pause(); else if (name === 'finish') setDialog('finish'); }, [pause]);
   useEffect(() => { let dispose: (() => void) | undefined; let cancelled = false; void subscribeWidgetActions((id, name) => { if (live.current?.id === id && stageRef.current === 'active') action(name); }).then(stop => { if (cancelled) stop(); else dispose = stop; }).catch(report); return () => { cancelled = true; dispose?.(); }; }, [action, report]);
   const bad = screen === 'active' && session?.status === 'running' && session.phase === 'focus' && reading().valid && posture.isBadPosture;
-  const previouslyBad = useRef(false);
   useEffect(() => {
     setBadSince(current => bad ? current ?? Date.now() : null);
-    if (previouslyBad.current && !bad && screen === 'active' && session?.status === 'running' && session.phase === 'focus' && reading().valid) playRecoverySound();
-    previouslyBad.current = !!bad;
-  }, [bad, screen, session?.status, session?.phase, reading]);
+  }, [bad]);
   const widget: WidgetState | null = widgetEnabled && screen === 'active' && session && session.status !== 'completed' ? { sessionId: session.id, remainingMs: session.remainingMs, durationMs: (session.phase === 'focus' ? session.settings.focusMinutes : session.settings.restMinutes) * 60_000, phase: session.phase, paused: session.status !== 'running', bad: !!bad, badSince, cycle: session.cycle, cycles: session.settings.cycles } : null;
   useEffect(() => { void publishWidget(widget).catch(report); }, [screen, session, bad, badSince, widgetEnabled, report]);
   useEffect(() => () => { void publishWidget(null); }, []);
 
-  function beginRegistration() { previousBaseline.current = posture.captureBaseline(); if (live.current && screen === 'active') { advanceSession(live.current, performance.now(), reading()); if (live.current.status === 'completed') { void finalize(); return; } beginCalibration(live.current, reading()); refresh(); checkpoint(); } posture.resetPostureEngine(); calibrationAt.current = performance.now(); setCalibrationNonce(value => value + 1); setScreen('calibrate'); }
+  function beginRegistration() { previousBaseline.current = posture.captureBaseline(); if (live.current && screen === 'active') { advanceWithRestCue(live.current, performance.now(), reading(), playRecoverySound); if (live.current.status === 'completed') { void finalize(); return; } beginCalibration(live.current, reading()); refresh(); checkpoint(); } posture.resetPostureEngine(); calibrationAt.current = performance.now(); setCalibrationNonce(value => value + 1); setScreen('calibrate'); }
   function cancelRegistration() {
     if (live.current?.status === 'recalibrating') { if (previousBaseline.current) posture.restoreBaseline(previousBaseline.current); endCalibration(live.current, null); refresh(); checkpoint(); setScreen('active'); }
     else { releaseMeasurement(); live.current = null; setSession(null); setScreen('home'); }
@@ -135,7 +133,7 @@ export default function WorkApp() {
 
   async function openCard(card: Card) { try { const record = await repository.current!.session(card.measurementId); if (!record) throw new Error('このカードの測定記録が見つかりません'); setDetail(record); } catch (cause) { report(cause); } }
   async function reset() { setBusy(true); try { const value = await enqueue(() => repository.current!.reset()); setDetail(null); setCollection(value); setDialog(null); } catch (cause) { report(cause); } finally { setBusy(false); } }
-  function finish() { const current = live.current; if (!current) return; advanceSession(current, performance.now(), screen === 'active' ? reading() : NO_READING); if (current.status !== 'completed') finishSession(current, undefined, reading()); refresh(); void finalize(); }
+  function finish() { const current = live.current; if (!current) return; advanceWithRestCue(current, performance.now(), screen === 'active' ? reading() : NO_READING, playRecoverySound); if (current.status !== 'completed') finishSession(current, undefined, reading()); refresh(); void finalize(); }
   function home() { releaseMeasurement(); live.current = null; setSession(null); setScreen('home'); }
   if (!collection) return <main className="work-app work-loading"><Brand /><p role="status">{error || '記録を読み込んでいます…'}</p>{error && <button className="work-button white" onClick={() => location.reload()}>再読み込み</button>}</main>;
   return <div className="work-app" aria-busy={busy}>
@@ -144,7 +142,7 @@ export default function WorkApp() {
     {screen === 'home' && <Home collection={collection} onStart={() => setScreen('timer')} onPick={() => setScreen('picker')} onCard={card => void openCard(card)} onReset={() => setDialog('reset')} onStory={() => setScreen('story')} onSound={() => setDialog('sound')} />}
     {screen === 'picker' && <CharacterPicker collection={collection} onClose={home} onConfirm={id => { void enqueue(() => repository.current!.select(id)).then(value => { setCollection(value); home(); }).catch(report); }} />}
     {screen === 'timer' && <TimerSettings saved={collection.timer} onClose={home} onSubmit={(timer, remember) => { if (!busy) void start(timer, remember); }} />}
-    {camera && <MeasureScreen widgetEnabled={widgetEnabled} onWidgetChange={setWidgetEnabled} sound={sound} onSoundChange={setSound} stage={screen as MeasureStage} session={session} videoRef={posture.videoRef} canvasRef={posture.canvasRef} status={posture.status} ready={posture.ready} remainingCalibrationMs={posture.snapshot.warmupRemainingMs} tracking={posture.snapshot.qualityOk} onRegister={beginRegistration} onCancel={cancelRegistration} onRecalibrate={beginRegistration} onPause={pause} onFinish={() => setDialog('finish')} onSound={() => setDialog('sound')} />}
+    {camera && <MeasureScreen widgetEnabled={widgetEnabled} onWidgetChange={setWidgetEnabled} sound={sound} onSoundChange={setSound} stage={screen as MeasureStage} session={session} videoRef={posture.videoRef} canvasRef={posture.canvasRef} status={posture.status} ready={posture.ready} remainingCalibrationMs={posture.snapshot.warmupRemainingMs} tracking={posture.snapshot.qualityOk} onRegister={beginRegistration} onCancel={cancelRegistration} onRecalibrate={beginRegistration} onPause={pause} onFinish={() => setDialog('finish')} />}
     {screen === 'result' && session && <main className="work-screen work-result-screen"><Brand /><h1>{session.acquiredCharacterId ? '新しい仲間がやってきた！' : 'おつかれさまでした！'}</h1><ResultCard session={session} /><button className="work-button blue" onClick={home}>ホームへ戻る</button></main>}
     {!isDesktop && widget && <Widget state={widget} onAction={action} />}
     {detail && <Dialog title="獲得カードの詳細" className="work-detail-dialog" onClose={() => setDetail(null)}><ResultCard session={detail} /></Dialog>}

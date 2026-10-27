@@ -12,6 +12,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { DEFAULT_TIMER, EMPTY_COLLECTION, createSession, type Baseline, type Collection, type Session } from './model';
 import '../../styles/base.css';
 import './work.css';
+import { DEFAULT_SOUND_SETTINGS } from '../sound/types/soundSettings';
 const date = '2026-10-27T09:00:00.000Z';
 function result(id = 'oto-anago'): Session {
   const session = createSession(`preview-${id}`, DEFAULT_TIMER, 0, { stats: {}, headWidthRatio: null } as Baseline);
@@ -23,6 +24,7 @@ export default function WorkPreview() {
   const [diagnostic, setDiagnostic] = useState(`${innerWidth}×${innerHeight}`);
   const widgetRef = useRef<WidgetState | null>(null);
   useEffect(() => { const resize = () => setDiagnostic(`${innerWidth}×${innerHeight}`); window.addEventListener('resize', resize); return () => window.removeEventListener('resize', resize); }, []);
+  const [sound, setSound] = useState(DEFAULT_SOUND_SETTINGS);
   const [screen, setScreen] = useState('home'); const [detail, setDetail] = useState<Session | null>(null);
   const [collection, setCollection] = useState<Collection>({ ...EMPTY_COLLECTION, cards: catalog.map(item => ({ characterId: item.id, measurementId: `preview-${item.id}`, acquiredAt: date, generation: 0 })) });
   const [widget, setWidget] = useState<WidgetState | null>(null); const video = useRef<HTMLVideoElement>(null); const canvas = useRef<HTMLCanvasElement>(null);
@@ -36,7 +38,7 @@ export default function WorkPreview() {
   {screen === 'home' && <Home collection={collection} onStart={() => setScreen('timer')} onPick={() => setScreen('picker')} onCard={card => setDetail(result(card.characterId))} onReset={() => setCollection(value => ({ ...value, cards: [] }))} onStory={() => {}} onSound={() => {}} />}
   {screen === 'picker' && <CharacterPicker collection={collection} onConfirm={id => { setCollection(value => ({ ...value, selectedId: id })); setScreen('home'); }} onClose={() => setScreen('home')} />}
   {screen === 'timer' && <TimerSettings saved={null} onSubmit={() => setScreen('prepare')} onClose={() => setScreen('home')} />}
-  {['prepare', 'calibrate', 'ready', 'active', 'rest', 'pause'].includes(screen) && <MeasureScreen stage={stage} session={session} videoRef={video} canvasRef={canvas} status="カメラを使わない表示検証です" ready remainingCalibrationMs={3000} tracking onRegister={() => setScreen('calibrate')} onCancel={() => setScreen('home')} onRecalibrate={() => setScreen('calibrate')} onPause={() => setScreen(screen === 'pause' ? 'active' : 'pause')} onFinish={() => setScreen('result')} onSound={() => {}} />}
+  {['prepare', 'calibrate', 'ready', 'active', 'rest', 'pause'].includes(screen) && <MeasureScreen stage={stage} session={session} videoRef={video} canvasRef={canvas} status="カメラを使わない表示検証です" ready remainingCalibrationMs={3000} tracking onRegister={() => setScreen('calibrate')} onCancel={() => setScreen('home')} onRecalibrate={() => setScreen('calibrate')} onPause={() => setScreen(screen === 'pause' ? 'active' : 'pause')} onFinish={() => setScreen('result')} sound={sound} onSoundChange={setSound} />}
   {screen === 'result' && <main className="work-screen work-result-screen"><h1>新しい仲間がやってきた！</h1><ResultCard session={result()} /></main>}
   {detail && <Dialog title="獲得カードの詳細" className="work-detail-dialog" onClose={() => setDetail(null)}><ResultCard session={detail} /></Dialog>}
   {!isDesktop && widget && <Widget state={widget} onAction={action => { if (action === 'finish') { publish(null); } else { const next = { ...widget, paused: !widget.paused }; publish(next); } }} />}

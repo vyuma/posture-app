@@ -3,6 +3,15 @@ import type { BaselineStats } from '../posture/engine.types';
 export type Grade = 1 | 2 | 3 | 4 | 5;
 export type TimerSettings = { focusMinutes: number; restMinutes: number; cycles: number };
 export const DEFAULT_TIMER: TimerSettings = { focusMinutes: 35, restMinutes: 5, cycles: 4 };
+export const TIMER_MAX = { focusMinutes: 120, restMinutes: 60, cycles: 12 } as const;
+export function clampTimerValue(key: keyof TimerSettings, value: number) {
+  return Number.isNaN(value) ? 1 : Math.max(1, Math.min(TIMER_MAX[key], Math.trunc(value)));
+}
+export function normalizeTimer(timer: TimerSettings): TimerSettings {
+  const cycles = clampTimerValue('cycles', timer.cycles);
+  return { focusMinutes: clampTimerValue('focusMinutes', timer.focusMinutes),
+    restMinutes: cycles === 1 ? 0 : clampTimerValue('restMinutes', timer.restMinutes), cycles };
+}
 export const SCORE_VERSION = 'baseline-distance-v1';
 export type Baseline = { stats: BaselineStats; headWidthRatio: number | null };
 export type Calibration = { id: string; focusMs: number; elapsedMs: number; baseline: Baseline; scoreVersion: string };
@@ -25,11 +34,12 @@ export const NO_READING: Reading = { valid: false, good: false, deviation: 0 };
 export const displayScore = (deviation: number) => Math.max(0, Math.min(100, 100 - deviation / 1.6 * 50));
 export const goodRatio = (session: Pick<Session, 'validMs' | 'goodMs'> & { legacyGoodRatio?: number }) => session.legacyGoodRatio ?? (session.validMs > 0 ? session.goodMs / session.validMs : null);
 export function timerValid(timer: TimerSettings) {
-  return Number.isInteger(timer.focusMinutes) && timer.focusMinutes >= 5 && timer.focusMinutes <= 120
-    && Number.isInteger(timer.restMinutes) && timer.restMinutes >= 5 && timer.restMinutes <= 60
+  return Number.isInteger(timer.focusMinutes) && timer.focusMinutes >= 1 && timer.focusMinutes <= TIMER_MAX.focusMinutes
+    && (timer.cycles === 1 ? timer.restMinutes === 0 : Number.isInteger(timer.restMinutes) && timer.restMinutes >= 1 && timer.restMinutes <= TIMER_MAX.restMinutes)
     && Number.isInteger(timer.cycles) && timer.cycles >= 1 && timer.cycles <= 12;
 }
 export function createSession(id: string, settings: TimerSettings, generation: number, baseline: Baseline, now = Date.now()): Session {
+  settings = normalizeTimer(settings);
   return { id, startedAt: new Date(now).toISOString(), endedAt: null, status: 'running', settings: { ...settings },
     phase: 'focus', cycle: 1, remainingMs: settings.focusMinutes * 60_000, focusMs: 0, validMs: 0, goodMs: 0,
     elapsedMs: 0, generation, calibrations: [{ id: `${id}:baseline:0`, focusMs: 0, elapsedMs: 0, baseline, scoreVersion: SCORE_VERSION }],
