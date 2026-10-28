@@ -10,6 +10,7 @@
     "build": "tsc && vite build",
     "build:debug-ui": "VITE_SHOW_DEBUG_UI=true tsc && vite build",
     "preview": "vite preview",
+    "research:depth": "vite --open /research/depth-probe/",
     "tauri": "tauri",
     "tauri:debug-ui": "VITE_SHOW_DEBUG_UI=true bun run tauri build",
     "release:macos": "node scripts/release-macos.mjs",

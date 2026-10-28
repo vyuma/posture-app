@@ -10,9 +10,18 @@ const MIN_VISIBILITY = 0.5;
 
 // ランドマークは輪郭の端に乗りやすく、そのまま深度を読むと背景を拾う。
 // 肩は肩中点へ、耳は鼻へ寄せて、身体の内側を読む。
-const SHOULDER_INWARD_RATIO = 0.2;
-const EAR_INWARD_RATIO = 0.25;
-const PATCH_RADIUS_TO_SHOULDER_WIDTH = 0.06;
+export type DepthProbeOptions = {
+  shoulderInwardRatio: number;
+  earInwardRatio: number;
+  /** パッチ半径を肩幅に対する比で指定する。 */
+  patchRadiusRatio: number;
+};
+
+export const DEFAULT_DEPTH_PROBE_OPTIONS: DepthProbeOptions = {
+  shoulderInwardRatio: 0.2,
+  earInwardRatio: 0.25,
+  patchRadiusRatio: 0.06,
+};
 
 /** ViT のパッチサイズ（14）の倍数に丸めた入力サイズを、映像の縦横比から求める。 */
 export function getDepthInputSize(
@@ -44,6 +53,7 @@ export function buildDepthProbePoints(
   landmarks: NormalizedLandmark[] | null,
   imageWidth: number,
   imageHeight: number,
+  options: DepthProbeOptions = DEFAULT_DEPTH_PROBE_OPTIONS,
 ): DepthProbePoints | null {
   if (!landmarks) {
     return null;
@@ -87,10 +97,12 @@ export function buildDepthProbePoints(
 
   return {
     shoulder: [shoulderL, shoulderR].map((point) =>
-      toNormalized(lerp(point, shoulderMid, SHOULDER_INWARD_RATIO)),
+      toNormalized(lerp(point, shoulderMid, options.shoulderInwardRatio)),
     ),
-    ear: ears.map((ear) => toNormalized(lerp(toPixel(ear), headCenter, EAR_INWARD_RATIO))),
-    radiusPx: shoulderWidthPx * PATCH_RADIUS_TO_SHOULDER_WIDTH,
+    ear: ears.map((ear) =>
+      toNormalized(lerp(toPixel(ear), headCenter, options.earInwardRatio)),
+    ),
+    radiusPx: shoulderWidthPx * options.patchRadiusRatio,
     imageWidth,
   };
 }

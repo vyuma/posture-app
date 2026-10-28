@@ -11,7 +11,7 @@ import type {
 
 // tsconfig の lib に WebWorker を入れると DOM と衝突するため、使う分だけ型を書く。
 const workerScope = self as unknown as {
-  postMessage(message: DepthWorkerResponse): void;
+  postMessage(message: DepthWorkerResponse, transfer?: Transferable[]): void;
   onmessage: ((event: MessageEvent<DepthWorkerRequest>) => void) | null;
 };
 
@@ -91,7 +91,7 @@ async function estimate(request: Extract<DepthWorkerRequest, { type: "estimate" 
   }
 
   // 縮小はメインスレッドの createImageBitmap で済ませてあり、ここでは画素を取り出すだけ。
-  const { bitmap, probes, id } = request;
+  const { bitmap, probes, id, includeDepthMap } = request;
   const { width, height } = bitmap;
   if (!canvas || canvas.width !== width || canvas.height !== height) {
     canvas = new OffscreenCanvas(width, height);
@@ -119,11 +119,18 @@ async function estimate(request: Extract<DepthWorkerRequest, { type: "estimate" 
     shoulderDisparity: sampleGroup(depth, outWidth, outHeight, probes.shoulder, probes.radiusPx, probes.imageWidth),
     frameRange: depthRange(depth),
     inferenceMs,
+    // 出力バッファは dispose で解放されるので、渡すときは複製する。
+    depthMap: includeDepthMap
+      ? { data: depth.slice(), width: outWidth, height: outHeight }
+      : undefined,
   };
   input.dispose();
   output.dispose();
   return response;
 }
+
+const transferablesOf = (response: DepthWorkerResponse): Transferable[] =>
+  response.type === "result" && response.depthMap ? [response.depthMap.data.buffer] : [];
 
 const toMessage = (error: unknown) =>
   error instanceof Error ? `${error.name}: ${error.message}` : String(error);
@@ -138,7 +145,7 @@ workerScope.onmessage = (event) => {
   }
 
   estimate(request)
-    .then((result) => workerScope.postMessage(result))
+    .then((result) => workerScope.postMessage(result, transferablesOf(result)))
     .catch((error) => {
       request.bitmap.close();
       workerScope.postMessage({ type: "error", id: request.id, message: toMessage(error) });

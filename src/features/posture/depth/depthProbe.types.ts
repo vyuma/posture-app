@@ -17,7 +17,11 @@ export type DepthWorkerRequest =
       id: number;
       bitmap: ImageBitmap;
       probes: DepthProbePoints;
+      /** 研究用ページで深度マップ全体を見るときだけ true。 */
+      includeDepthMap?: boolean;
     };
+
+export type DepthMap = { data: Float32Array; width: number; height: number };
 
 export type DepthWorkerResponse =
   | { type: "ready"; backend: DepthBackend; model: string; loadMs: number }
@@ -29,6 +33,7 @@ export type DepthWorkerResponse =
       shoulderDisparity: number | null;
       frameRange: number;
       inferenceMs: number;
+      depthMap?: DepthMap;
     }
   | { type: "error"; id?: number; message: string };
 

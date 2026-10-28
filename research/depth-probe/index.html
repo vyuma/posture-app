@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>深度プローブ研究</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>深度プローブ研究</h1>
+      <p id="status">初期化中...</p>
+    </header>
+
+    <section class="controls" aria-label="設定">
+      <label>
+        入力の高さ
+        <select id="input-height">
+          <option value="182">182</option>
+          <option value="252" selected>252（本番）</option>
+          <option value="336">336</option>
+          <option value="518">518（モデル既定）</option>
+        </select>
+      </label>
+      <label>
+        推論間隔
+        <select id="interval">
+          <option value="0">最速</option>
+          <option value="300" selected>300ms（本番）</option>
+          <option value="1000">1000ms</option>
+        </select>
+      </label>
+      <label>
+        耳の内側寄せ <output id="ear-inward-value"></output>
+        <input id="ear-inward" type="range" min="0" max="0.6" step="0.05" />
+      </label>
+      <label>
+        肩の内側寄せ <output id="shoulder-inward-value"></output>
+        <input id="shoulder-inward" type="range" min="0" max="0.6" step="0.05" />
+      </label>
+      <label>
+        パッチ半径/肩幅 <output id="radius-value"></output>
+        <input id="radius" type="range" min="0.02" max="0.2" step="0.01" />
+      </label>
+      <div class="buttons">
+        <button id="freeze" type="button">一時停止</button>
+        <button id="reset-baseline" type="button">基準を取り直す</button>
+        <button id="record" type="button">記録開始</button>
+        <button id="download" type="button" disabled>CSV を保存</button>
+      </div>
+      <div class="labels" role="group" aria-label="ラベル（数字キーでも切り替え）">
+        <span>ラベル:</span>
+        <button type="button" data-label="none" class="active">0 なし</button>
+        <button type="button" data-label="good">1 良い姿勢</button>
+        <button type="button" data-label="forward-head">2 頭を前に出す</button>
+        <button type="button" data-label="slouch">3 猫背</button>
+        <button type="button" data-label="turned">4 横を向く</button>
+      </div>
+    </section>
+
+    <main class="grid">
+      <figure>
+        <figcaption>推論に送ったフレームと読み取り位置（左右反転なし）</figcaption>
+        <canvas id="frame"></canvas>
+      </figure>
+      <figure>
+        <figcaption>深度マップ（明るいほど近い）とパッチ</figcaption>
+        <canvas id="depth"></canvas>
+      </figure>
+      <figure>
+        <figcaption>縦断面：首の中心を上から下へ（左が近い）</figcaption>
+        <canvas id="profile-v" height="260"></canvas>
+      </figure>
+      <figure>
+        <figcaption>横断面：肩の高さを左から右へ（上が近い）</figcaption>
+        <canvas id="profile-h" height="260"></canvas>
+      </figure>
+      <figure>
+        <figcaption>パッチの中身（p10 / 中央値 / p90、幅が大きいと背景が混入している）</figcaption>
+        <table id="patches"></table>
+        <dl id="summary"></dl>
+      </figure>
+      <figure>
+        <figcaption>時系列（直近30秒）</figcaption>
+        <canvas id="series" height="260"></canvas>
+        <p class="legend">
+          <span class="swatch normalized"></span>正規化した耳−肩差
+          <span class="swatch baseline"></span>基準からの変化
+          <span class="swatch mediapipe"></span>MediaPipe 頭部前傾角（右軸, °）
+        </p>
+      </figure>
+    </main>
+
+    <video id="video" playsinline muted hidden></video>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
