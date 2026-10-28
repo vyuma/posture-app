@@ -10,6 +10,10 @@
   --normalized: #2f6fde;
   --baseline: #c2255c;
   --mediapipe: #868e96;
+  --face: #7048e8;
+  --ok: #2b8a3e;
+  --warn: #e67700;
+  --bad: #c92a2a;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -25,6 +29,10 @@
     --normalized: #6c9cff;
     --baseline: #f06595;
     --mediapipe: #adb5bd;
+    --face: #b197fc;
+    --ok: #69db7c;
+    --warn: #ffa94d;
+    --bad: #ff8787;
   }
 }
 
@@ -192,4 +200,56 @@ dd {
 
 .swatch.mediapipe {
   background: var(--mediapipe);
+}
+
+.swatch.ear {
+  background: var(--ear);
+}
+
+.swatch.shoulder {
+  background: var(--shoulder);
+}
+
+.swatch.face {
+  background: var(--face);
+}
+
+.verdict {
+  margin: 0 0 12px;
+  padding: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.verdict h2 {
+  margin: 0 0 6px;
+  font-size: 15px;
+}
+
+.verdict ul {
+  margin: 4px 0;
+  padding-left: 18px;
+}
+
+.verdict .note {
+  margin: 4px 0 8px;
+  color: var(--muted);
+}
+
+.verdict-ok {
+  color: var(--ok);
+}
+
+.verdict-warn {
+  color: var(--warn);
+}
+
+.verdict-bad {
+  color: var(--bad);
+}
+
+.verdict-pending {
+  color: var(--muted);
 }

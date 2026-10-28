@@ -55,7 +55,14 @@
         <button type="button" data-label="forward-head">2 頭を前に出す</button>
         <button type="button" data-label="slouch">3 猫背</button>
         <button type="button" data-label="turned">4 横を向く</button>
+        <button type="button" data-label="closer">5 体ごと近づく（陽性対照）</button>
       </div>
+    </section>
+
+    <section class="verdict" aria-label="判定">
+      <h2>判定：深度は頭の前方移動を捉えているか</h2>
+      <div id="verdict-text"><p>記録を始めると、ラベルごとに集計して判定します。</p></div>
+      <table id="verdict-table"></table>
     </section>
 
     <main class="grid">
@@ -81,12 +88,21 @@
         <dl id="summary"></dl>
       </figure>
       <figure>
-        <figcaption>時系列（直近30秒）</figcaption>
-        <canvas id="series" height="260"></canvas>
+        <figcaption>深度の時系列（直近30秒、上が「近づいた」）</figcaption>
+        <canvas id="series-depth" height="220"></canvas>
         <p class="legend">
-          <span class="swatch normalized"></span>正規化した耳−肩差
-          <span class="swatch baseline"></span>基準からの変化
-          <span class="swatch mediapipe"></span>MediaPipe 頭部前傾角（右軸, °）
+          <span class="swatch ear"></span>耳の変化
+          <span class="swatch shoulder"></span>肩の変化
+          <span class="swatch baseline"></span>耳−肩の変化（左上の目盛りは3本共通）
+          <span class="swatch normalized"></span>旧指標（独自の目盛り）
+        </p>
+      </figure>
+      <figure>
+        <figcaption>深度を使わない比較（直近30秒、線ごとに独自の目盛り）</figcaption>
+        <canvas id="series-compare" height="220"></canvas>
+        <p class="legend">
+          <span class="swatch face"></span>Face 頭の前方移動（cm）
+          <span class="swatch mediapipe"></span>MediaPipe 頭部前傾角（°）
         </p>
       </figure>
     </main>

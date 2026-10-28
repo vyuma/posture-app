@@ -1,11 +1,14 @@
 import {
+  FaceLandmarker,
   FilesetResolver,
   PoseLandmarker,
+  type Matrix,
   type NormalizedLandmark,
 } from "@mediapipe/tasks-vision";
 
 import {
   DEPTH_PROBE_BASELINE_MS,
+  POSE_LANDMARK_INDEX,
   POSE_MODEL_URL,
   VISION_WASM_URL,
 } from "../../src/features/posture/constants";
@@ -26,29 +29,45 @@ import type {
   DepthWorkerResponse,
   ProbePoint,
 } from "../../src/features/posture/depth/depthProbe.types";
+import { fitBackgroundAffine, personBox, type PersonBox } from "./alignment";
+import { buildVerdict, type SignalKey, SIGNALS } from "./verdict";
 
-type Label = "none" | "good" | "forward-head" | "slouch" | "turned";
+const FACE_MODEL_URL =
+  "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
+
+export type Label = "none" | "good" | "forward-head" | "slouch" | "turned" | "closer";
 
 type PendingFrame = {
   id: number;
-  sentAt: number;
   probes: DepthProbePoints;
   landmarks: NormalizedLandmark[] | null;
   frame: ImageBitmap;
   inputWidth: number;
   inputHeight: number;
   mediapipeHeadForwardDeg: number | null;
+  faceDistanceCm: number | null;
+  shoulderWidthPx: number | null;
 };
 
-type Sample = {
+export type Sample = {
   t: number;
   label: Label;
+  /** ラベル切り替え直後（姿勢の移行中）でない。判定にはこの行だけを使う。 */
+  settled: boolean;
   earDisparity: number | null;
   shoulderDisparity: number | null;
-  delta: number | null;
   frameRange: number;
-  normalized: number | null;
-  fromBaseline: number | null;
+  /** 旧指標：(耳−肩)/フレームのレンジ の基準からの変化。 */
+  oldMetric: number | null;
+  /** 背景で基準フレームに合わせた後の、耳・肩・耳−肩の基準からの変化（基準フレームのレンジ比）。 */
+  earChange: number | null;
+  shoulderChange: number | null;
+  neckChange: number | null;
+  fitR2: number | null;
+  fitScale: number | null;
+  faceDistanceCm: number | null;
+  /** 肩までの距離（肩幅から推定）に対して頭が何 cm 手前にあるかの、基準からの変化。 */
+  faceForwardCm: number | null;
   mediapipeHeadForwardDeg: number | null;
   inferenceMs: number;
   inputWidth: number;
@@ -56,14 +75,37 @@ type Sample = {
   options: DepthProbeOptions;
 };
 
+type Baseline = {
+  startedAt: number | null;
+  reference: DepthMap | null;
+  referenceBox: PersonBox | null;
+  referenceRange: number;
+  samples: {
+    oldNormalized: number[];
+    alignedEar: number[];
+    alignedShoulder: number[];
+    faceDistanceCm: number[];
+    shoulderWidthPx: number[];
+  };
+  ready: {
+    oldNormalized: number;
+    alignedEar: number;
+    alignedShoulder: number;
+    faceDistanceCm: number | null;
+    shoulderWidthPx: number | null;
+  } | null;
+};
+
 const SERIES_WINDOW_MS = 30_000;
 const POSE_INTERVAL_MS = 33;
+const SETTLE_MS = 1_000;
 const LABEL_KEYS: Record<string, Label> = {
   "0": "none",
   "1": "good",
   "2": "forward-head",
   "3": "slouch",
   "4": "turned",
+  "5": "closer",
 };
 const LABEL_TINT: Record<Label, string | null> = {
   none: null,
@@ -71,6 +113,7 @@ const LABEL_TINT: Record<Label, string | null> = {
   "forward-head": "rgba(250, 82, 82, 0.14)",
   slouch: "rgba(250, 176, 5, 0.16)",
   turned: "rgba(132, 94, 247, 0.14)",
+  closer: "rgba(34, 139, 230, 0.14)",
 };
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -83,9 +126,12 @@ const frameCanvas = $<HTMLCanvasElement>("frame");
 const depthCanvas = $<HTMLCanvasElement>("depth");
 const profileVCanvas = $<HTMLCanvasElement>("profile-v");
 const profileHCanvas = $<HTMLCanvasElement>("profile-h");
-const seriesCanvas = $<HTMLCanvasElement>("series");
+const seriesDepthCanvas = $<HTMLCanvasElement>("series-depth");
+const seriesCompareCanvas = $<HTMLCanvasElement>("series-compare");
 const patchTable = $<HTMLTableElement>("patches");
 const summaryList = $<HTMLDListElement>("summary");
+const verdictTable = $<HTMLTableElement>("verdict-table");
+const verdictText = $<HTMLDivElement>("verdict-text");
 const inputHeightSelect = $<HTMLSelectElement>("input-height");
 const intervalSelect = $<HTMLSelectElement>("interval");
 const freezeButton = $<HTMLButtonElement>("freeze");
@@ -100,9 +146,11 @@ const sliders: [string, keyof DepthProbeOptions][] = [
 ];
 
 let poseLandmarker: PoseLandmarker | null = null;
+let faceLandmarker: FaceLandmarker | null = null;
 let engineState = createPostureEngineState();
 let latestLandmarks: NormalizedLandmark[] | null = null;
 let latestHeadForwardDeg: number | null = null;
+let latestFaceDistanceCm: number | null = null;
 let lastPoseAt = 0;
 let lastDepthAt = 0;
 let workerReady = false;
@@ -114,9 +162,8 @@ let nextId = 0;
 let frozen = false;
 let recording = false;
 let label: Label = "none";
-let baseline: number | null = null;
-let baselineStartedAt: number | null = null;
-let baselineSamples: number[] = [];
+let labelChangedAt = 0;
+let baseline = createBaseline();
 const series: Sample[] = [];
 const recorded: Sample[] = [];
 
@@ -127,12 +174,32 @@ const worker = new Worker(
 
 // ---- 計算 ----------------------------------------------------------------
 
+function createBaseline(): Baseline {
+  return {
+    startedAt: null,
+    reference: null,
+    referenceBox: null,
+    referenceRange: 1,
+    samples: {
+      oldNormalized: [],
+      alignedEar: [],
+      alignedShoulder: [],
+      faceDistanceCm: [],
+      shoulderWidthPx: [],
+    },
+    ready: null,
+  };
+}
+
 function quantile(sorted: number[], q: number) {
   if (sorted.length === 0) {
     return NaN;
   }
   return sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))];
 }
+
+const median = (values: number[]) => quantile([...values].sort((a, b) => a - b), 0.5);
+const medianOrNull = (values: number[]) => (values.length > 0 ? median(values) : null);
 
 function toDepthPixel(point: ProbePoint, map: DepthMap) {
   return {
@@ -162,18 +229,101 @@ function displayRange(map: DepthMap) {
   return { lo: quantile(sorted, 0.02), hi: quantile(sorted, 0.98) };
 }
 
-function trackBaseline(value: number, now: number) {
-  if (baseline !== null) {
-    return value - baseline;
+/** 顔の変換行列の平行移動成分から、カメラから頭までの距離（cm）を取り出す。 */
+function faceDistanceFromMatrix(matrix: Matrix | undefined) {
+  if (!matrix || matrix.data.length !== 16) {
+    return null;
   }
-  baselineStartedAt ??= now;
-  baselineSamples.push(value);
-  if (now - baselineStartedAt >= DEPTH_PROBE_BASELINE_MS && baselineSamples.length >= 5) {
-    const sorted = [...baselineSamples].sort((a, b) => a - b);
-    baseline = quantile(sorted, 0.5);
-    return value - baseline;
+  const d = matrix.data;
+  // 最下行が (0,0,0,1) なら列優先で平行移動は 12〜14、そうでなければ行優先で 3,7,11。
+  const columnMajor = Math.abs(d[3]) < 1e-6 && Math.abs(d[7]) < 1e-6 && Math.abs(d[11]) < 1e-6;
+  const z = columnMajor ? d[14] : d[11];
+  return Number.isFinite(z) ? Math.abs(z) : null;
+}
+
+function shoulderWidthPx(landmarks: NormalizedLandmark[] | null) {
+  const left = landmarks?.[POSE_LANDMARK_INDEX.LEFT_SHOULDER];
+  const right = landmarks?.[POSE_LANDMARK_INDEX.RIGHT_SHOULDER];
+  if (!left || !right || (left.visibility ?? 0) < 0.5 || (right.visibility ?? 0) < 0.5) {
+    return null;
   }
-  return null;
+  return Math.hypot((left.x - right.x) * video.videoWidth, (left.y - right.y) * video.videoHeight);
+}
+
+function resetBaseline() {
+  baseline = createBaseline();
+  engineState = createPostureEngineState();
+}
+
+/**
+ * 1フレーム分の指標を計算する。基準期間中は値を溜め、期間が終わったら中央値を基準にする。
+ * 背景合わせは基準期間の最初のフレームを参照にする。
+ */
+function computeSignals(
+  message: Extract<DepthWorkerResponse, { type: "result" }>,
+  map: DepthMap,
+  current: PendingFrame,
+  now: number,
+) {
+  const { earDisparity: ear, shoulderDisparity: shoulder, frameRange } = message;
+  const box = personBox(current.probes, map);
+  if (!baseline.reference) {
+    baseline.reference = map;
+    baseline.referenceBox = box;
+    baseline.referenceRange = frameRange || 1;
+    baseline.startedAt = now;
+  }
+
+  const oldNormalized = ear !== null && shoulder !== null && frameRange > 0 ? (ear - shoulder) / frameRange : null;
+  const fit = fitBackgroundAffine(map, baseline.reference, [box, baseline.referenceBox!]);
+  const alignedEar = fit && ear !== null ? fit.a * ear + fit.b : null;
+  const alignedShoulder = fit && shoulder !== null ? fit.a * shoulder + fit.b : null;
+
+  if (!baseline.ready) {
+    const s = baseline.samples;
+    if (oldNormalized !== null) s.oldNormalized.push(oldNormalized);
+    if (alignedEar !== null) s.alignedEar.push(alignedEar);
+    if (alignedShoulder !== null) s.alignedShoulder.push(alignedShoulder);
+    if (current.faceDistanceCm !== null) s.faceDistanceCm.push(current.faceDistanceCm);
+    if (current.shoulderWidthPx !== null) s.shoulderWidthPx.push(current.shoulderWidthPx);
+    if (
+      now - baseline.startedAt! >= DEPTH_PROBE_BASELINE_MS &&
+      s.oldNormalized.length >= 5 &&
+      s.alignedEar.length >= 5
+    ) {
+      baseline.ready = {
+        oldNormalized: median(s.oldNormalized),
+        alignedEar: median(s.alignedEar),
+        alignedShoulder: median(s.alignedShoulder),
+        faceDistanceCm: medianOrNull(s.faceDistanceCm),
+        shoulderWidthPx: medianOrNull(s.shoulderWidthPx),
+      };
+    }
+  }
+
+  const base = baseline.ready;
+  const range = baseline.referenceRange;
+  const earChange = base && alignedEar !== null ? (alignedEar - base.alignedEar) / range : null;
+  const shoulderChange =
+    base && alignedShoulder !== null ? (alignedShoulder - base.alignedShoulder) / range : null;
+  // 肩までの距離は肩幅に反比例するとみなし、頭が肩よりどれだけ手前に出たかを cm で出す。
+  const faceForwardCm =
+    base?.faceDistanceCm != null &&
+    base.shoulderWidthPx != null &&
+    current.faceDistanceCm !== null &&
+    current.shoulderWidthPx !== null
+      ? base.faceDistanceCm * (base.shoulderWidthPx / current.shoulderWidthPx) - current.faceDistanceCm
+      : null;
+
+  return {
+    oldMetric: base && oldNormalized !== null ? oldNormalized - base.oldNormalized : null,
+    earChange,
+    shoulderChange,
+    neckChange: earChange !== null && shoulderChange !== null ? earChange - shoulderChange : null,
+    fitR2: fit?.r2 ?? null,
+    fitScale: fit?.a ?? null,
+    faceForwardCm,
+  };
 }
 
 /** Turbo カラーマップの多項式近似（Google, 2019）。t は 0〜1。 */
@@ -226,7 +376,15 @@ function drawFrame(frame: ImageBitmap, probes: DepthProbePoints, landmarks: Norm
   drawProbes(ctx, probes, frame.width, frame.height);
 }
 
-function drawDepth(map: DepthMap, probes: DepthProbePoints, lo: number, hi: number, neckX: number, shoulderY: number) {
+function drawDepth(
+  map: DepthMap,
+  probes: DepthProbePoints,
+  lo: number,
+  hi: number,
+  neckX: number,
+  shoulderY: number,
+  box: PersonBox,
+) {
   depthCanvas.width = map.width;
   depthCanvas.height = map.height;
   const ctx = depthCanvas.getContext("2d")!;
@@ -250,6 +408,9 @@ function drawDepth(map: DepthMap, probes: DepthProbePoints, lo: number, hi: numb
   ctx.moveTo(0, shoulderY + 0.5);
   ctx.lineTo(map.width, shoulderY + 0.5);
   ctx.stroke();
+  // 背景合わせに使わない人物領域。
+  ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
+  ctx.strokeRect(box.x0, box.y0, box.x1 - box.x0, map.height - box.y0);
   ctx.setLineDash([]);
   drawProbes(ctx, probes, map.width, map.height);
 }
@@ -365,23 +526,34 @@ function renderPatchTable(map: DepthMap, probes: DepthProbePoints) {
 
 function renderSummary(sample: Sample) {
   const fmt = (value: number | null, digits = 3) => (value === null ? "-" : value.toFixed(digits));
+  const learning = baseline.ready ? null : "基準を学習中";
   const items: [string, string][] = [
-    ["耳の視差", fmt(sample.earDisparity)],
-    ["肩の視差", fmt(sample.shoulderDisparity)],
-    ["耳−肩", fmt(sample.delta)],
-    ["フレームのレンジ(p5–p95)", fmt(sample.frameRange)],
-    ["正規化", fmt(sample.normalized)],
-    ["基準から", baseline === null ? "基準を学習中" : fmt(sample.fromBaseline)],
+    ["耳の視差 / 肩の視差", `${fmt(sample.earDisparity)} / ${fmt(sample.shoulderDisparity)}`],
+    ["旧指標（基準から）", learning ?? fmt(sample.oldMetric, 4)],
+    ["耳の変化（背景合わせ）", learning ?? fmt(sample.earChange, 4)],
+    ["肩の変化（背景合わせ）", learning ?? fmt(sample.shoulderChange, 4)],
+    ["耳−肩の変化（背景合わせ）", learning ?? fmt(sample.neckChange, 4)],
+    ["背景合わせ R² / 倍率", `${fmt(sample.fitR2, 2)} / ${fmt(sample.fitScale, 3)}`],
+    ["Face 頭までの距離", sample.faceDistanceCm === null ? "顔なし" : `${sample.faceDistanceCm.toFixed(1)} cm`],
+    ["Face 頭の前方移動", learning ?? (sample.faceForwardCm === null ? "-" : `${sample.faceForwardCm.toFixed(1)} cm`)],
     ["MediaPipe 頭部前傾角", fmt(sample.mediapipeHeadForwardDeg, 1)],
-    ["入力サイズ", `${sample.inputWidth}×${sample.inputHeight}`],
-    ["推論", `${Math.round(sample.inferenceMs)}ms`],
+    ["入力 / 推論", `${sample.inputWidth}×${sample.inputHeight} / ${Math.round(sample.inferenceMs)}ms`],
   ];
   summaryList.innerHTML = items.map(([key, value]) => `<dt>${key}</dt><dd>${value}</dd>`).join("");
 }
 
-function drawSeries(now: number) {
-  const { ctx, width, height } = prepareCanvas(seriesCanvas);
-  const pad = 28;
+type SeriesLine = {
+  pick: (sample: Sample) => number | null;
+  color: string;
+  /** shared は同じグラフの shared 同士で縦軸を共有、own は線ごとに自動スケール。 */
+  axis: "shared" | "own";
+  minExtent: number;
+  unit?: string;
+};
+
+function drawSeries(canvas: HTMLCanvasElement, lines: SeriesLine[], now: number) {
+  const { ctx, width, height } = prepareCanvas(canvas);
+  const pad = 8;
   const start = now - SERIES_WINDOW_MS;
   const visible = series.filter((sample) => sample.t >= start);
   const toX = (t: number) => pad + ((t - start) / SERIES_WINDOW_MS) * (width - pad * 2);
@@ -396,46 +568,85 @@ function drawSeries(now: number) {
     ctx.fillRect(x0, 0, x1 - x0, height);
   }
 
-  const values = visible.flatMap((sample) =>
-    [sample.normalized, sample.fromBaseline].filter((v): v is number => v !== null),
-  );
-  const extent = Math.max(0.05, ...values.map(Math.abs));
-  const toY = (value: number) => height / 2 - (value / extent) * (height / 2 - 8);
+  const maxAbs = (line: SeriesLine) =>
+    Math.max(
+      line.minExtent,
+      ...visible.map((s) => Math.abs(line.pick(s) ?? 0)),
+    );
+  const sharedExtent = Math.max(0, ...lines.filter((l) => l.axis === "shared").map(maxAbs));
 
   ctx.strokeStyle = css("--line");
   ctx.beginPath();
-  ctx.moveTo(pad, toY(0));
-  ctx.lineTo(width - pad, toY(0));
+  ctx.moveTo(pad, height / 2);
+  ctx.lineTo(width - pad, height / 2);
   ctx.stroke();
-  ctx.fillStyle = css("--muted");
-  ctx.fillText(`+${extent.toFixed(2)}`, 0, 12);
-  ctx.fillText(`-${extent.toFixed(2)}`, 0, height - 4);
 
-  const line = (pick: (sample: Sample) => number | null, color: string, toYFn = toY) => {
-    ctx.strokeStyle = color;
+  lines.forEach((line, index) => {
+    const extent = line.axis === "shared" ? sharedExtent : maxAbs(line);
+    const toY = (value: number) => height / 2 - (value / extent) * (height / 2 - 14);
+    ctx.strokeStyle = line.color;
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     let drawing = false;
     for (const sample of visible) {
-      const value = pick(sample);
+      const value = line.pick(sample);
       if (value === null) {
         drawing = false;
         continue;
       }
-      if (drawing) ctx.lineTo(toX(sample.t), toYFn(value));
-      else ctx.moveTo(toX(sample.t), toYFn(value));
+      if (drawing) ctx.lineTo(toX(sample.t), toY(value));
+      else ctx.moveTo(toX(sample.t), toY(value));
       drawing = true;
     }
     ctx.stroke();
     ctx.lineWidth = 1;
-  };
+    if (line.axis === "own" || index === 0) {
+      ctx.fillStyle = line.axis === "own" ? line.color : css("--muted");
+      const digits = extent < 0.01 ? 4 : extent < 1 ? 3 : 1;
+      ctx.fillText(`±${extent.toFixed(digits)}${line.unit ?? ""}`, pad + index * 90, 11);
+    }
+  });
+}
 
-  line((s) => s.normalized, css("--normalized"));
-  line((s) => s.fromBaseline, css("--baseline"));
-  // MediaPipe の角度は ±30° を同じ高さに合わせた右軸で重ねる。
-  line((s) => s.mediapipeHeadForwardDeg, css("--mediapipe"), (deg) => height / 2 - (deg / 30) * (height / 2 - 8));
-  ctx.fillStyle = css("--muted");
-  ctx.fillText("±30°", width - pad + 2, 12);
+function drawAllSeries(now: number) {
+  drawSeries(
+    seriesDepthCanvas,
+    [
+      { pick: (s) => s.earChange, color: css("--ear"), axis: "shared", minExtent: 0.005 },
+      { pick: (s) => s.shoulderChange, color: css("--shoulder"), axis: "shared", minExtent: 0.005 },
+      { pick: (s) => s.neckChange, color: css("--baseline"), axis: "shared", minExtent: 0.005 },
+      { pick: (s) => s.oldMetric, color: css("--normalized"), axis: "own", minExtent: 0.005 },
+    ],
+    now,
+  );
+  drawSeries(
+    seriesCompareCanvas,
+    [
+      { pick: (s) => s.faceForwardCm, color: css("--face"), axis: "own", minExtent: 1, unit: "cm" },
+      { pick: (s) => s.mediapipeHeadForwardDeg, color: css("--mediapipe"), axis: "own", minExtent: 5, unit: "°" },
+    ],
+    now,
+  );
+}
+
+function renderVerdict() {
+  const samples = recorded.length > 0 ? recorded : series;
+  const verdict = buildVerdict(samples);
+  const fmt = (value: number | null, digits: number) => (value === null ? "-" : value.toFixed(digits));
+  verdictTable.innerHTML =
+    "<tr><th>信号</th><th>良い姿勢</th><th>頭を前に</th><th>d′ 前−良</th><th>近づく</th><th>d′ 近−良</th></tr>" +
+    (Object.keys(SIGNALS) as SignalKey[])
+      .map((key) => {
+        const row = verdict.rows[key];
+        const cell = (stats: typeof row.good) =>
+          stats ? `${fmt(stats.mean, SIGNALS[key].digits)}±${fmt(stats.sd, SIGNALS[key].digits)} (${stats.n})` : "-";
+        return `<tr><td>${SIGNALS[key].name}</td><td>${cell(row.good)}</td><td>${cell(row.forwardHead)}</td><td><strong>${fmt(row.dForward, 2)}</strong></td><td>${cell(row.closer)}</td><td>${fmt(row.dCloser, 2)}</td></tr>`;
+      })
+      .join("");
+  verdictText.innerHTML =
+    `<p class="verdict-${verdict.level}"><strong>${verdict.headline}</strong></p>` +
+    `<ul>${verdict.reasons.map((reason) => `<li>${reason}</li>`).join("")}</ul>` +
+    `<p class="note">${recorded.length > 0 ? `記録 ${recorded.length} 件から集計` : "記録がないので直近30秒から集計"}。ラベル切替後 ${SETTLE_MS / 1000} 秒は除外。</p>`;
 }
 
 // ---- ワーカーとの通信 -----------------------------------------------------
@@ -464,20 +675,16 @@ worker.onmessage = (event: MessageEvent<DepthWorkerResponse>) => {
 
   const map = message.depthMap;
   const now = performance.now();
-  const delta =
-    message.earDisparity !== null && message.shoulderDisparity !== null
-      ? message.earDisparity - message.shoulderDisparity
-      : null;
-  const normalized = delta !== null && message.frameRange > 0 ? delta / message.frameRange : null;
+  const signals = computeSignals(message, map, current, now);
   const sample: Sample = {
     t: now,
     label,
+    settled: now - labelChangedAt >= SETTLE_MS,
     earDisparity: message.earDisparity,
     shoulderDisparity: message.shoulderDisparity,
-    delta,
     frameRange: message.frameRange,
-    normalized,
-    fromBaseline: normalized !== null ? trackBaseline(normalized, now) : null,
+    ...signals,
+    faceDistanceCm: current.faceDistanceCm,
     mediapipeHeadForwardDeg: current.mediapipeHeadForwardDeg,
     inferenceMs: message.inferenceMs,
     inputWidth: current.inputWidth,
@@ -498,7 +705,7 @@ worker.onmessage = (event: MessageEvent<DepthWorkerResponse>) => {
 
   drawFrame(current.frame, probes, current.landmarks);
   current.frame.close();
-  drawDepth(map, probes, lo, hi, neckX, shoulderY);
+  drawDepth(map, probes, lo, hi, neckX, shoulderY, personBox(probes, map));
   drawVerticalProfile(map, neckX, lo, hi, [
     [earY, css("--ear"), "耳の高さ"],
     [shoulderY, css("--shoulder"), "肩の高さ"],
@@ -506,7 +713,8 @@ worker.onmessage = (event: MessageEvent<DepthWorkerResponse>) => {
   drawHorizontalProfile(map, shoulderY, lo, hi, shoulderPixels.map((p) => [p.x, css("--shoulder")]));
   renderPatchTable(map, probes);
   renderSummary(sample);
-  drawSeries(now);
+  drawAllSeries(now);
+  renderVerdict();
   statusEl.textContent = `${backendLabel} · 推論 ${Math.round(message.inferenceMs)}ms${recording ? ` · 記録中 ${recorded.length}件` : ""}`;
 };
 
@@ -527,13 +735,14 @@ async function requestDepth(now: number) {
   lastDepthAt = now;
   pending = {
     id,
-    sentAt: now,
     probes,
     landmarks: latestLandmarks,
     frame: await createImageBitmap(video, { resizeWidth: width, resizeHeight: height }),
     inputWidth: width,
     inputHeight: height,
     mediapipeHeadForwardDeg: latestHeadForwardDeg,
+    faceDistanceCm: latestFaceDistanceCm,
+    shoulderWidthPx: shoulderWidthPx(latestLandmarks),
   };
   // 表示用とは別に、ワーカーへ渡す（所有権ごと移る）ビットマップを作る。
   const bitmap = await createImageBitmap(pending.frame);
@@ -557,6 +766,10 @@ function tick() {
     const evaluated = evaluatePostureFrame(engineState, now, latestLandmarks, result.worldLandmarks[0] ?? null);
     engineState = evaluated.state;
     latestHeadForwardDeg = evaluated.result.experiment.headForwardAngleDeg;
+    if (faceLandmarker) {
+      const face = faceLandmarker.detectForVideo(video, now);
+      latestFaceDistanceCm = faceDistanceFromMatrix(face.facialTransformationMatrixes[0]);
+    }
   }
 
   if (workerReady && !requesting && now - lastDepthAt >= Number(intervalSelect.value)) {
@@ -570,6 +783,9 @@ function tick() {
 }
 
 function setLabel(next: Label) {
+  if (next !== label) {
+    labelChangedAt = performance.now();
+  }
   label = next;
   document.querySelectorAll<HTMLButtonElement>("[data-label]").forEach((button) => {
     button.classList.toggle("active", button.dataset.label === next);
@@ -577,22 +793,34 @@ function setLabel(next: Label) {
 }
 
 function toCsv(samples: Sample[]) {
-  const header = [
-    "t_ms", "label", "ear_disparity", "shoulder_disparity", "delta", "frame_range",
-    "normalized", "from_baseline", "mediapipe_head_forward_deg", "inference_ms",
-    "input_width", "input_height", "ear_inward", "shoulder_inward", "patch_radius_ratio",
+  const columns: [string, (s: Sample) => number | string | boolean | null][] = [
+    ["t_ms", (s) => Math.round(s.t - (samples[0]?.t ?? 0))],
+    ["label", (s) => s.label],
+    ["settled", (s) => s.settled],
+    ["ear_disparity", (s) => s.earDisparity],
+    ["shoulder_disparity", (s) => s.shoulderDisparity],
+    ["frame_range", (s) => s.frameRange],
+    ["old_metric", (s) => s.oldMetric],
+    ["ear_change", (s) => s.earChange],
+    ["shoulder_change", (s) => s.shoulderChange],
+    ["neck_change", (s) => s.neckChange],
+    ["fit_r2", (s) => s.fitR2],
+    ["fit_scale", (s) => s.fitScale],
+    ["face_distance_cm", (s) => s.faceDistanceCm],
+    ["face_forward_cm", (s) => s.faceForwardCm],
+    ["mediapipe_head_forward_deg", (s) => s.mediapipeHeadForwardDeg],
+    ["inference_ms", (s) => Math.round(s.inferenceMs)],
+    ["input_width", (s) => s.inputWidth],
+    ["input_height", (s) => s.inputHeight],
+    ["ear_inward", (s) => s.options.earInwardRatio],
+    ["shoulder_inward", (s) => s.options.shoulderInwardRatio],
+    ["patch_radius_ratio", (s) => s.options.patchRadiusRatio],
   ];
-  const cell = (value: number | string | null) => (value === null ? "" : String(value));
-  const t0 = samples[0]?.t ?? 0;
-  const rows = samples.map((s) =>
-    [
-      Math.round(s.t - t0), s.label, s.earDisparity, s.shoulderDisparity, s.delta, s.frameRange,
-      s.normalized, s.fromBaseline, s.mediapipeHeadForwardDeg, Math.round(s.inferenceMs),
-      s.inputWidth, s.inputHeight, s.options.earInwardRatio, s.options.shoulderInwardRatio,
-      s.options.patchRadiusRatio,
-    ].map(cell).join(","),
-  );
-  return [header.join(","), ...rows].join("\n");
+  const cell = (value: number | string | boolean | null) => (value === null ? "" : String(value));
+  return [
+    columns.map(([name]) => name).join(","),
+    ...samples.map((s) => columns.map(([, pick]) => cell(pick(s))).join(",")),
+  ].join("\n");
 }
 
 function bindControls() {
@@ -607,17 +835,15 @@ function bindControls() {
     });
   }
 
+  // 解像度が変わると基準フレームと画素が対応しなくなるので、基準を取り直す。
+  inputHeightSelect.addEventListener("change", resetBaseline);
+
   freezeButton.addEventListener("click", () => {
     frozen = !frozen;
     freezeButton.textContent = frozen ? "再開" : "一時停止";
   });
 
-  $<HTMLButtonElement>("reset-baseline").addEventListener("click", () => {
-    baseline = null;
-    baselineStartedAt = null;
-    baselineSamples = [];
-    engineState = createPostureEngineState();
-  });
+  $<HTMLButtonElement>("reset-baseline").addEventListener("click", resetBaseline);
 
   recordButton.addEventListener("click", () => {
     recording = !recording;
@@ -649,15 +875,23 @@ function bindControls() {
   });
 }
 
-async function createPose() {
+async function createLandmarkers() {
   const vision = await FilesetResolver.forVisionTasks(VISION_WASM_URL);
-  const create = (delegate: "GPU" | "CPU") =>
+  const pose = (delegate: "GPU" | "CPU") =>
     PoseLandmarker.createFromOptions(vision, {
       baseOptions: { modelAssetPath: POSE_MODEL_URL, delegate },
       runningMode: "VIDEO",
       numPoses: 1,
     });
-  return create("GPU").catch(() => create("CPU"));
+  const face = (delegate: "GPU" | "CPU") =>
+    FaceLandmarker.createFromOptions(vision, {
+      baseOptions: { modelAssetPath: FACE_MODEL_URL, delegate },
+      runningMode: "VIDEO",
+      numFaces: 1,
+      outputFacialTransformationMatrixes: true,
+    });
+  poseLandmarker = await pose("GPU").catch(() => pose("CPU"));
+  faceLandmarker = await face("GPU").catch(() => face("CPU"));
 }
 
 async function main() {
@@ -670,7 +904,7 @@ async function main() {
     audio: false,
   });
   await video.play();
-  poseLandmarker = await createPose();
+  await createLandmarkers();
   if (!workerReady) {
     statusEl.textContent = "深度モデルを読み込み中...";
   }
