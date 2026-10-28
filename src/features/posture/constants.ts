@@ -20,3 +20,10 @@ export const POSE_LANDMARK_INDEX = {
 } as const;
 
 export const POSE_OVERLAY_LANDMARK = POSE_LANDMARK_INDEX;
+
+// 深度プローブ（Depth Anything V2 Small）。姿勢はゆっくり変わるので低頻度で回す。
+export const DEPTH_PROBE_INTERVAL_MS = 300;
+export const DEPTH_PROBE_BASELINE_MS = 5_000;
+export const DEPTH_INPUT_HEIGHT = 252;
+export const DEPTH_MODEL_BASE_URL =
+  "https://huggingface.co/onnx-community/depth-anything-v2-small/resolve/main/onnx";

@@ -27,6 +27,7 @@
     "html-to-image": "^1.11.13",
     "ioredis": "^5.10.0",
     "lottie-web": "^5.13.0",
+    "onnxruntime-web": "1.30.0",
     "qrcode": "^1.5.4",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

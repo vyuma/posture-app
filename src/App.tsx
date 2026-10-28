@@ -54,6 +54,8 @@ import { buildPairingLink } from "./features/pairing/services/pairingLink";
 import { sendPostureSignal } from "./features/pairing/services/desktopBridge";
 import { useBrowserPairingSession } from "./features/pairing/hooks/useBrowserPairingSession";
 import {
+  DepthProbeBadge,
+  isDepthProbeEnabled,
   usePostureTracking,
   usePostureTransitionEffects,
 } from "./features/posture";
@@ -126,6 +128,7 @@ const REWARD_RULE: RewardRule = {
   minDurationMs: 0,
   minGoodRatio: 0.5,
 };
+const DEPTH_PROBE_ENABLED = isDepthProbeEnabled();
 const EMPTY_MEASUREMENT_STATS: MeasurementStats = {
   activeMeasurementMs: 0,
   goodMs: 0,
@@ -176,11 +179,13 @@ function App() {
     status,
     isBadPosture,
     snapshot,
+    depth,
     resetPostureEngine,
   } = usePostureTracking({
     enabled: trackingEnabled,
     overlayEnabled: isOverlayEnabled,
     paused: isPaused,
+    depthProbeEnabled: DEPTH_PROBE_ENABLED,
   });
 
   const {
@@ -727,6 +732,7 @@ function App() {
     <>
       {screen}
       {permissionPopup}
+      <DepthProbeBadge depth={depth} />
       <DesktopUpdater canInstall={flowPhase === "home" && !isStartPending && !permissionPopupMessage} />
     </>
   );

@@ -66,6 +66,13 @@ export default defineConfig(async ({ mode }) => {
         ignored: ["**/src-tauri/**"],
       },
     },
+    // onnxruntime-web は wasm を import.meta.url 基準で読むため、事前バンドルしない。
+    optimizeDeps: {
+      exclude: ["onnxruntime-web"],
+    },
+    worker: {
+      format: "es",
+    },
     build: {
       rollupOptions: {
         input: {

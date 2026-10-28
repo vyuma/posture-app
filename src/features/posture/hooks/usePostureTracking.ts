@@ -23,6 +23,11 @@ import {
   POSTURE_SPEC,
 } from "../engine.spec";
 import { drawPoseOverlay } from "../services/drawPoseOverlay";
+import { DepthProbeClient } from "../depth/DepthProbeClient";
+import {
+  DEPTH_PROBE_OFF,
+  type DepthProbeSnapshot,
+} from "../depth/depthProbe.types";
 import type { PostureExperimentMetrics } from "../engine.types";
 import type {
   PostureExperimentSample,
@@ -187,10 +192,17 @@ type UsePostureTrackingOptions = {
   enabled?: boolean;
   overlayEnabled?: boolean;
   paused?: boolean;
+  /** 深度モデル（Depth Anything V2 Small）で耳と肩の奥行き差を測る。 */
+  depthProbeEnabled?: boolean;
 };
 
 export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
-  const { enabled = true, overlayEnabled = true, paused = false } = options;
+  const {
+    enabled = true,
+    overlayEnabled = true,
+    paused = false,
+    depthProbeEnabled = false,
+  } = options;
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const trackingTimerRef = useRef<number | null>(null);
@@ -207,6 +219,7 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
   const experimentHistoryRef = useRef<PostureExperimentSample[]>([]);
   const experimentSmoothingRef = useRef<PostureExperimentMetrics[]>([]);
   const isBadPostureRef = useRef(false);
+  const depthProbeRef = useRef<DepthProbeClient | null>(null);
 
   const [ready, setReady] = useState(false);
   const [status, setStatus] = useState(enabled ? INIT_STATUS : IDLE_STATUS);
@@ -215,6 +228,7 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
   const [experimentHistory, setExperimentHistory] = useState<
     PostureExperimentSample[]
   >([]);
+  const [depth, setDepth] = useState<DepthProbeSnapshot>(DEPTH_PROBE_OFF);
 
   const clearTrackingTimer = useCallback(() => {
     if (trackingTimerRef.current === null) {
@@ -233,6 +247,7 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
     isBadPostureRef.current = false;
     setIsBadPosture(false);
     setSnapshot(DEFAULT_SNAPSHOT);
+    depthProbeRef.current?.resetBaseline();
     setStatus("測定を初期化しました。5秒間、基準線を再学習します。");
   }, []);
 
@@ -243,6 +258,21 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
   useEffect(() => {
     overlayEnabledRef.current = overlayEnabled;
   }, [overlayEnabled]);
+
+  useEffect(() => {
+    if (!enabled || !depthProbeEnabled) {
+      return;
+    }
+
+    const client = new DepthProbeClient(setDepth);
+    depthProbeRef.current = client;
+
+    return () => {
+      client.dispose();
+      depthProbeRef.current = null;
+      setDepth(DEPTH_PROBE_OFF);
+    };
+  }, [enabled, depthProbeEnabled]);
 
   useEffect(() => {
     pausedRef.current = paused;
@@ -526,6 +556,9 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
           worldLandmarks,
         );
         engineStateRef.current = state;
+        if (trackingMode === "foreground") {
+          depthProbeRef.current?.submit(video, imageLandmarks, now);
+        }
         experimentSmoothingRef.current = appendLimited(
           experimentSmoothingRef.current,
           result.experiment,
@@ -697,6 +730,7 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
     isBadPosture,
     snapshot,
     experimentHistory,
+    depth,
     resetPostureEngine,
   };
 }
