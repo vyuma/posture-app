@@ -19,7 +19,7 @@ const OVERLAY_HEIGHT: f64 = 238.0;
 /// Expand around the timer's bottom-center, keeping its screen anchor stable.
 pub fn set_work_widget(app: &AppHandle, visible: bool, bad: bool) -> Result<(), String> {
     let window = ensure_overlay_window(app)?;
-    let (width, height) = if bad { (420.0, 390.0) } else { (220.0, 238.0) };
+    let (width, height) = if bad { (360.0, 822.0) } else { (300.0, 300.0) };
     #[cfg(target_os = "macos")]
     {
         let _ = window;
@@ -31,10 +31,12 @@ pub fn set_work_widget(app: &AppHandle, visible: bool, bad: bool) -> Result<(), 
         let scale = window.scale_factor().map_err(|e| e.to_string())?;
         let old = window.outer_size().map_err(|e| e.to_string())?;
         let position = window.outer_position().map_err(|e| e.to_string())?;
+        let area = window.current_monitor().map_err(|e| e.to_string())?.map(|monitor| *monitor.work_area());
+        let width = area.map_or(width, |area| width.min(area.size.width as f64 / scale));
+        let height = area.map_or(height, |area| height.min(area.size.height as f64 / scale));
         let mut x = position.x + (old.width as i32 - (width * scale) as i32) / 2;
         let mut y = position.y + old.height as i32 - (height * scale) as i32;
-        if let Some(monitor) = window.current_monitor().map_err(|e| e.to_string())? {
-            let area = monitor.work_area();
+        if let Some(area) = area {
             x = x.clamp(area.position.x, (area.position.x + area.size.width as i32 - (width * scale) as i32).max(area.position.x));
             y = y.clamp(area.position.y, (area.position.y + area.size.height as i32 - (height * scale) as i32).max(area.position.y));
         }

@@ -1,0 +1,45 @@
+/* Figma widget coordinates are relative to the unchanged 178×65 timer bar. */
+.work-widget{position:fixed;right:60px;bottom:24px;width:178px;height:65px;z-index:50;pointer-events:none;isolation:isolate;font-family:"SF Pro",-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;color:#111f6e;--widget-bar:#ecf8fc;--widget-progress:#13a2d7}
+.work-widget.is-native{right:calc((100vw - 178px)/2);bottom:12px}
+.work-widget.is-rest{--widget-bar:#f6edd8;--widget-progress:#f78000;color:#6e4211}
+.work-widget-character{position:absolute;inset:0;pointer-events:none}
+.work-widget-mask{position:absolute;left:var(--widget-maskLeft);top:var(--widget-maskTop);width:var(--widget-maskWidth);height:var(--widget-maskHeight);overflow:hidden;pointer-events:auto;cursor:grab;touch-action:none}
+.work-widget-mask:active{cursor:grabbing}
+.work-widget.is-rest .work-widget-mask{left:-60px;width:238px}
+.work-widget-shake{position:absolute;inset:0;transform-origin:calc(88px - var(--widget-maskLeft)) 100%}
+.work-widget-rig{position:absolute;left:calc(var(--widget-rigLeft) - var(--widget-maskLeft));top:calc(var(--widget-rigTop) - var(--widget-maskTop));width:var(--widget-rigWidth);height:var(--widget-rigHeight);filter:drop-shadow(calc(3.4049px + var(--widget-growth)*9.4946px) calc(3.4049px + var(--widget-growth)*9.4946px) calc(6.8098px + var(--widget-growth)*18.9891px) #00000059)}
+.work-widget.is-rest .work-widget-rig{left:calc(var(--widget-rigLeft) + 60px)}
+.work-widget-rig svg{display:block!important;overflow:visible}
+.work-widget.is-bad .work-widget-shake{animation:widget-angry-shake .68s ease-in-out infinite}
+.work-widget-speech{position:absolute;left:var(--widget-bubbleLeft);top:var(--widget-bubbleTop);width:var(--widget-bubbleWidth);height:var(--widget-bubbleHeight);display:grid;place-items:center;background:#fff;border-radius:232px;transform:rotate(var(--widget-bubbleAngle));color:#000;pointer-events:auto;cursor:grab}
+.work-widget-speech::after{content:"";position:absolute;width:calc(21.42px + var(--widget-growth)*11.18px);height:calc(19.04px + var(--widget-growth)*9.94px);left:47%;top:75%;background:#fff;clip-path:polygon(0 0,100% 0,28% 100%);z-index:-1}
+.work-widget-speech span{white-space:nowrap;font-size:var(--widget-fontSize);font-weight:510;line-height:var(--widget-lineHeight);letter-spacing:var(--widget-tracking);animation:widget-speech-appear .18s ease-out both}
+.work-widget-bar{position:absolute;inset:0;pointer-events:auto;width:178px;height:65px;border-radius:44px;background:var(--widget-bar);box-shadow:4px 6px 4px #00000040}
+.work-widget-bar button{position:absolute;border:0;margin:0;padding:0;background:transparent;color:inherit;cursor:pointer;border-radius:50%;transition:background-color .15s ease-out,transform .15s ease-out;-webkit-tap-highlight-color:transparent}
+.work-widget-bar button:hover{background:#ffffff80}
+.work-widget-bar button:active{transform:scale(.96)}
+.work-widget-bar button:focus-visible{outline:2px solid currentColor;outline-offset:2px}
+.work-widget-time{left:21px;top:10px;width:82px;height:33px;text-align:left;border-radius:10px!important}
+.work-widget-time b{display:block;width:max-content;transform:scaleX(var(--widget-time-scale,1));transform-origin:left center;font-size:27.6279px;font-weight:700;line-height:33px;letter-spacing:1.15116px;font-variant-numeric:proportional-nums;white-space:nowrap}
+.work-widget-time.is-long b{font-size:22px;letter-spacing:.2px}
+.work-widget-toggle{left:103px;top:11px;width:30px;height:30px}
+.work-widget-stop{left:133px;top:11px;width:30px;height:30px}
+.work-widget-bar button img{display:block;width:30px;height:30px;pointer-events:none}
+.work-widget-bar progress{position:absolute;left:15px;top:46px;width:148px;height:8px;border:0;overflow:hidden;border-radius:44px;appearance:none;background:#fff;color:var(--widget-progress);accent-color:var(--widget-progress)}
+.work-widget-bar progress::-webkit-progress-bar{background:#fff;border-radius:44px}
+.work-widget-bar progress::-webkit-progress-value{background:var(--widget-progress);border-radius:44px}
+.work-widget-bar progress::-moz-progress-bar{background:var(--widget-progress);border-radius:44px}
+@keyframes widget-speech-appear{from{opacity:0}to{opacity:1}}
+@keyframes widget-angry-shake{0%,100%{transform:translateX(0) rotate(0deg)}12%{transform:translateX(-2px) rotate(-1.2deg)}26%{transform:translateX(2px) rotate(1.6deg)}40%{transform:translateX(-2px) rotate(-1.6deg)}55%{transform:translateX(2px) rotate(1.3deg)}70%{transform:translateX(-1px) rotate(-.9deg)}84%{transform:translateX(1px) rotate(.6deg)}}
+@media(prefers-reduced-motion:reduce){.work-widget *{animation:none!important;transition:none!important}}
+
+.work-widget-mask,.work-widget-rig,.work-widget-speech,.work-widget-speech-frame{transition:width .6s cubic-bezier(.2,.75,.34,.94),height .6s cubic-bezier(.2,.75,.34,.94),left .6s cubic-bezier(.2,.75,.34,.94),top .6s cubic-bezier(.2,.75,.34,.94)}
+.work-widget.is-bad .work-widget-mask,.work-widget.is-bad .work-widget-rig,.work-widget.is-bad .work-widget-speech,.work-widget.is-bad .work-widget-speech-frame{transition-duration:60ms;transition-timing-function:linear}
+
+.work-widget.is-rest .work-widget-time{left:18px;width:85px}
+
+/* Feedback motion lives inside the unchanged position/angle of the Figma bubble. */
+.work-widget-speech-frame{position:absolute;left:var(--widget-bubbleLeft);top:var(--widget-bubbleTop);width:var(--widget-bubbleWidth);height:var(--widget-bubbleHeight);transform:rotate(var(--widget-bubbleAngle));pointer-events:auto;cursor:grab}
+.work-widget-speech-frame .work-widget-speech{inset:0;transform-origin:50% 85%;transition:none}
+.work-widget-speech.is-feedback span{animation:none}
+.work-widget-announcement{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}

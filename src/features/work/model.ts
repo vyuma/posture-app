@@ -1,3 +1,4 @@
+import type { FeedbackBaseline } from '../posture/feedback';
 import type { BaselineStats } from '../posture/engine.types';
 
 export type Grade = 1 | 2 | 3 | 4 | 5;
@@ -13,7 +14,7 @@ export function normalizeTimer(timer: TimerSettings): TimerSettings {
     restMinutes: cycles === 1 ? 0 : clampTimerValue('restMinutes', timer.restMinutes), cycles };
 }
 export const SCORE_VERSION = 'baseline-distance-v1';
-export type Baseline = { stats: BaselineStats; headWidthRatio: number | null };
+export type Baseline = { stats: BaselineStats; headWidthRatio: number | null; feedback?: FeedbackBaseline };
 export type Calibration = { id: string; focusMs: number; elapsedMs: number; baseline: Baseline; scoreVersion: string };
 export type Sample = { sequence: number; focusMs: number; elapsedMs: number; calibrationId: string; segment: number; score: number | null; deviation: number | null; state: 'good' | 'bad' | 'untracked' };
 export type EventKind = 'start' | 'rest' | 'focus' | 'pause' | 'resume' | 'recalibrate' | 'calibrated' | 'calibration_cancelled' | 'tracking_lost' | 'tracking_restored' | 'finish';
@@ -21,18 +22,24 @@ export type SessionEvent = { kind: EventKind; focusMs: number; elapsedMs: number
 export type Session = {
   id: string; startedAt: string; endedAt: string | null; status: 'running' | 'paused' | 'recalibrating' | 'completed' | 'interrupted';
   settings: TimerSettings; phase: 'focus' | 'rest'; cycle: number; remainingMs: number;
+  ratioBasis?: 'focus-v1';
   focusMs: number; validMs: number; goodMs: number; elapsedMs: number; generation: number;
   calibrations: Calibration[]; samples: Sample[]; events: SessionEvent[]; segment: number;
   acquiredCharacterId: string | null; rewardQualified: boolean; legacy?: boolean; legacyGoodRatio?: number;
   lastTickMs: number | null; wasPaused: boolean; lastSampleFocusMs: number; tracking: boolean | null;
 };
 export type Card = { characterId: string; measurementId: string; acquiredAt: string; generation: number };
-export type Collection = { revision: number; generation: number; cards: Card[]; selectedId: string | null; timer: TimerSettings | null; migrated: boolean };
+export type Collection = { revision: number; generation: number; cards: Card[]; selectedId: string | null; timer: TimerSettings | null; migrated: boolean; nextRewardId?: string | null };
 export const EMPTY_COLLECTION: Collection = { revision: 0, generation: 0, cards: [], selectedId: null, timer: null, migrated: false };
 export type Reading = { valid: boolean; good: boolean; deviation: number };
 export const NO_READING: Reading = { valid: false, good: false, deviation: 0 };
 export const displayScore = (deviation: number) => Math.max(0, Math.min(100, 100 - deviation / 1.6 * 50));
-export const goodRatio = (session: Pick<Session, 'validMs' | 'goodMs'> & { legacyGoodRatio?: number }) => session.legacyGoodRatio ?? (session.validMs > 0 ? session.goodMs / session.validMs : null);
+export function goodRatio(session: Pick<Session, 'validMs' | 'goodMs'> & Partial<Pick<Session, 'focusMs' | 'ratioBasis' | 'legacyGoodRatio'>>) {
+  if (session.legacyGoodRatio !== undefined) return session.legacyGoodRatio;
+  // Saved sessions without the new policy retain their original result.
+  const denominator = session.ratioBasis === 'focus-v1' ? session.focusMs ?? 0 : session.validMs;
+  return session.validMs > 0 && denominator > 0 ? session.goodMs / denominator : null;
+}
 export function timerValid(timer: TimerSettings) {
   return Number.isInteger(timer.focusMinutes) && timer.focusMinutes >= 1 && timer.focusMinutes <= TIMER_MAX.focusMinutes
     && (timer.cycles === 1 ? timer.restMinutes === 0 : Number.isInteger(timer.restMinutes) && timer.restMinutes >= 1 && timer.restMinutes <= TIMER_MAX.restMinutes)
@@ -41,7 +48,7 @@ export function timerValid(timer: TimerSettings) {
 export function createSession(id: string, settings: TimerSettings, generation: number, baseline: Baseline, now = Date.now()): Session {
   settings = normalizeTimer(settings);
   return { id, startedAt: new Date(now).toISOString(), endedAt: null, status: 'running', settings: { ...settings },
-    phase: 'focus', cycle: 1, remainingMs: settings.focusMinutes * 60_000, focusMs: 0, validMs: 0, goodMs: 0,
+    ratioBasis: 'focus-v1', phase: 'focus', cycle: 1, remainingMs: settings.focusMinutes * 60_000, focusMs: 0, validMs: 0, goodMs: 0,
     elapsedMs: 0, generation, calibrations: [{ id: `${id}:baseline:0`, focusMs: 0, elapsedMs: 0, baseline, scoreVersion: SCORE_VERSION }],
     samples: [], events: [{ kind: 'start', focusMs: 0, elapsedMs: 0, segment: 0 }], segment: 0,
     acquiredCharacterId: null, rewardQualified: false, lastTickMs: null, wasPaused: false, lastSampleFocusMs: -1000, tracking: null };

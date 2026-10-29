@@ -1,4 +1,5 @@
-import type { CharacterDefinition, CharacterExpression } from "./types";
+import additions from "./characterAdditions.json";
+import type { CharacterDefinition, CharacterExpression, CharacterRarity } from "./types";
 
 /** 実ファイルは PNG（.svg は未配置のため 404 になる） */
 const NORMAL_NAGO_EXPRESSIONS = {
@@ -12,6 +13,7 @@ const NORMAL_NAGO_EXPRESSIONS = {
 export const CHARACTER_CATALOG: CharacterDefinition[] = [
   {
     id: "normal-nago",
+    number: 1,
     name: "シマアナゴ",
     rarity: "common",
     story: "いつもそばで姿勢を見守ってくれる、基本のピンアナゴ。",
@@ -25,6 +27,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
   },
   {
     id: "shin-anago",
+    number: 2,
     name: "シン・アナゴ",
     rarity: "common",
     story: "姿勢のいい時間にひょっこり現れる、まっすぐなピンアナゴ。",
@@ -37,6 +40,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
   },
   {
     id: "kuro-anyago",
+    number: 3,
     name: "クロアニャゴ",
     rarity: "common",
     story: "集中している人のそばが好きな、落ち着いた黒いピンアナゴ。",
@@ -49,6 +53,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
   },
   {
     id: "dot-nago",
+    number: 4,
     name: "クマアナゴ",
     rarity: "rare",
     story: "ドット模様と一緒に、集中のリズムを刻むピンアナゴ。",
@@ -61,6 +66,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
   },
   {
     id: "moja-anago",
+    number: 5,
     name: "モジャアナゴ",
     rarity: "epic",
     story: "良い姿勢を続ける人にだけ姿を見せる、もじゃもじゃ不思議なピンアナゴ。",
@@ -73,6 +79,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
   },
   {
     id: "oto-anago",
+    number: 6,
     name: "オトアナゴ",
     rarity: "common",
     story: "良い姿勢のリズムに合わせてゆらゆらする白いピンアナゴ。",
@@ -85,6 +92,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
   },
   {
     id: "hat-anago",
+    number: 7,
     name: "ハットナゴ",
     rarity: "rare",
     story: "休憩と集中の切り替えが上手な、おしゃれ好きのピンアナゴ。",
@@ -97,6 +105,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
   },
   {
     id: "nasubi-nago",
+    number: 8,
     name: "ナスビナゴ",
     rarity: "common",
     story: "なすびの冠を戴き、落ち着いた集中のそばにひょっこり顔を出すピンアナゴ。",
@@ -109,6 +118,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
   },
   {
     id: "twin-nago",
+    number: 9,
     name: "ツインナゴ",
     rarity: "rare",
     story: "ハート模様とツインテールで、華やかな姿勢タイムを盛り上げるピンアナゴ。",
@@ -121,6 +131,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
   },
   {
     id: "nami-anago",
+    number: 10,
     name: "ナミアナゴ",
     rarity: "common",
     story: "波線がゆらゆら流れ、リズムのいい姿勢を一緒に刻むピンアナゴ。",
@@ -133,6 +144,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
   },
   {
     id: "futaba-nago",
+    number: 11,
     name: "フタバナゴ",
     rarity: "common",
     story: "双葉を乗せてすくすく伸びる、まっすぐな背筋が似合うピンアナゴ。",
@@ -145,6 +157,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
   },
   {
     id: "pan-nago",
+    number: 12,
     name: "パンアナゴ",
     rarity: "common",
     story: "パンみたいな温かい質感で、長い集中もそっと支えるピンアナゴ。",
@@ -157,6 +170,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
   },
   {
     id: "yozora-nago",
+    number: 13,
     name: "ヨゾラナゴ",
     rarity: "epic",
     story: "星屑をまとった夜の色で、静かな集中のそばにいるピンアナゴ。",
@@ -169,6 +183,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
   },
   {
     id: "koi-anago",
+    number: 14,
     name: "コイアナゴ",
     rarity: "rare",
     story: "うろこ模様をきらめかせながら、自分のペースで良い姿勢を目指すピンアナゴ。",
@@ -181,6 +196,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
   },
   {
     id: "pain-nago",
+    number: 15,
     name: "パインナゴ",
     rarity: "rare",
     story: "パイナップル柄のリズムで、楽しい姿勢の時間を運んでくるピンアナゴ。",
@@ -193,6 +209,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
   },
   {
     id: "wan-anago",
+    number: 16,
     name: "ワンアナゴ",
     rarity: "common",
     story: "耳をぴんと立てて、あなたのそばで甘えん坊なピンアナゴ。",
@@ -205,6 +222,7 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
   },
   {
     id: "ryuu-anago",
+    number: 17,
     name: "リュウアナゴ",
     rarity: "rare",
     story: "水滴の模様が揺れるたび、集中の深さを静かに見守るピンアナゴ。",
@@ -215,6 +233,9 @@ export const CHARACTER_CATALOG: CharacterDefinition[] = [
     },
     personalityTags: ["ミステリアス", "プライドが高い"],
   },
+  ...additions.map(({ stars: _stars, presentation: _presentation, ...entry }) => ({
+    ...entry, rarity: entry.rarity as CharacterRarity,
+  })),
 ];
 
 export function getNextUnacquiredCharacter(
@@ -235,4 +256,9 @@ export function getCharacterImageSrc(
   }
 
   return character.portraitSrc;
+}
+
+/** Collection numbers are permanent; unimplemented slots remain empty. */
+export function getCharacterAtSlotIndex(index: number) {
+  return CHARACTER_CATALOG.find(item => item.number === index + 1);
 }

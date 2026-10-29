@@ -1,0 +1,18 @@
+/* Align the visible logo ink with Home's 83/1512 content gutter.
+   The PNG's transparent left inset is 262/1702 of its width. */
+:where(.work-app,.onboarding-screen){
+  --work-logo-width:calc(134 * 100vw / 1512);
+  --work-logo-top:calc(40 * 100vw / 1512);
+}
+.work-brand{
+  position:absolute;z-index:2;
+  left:calc(5.4894179894vw - var(--work-logo-width) * 262 / 1702);
+  top:var(--work-logo-top);width:var(--work-logo-width);height:auto;
+  object-fit:contain;user-select:none;pointer-events:none;
+}
+@media(max-width:1050px){
+  :where(.work-app,.onboarding-screen){--work-logo-width:120px;--work-logo-top:25px}
+}
+@media(max-width:600px){
+  :where(.work-app,.onboarding-screen){--work-logo-width:110px;--work-logo-top:14px}
+}

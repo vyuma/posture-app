@@ -1,0 +1,5 @@
+{
+  "sakura": { "hoverMs": 900, "detailMs": 1200, "acquisitionMs": 1200, "starDelayMs": 420, "confettiDelayMs": 700, "colors": ["#e7a1c5", "#f5cadf", "#fff4fa"] },
+  "miira": { "hoverMs": 1200, "detailMs": 1500, "acquisitionMs": 1700, "starDelayMs": 900, "confettiDelayMs": 1250, "colors": ["#b7a488", "#e0d4bb", "#f2e9d8"] },
+  "king": { "hoverMs": 1500, "detailMs": 1900, "acquisitionMs": 2200, "starDelayMs": 1150, "confettiDelayMs": 1600, "colors": ["#d6ae36", "#f8dc82", "#fff2c4"] }
+}

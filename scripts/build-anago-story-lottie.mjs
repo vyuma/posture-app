@@ -31,13 +31,16 @@ function placedPose(source, scale, x, y, mirror = false) {
 
 const introScale = 405.78 / 636;
 const happyScale = 146.662 / 226;
-const intro = placedPose(POSES.good, introScale, 250.6 + 405.78 + 32 * introScale, 331, true);
+// Story 1: group x=115, image x=36.604 within it, group y=347.
+// Move the resting pose; retain the existing rise/bounce and morph timing.
+const intro = placedPose(POSES.good, introScale, 151.604 + 405.78 + 32 * introScale, 347, true);
+// Updated Story 2/3 frames move the characters left without changing poses.
 const happy = placedPose(POSES.happy, happyScale,
-  421.25 + 87.7928 - POSES.happy.body.v.at(-1)[0] * happyScale,
+  341.25 + 87.7928 - POSES.happy.body.v.at(-1)[0] * happyScale,
   386.36 + 87.7928 - POSES.happy.body.v.at(-1)[1] * happyScale);
 const angryScale = 146.064 / 226;
 const angry = placedPose(POSES.angry, angryScale,
-  541.0035 + POSES.angry.body.v.at(-1)[0] * angryScale,
+  454.0035 + POSES.angry.body.v.at(-1)[0] * angryScale,
   432.2771 - POSES.angry.body.v.at(-1)[1] * angryScale, true);
 const STORY_HEIGHT = 4000;
 function extendStem(source) {

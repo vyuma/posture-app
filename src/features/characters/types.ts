@@ -1,6 +1,6 @@
 import type { PostureTimelineSegment } from "../flow/types";
 
-export type CharacterRarity = "common" | "rare" | "epic";
+export type CharacterRarity = "common" | "rare" | "epic" | "ultra-rare";
 export type CharacterExpression = "good" | "bad" | "paused" | "happy";
 
 export type CharacterExpressionMap = Partial<
@@ -14,6 +14,7 @@ export type CharacterColor = {
 
 export type CharacterDefinition = {
   id: string;
+  number: number;
   name: string;
   rarity: CharacterRarity;
   story: string;

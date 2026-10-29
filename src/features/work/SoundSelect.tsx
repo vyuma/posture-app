@@ -7,5 +7,5 @@ export function SoundSelect({ settings, onChange }: { settings: SoundSettings; o
   }));
   return <div className="work-sound-row"><span>効果音</span><OptionMenu value={settings.selectedSound}
     onChange={selectedSound => onChange?.({ ...settings, selectedSound })} options={options} label="効果音" className="work-sound-select"
-    arrow={<svg viewBox="0 0 20 20" aria-hidden="true"><path d="m5 7.5 5 5 5-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>} /></div>;
+    arrow={<svg viewBox="0 0 11.4 6.23" aria-hidden="true"><path d="M0 0h11.4L5.7 6.23Z" fill="currentColor" /></svg>} /></div>;
 }

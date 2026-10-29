@@ -1,16 +1,7 @@
 import { toBlob } from "html-to-image";
 
-import {
-  copyShareImageNative,
-  shouldPreferNativeClipboardShare,
-} from "./shareNativeClipboard";
-
-export type ShareResultOutcome =
-  | "shared"
-  | "downloaded"
-  | "copied"
-  | "aborted";
-export type ShareResultAction = "auto" | "share" | "copy" | "download";
+import { deliverResultImage, type ShareResultAction, type ShareResultOutcome } from "./resultImageDelivery";
+export type { ShareResultAction, ShareResultOutcome } from "./resultImageDelivery";
 
 const SHARE_CAPTURE_CLASS = "is-share-capture";
 /**
@@ -56,15 +47,6 @@ async function waitForImageDecode(img: HTMLImageElement): Promise<void> {
     img.addEventListener("load", onLoad, { once: true });
     img.addEventListener("error", onError, { once: true });
   });
-}
-
-function isAbortError(err: unknown): boolean {
-  return (
-    err !== null &&
-    typeof err === "object" &&
-    "name" in err &&
-    String((err as { name?: string }).name) === "AbortError"
-  );
 }
 
 function blobToDataUrl(blob: Blob): Promise<string> {
@@ -155,55 +137,6 @@ function delay(ms: number): Promise<void> {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
 
-async function copyBlobToClipboard(blob: Blob): Promise<boolean> {
-  if (await copyShareImageNative(blob)) {
-    return true;
-  }
-
-  if (
-    typeof navigator === "undefined" ||
-    navigator.clipboard?.write === undefined ||
-    typeof ClipboardItem === "undefined"
-  ) {
-    return false;
-  }
-
-  const clipboardItemSupport = ClipboardItem as typeof ClipboardItem & {
-    supports?: (type: string) => boolean;
-  };
-  if (
-    typeof clipboardItemSupport.supports === "function" &&
-    !clipboardItemSupport.supports(blob.type)
-  ) {
-    return false;
-  }
-
-  try {
-    await navigator.clipboard.write([
-      new ClipboardItem({ [blob.type]: blob }),
-    ]);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function downloadBlob(blob: Blob, fileName: string): void {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  try {
-    anchor.href = url;
-    anchor.download = fileName;
-    anchor.rel = "noopener";
-    anchor.style.display = "none";
-    document.body.appendChild(anchor);
-    anchor.click();
-  } finally {
-    anchor.remove();
-    URL.revokeObjectURL(url);
-  }
-}
-
 /**
  * 元 DOM を変更しないため、画面外（ただし WebKit でも painting が走る位置）に
  * 「ステージ」を作ってクローンを配置して撮影する。
@@ -239,18 +172,12 @@ function createOffscreenStage(width: number): HTMLDivElement {
   return stage;
 }
 
-/**
- * 測定結果カード領域を PNG にして共有（navigator.share の files）→失敗時はダウンロード。
- * ユーザーが共有シートをキャンセルした場合はダウンロードしない。
- */
-export async function shareResultCapture(
-  element: HTMLElement,
-  options: { action?: ShareResultAction } = {},
-): Promise<ShareResultOutcome> {
+/** Capture only the card; preserve its opaque surface and transparent corners. */
+async function captureResultCard(element: HTMLElement): Promise<Blob> {
   await document.fonts.ready;
   await Promise.all(Array.from(element.querySelectorAll("img"), waitForImageDecode));
   const captureWidth = element.offsetWidth;
-  const captureHeight = element.offsetHeight;
+  let captureHeight = element.offsetHeight;
   const stage = createOffscreenStage(captureWidth);
   const clone = element.cloneNode(true) as HTMLElement;
 
@@ -268,6 +195,35 @@ export async function shareResultCapture(
     target.style.transition = "none";
   });
   clone.querySelectorAll("[data-export-exclude]").forEach(node => node.remove());
+  if (element.dataset.rarityEffect) {
+    clone.style.opacity = "1";
+    const art = clone.querySelector<HTMLElement>(".work-detail-art");
+    if (art) art.style.boxShadow = "none";
+  }
+  // Capture the exact original portrait, never a half-open eye or an unwrapping frame.
+  clone.querySelectorAll<HTMLElement>("[data-rarity-export-portrait]").forEach(image => { image.style.visibility = "visible"; });
+  clone.querySelectorAll<HTMLElement>(".rarity-backdrop, .character-stars>svg").forEach(node => {
+    node.style.transform = "none";
+    node.style.opacity = "1";
+  });
+  // Collection viewing has a lighter, repositioned date. Export keeps the acquisition styling.
+  if (element.dataset.variant === "collection") {
+    const date = clone.querySelector<HTMLElement>(".work-detail-body>time");
+    if (date) { date.style.marginLeft = "0"; date.style.marginRight = `${captureWidth * .0166436}px`; date.style.width = "auto"; date.style.textAlign = "right"; date.style.top = "0"; date.style.color = "#505050"; date.style.setProperty("-webkit-text-fill-color", "#505050"); }
+    const focusLabel = clone.querySelector<HTMLElement>(".work-result-metrics>div:first-child>span");
+    if (focusLabel) focusLabel.style.textAlign = "center";
+    clone.dataset.variant = "result";
+    // On narrow screens the entry occupies a flex row. Let the clone collapse
+    // that row after removal so its saved PNG has the acquisition card's height.
+    if (getComputedStyle(element).display === "flex") {
+      clone.style.height = "auto";
+      const metrics = clone.querySelector<HTMLElement>(".work-result-metrics");
+      if (metrics) metrics.style.justifyContent = "space-around";
+      const body = clone.querySelector<HTMLElement>(".work-detail-body");
+      if (body) body.style.height = "auto";
+      if (date) { date.style.marginRight = "0"; date.style.marginLeft = "0"; }
+    }
+  }
   clone.classList.add(SHARE_CAPTURE_CLASS);
   clone.classList.remove("is-entering", "is-tapped");
   clone.style.transform = "none";
@@ -295,12 +251,14 @@ export async function shareResultCapture(
     await delay(POST_INLINE_PAINT_DELAY_MS);
     await waitForLayoutSettle();
 
+    captureHeight = clone.offsetHeight;
     const computedStyle = window.getComputedStyle(clone);
     blob = await toBlob(clone, {
       pixelRatio: 2,
       // Tauri 環境では cacheBust クエリでローカル画像が欠落することがあるため無効化
       cacheBust: false,
-      backgroundColor: "#ffffff",
+      // Do not set backgroundColor: it paints the full rectangular canvas and
+      // overrides the node background. Keep the clone's rounded white surface.
       width: captureWidth,
       height: captureHeight,
       style: {
@@ -324,80 +282,14 @@ export async function shareResultCapture(
     throw new Error("Capture failed");
   }
 
-  const file = new File([blob], `pinn-result-${Date.now()}.png`, {
-    type: "image/png",
-  });
-  const action = options.action ?? "auto";
+  return blob;
+}
 
-  if (action === "download") {
-    downloadBlob(blob, file.name);
-    return "downloaded";
-  }
-
-  const shouldCopyBeforeWebShare =
-    action === "copy" ||
-    (action === "auto" && shouldPreferNativeClipboardShare());
-
-  if (shouldCopyBeforeWebShare && await copyBlobToClipboard(blob)) {
-    return "copied";
-  }
-
-  if (
-    action !== "copy" &&
-    !shouldCopyBeforeWebShare &&
-    typeof navigator !== "undefined" &&
-    typeof navigator.share === "function"
-  ) {
-    let canShareFiles = false;
-    if (typeof navigator.canShare === "function") {
-      try {
-        canShareFiles = navigator.canShare({ files: [file] });
-      } catch {
-        canShareFiles = false;
-      }
-    } else {
-      canShareFiles = true;
-    }
-
-    if (canShareFiles) {
-      try {
-        await navigator.share({
-          title: "Piin",
-          text: "Piinでピンアナゴを獲得しました！",
-          files: [file],
-        });
-        return "shared";
-      } catch (err) {
-        if (isAbortError(err)) {
-          return "aborted";
-        }
-        /* ファイル共有失敗 → テキストのみ試行しないでダウンロードへ */
-      }
-    } else {
-      try {
-        await navigator.share({
-          title: "Piin",
-          text: "Piinでピンアナゴを獲得しました！",
-        });
-        return "shared";
-      } catch (err) {
-        if (isAbortError(err)) {
-          return "aborted";
-        }
-      }
-    }
-  }
-
-  if (await copyBlobToClipboard(blob)) {
-    return "copied";
-  }
-
-  try {
-    downloadBlob(blob, file.name);
-    return "downloaded";
-  } catch {
-    throw new Error("Clipboard and save both failed");
-  }
+export function shareResultCapture(
+  element: HTMLElement,
+  options: { action?: ShareResultAction } = {},
+): Promise<ShareResultOutcome> {
+  return deliverResultImage(captureResultCard(element), options.action);
 }
 
 /**

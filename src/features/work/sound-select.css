@@ -1,12 +1,70 @@
-.work-measuring-panel .work-inline-sound{padding:17px 19.0914px;font-family:'SF Pro',-apple-system,BlinkMacSystemFont,'Noto Sans JP',sans-serif}
-.work-measuring-panel .work-inline-sound label,.work-measuring-panel .work-inline-sound .work-sound-row{gap:18.27px;font-size:12.7276px;font-weight:700;line-height:15px}
-.work-measuring-panel .work-inline-sound label>span,.work-measuring-panel .work-sound-row>span{width:39px;flex:none}
-.work-inline-sound .work-sound-row{display:flex;align-items:center;gap:25px;color:#666;font-size:14px;font-weight:600;min-width:0}
-.work-sound-row>span{flex:none}
-.work-sound-select{position:relative;flex:1;min-width:0}
-.work-sound-select-trigger{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:44px;padding:6.36381px 19.0914px;border:0;border-radius:12.7276px;background:#fff;color:#666;font-size:12.7276px;font-weight:700;line-height:19px;text-align:left;cursor:pointer}
-.work-sound-select-trigger>span{order:-1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.work-sound-select-trigger>svg{width:20px;height:20px;flex:none}
+/* Shared sound geometry for measuring, resting and paused screens.
+   Scale the label column with its text; keep both controls on the same axis. */
+.work-app .work-measuring-panel .work-inline-sound {
+  --sound-px:1px;
+  --sound-volume-height:max(19.09px,calc(19.09 * var(--sound-px)));
+  --sound-control-height:max(28px,calc(41.36 * var(--sound-px)));
+  display:grid;
+  grid-template-rows:var(--sound-volume-height) var(--sound-control-height);
+  height:auto;
+  margin-top:calc(9.49 * var(--sound-px));
+  padding:calc(19.09 * var(--sound-px)) calc(19.0914 * var(--sound-px)) calc(16.71 * var(--sound-px));
+  gap:calc(12.73 * var(--sound-px));
+  border-radius:calc(12.7276 * var(--sound-px));
+  background:#f5f5f5;
+  font-family:'SF Pro',-apple-system,BlinkMacSystemFont,'Noto Sans JP',sans-serif;
+}
+.work-app .work-measuring-panel .work-inline-sound :is(label,.work-sound-row) {
+  display:grid;
+  grid-template-columns:max(3em,calc(39 * var(--sound-px))) minmax(0,1fr);
+  align-items:center;
+  gap:calc(18.27 * var(--sound-px));
+  min-width:0;
+  font-size:max(12px,calc(12.7276 * var(--sound-px)));
+  font-weight:700;
+  line-height:max(1.15em,calc(15 * var(--sound-px)));
+  letter-spacing:0;
+  color:#666;
+}
+.work-app .work-measuring-panel .work-inline-sound :is(label,.work-sound-row)>span {
+  width:auto;
+  white-space:nowrap;
+}
+.work-sound-select { position:relative;min-width:0;height:100%; }
+.work-sound-select-trigger {
+  display:flex;align-items:center;justify-content:space-between;
+  gap:max(8px,calc(12 * var(--sound-px)));
+  width:100%;height:100%;min-height:0;
+  padding:0 calc(19.0914 * var(--sound-px));
+  border:0;border-radius:calc(12.7276 * var(--sound-px));
+  background:#fff;color:#666;
+  font-size:inherit;font-weight:700;line-height:inherit;text-align:left;cursor:pointer;
+}
+.work-sound-select-trigger>span { order:-1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.work-sound-select-trigger>svg { width:max(9px,calc(11.4 * var(--sound-px)));height:max(4.92px,calc(6.23 * var(--sound-px)));flex:none; }
+.work-app .work-measuring-panel .work-inline-sound input[type=range] {
+  --sound-track-height:max(3px,calc(6.36 * var(--sound-px)));
+  --sound-thumb-size:max(14px,calc(19.09 * var(--sound-px)));
+  appearance:none;width:100%;min-width:0;height:100%;min-height:0;margin:0;padding:0;background:transparent;cursor:pointer;
+}
+.work-app .work-measuring-panel .work-inline-sound input[type=range]::-webkit-slider-runnable-track {
+  height:var(--sound-track-height);border-radius:16px;background:linear-gradient(to right,#13a2d7 var(--volume-progress),#fff 0);
+}
+.work-app .work-measuring-panel .work-inline-sound input[type=range]::-webkit-slider-thumb {
+  appearance:none;width:var(--sound-thumb-size);height:var(--sound-thumb-size);margin-top:calc((var(--sound-track-height) - var(--sound-thumb-size))/2);background:#13a2d7;border:0;border-radius:50%;
+}
+.work-app .work-measuring-panel .work-inline-sound input[type=range]::-moz-range-track {
+  height:var(--sound-track-height);border-radius:16px;background:linear-gradient(to right,#13a2d7 var(--volume-progress),#fff 0);
+}
+.work-app .work-measuring-panel .work-inline-sound input[type=range]::-moz-range-thumb {
+  width:var(--sound-thumb-size);height:var(--sound-thumb-size);background:#13a2d7;border:0;border-radius:50%;
+}
+@media(min-width:700px) and (min-aspect-ratio:1/1) {
+  .work-app .work-measuring-panel .work-inline-sound { --sound-px:var(--scene-px); }
+}
+@media(max-width:699px), (pointer:coarse) {
+  .work-app .work-measuring-panel .work-inline-sound { --sound-volume-height:24px;--sound-control-height:44px; }
+}
 .work-sound-select-menu{position:absolute;z-index:15;top:calc(100% + 8px);right:0;width:100%;min-width:min(180px,calc(100vw - 48px));max-height:min(256px,calc(100dvh - 40px));overflow:auto;padding:6px;border-radius:16px;background:#fff;box-shadow:0 5px 18px #143c5226,0 1px 4px #00000014;scrollbar-width:thin;scrollbar-color:#b0d4e2 transparent}
 .work-sound-select-menu[data-above=true]{top:auto;bottom:calc(100% + 8px)}
 .work-sound-select-option{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;padding:10px 12px;border:0;border-radius:10px;background:transparent;color:#555;font-size:14px;font-weight:600;line-height:20px;text-align:left;cursor:pointer}
@@ -18,4 +76,3 @@
 .work-sound-select-trigger:focus-visible{outline:2px solid #087da9;outline-offset:3px}
 .work-sound-select-option:focus-visible{outline:2px solid #087da9;outline-offset:-2px;background:#daf0fa}
 @media(hover:hover){.work-sound-select-trigger:hover{background:#f2faff}.work-sound-select-option:hover{background:#daf0fa}}
-@media(max-width:1199px){.work-inline-sound .work-sound-row{gap:12px;font-size:12px}}

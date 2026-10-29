@@ -1,0 +1,132 @@
+/* Reference: active 4025:3846, rest 4057:5172, paused 4057:5125 (1512 × 982).
+   All phases share the same geometry; responsive-layout.css supplies the proportional landscape sizing. */
+.work-app .work-measure-screen{font-family:'SF Pro',-apple-system,BlinkMacSystemFont,'Noto Sans JP',sans-serif;letter-spacing:0;background:linear-gradient(180deg,#13a2d7,#f2edcc)}
+.work-app .work-measure-screen:not(.stage-prepare){padding:149px max(32px,calc((100% - 1334px)/2)) 80px}
+.work-app .work-measure-screen>.screen-close,.work-app .work-timer-screen>.screen-close{top:56px;right:max(32px,calc((100% - 1352px)/2));width:56px;height:56px;border:0}
+.work-app .work-measuring-panel{position:relative;max-width:1334px;min-height:753px;margin:auto;padding:45px 60.58px 51.27px 80px;background:white;border-radius:32px;box-shadow:0 0 8.52px #00000026}
+.work-app .work-measuring-panel .work-measure-heading{display:flex;flex-wrap:nowrap;gap:38px;min-height:46px;margin:0 -13px 40px 0;align-items:center}
+.work-app .work-measuring-panel .work-measure-heading h1{font-size:36px;font-weight:700;line-height:43px;color:#13a2d7}
+.work-app .work-measuring-panel .work-measure-heading p{font-size:20px;line-height:24px;font-weight:700;color:#666;flex:1}
+.work-app .work-measuring-panel .work-measure-heading>.work-button{width:163px;height:46px;min-height:46px;padding:0 12px;margin:0 0 0 auto;border:1px solid #f5f5f5;border-radius:57.12px;box-shadow:0 2px 2.5px #00000040;font-size:13.7091px;line-height:16px;color:#13a2d7}
+.work-app .work-measure-screen.is-rest .work-measure-heading h1{color:#f78000}
+.work-app .work-measure-screen.is-rest .work-measure-heading{column-gap:34px}
+.work-app .work-measuring-grid{display:grid;grid-template-columns:minmax(0,768fr) minmax(0,383.42fr);gap:42px;min-height:452px}
+.work-app .work-measuring-grid .work-camera{margin-top:1px;aspect-ratio:768/451;border-radius:32px;background:#a1a1a1;box-shadow:0 0 8.52px #00000026}
+.work-app .work-live-metrics{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:28px}
+.work-app .work-live-metrics>div{height:191px;min-height:191px;padding:46px 0 25px;border-radius:12.7276px;background:#ecf8fc;color:#13a2d7;justify-content:flex-start}
+.work-app .work-live-metrics>div+div{background:#f7800014;color:#f78000}
+.work-app .work-live-metrics span{font-size:20px;line-height:24px;font-weight:700}
+.work-app .work-live-metrics strong{font-size:56.6897px;line-height:68px;margin-top:11px;font-weight:700;font-variant-numeric:tabular-nums}
+.work-app .work-live-metrics small{font-size:42.5172px;line-height:51px}
+.work-app .work-live-metrics.is-rest{grid-template-columns:1fr}
+.work-app .work-live-metrics.is-rest>div{background:#fef5eb;color:#f78000;padding-top:44px}
+.work-app .work-live-metrics.is-rest span{font-size:23.7097px;line-height:28px}
+.work-app .work-live-metrics.is-rest strong{font-size:67.2047px;line-height:80px;margin-top:7.49px}
+.work-app .work-measuring-panel .work-switch-row{height:57.27px;min-height:57.27px;border-top:1.59095px solid #f5f5f5;font-size:15.9095px;font-weight:700;line-height:19px}
+.work-app .work-measuring-panel .work-switch-row input{margin:0;width:47.49px;height:25.55px;background:#bbb}
+.work-app .work-measuring-panel .work-switch-row input:checked{background:#13a2d7}
+.work-app .work-measuring-panel .work-switch-row input::before{top:3px;left:3px;width:19.55px;height:19.55px}
+.work-app .work-measuring-panel .work-switch-row input:checked::before{translate:21.94px 0}
+.work-app .work-measure-footer{display:flex;gap:23.26px;margin:55px 19.42px 0 0;transform:none}
+.work-app .work-measure-footer .work-button{width:258.37px;min-height:63.73px;height:63.73px;padding:12px 20px;font-size:24px;line-height:29px;font-weight:700}
+.work-app .work-measure-footer .white{background:transparent;border:2.5px solid #13a2d7;color:#13a2d7;filter:drop-shadow(1px 1px 4px #00000040)}
+.work-app .work-measure-footer .blue{background:#13a2d7;box-shadow:0 1px 1px #00000040}
+/* Registration: the progress arc is driven by the same remaining time as the number. */
+.work-app .work-measure-screen:is(.stage-calibrate,.stage-ready) .work-registration-panel{min-height:753px;max-width:1334px;padding:54px 92px 67px;border-radius:32px;background:#fff;box-shadow:0 0 8.52px #00000026}
+.work-app .work-measure-screen:is(.stage-calibrate,.stage-ready) .work-measure-heading{min-height:43px;margin:0 -3px 46px;display:flex;align-items:center;gap:39px}
+.work-app .work-measure-screen:is(.stage-calibrate,.stage-ready) .work-measure-heading h1{color:#13a2d7;font-size:36px;line-height:43px}
+.work-app .work-measure-screen:is(.stage-calibrate,.stage-ready) .work-measure-heading p{color:#666;font-size:24px;line-height:29px;font-weight:700}
+.work-app .work-calibration-content{display:block}
+.work-app .work-calibration-content>.work-camera{aspect-ratio:1150/543;border-radius:32px;background:#a1a1a1;box-shadow:0 0 8.52px #00000026;container-type:inline-size}
+.work-calibration-overlay{position:absolute;inset:0;color:#fff;text-align:center;text-shadow:0 1px 4px #0003}
+.work-calibration-ring{position:absolute;top:11.9705%;left:50%;width:27.8261%;aspect-ratio:1;transform:translateX(-50%);display:grid;place-items:center}
+.work-calibration-ring svg{position:absolute;inset:0;width:100%;height:100%;fill:none;stroke:#fff;stroke-width:20;transform:rotate(-90deg)}
+.work-calibration-track{stroke-opacity:.2}
+/* Frame-based interpolation writes SVG progress directly, including in WKWebView. */
+.work-calibration-progress{transition:none}
+.work-calibration-ring b{font-size:11.1304cqw;line-height:1.1953125;font-weight:700}
+.work-calibration-ring[data-complete=true] b{font-size:5.56522cqw;line-height:1.1875}
+.work-calibration-ring[data-complete=true] .work-calibration-progress{transition:none}
+.work-calibration-label{position:absolute;top:77.9%;left:0;width:100%;font-size:3.13043cqw;line-height:1.19444;font-weight:700}
+.work-app .work-calibration-note{position:absolute;top:87.6611%;left:0;width:100%;font-size:1.73913cqw;line-height:1.2;font-weight:400}
+.work-app .work-timer-panel{box-shadow:0 0 8.52px #00000026}
+@media(max-width:1399px){
+ .work-app .work-measuring-panel{padding:40px;min-height:0}
+ .work-app .work-measuring-panel .work-measure-heading{gap:24px;margin-right:0;flex-wrap:wrap}
+ .work-app .work-measuring-panel .work-measure-heading p{font-size:17px}
+ .work-app .work-measuring-grid{grid-template-columns:minmax(0,2fr) minmax(300px,1fr);gap:28px;min-height:0}
+ .work-app .work-live-metrics strong{font-size:46px}
+ .work-app .work-live-metrics span{font-size:18px}
+ .work-app .work-live-metrics small{font-size:30px}
+ .work-app .work-measure-footer{margin:40px 0 0}
+ .work-app .work-measure-screen:is(.stage-calibrate,.stage-ready) .work-registration-panel{min-height:0;padding:40px}
+ .work-app .work-measure-screen:is(.stage-calibrate,.stage-ready) .work-measure-heading{gap:24px;margin:0 0 32px;flex-wrap:wrap}
+ .work-app .work-measure-screen:is(.stage-calibrate,.stage-ready) .work-measure-heading p{font-size:20px;line-height:29px}
+}
+@media(max-width:999px){
+ .work-app .work-measure-screen:not(.stage-prepare){padding:116px 24px 48px}
+ .work-app .work-measure-screen>.screen-close,.work-app .work-timer-screen>.screen-close{top:30px;right:24px;width:48px;height:48px}
+ .work-app .work-measuring-panel{padding:28px}
+ .work-app .work-measuring-panel .work-measure-heading{gap:12px 20px;margin-bottom:24px}
+ .work-app .work-measuring-panel .work-measure-heading h1{font-size:28px;line-height:36px}
+ .work-app .work-measuring-panel .work-measure-heading p{flex-basis:calc(100% - 210px);font-size:16px;line-height:24px}
+ .work-app .work-measuring-grid{grid-template-columns:minmax(0,1fr) minmax(260px,1fr);gap:24px}
+ .work-app .work-live-metrics>div{height:144px;min-height:144px;padding:24px 0 16px}
+ .work-app .work-live-metrics{margin-bottom:20px;gap:10px}
+ .work-app .work-live-metrics strong{font-size:34px;line-height:48px;margin-top:10px}
+ .work-app .work-live-metrics span{font-size:16px;line-height:22px}
+ .work-app .work-live-metrics small{font-size:25px}
+ .work-app .work-live-metrics.is-rest>div{padding:22px 0 16px}
+ .work-app .work-live-metrics.is-rest strong{font-size:48px;line-height:58px}
+ .work-app .work-live-metrics.is-rest span{font-size:20px;line-height:26px}
+ .work-app .work-measure-footer{margin-top:28px;gap:20px}
+ .work-app .work-measure-footer .work-button{width:240px;min-height:60px;height:60px;font-size:20px}
+ .work-app .work-measure-screen:is(.stage-calibrate,.stage-ready) .work-registration-panel{padding:28px}
+ .work-app .work-measure-screen:is(.stage-calibrate,.stage-ready) .work-measure-heading h1{font-size:28px;line-height:36px}
+ .work-app .work-measure-screen:is(.stage-calibrate,.stage-ready) .work-measure-heading p{font-size:18px;line-height:26px}
+ .work-app .work-calibration-content>.work-camera{aspect-ratio:4/3;min-height:320px;border-radius:24px}
+ .work-calibration-ring{width:42%;max-width:280px;top:8%}
+ .work-calibration-ring b{font-size:clamp(72px,13cqw,112px)}
+ .work-calibration-ring[data-complete=true] b{font-size:clamp(36px,6.5cqw,56px)}
+ .work-calibration-label{font-size:26px;line-height:34px;top:auto;bottom:64px}
+ .work-app .work-calibration-note{font-size:15px;line-height:22px;top:auto;bottom:28px;padding:0 12px}
+}
+@media(max-width:699px){
+ .work-app .work-measure-screen:not(.stage-prepare){padding:108px 16px 40px}
+ .work-app .work-measuring-panel{padding:24px 20px;border-radius:26px}
+ .work-app .work-measuring-panel .work-measure-heading{display:flex;align-items:flex-start;gap:12px}
+ .work-app .work-measuring-panel .work-measure-heading h1{font-size:26px;line-height:34px}
+ .work-app .work-measuring-panel .work-measure-heading p{flex-basis:100%;margin:0;font-size:14px;line-height:22px}
+ .work-app .work-measuring-panel .work-measure-heading>.work-button{margin:4px 0 0}
+ .work-app .work-measuring-grid{grid-template-columns:minmax(0,1fr);gap:24px}
+ .work-app .work-measuring-grid .work-camera{border-radius:20px}
+ .work-app .work-live-controls{margin-top:0}
+ .work-app .work-live-metrics strong{font-size:40px}
+ .work-app .work-measure-footer{gap:12px}
+ .work-app .work-measure-footer .work-button{width:calc(50% - 6px);min-height:56px;height:56px;font-size:18px;padding:10px}
+ .work-app .work-measure-screen:is(.stage-calibrate,.stage-ready) .work-registration-panel{padding:24px 16px;border-radius:26px}
+ .work-app .work-measure-screen:is(.stage-calibrate,.stage-ready) .work-measure-heading{gap:10px;margin-bottom:24px}
+ .work-app .work-measure-screen:is(.stage-calibrate,.stage-ready) .work-measure-heading h1{font-size:26px;line-height:34px}
+ .work-app .work-measure-screen:is(.stage-calibrate,.stage-ready) .work-measure-heading p{font-size:16px;line-height:24px}
+ .work-app .work-calibration-content>.work-camera{aspect-ratio:3/4;min-height:340px;border-radius:20px}
+ .work-calibration-ring{width:66%;top:9%}
+ .work-calibration-ring b{font-size:72px}
+ .work-calibration-ring[data-complete=true] b{font-size:36px}
+ .work-calibration-label{font-size:24px;line-height:30px;bottom:78px}
+ .work-app .work-calibration-note{bottom:24px;font-size:14px;line-height:22px}
+}
+@media(prefers-reduced-motion:reduce){.work-calibration-progress{transition:none}}
+
+@media(min-width:1400px){.work-app .work-measuring-panel .work-measure-heading h1{position:relative;top:3.5px}.work-app .work-measuring-panel .work-measure-heading p{position:relative;top:4px}}
+
+.work-app .work-measure-screen>.screen-close img,.work-app .work-timer-screen>.screen-close img{display:block;width:100%;height:100%}
+.work-app .work-timer-screen .work-steppers svg{width:40px;height:40px;stroke-width:3}
+@media(max-width:1199px){.work-app .work-timer-screen .work-steppers svg{width:32px;height:32px}}
+@media(min-width:1400px){.work-app .work-measure-screen:is(.stage-calibrate,.stage-ready) .work-measure-heading p{align-self:flex-start;margin-top:5px}}
+
+@media(max-width:699px){.work-app .work-measure-screen:is(.stage-calibrate,.stage-ready) .work-measure-heading{display:block}.work-app .work-measure-screen:is(.stage-calibrate,.stage-ready) .work-measure-heading p{margin-top:8px}}
+
+.work-app .work-measure-footer .white:hover:not(:disabled){filter:drop-shadow(1px 1px 4px #00000040) brightness(.96)}
+
+.work-app .work-timer-control>label,.work-app .work-number input,.work-app .work-number span,.work-app .work-timer-panel .work-remember{font-weight:590}
+@media(min-width:1200px){.work-app .work-timer-panel h1{margin-left:1px}.work-app .work-timer-panel>.work-button{width:407px}}

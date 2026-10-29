@@ -1,0 +1,50 @@
+/* Rock each end up/down twice around the tail, then settle at the original
+   angle. Keep the existing entrance and letter reveal; no idle loop/timers. */
+.work-picker .work-bubble-speaking {
+  display: flex;
+  flex-direction: column;
+  white-space: normal;
+  text-align: center;
+  overflow-wrap: anywhere;
+  transform-origin: 28% 100%;
+  animation: work-bubble-speak var(--speech-duration) ease-in-out both;
+}
+.work-picker .work-bubble-speaking[data-multiline="true"] {
+  font-size: clamp(11px, 1.4vw, 20px);
+  line-height: 1.45;
+}
+.work-speech-line { display: block; }
+.work-speech-letter {
+  display: inline-block;
+  white-space: pre;
+  animation: work-speech-letter 140ms ease-out var(--speech-delay) both;
+}
+.work-speech-announcement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@keyframes work-bubble-speak {
+  0% { opacity: 0; transform: translateY(3px) rotate(6deg) scale(.96); animation-timing-function: cubic-bezier(.2, .8, .2, 1); }
+  22% { opacity: 1; transform: translateY(-1px) rotate(8deg) scale(1.012); }
+  36% { transform: translateY(0) rotate(9.5deg) scale(1); }
+  50% { transform: translateY(0) rotate(6.5deg) scale(1); }
+  66% { transform: translateY(0) rotate(9deg) scale(1); }
+  82% { transform: translateY(0) rotate(7deg) scale(1); }
+  100% { opacity: 1; transform: translateY(0) rotate(8deg) scale(1); }
+}
+@keyframes work-speech-letter {
+  from { opacity: 0; transform: translateY(1px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 600px) {
+  .work-picker .work-bubble-speaking[data-multiline="true"] { font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .work-picker .work-bubble-speaking { animation: none; }
+  .work-speech-letter { animation: none; }
+}

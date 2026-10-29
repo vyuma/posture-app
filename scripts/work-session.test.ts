@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, test } from 'bun:test';
 import { IDBFactory } from 'fake-indexeddb';
 import { advanceSession, beginCalibration, createSession, endCalibration, finishSession, goodRatio, pauseSession, resumeSession, normalizeTimer, timerValid, displayScore, type Baseline } from '../src/features/work/model';
 import { openBrowserDriver, WorkRepository } from '../src/features/work/repository';
-import { graphSegments } from '../src/features/work/ScoreGraph';
+import { graphSegments, graphTimeTicks, closestGraphSample } from '../src/features/work/ScoreGraph';
 import { advanceWithRestCue } from '../src/features/work/sessionSound';
 
 const baseline = { stats: {}, headWidthRatio: 0.8 } as Baseline;
@@ -63,7 +63,7 @@ describe('measurement clock and scores', () => {
   test('automatically completes after the last focus without another rest', () => { const session = make(); run(session, 900); expect(session.status).toBe('completed'); expect(session.focusMs).toBe(600_000); expect(session.goodMs).toBe(600_000); expect(session.elapsedMs).toBe(900_000); expect(session.cycle).toBe(2); expect(session.events.filter(event => event.kind === 'rest')).toHaveLength(1); });
   test('pause preserves rest and remaining time; recalibration preserves session and prior pause', () => { const session = make(); run(session, 310); pauseSession(session, good); const remaining = session.remainingMs; run(session, 20); expect(session.remainingMs).toBe(remaining); beginCalibration(session, good); run(session, 10); endCalibration(session, { ...baseline, headWidthRatio: 0.9 }); expect(session.status).toBe('paused'); expect(session.phase).toBe('rest'); expect(session.calibrations).toHaveLength(2); expect(session.focusMs).toBe(300_000); resumeSession(session); run(session, 1); expect(session.remainingMs).toBe(remaining - 1000); });
   test('failed recalibration restores previous calibration and retains all samples', () => { const session = make(); run(session, 10); const samples = session.samples.length; beginCalibration(session, good); run(session, 5); endCalibration(session, null); expect(session.calibrations).toHaveLength(1); expect(session.focusMs).toBe(10_000); expect(session.samples.length).toBeGreaterThanOrEqual(samples); expect(session.status).toBe('running'); });
-  test('missing and stale frames never improve or worsen the valid-time ratio', () => { const session = make(); run(session, 10); run(session, 10, bad); run(session, 20, missing); advanceSession(session, session.lastTickMs! + 60_000, good); expect(goodRatio(session)).toBe(0.5); expect(session.focusMs).toBe(100_000); expect(session.validMs).toBe(20_000); expect(session.samples[session.samples.length - 1].score).toBeNull(); finishSession(session); expect(session.rewardQualified).toBe(true); });
+  test('new sessions include missing and stale focus time in the ratio without fabricating graph scores', () => { const session = make(); run(session, 10); run(session, 10, bad); run(session, 20, missing); advanceSession(session, session.lastTickMs! + 60_000, good); expect(goodRatio(session)).toBe(0.1); expect(session.focusMs).toBe(100_000); expect(session.validMs).toBe(20_000); expect(session.samples[session.samples.length - 1].score).toBeNull(); finishSession(session); expect(session.rewardQualified).toBe(false); });
   test('manual finish keeps the exact final sample between one-second ticks', () => { const session = make(); run(session, 1); advanceSession(session, 1250, bad); finishSession(session, undefined, bad); expect(session.samples.at(-1)?.focusMs).toBe(1250); expect(session.samples.at(-1)?.state).toBe('bad'); });
   test('zero valid time has no ratio or reward', () => { const session = make(); run(session, 2, missing); finishSession(session); expect(goodRatio(session)).toBeNull(); expect(session.rewardQualified).toBe(false); });
   test('plot segments stay separate around pauses and gaps', () => { const session = make(); run(session, 5); pauseSession(session, good); resumeSession(session); run(session, 5); run(session, 5, missing); run(session, 5); const groups = graphSegments(session.samples, 2); expect(groups.length).toBe(3); for (const group of groups) expect(new Set(group.map(point => point.segment)).size).toBe(1); });
@@ -84,5 +84,91 @@ describe('atomic local history and collection', () => {
   test('reset retains history and timer, rejects old rewards, restart never imports erased cards', async () => { const { repo, driver } = await repository(); const session = finishGood(); await repo.timer(settings); await repo.finish(session, ['normal-nago']); await repo.select('normal-nago'); await repo.reset(); await repo.finish(session, ['normal-nago']); await repo.finish(finishGood(0), ['normal-nago']); const reopened = new WorkRepository(driver); await reopened.initialize(); const collection = await reopened.collection(); expect(collection.cards).toHaveLength(0); expect(collection.selectedId).toBeNull(); expect(collection.timer).toEqual(settings); expect((await reopened.session(session.id))?.acquiredCharacterId).toBe('normal-nago'); expect((await reopened.finish(finishGood(collection.generation), ['normal-nago'])).session.acquiredCharacterId).toBe('normal-nago'); });
   test('unique rewards stop after catalog completion', async () => { const { repo } = await repository(); for (let i = 0; i < 4; i++) await repo.finish(finishGood(), ['normal-nago', 'shin-anago']); expect((await repo.collection()).cards.map(card => card.characterId)).toEqual(['normal-nago', 'shin-anago']); });
   test('crash recovery retains checkpoint without reward or automatic resumption', async () => { const { repo } = await repository(); const session = make(); run(session, 10); await repo.checkpoint(session); expect(await repo.recover()).toBe(1); expect((await repo.session(session.id))?.status).toBe('interrupted'); finishSession(session); const recovered = await repo.finish(session, ['normal-nago']); expect(recovered.collection.cards).toHaveLength(0); expect(recovered.session.status).toBe('interrupted'); });
+  test('next reward survives reopening, is used once, and cannot duplicate an owned card', async () => {
+    const { repo, driver } = await repository(); const ids = ['normal-nago', 'sakura-nago'];
+    await repo.nextReward('sakura-nago', ids);
+    const reopened = new WorkRepository(driver);
+    expect((await reopened.initialize()).nextRewardId).toBe('sakura-nago');
+    const first = await reopened.finish(finishGood(), ids);
+    expect(first.session.acquiredCharacterId).toBe('sakura-nago');
+    expect(first.collection.nextRewardId).toBeNull();
+    expect((await repo.finish(first.session, ids)).collection.cards).toHaveLength(1);
+    await expect(repo.nextReward('sakura-nago', ids)).rejects.toThrow('未獲得');
+    const second = await repo.finish(finishGood(), ids);
+    expect(second.session.acquiredCharacterId).toBe('normal-nago');
+    expect((await repo.finish(finishGood(), ids)).session.acquiredCharacterId).toBeNull();
+  });
+  test('failed posture and interrupted sessions do not consume the next reward', async () => {
+    const { repo } = await repository(); const ids = ['normal-nago', 'king-nago'];
+    await repo.nextReward('king-nago', ids);
+    for (const reading of [bad, missing]) {
+      const session = make(); run(session, 3, reading); finishSession(session);
+      const result = await repo.finish(session, ids);
+      expect(result.session.acquiredCharacterId).toBeNull();
+      expect(result.collection.nextRewardId).toBe('king-nago');
+    }
+    const interrupted = make(); run(interrupted, 2); await repo.checkpoint(interrupted); await repo.recover();
+    finishSession(interrupted); await repo.finish(interrupted, ids);
+    expect((await repo.collection()).nextRewardId).toBe('king-nago');
+  });
+  test('save failure leaves both reward and one-time selection untouched until retry', async () => {
+    const { repo, driver } = await repository(); const ids = ['normal-nago', 'miira-nago'];
+    await repo.nextReward('miira-nago', ids);
+    const failing = new WorkRepository({ ...driver, compareAndSet: async () => { throw new Error('disk full'); } });
+    const session = finishGood();
+    await expect(failing.finish(session, ids)).rejects.toThrow('disk full');
+    expect((await repo.collection()).nextRewardId).toBe('miira-nago');
+    expect((await repo.collection()).cards).toHaveLength(0);
+    expect(await repo.session(session.id)).toBeNull();
+    expect((await repo.finish(session, ids)).session.acquiredCharacterId).toBe('miira-nago');
+    expect((await repo.collection()).nextRewardId).toBeNull();
+  });
+  test('concurrent results consume a selected character exactly once', async () => {
+    const { repo } = await repository(); const ids = ['normal-nago', 'sakura-nago'];
+    await repo.nextReward('sakura-nago', ids);
+    const results = await Promise.all([repo.finish(finishGood(), ids), repo.finish(finishGood(), ids)]);
+    expect(results.map(result => result.session.acquiredCharacterId).sort()).toEqual([...ids].sort());
+    expect((await repo.collection()).cards).toHaveLength(2);
+    expect((await repo.collection()).nextRewardId).toBeNull();
+  });
+  test('selection can be cancelled, rejects unknown IDs, and resets with the collection', async () => {
+    const { repo } = await repository(); const ids = ['normal-nago', 'sakura-nago'];
+    await expect(repo.nextReward('unknown', ids)).rejects.toThrow('未獲得');
+    await repo.nextReward('sakura-nago', ids); await repo.nextReward(null, ids);
+    expect((await repo.collection()).nextRewardId).toBeNull();
+    expect((await repo.finish(finishGood(), ids)).session.acquiredCharacterId).toBe('normal-nago');
+    await repo.nextReward('sakura-nago', ids); await repo.reset();
+    expect((await repo.collection()).nextRewardId).toBeNull();
+    await repo.nextReward('sakura-nago', ids);
+    const old = await repo.finish(finishGood(0), ids);
+    expect(old.session.acquiredCharacterId).toBeNull();
+    expect(old.collection.nextRewardId).toBe('sakura-nago');
+  });
+  test('stale or removed selections cannot create duplicate or unknown rewards', async () => {
+    const { repo, driver } = await repository(); const ids = ['normal-nago', 'sakura-nago'];
+    await repo.finish(finishGood(), ids);
+    const current = await repo.collection();
+    await driver.compareAndSet(current.revision, { ...current, revision: current.revision + 1, nextRewardId: 'normal-nago' });
+    expect((await repo.finish(finishGood(), ids)).session.acquiredCharacterId).toBe('sakura-nago');
+    await repo.reset(); await repo.nextReward('sakura-nago', ids);
+    const updated = await repo.collection();
+    expect((await repo.finish(finishGood(updated.generation), ['normal-nago'])).session.acquiredCharacterId).toBe('normal-nago');
+  });
   test('legacy acquisition is preserved without inventing graph data', async () => { localStorage.setItem('posture.characters.acquired.v1', JSON.stringify([{ characterId: 'normal-nago', measurementId: 'legacy1', acquiredAt: '2026-10-25T00:00:00Z', activeMeasurementMs: 60000, goodRatio: 0.8 }])); const { repo } = await repository(); expect((await repo.collection()).cards).toHaveLength(1); const session = await repo.session('legacy1'); expect(session?.samples).toEqual([]); expect(goodRatio(session!)).toBe(0.8); });
+});
+
+describe('result graph inspection', () => {
+  test('shows readable minute ticks and the exact duration without a crowded final tick', () => {
+    expect(graphTimeTicks(140 * 60_000)).toEqual([0,30,60,90,120,140].map(value => value * 60_000));
+    expect(graphTimeTicks(61 * 60_000)).toEqual([0,15,30,45,61].map(value => value * 60_000));
+    expect(graphTimeTicks(20_000)).toEqual([0,20_000]);
+    expect(graphTimeTicks(0)).toEqual([0]);
+  });
+  test('selects both sides of a recalibration boundary and clamps to the end samples', () => {
+    const points = [{ focusMs: 0, score: 90 }, { focusMs: 60_000, score: 20 }, { focusMs: 60_000, score: 100 }, { focusMs: 120_000, score: null }] as ReturnType<typeof make>['samples'];
+    expect(closestGraphSample(points,60_000,25)).toBe(1);
+    expect(closestGraphSample(points,60_000,95)).toBe(2);
+    expect(closestGraphSample(points,-1,20)).toBe(0);
+    expect(closestGraphSample(points,130_000,50)).toBe(3);
+  });
 });

@@ -32,10 +32,10 @@ import {
 } from "./engine.score";
 import { POSTURE_SPEC } from "./engine.spec";
 import {
-  areBothShouldersUsable,
+  resetLandmarkTracking,
   forceBadState,
   updatePostureState,
-  updateShoulderDropMonitor,
+  updateLandmarkDropMonitor,
 } from "./engine.state";
 import type {
   BodyTurnSource,
@@ -68,11 +68,11 @@ export function createPostureEngineState(): PostureEngineState {
     baselineHeadWidthRatio: null,
     emaScore: null,
     candidateBadState: false,
-    shoulderEstablished: false,
-    shoulderDropActive: false,
-    shoulderMissingAccumMs: 0,
-    shoulderRecoveryAccumMs: 0,
-    shoulderDropLastTsMs: null,
+    landmarksEstablished: false,
+    landmarkDropActive: false,
+    landmarkMissingSinceMs: null,
+    landmarkRecoverySinceMs: null,
+    landmarkDropLastTsMs: null,
     stableState: "good",
     postureState: "hold",
     badAccumMs: 0,
@@ -262,7 +262,7 @@ export function evaluatePostureFrame(
     worldLandmarks,
     "world",
   );
-  const shouldersVisible = areBothShouldersUsable(selected);
+  const landmarksVisible = buildCorePoints(selected2d) !== null;
   const extracted = extractFeaturesFromSelection(selected2d, selected3d);
   const experiment = computePostureExperiment(selected, extracted);
   // Only observed, valid intervals count toward the five-second calibration.
@@ -276,11 +276,12 @@ export function evaluatePostureFrame(
     warmupValidMs,
     warmupLastValidMs: extracted.qualityOk ? nowMs : null,
   };
-  next = updateShoulderDropMonitor(next, shouldersVisible, nowMs);
+  // Only a calibrated, previously observed body can become a sustained-loss warning.
+  next = next.baseline ? updateLandmarkDropMonitor(next, landmarksVisible, nowMs) : resetLandmarkTracking(next);
 
   if (!extracted.qualityOk) {
     next = updatePostureState(next, false, false, nowMs);
-    if (next.shoulderDropActive) {
+    if (next.landmarkDropActive) {
       next = forceBadState(next, nowMs);
     }
     return buildNonReadyFrameResult(
@@ -328,7 +329,7 @@ export function evaluatePostureFrame(
 
   if (!next.baseline) {
     next = updatePostureState(next, false, false, nowMs);
-    if (next.shoulderDropActive) {
+    if (next.landmarkDropActive) {
       next = forceBadState(next, nowMs);
     }
     return buildNonReadyFrameResult(
@@ -364,7 +365,7 @@ export function evaluatePostureFrame(
     scoreResult.confidence,
   );
   const mergedCandidateBad =
-    next.shoulderDropActive || isHeadTurnedSevere || nextCandidateBad;
+    next.landmarkDropActive || isHeadTurnedSevere || nextCandidateBad;
   const transitionEligible =
     isHeadTurnedSevere ||
     scoreResult.usableFeatureCount >= POSTURE_SPEC.minUsableFeatureCount;
@@ -382,13 +383,15 @@ export function evaluatePostureFrame(
     nowMs,
     transitionEligible,
   );
-  if (next.shoulderDropActive) {
+  if (next.landmarkDropActive) {
     next = forceBadState(next, nowMs);
   }
 
   return {
     state: next,
     result: {
+      trackingStatus: next.landmarkDropActive ? "missing" : "tracked",
+      presentationPosture: next.postureState,
       eval: {
         score: scoreResult.scoreEma,
         candidateBad: mergedCandidateBad,
@@ -428,9 +431,11 @@ function buildNonReadyFrameResult(
   return {
     state,
     result: {
+      trackingStatus: state.landmarkDropActive ? "missing" : state.landmarksEstablished && state.landmarkMissingSinceMs !== null ? "grace" : "unavailable",
+      presentationPosture: state.stableState,
       eval: {
         score: state.emaScore ?? 0,
-        candidateBad: state.shoulderDropActive || state.candidateBadState,
+        candidateBad: state.landmarkDropActive || state.candidateBadState,
         qualityOk: false,
         view: payload.view,
         isHeadTurned: payload.isHeadTurned,

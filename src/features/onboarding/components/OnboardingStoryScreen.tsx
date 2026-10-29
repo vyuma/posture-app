@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 
+import { Brand } from "../../work/Brand";
+
 import CARDS from "../storyCards.json";
 import { CharacterStars } from "../../characters/CharacterStars";
 import { StoryAnago } from "./StoryAnago";
@@ -20,14 +22,35 @@ const FRIENDS = ["shin-anago", "oto-anago", "kuro-anyago", "normal-nago", "dot-n
 
 export function OnboardingStoryScreen({ onComplete }: { onComplete: () => void }) {
   const [index, setIndex] = useState(0);
+  const [destination, setDestination] = useState<Scene | null>(null);
+  const leaving = destination !== null;
+  const transitionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const completing = useRef(false);
   const screen = useRef<HTMLElement>(null);
   const scene = SCENES[index];
   const isLast = index === SCENES.length - 1;
+  const move = useCallback((target: number) => {
+    if (transitionTimer.current || completing.current || screen.current?.closest('[inert]') || target === index) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setIndex(target);
+      return;
+    }
+    setDestination(SCENES[target]);
+    // Keep the current scene mounted for its outro, including the shared Lottie rig.
+    transitionTimer.current = setTimeout(() => {
+      setIndex(target);
+      setDestination(null);
+      transitionTimer.current = null;
+    }, scene === 'friends' ? 220 : 180);
+  }, [index, scene]);
   const next = useCallback(() => {
-    if (isLast) onComplete();
-    else setIndex((current) => Math.min(current + 1, SCENES.length - 1));
-  }, [isLast, onComplete]);
-  const previous = useCallback(() => setIndex((current) => Math.max(0, current - 1)), []);
+    if (transitionTimer.current || completing.current || screen.current?.closest('[inert]')) return;
+    if (isLast) { completing.current = true; onComplete(); }
+    else move(index + 1);
+  }, [index, isLast, move, onComplete]);
+  const previous = useCallback(() => move(Math.max(0, index - 1)), [index, move]);
+
+  useEffect(() => () => { if (transitionTimer.current) clearTimeout(transitionTimer.current); }, []);
 
   useLayoutEffect(() => {
     const element = screen.current;
@@ -69,21 +92,20 @@ export function OnboardingStoryScreen({ onComplete }: { onComplete: () => void }
   }, [next, previous]);
 
   return (
-    <main ref={screen} className={`onboarding-screen onboarding--${scene}`} aria-label="PiiiN ストーリー">
+    <main ref={screen} className={`onboarding-screen onboarding--${scene}`} data-leaving={leaving || undefined} data-destination={destination ?? undefined} aria-label="PiiiN ストーリー" aria-busy={leaving}>
       <div className="onboarding-bubbles" aria-hidden="true">
         {Array.from({ length: 11 }, (_, i) => <span key={i} />)}
       </div>
+      {scene !== "splash" && <header className="onboarding-header"><Brand /></header>}
       <div className="onboarding-canvas">
         {scene === "splash" ? (
           <section className="onboarding-splash" aria-label="姿勢改善にワクワクを">
             <img className="onboarding-main-logo" src="/logo/logo_main.png" alt="姿勢改善にワクワクを PiiiN" draggable={false} />
-            <button className="onboarding-start" type="button" onClick={next}>はじめる</button>
+            <button className="onboarding-start" type="button" onClick={next} aria-disabled={leaving}>はじめる</button>
           </section>
         ) : (
           <>
-            <header className="onboarding-header">
-              <img src="/logo/logo_white.png" alt="PiiiN" draggable={false} />
-            </header>
+            <div className="onboarding-header-space" aria-hidden="true" />
             <div className="onboarding-copy" key={scene} role="status" aria-live="polite" aria-atomic="true">
               <span className="onboarding-sr-only">ストーリー {index} / 5。</span>
               {COPY[scene].map((line, i) => (
@@ -103,8 +125,8 @@ export function OnboardingStoryScreen({ onComplete }: { onComplete: () => void }
         )}
       </div>
       <nav className="onboarding-navigation" aria-label="ストーリーの操作" hidden={scene === "splash"}>
-        {index > 1 && <button type="button" className="onboarding-arrow onboarding-arrow--back" onClick={previous} aria-label="前のストーリーへ"><img src="/story/redesign/arrow-back.svg" alt="" /></button>}
-        <button type="button" className="onboarding-arrow onboarding-arrow--next" onClick={next} aria-label={isLast ? "ストーリーを終了" : "次のストーリーへ"}><img src="/story/redesign/arrow-back.svg" alt="" /></button>
+        {index > 1 && <button type="button" className="onboarding-arrow onboarding-arrow--back" onClick={previous} aria-disabled={leaving} aria-label="前のストーリーへ"><img src="/story/redesign/arrow-back.svg" alt="" /></button>}
+        <button type="button" className="onboarding-arrow onboarding-arrow--next" onClick={next} aria-disabled={leaving} aria-label={isLast ? "ストーリーを終了" : "次のストーリーへ"}><img src="/story/redesign/arrow-back.svg" alt="" /></button>
       </nav>
     </main>
   );

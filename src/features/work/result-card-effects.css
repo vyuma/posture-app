@@ -119,6 +119,151 @@
 }
 
 
+.work-detail-card--acquired.is-entering {
+  animation: work-acquired-card-enter 0.72s cubic-bezier(0.18, 0.74, 0.28, 1) both;
+}
+
+.work-detail-card--acquired.is-tapped {
+  animation: work-acquired-card-press 0.52s cubic-bezier(0.18, 0.74, 0.28, 1);
+}
+
+.work-detail-card--acquired.is-tapped::before {
+  inset: 8% 5%;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 16% 22%, rgba(255, 255, 255, 0.96) 0 2px, transparent 3px),
+    radial-gradient(circle at 82% 26%, rgba(255, 255, 255, 0.9) 0 2px, transparent 3px),
+    radial-gradient(circle at 72% 76%, rgba(255, 255, 255, 0.86) 0 2px, transparent 3px),
+    radial-gradient(circle at 34% 66%, rgba(255, 255, 255, 0.82) 0 2px, transparent 3px),
+    linear-gradient(
+      110deg,
+      rgba(255, 255, 255, 0) 22%,
+      rgba(255, 255, 255, 0.78) 52%,
+      rgba(255, 255, 255, 0) 76%
+    );
+  animation: work-acquired-card-glitter 0.52s ease-out;
+}
+
+.work-detail-card--acquired.is-tapped::after {
+  opacity: 1;
+}
+
+@keyframes work-acquired-card-enter {
+  0% {
+    opacity: 0;
+    transform:
+      perspective(900px)
+      rotateX(5deg)
+      rotateY(0deg)
+      translateY(24px)
+      scale(0.96);
+    box-shadow:
+      0 10px 28px rgba(19, 100, 120, 0.12),
+      0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+  38% {
+    opacity: 1;
+    transform:
+      perspective(900px)
+      rotateX(2deg)
+      rotateY(0deg)
+      translateY(8px)
+      scale(0.982);
+    box-shadow:
+      0 12px 30px rgba(19, 100, 120, 0.16),
+      0 1px 0 rgba(255, 255, 255, 0.92);
+  }
+  68% {
+    transform:
+      perspective(900px)
+      rotateX(-1deg)
+      rotateY(0deg)
+      translateY(-8px)
+      scale(1.014);
+    box-shadow:
+      0 26px 56px rgba(19, 100, 120, 0.22),
+      0 0 0 1px color-mix(in srgb, var(--result-stat-accent, #fd8c3e) 20%, transparent),
+      0 1px 0 rgba(255, 255, 255, 0.94);
+  }
+  100% {
+    opacity: 1;
+    transform:
+      perspective(900px)
+      rotateX(var(--tilt-x))
+      rotateY(var(--tilt-y))
+      translateY(calc(var(--tilt-lift) + var(--result-card-press-y)))
+      scale(var(--result-card-scale));
+    box-shadow:
+      0 20px 48px rgba(19, 100, 120, 0.16),
+      0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+}
+
+@keyframes work-acquired-card-press {
+  0% {
+    transform:
+      perspective(900px)
+      rotateX(var(--tilt-x))
+      rotateY(var(--tilt-y))
+      translateY(calc(var(--tilt-lift) + var(--result-card-press-y)))
+      scale(var(--result-card-scale));
+    box-shadow:
+      0 18px 42px rgba(19, 100, 120, 0.2),
+      0 0 0 1px color-mix(in srgb, var(--result-stat-accent, #fd8c3e) 22%, transparent),
+      0 1px 0 rgba(255, 255, 255, 0.92);
+  }
+  32% {
+    transform:
+      perspective(900px)
+      rotateX(var(--tilt-x))
+      rotateY(var(--tilt-y))
+      translateY(calc(var(--tilt-lift) + 8px))
+      scale(0.976);
+    box-shadow:
+      0 10px 26px rgba(19, 100, 120, 0.17),
+      0 0 0 1px color-mix(in srgb, var(--result-stat-accent, #fd8c3e) 24%, transparent),
+      0 1px 0 rgba(255, 255, 255, 0.92);
+  }
+  72% {
+    transform:
+      perspective(900px)
+      rotateX(var(--tilt-x))
+      rotateY(var(--tilt-y))
+      translateY(calc(var(--tilt-lift) - 7px))
+      scale(1.016);
+    box-shadow:
+      0 26px 56px rgba(19, 100, 120, 0.24),
+      0 0 0 1px color-mix(in srgb, var(--result-stat-accent, #fd8c3e) 24%, transparent),
+      0 1px 0 rgba(255, 255, 255, 0.94);
+  }
+  100% {
+    transform:
+      perspective(900px)
+      rotateX(var(--tilt-x))
+      rotateY(var(--tilt-y))
+      translateY(calc(var(--tilt-lift) + var(--result-card-press-y)))
+      scale(var(--result-card-scale));
+    box-shadow:
+      0 20px 48px rgba(19, 100, 120, 0.16),
+      0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+}
+
+@keyframes work-acquired-card-glitter {
+  0% {
+    opacity: 0;
+    transform: translateX(-28%) translateY(10%) rotate(-10deg);
+  }
+  28% {
+    opacity: 0.92;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(24%) translateY(-12%) rotate(8deg);
+  }
+}
+
+
 .work-detail-card.is-share-capture{box-shadow:none!important;transform:none!important;animation:none!important}
 .work-detail-card.is-share-capture::before,.work-detail-card.is-share-capture::after{content:none!important}
 @media(prefers-reduced-motion:reduce){.work-detail-card--acquired,.work-detail-card--acquired::before,.work-detail-card--acquired::after{animation:none!important;transition:none!important;transform:none!important}}
