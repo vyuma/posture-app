@@ -31,8 +31,8 @@ export const POSTURE_SPEC = {
   minUsableFeatureCount: 3,
   lowConfidenceThreshold: 0.5,
   lowConfidenceBadThresholdBoost: 0.15,
-  shoulderDropEnterMs: 400,
-  shoulderDropExitMs: 500,
+  landmarkDropEnterMs: 1000,
+  landmarkDropExitMs: 350,
   sourceReliability: {
     world: 1,
     image: 0.85,

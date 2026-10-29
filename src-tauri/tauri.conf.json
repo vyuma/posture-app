@@ -23,7 +23,8 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": null,
+      "assetProtocol": { "enable": true, "scope": ["$APPDATA/timelapse/**", "$APPDATA/timelapse-qa/timelapse/**"] }
     }
   },
   "bundle": {

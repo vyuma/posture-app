@@ -48,8 +48,10 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::work_commands::work_database,
+            commands::timelapse_commands::timelapse_store,
             commands::work_widget_commands::work_widget_update,
             commands::work_widget_commands::work_widget_get,
+            commands::work_widget_commands::work_widget_compact,
             commands::work_widget_commands::work_preview_window,
             commands::work_widget_commands::work_widget_action,
             get_pairing_info,

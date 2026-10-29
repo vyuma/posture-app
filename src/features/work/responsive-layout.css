@@ -1,0 +1,235 @@
+/* Shared viewport contract for web and WKWebView.
+   The background covers the window. Landscape scenes use the smaller width/height
+   ratio of the 1512 × 982 design; portrait scenes keep readable, scrolling layouts.
+   No CSS zoom/transform on the app: dialogs, pointer coordinates and animations
+   keep their original coordinate system. */
+.work-app { background:linear-gradient(180deg,#13a2d7,#f2edcc); }
+.work-flow { min-height:100dvh; }
+.work-flow[hidden] { display:none; }
+.work-app .work-screen { min-height:100dvh; }
+
+@media (min-width:700px) and (min-aspect-ratio:1/1) {
+  .work-app { --scene-px:min(calc(100vw / 1512),calc(100dvh / 982)); }
+
+  /* Measurement and registration */
+  .work-app .work-screen.work-measure-screen:not(.stage-prepare) { padding:calc(149 * var(--scene-px)) max(calc(32 * var(--scene-px)),calc((100% - calc(1334 * var(--scene-px)))/2)) calc(80 * var(--scene-px)); }
+  .work-app .work-screen.work-measure-screen>.screen-close, .work-app .work-screen.work-timer-screen>.screen-close { top:calc(56 * var(--scene-px));right:max(calc(32 * var(--scene-px)),calc((100% - calc(1352 * var(--scene-px)))/2));width:calc(56 * var(--scene-px));height:calc(56 * var(--scene-px));border:0; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measuring-panel { position:relative;max-width:calc(1334 * var(--scene-px));min-height:calc(753 * var(--scene-px));margin:auto;padding:calc(45 * var(--scene-px)) calc(60.58 * var(--scene-px)) calc(51.27 * var(--scene-px)) calc(80 * var(--scene-px));border-radius:calc(32 * var(--scene-px));box-shadow:0 0 calc(8.52 * var(--scene-px)) #00000026; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measuring-panel .work-measure-heading { display:flex;flex-wrap:nowrap;gap:calc(38 * var(--scene-px));min-height:calc(46 * var(--scene-px));margin:0 calc(-13 * var(--scene-px)) calc(40 * var(--scene-px)) 0;align-items:center; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measuring-panel .work-measure-heading h1 { font-size:max(16px,calc(36 * var(--scene-px)));line-height:max(1.15em,calc(43 * var(--scene-px))); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measuring-panel .work-measure-heading p { font-size:max(12px,calc(20 * var(--scene-px)));line-height:max(1.15em,calc(24 * var(--scene-px)));flex:1; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measuring-panel .work-measure-heading>.work-button { width:calc(163 * var(--scene-px));height:calc(46 * var(--scene-px));min-height:calc(46 * var(--scene-px));padding:0 calc(12 * var(--scene-px));margin:0 0 0 auto;border:calc(1 * var(--scene-px)) solid #f5f5f5;border-radius:calc(57.12 * var(--scene-px));box-shadow:0 calc(2 * var(--scene-px)) calc(2.5 * var(--scene-px)) #00000040;font-size:max(12px,calc(13.7091 * var(--scene-px)));line-height:max(1.15em,calc(16 * var(--scene-px))); }
+  .work-app .work-screen.work-measure-screen.is-rest .work-measure-heading { column-gap:calc(34 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measuring-grid { display:grid;grid-template-columns:minmax(0,768fr) minmax(0,383.42fr);gap:calc(42 * var(--scene-px));min-height:calc(452 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measuring-grid .work-camera { margin-top:calc(1 * var(--scene-px));aspect-ratio:768/451;border-radius:calc(32 * var(--scene-px));box-shadow:0 0 calc(8.52 * var(--scene-px)) #00000026; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-live-metrics { display:grid;grid-template-columns:1fr 1fr;gap:calc(13 * var(--scene-px));margin-bottom:calc(28 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-live-metrics>div { height:calc(191 * var(--scene-px));min-height:calc(191 * var(--scene-px));padding:calc(46 * var(--scene-px)) 0 calc(25 * var(--scene-px));border-radius:calc(12.7276 * var(--scene-px));justify-content:flex-start; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-live-metrics span { font-size:max(12px,calc(20 * var(--scene-px)));line-height:max(1.15em,calc(24 * var(--scene-px))); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-live-metrics strong { font-size:max(24px,calc(56.6897 * var(--scene-px)));line-height:max(1.15em,calc(68 * var(--scene-px)));margin-top:calc(11 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-live-metrics small { font-size:max(24px,calc(42.5172 * var(--scene-px)));line-height:max(1.15em,calc(51 * var(--scene-px))); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-live-metrics.is-rest { grid-template-columns:1fr; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-live-metrics.is-rest>div { padding-top:calc(44 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-live-metrics.is-rest span { font-size:max(12px,calc(23.7097 * var(--scene-px)));line-height:max(1.15em,calc(28 * var(--scene-px))); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-live-metrics.is-rest strong { font-size:max(24px,calc(67.2047 * var(--scene-px)));line-height:max(1.15em,calc(80 * var(--scene-px)));margin-top:calc(7.49 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measuring-panel .work-switch-row { height:calc(57.27 * var(--scene-px));min-height:calc(57.27 * var(--scene-px));border-top:calc(1.59095 * var(--scene-px)) solid #f5f5f5;font-size:max(12px,calc(15.9095 * var(--scene-px)));line-height:max(1.15em,calc(19 * var(--scene-px))); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measuring-panel .work-switch-row input { margin:0;width:calc(47.49 * var(--scene-px));height:calc(25.55 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measuring-panel .work-switch-row input::before { top:calc(3 * var(--scene-px));left:calc(3 * var(--scene-px));width:calc(19.55 * var(--scene-px));height:calc(19.55 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measure-footer { display:flex;gap:calc(23.26 * var(--scene-px));margin:calc(55 * var(--scene-px)) calc(19.42 * var(--scene-px)) 0 0; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measure-footer .work-button { width:calc(258.37 * var(--scene-px));min-height:calc(63.73 * var(--scene-px));height:calc(63.73 * var(--scene-px));padding:calc(12 * var(--scene-px)) calc(20 * var(--scene-px));font-size:max(12px,calc(24 * var(--scene-px)));line-height:max(1.15em,calc(29 * var(--scene-px))); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measure-footer .white { border:calc(2.5 * var(--scene-px)) solid #13a2d7; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measure-footer .blue { box-shadow:0 calc(1 * var(--scene-px)) calc(1 * var(--scene-px)) #00000040; }
+  .work-app .work-screen.work-measure-screen:is(.stage-calibrate,.stage-ready) .work-registration-panel { min-height:calc(753 * var(--scene-px));max-width:calc(1334 * var(--scene-px));padding:calc(54 * var(--scene-px)) calc(92 * var(--scene-px)) calc(67 * var(--scene-px));border-radius:calc(32 * var(--scene-px));box-shadow:0 0 calc(8.52 * var(--scene-px)) #00000026; }
+  .work-app .work-screen.work-measure-screen:is(.stage-calibrate,.stage-ready) .work-measure-heading { min-height:calc(43 * var(--scene-px));margin:0 calc(-3 * var(--scene-px)) calc(46 * var(--scene-px));display:flex;align-items:center;gap:calc(39 * var(--scene-px)); }
+  .work-app .work-screen.work-measure-screen:is(.stage-calibrate,.stage-ready) .work-measure-heading h1 { font-size:max(16px,calc(36 * var(--scene-px)));line-height:max(1.15em,calc(43 * var(--scene-px))); }
+  .work-app .work-screen.work-measure-screen:is(.stage-calibrate,.stage-ready) .work-measure-heading p { font-size:max(12px,calc(24 * var(--scene-px)));line-height:max(1.15em,calc(29 * var(--scene-px))); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-calibration-content { display:block; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-calibration-content>.work-camera { aspect-ratio:1150/543;border-radius:calc(32 * var(--scene-px));box-shadow:0 0 calc(8.52 * var(--scene-px)) #00000026; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-calibration-overlay { position:absolute;inset:0; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-calibration-ring { position:absolute;top:11.9705%;left:50%;width:27.8261%;aspect-ratio:1;display:grid; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-calibration-ring svg { position:absolute;inset:0;width:100%;height:100%; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-calibration-ring b { font-size:11.1304cqw;line-height:1.1953125; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-calibration-ring[data-complete=true] b { font-size:5.56522cqw;line-height:1.1875; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-calibration-label { position:absolute;top:77.9%;left:0;width:100%;font-size:3.13043cqw;line-height:1.19444; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-calibration-note { position:absolute;top:87.6611%;left:0;width:100%;font-size:1.73913cqw;line-height:1.2; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-timer-panel { box-shadow:0 0 calc(8.52 * var(--scene-px)) #00000026; }  /* Timer */ .work-app .work-screen.work-timer-screen { padding-inline:max(calc(32 * var(--scene-px)),calc((100vw - calc(1308 * var(--scene-px)))/2)); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-timer-panel { max-width:calc(1308 * var(--scene-px));margin:auto;min-height:calc(694 * var(--scene-px));padding:calc(85 * var(--scene-px)) calc(116 * var(--scene-px)) calc(34.5 * var(--scene-px));border-radius:calc(32 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-timer-panel h1 { font-size:max(16px,calc(35.1222 * var(--scene-px)));line-height:max(1.15em,calc(42 * var(--scene-px)));margin:0 0 calc(35 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-timer-controls { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:calc(28.49 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-timer-control { min-width:0;height:calc(306.76 * var(--scene-px));padding:calc(57.934 * var(--scene-px)) calc(46.5 * var(--scene-px)) calc(35 * var(--scene-px));border-radius:calc(32 * var(--scene-px));box-shadow:0 calc(3 * var(--scene-px)) calc(6 * var(--scene-px)) #00000015; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-timer-control>label { display:block;font-size:max(16px,calc(30.8 * var(--scene-px)));line-height:max(1.15em,calc(36.75 * var(--scene-px))); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-number { display:flex;align-items:baseline;justify-content:center;gap:0;margin:calc(8.837 * var(--scene-px)) 0 0;height:calc(100.67 * var(--scene-px));font-size:clamp(calc(32 * var(--scene-px)),36.3cqw,calc(89.1099 * var(--scene-px))); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-number input { flex:none;min-width:0;width:calc(var(--timer-digits)*1ch + .04ch);padding:0;border:0;font-size:inherit;line-height:1.13; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-number input::-webkit-inner-spin-button, .work-app :is(.work-screen,.timelapse-screen) .work-number input::-webkit-outer-spin-button { margin:0; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-number span { flex:none;font-size:.5237em;line-height:1.2; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-timer-control .work-timer-range { display:block;width:100%;height:calc(37.04 * var(--scene-px));margin:calc(30.395 * var(--scene-px)) 0 0;padding:0;border:0;border-radius:calc(49 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-timer-range::-webkit-slider-runnable-track { height:calc(23.74 * var(--scene-px));border-radius:calc(49 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-timer-range::-webkit-slider-thumb { margin-top:calc(-6.65 * var(--scene-px));width:calc(37.04 * var(--scene-px));height:calc(37.04 * var(--scene-px));border:0;border-radius:50%; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-timer-range::-moz-range-thumb { width:calc(37.04 * var(--scene-px));height:calc(37.04 * var(--scene-px));border:0;border-radius:50%; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-timer-range::-moz-range-track { height:calc(23.74 * var(--scene-px));border-radius:calc(49 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-steppers { display:flex;justify-content:center;gap:calc(20 * var(--scene-px));margin-top:calc(14 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-steppers button { display:grid;flex:none;width:calc(58 * var(--scene-px));height:calc(58 * var(--scene-px));padding:calc(12 * var(--scene-px));border-radius:50%; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-steppers svg { width:calc(28 * var(--scene-px));height:calc(28 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-timer-panel>.work-button { display:flex;width:calc(408 * var(--scene-px));max-width:100%;height:calc(77 * var(--scene-px));min-height:calc(77 * var(--scene-px));margin:calc(58.24 * var(--scene-px)) auto calc(11.5 * var(--scene-px));padding:calc(24 * var(--scene-px)) calc(32 * var(--scene-px));font-size:max(12px,calc(24 * var(--scene-px)));line-height:max(1.15em,calc(29 * var(--scene-px))); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-remember { display:flex;justify-content:center;align-items:center;gap:calc(9 * var(--scene-px));min-height:calc(44 * var(--scene-px));margin:auto;font-size:max(12px,calc(18.7143 * var(--scene-px)));line-height:max(1.15em,calc(22 * var(--scene-px))); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-remember input { flex:none;display:grid;width:calc(23 * var(--scene-px));height:calc(23 * var(--scene-px));margin:0;border:0;border-radius:calc(3 * var(--scene-px));box-shadow:inset calc(1 * var(--scene-px)) calc(1 * var(--scene-px)) calc(2.8 * var(--scene-px)) rgba(0,0,0,.25); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-remember input:checked::after { width:calc(7 * var(--scene-px));height:calc(12 * var(--scene-px));border:solid white;border-width:0 calc(2 * var(--scene-px)) calc(2 * var(--scene-px)) 0; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-timer-hint { position:absolute;width:calc(1 * var(--scene-px));height:calc(1 * var(--scene-px));padding:0; }  /* Result */ .work-app .work-screen.work-result-screen { display:flex;flex-direction:column;align-items:center;gap:0;min-height:100dvh;padding:calc(135 * var(--scene-px)) calc(24 * var(--scene-px)) calc(100 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-result-heading { max-width:100%;margin-bottom:calc(56 * var(--scene-px)); }
+  .work-app .work-screen .work-result-heading>p { font-size:max(16px,calc(38.3333 * var(--scene-px)));line-height:max(1.15em,calc(46 * var(--scene-px)));margin:0 0 calc(26 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-result-heading>h1 { font-size:max(24px,calc(64 * var(--scene-px)));line-height:max(1.15em,calc(76 * var(--scene-px)));margin:0; }
+  .work-app .work-screen.work-result-screen>.work-result { position:relative;display:block;width:calc(721 * var(--scene-px));max-width:calc(100% - calc(176 * var(--scene-px)));margin:0 auto; }
+  .work-app .work-screen.work-result-screen .work-detail-card { aspect-ratio:721/409; }
+  .work-app .work-screen.work-result-screen .work-result-actions { position:absolute;left:calc(100% + calc(21 * var(--scene-px)));top:calc(7 * var(--scene-px));padding:0; }
+  .work-app .work-screen.work-result-screen .work-result-feedback { position:absolute;top:calc(100% + calc(8 * var(--scene-px)));left:0;width:100%;margin:0; }
+  .work-app .work-screen.work-result-screen>.work-button { width:calc(400 * var(--scene-px));max-width:100%;min-height:calc(77 * var(--scene-px));margin-top:calc(57 * var(--scene-px));padding:calc(24 * var(--scene-px)) calc(32 * var(--scene-px));font-size:max(12px,calc(24 * var(--scene-px)));line-height:max(1.15em,calc(29 * var(--scene-px)));box-shadow:0 0 calc(8.52 * var(--scene-px)) #00000026; }/* Timelapse */
+  .work-app .timelapse-screen>.timelapse-close { position:absolute;right:max(calc(24 * var(--scene-px)),calc((100% - calc(1352 * var(--scene-px)))/2));top:calc(56 * var(--scene-px));width:calc(56 * var(--scene-px));height:calc(56 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-close img { width:calc(56 * var(--scene-px));height:calc(56 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-panel { position:relative;width:calc(936 * var(--scene-px));margin:0 auto;padding-bottom:calc(41.677 * var(--scene-px));border-radius:calc(32 * var(--scene-px));box-shadow:0 0 calc(8.52 * var(--scene-px)) #00000026; }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-panel>header { display:flex;align-items:center;gap:calc(29 * var(--scene-px));padding:calc(45 * var(--scene-px)) calc(79 * var(--scene-px)) 0;min-width:0; }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-panel h1 { font-size:max(16px,calc(36 * var(--scene-px)));line-height:max(1.15em,calc(43 * var(--scene-px)));margin:0;flex:0 0 calc(214 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-panel>header>p { font-size:max(12px,calc(24 * var(--scene-px)));line-height:max(1.15em,calc(29 * var(--scene-px)));margin:0; }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-player { position:relative;width:calc(100% - calc(168 * var(--scene-px)));aspect-ratio:768/451;margin:calc(34 * var(--scene-px)) calc(84 * var(--scene-px)) 0;box-shadow:0 0 calc(8.52 * var(--scene-px)) #00000026;border-radius:calc(32 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-player>video { position:absolute;inset:0;width:100%;height:100%; }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-buttons { display:flex;justify-content:center;gap:calc(30 * var(--scene-px));margin:calc(40 * var(--scene-px)) auto 0; }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-buttons>.work-button { width:calc(270 * var(--scene-px));min-height:calc(74.323 * var(--scene-px));padding:calc(20.3384 * var(--scene-px)) calc(27.1179 * var(--scene-px));gap:calc(6.779 * var(--scene-px));border-radius:calc(84.7434 * var(--scene-px));font-size:max(12px,calc(20.3384 * var(--scene-px)));line-height:max(1.15em,calc(24 * var(--scene-px)));box-shadow:0 0 calc(7.22014 * var(--scene-px)) #00000026; }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-buttons>.work-button.white { border:calc(2.5 * var(--scene-px)) solid #f78000; }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-buttons>.orange { gap:calc(6.779 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-speed-icon { display:flex;width:calc(26 * var(--scene-px));align-items:center; }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-speed-icon img { width:calc(14 * var(--scene-px));height:calc(17 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-speed-icon img+img { margin-left:calc(-2 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-file-actions { position:absolute;left:calc(50% + calc(520 * var(--scene-px)));top:calc(148 * var(--scene-px));display:flex;flex-direction:column;gap:calc(24 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-file-actions>button { width:calc(64 * var(--scene-px));height:calc(64 * var(--scene-px));padding:0;border:0;border-radius:50%; }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-file-actions img { display:block;width:100%;height:100%; }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-side { position:absolute;bottom:0;height:calc(336 * var(--scene-px));width:calc(209 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-side.left { left:max(calc(0 * var(--scene-px)),calc(50% - calc(707 * var(--scene-px)))); }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-side.right { left:calc(50% + calc(510 * var(--scene-px)));width:calc(203 * var(--scene-px));height:calc(326 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-status { margin:calc(20 * var(--scene-px)) calc(84 * var(--scene-px)) 0;font-size:max(12px,calc(14 * var(--scene-px)));line-height:1.6; }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-status p { margin:calc(8 * var(--scene-px)) 0; }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-status>div { display:flex;align-items:center;gap:calc(20 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-status label { flex:1; }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-status progress { display:block;width:100%;margin-top:calc(8 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-status button, .work-app :is(.work-screen,.timelapse-screen) .timelapse-layout-heading button { padding:calc(8 * var(--scene-px)) calc(12 * var(--scene-px));border:0;border-radius:calc(12 * var(--scene-px)); }
+
+  /* Shared outer margins are based on the same scene scale, never a fixed canvas. */
+  .work-app .work-screen.work-timer-screen { padding:calc(176 * var(--scene-px)) max(16px,calc((100% - 1308 * var(--scene-px))/2)) calc(110 * var(--scene-px)); }
+  .work-app .work-screen.work-measure-screen:not(.stage-prepare) { padding:calc(149 * var(--scene-px)) max(16px,calc((100% - 1334 * var(--scene-px))/2)) calc(80 * var(--scene-px)); }
+  .work-app :is(.work-measure-screen,.work-timer-screen,.work-picker)>.screen-close,
+  .work-app .timelapse-screen>.timelapse-close { right:calc((100% - 1352 * var(--scene-px))/2);top:calc(56 * var(--scene-px));width:max(36px,calc(56 * var(--scene-px)));height:max(36px,calc(56 * var(--scene-px))); }
+  .work-app .timelapse-close img { width:100%;height:100%; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measuring-panel .work-measure-heading { flex-wrap:nowrap; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measuring-panel .work-measure-heading h1 { flex:none;position:relative;top:calc(3.5 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measuring-panel .work-measure-heading p { flex-basis:auto;position:relative;top:calc(4 * var(--scene-px));margin:0; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measuring-panel .work-measure-heading>.work-button { flex:none;width:max(100px,calc(163 * var(--scene-px)));min-height:max(32px,calc(46 * var(--scene-px)));padding-inline:6px; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measuring-panel .work-live-controls { margin:0; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measuring-panel .work-switch-row { height:max(32px,calc(57.27 * var(--scene-px)));min-height:0; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measuring-panel .work-switch-row input { width:max(32px,calc(47.49 * var(--scene-px)));height:max(18px,calc(25.55 * var(--scene-px))); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measuring-panel .work-switch-row input::before { width:max(14px,calc(19.55 * var(--scene-px)));height:max(14px,calc(19.55 * var(--scene-px)));top:50%;left:max(2px,calc(3 * var(--scene-px)));transform:translateY(-50%); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measuring-panel .work-switch-row input:checked::before { translate:max(14px,calc(21.94 * var(--scene-px))) 0; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measure-footer .work-button { min-height:44px;height:max(44px,calc(63.73 * var(--scene-px))); }
+  .work-app .work-screen.work-measure-screen:is(.stage-calibrate,.stage-ready) .work-measure-heading { flex-wrap:nowrap; }
+  .work-app .work-screen.work-measure-screen:is(.stage-calibrate,.stage-ready) .work-measure-heading p { align-self:flex-start;margin-top:calc(5 * var(--scene-px)); }
+  .work-app .work-calibration-content>.work-camera { min-height:0; }
+  .work-app .work-calibration-ring { max-width:none; }
+  .work-app .work-calibration-label,.work-app .work-calibration-note { bottom:auto; }
+  .work-app .work-calibration-note { padding:0; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-timer-panel>.work-button { width:calc(407 * var(--scene-px));min-height:44px; }
+  .work-app :is(.work-screen,.timelapse-screen) .work-timer-panel h1 { margin-left:calc(1 * var(--scene-px)); }
+  .work-app .work-timer-screen .work-steppers svg { width:calc(40 * var(--scene-px));height:calc(40 * var(--scene-px)); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-timer-panel .work-remember { min-height:32px; }
+  .work-app .work-timer-control>label,.work-app .work-number input,.work-app .work-number span,.work-app :is(.work-screen,.timelapse-screen) .work-timer-panel .work-remember { font-weight:590; }
+  .work-app .work-screen.stage-prepare { padding:calc(176 * var(--scene-px)) max(16px,calc((100% - 1304 * var(--scene-px))/2)) calc(110 * var(--scene-px)); }
+  .work-app .stage-prepare .work-registration-panel { min-height:calc(695 * var(--scene-px));max-width:calc(1334 * var(--scene-px));padding:calc(50 * var(--scene-px)) calc(108 * var(--scene-px)) calc(44 * var(--scene-px));border-radius:calc(40 * var(--scene-px)); }
+  .work-app .stage-prepare .work-measure-heading { display:flex;gap:calc(32 * var(--scene-px));margin-bottom:calc(30 * var(--scene-px)); }
+  .work-app .stage-prepare .work-measure-heading h1 { font-size:max(20px,calc(32 * var(--scene-px))); }
+  .work-app .stage-prepare .work-measure-heading p { font-size:max(14px,calc(20 * var(--scene-px))); }
+  .work-app .stage-prepare .work-registration-panel>.work-button { width:calc(408 * var(--scene-px));min-height:max(44px,calc(77 * var(--scene-px)));margin-top:calc(30 * var(--scene-px));font-size:max(16px,calc(24 * var(--scene-px))); }
+  .work-app .work-result-screen .work-result-actions { flex-direction:column;gap:calc(24 * var(--scene-px)); }
+  .work-app .work-result-screen .work-result-actions>button { width:max(36px,calc(64 * var(--scene-px)));height:max(36px,calc(64 * var(--scene-px))); }
+  .work-app .work-result-navigation { gap:calc(30 * var(--scene-px));margin-top:calc(57 * var(--scene-px)); }
+  .work-app .work-result-navigation>.work-button { width:calc(270 * var(--scene-px));min-height:max(44px,calc(77 * var(--scene-px)));padding:calc(20 * var(--scene-px)) calc(16 * var(--scene-px));font-size:max(16px,calc(24 * var(--scene-px)));line-height:1.21; }
+  .work-app .timelapse-screen { min-height:100dvh;padding:calc(162 * var(--scene-px)) 0 calc(91 * var(--scene-px));overflow:clip; }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-panel>header { flex-wrap:nowrap; }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-panel>header>p { margin:0; }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-buttons { padding:0; }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-buttons>.work-button { min-height:max(44px,calc(74.323 * var(--scene-px))); }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-file-actions { right:auto;margin:0;flex-direction:column; }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-file-actions>button { width:max(36px,calc(64 * var(--scene-px)));height:max(36px,calc(64 * var(--scene-px))); }
+  .work-app :is(.work-screen,.timelapse-screen) .timelapse-side.right { right:auto; }
+}
+
+/* The picker has one independently scrolling collection, with both panels sharing
+   the available height. Character crops and speech animation stay unchanged. */
+@media (min-width:700px) and (min-aspect-ratio:1/1) {
+  .work-app .work-screen.work-picker { display:grid;grid-template-columns:minmax(0,479fr) minmax(0,725fr);gap:calc(45 * var(--scene-px));height:100dvh;min-height:0;padding:calc(171 * var(--scene-px)) max(20px,calc((100% - 1252 * var(--scene-px))/2)) calc(117 * var(--scene-px)) max(20px,calc((100% - 1246 * var(--scene-px))/2)); }
+  .work-app .work-picker-preview { height:auto;margin-top:calc(2 * var(--scene-px));margin-bottom:calc(-1 * var(--scene-px));border-radius:calc(32 * var(--scene-px)); }
+  .work-app .work-picker-preview h1 { font-size:max(18px,calc(33.34 * var(--scene-px)));line-height:1.2; }
+  .work-app .work-picker .work-bubble { min-height:calc(56 * var(--scene-px));padding:calc(8 * var(--scene-px)) calc(12 * var(--scene-px));font-size:max(12px,calc(22 * var(--scene-px)));line-height:1.36; }
+  .work-app .work-picker .work-bubble[data-multiline=true] { font-size:max(11px,calc(20 * var(--scene-px)));line-height:1.45; }
+  .work-app .work-picker-list { height:auto;padding:calc(54 * var(--scene-px)) calc(48 * var(--scene-px)) calc(44 * var(--scene-px));border-radius:calc(28 * var(--scene-px)); }
+  .work-app .work-picker-grid { gap:calc(20 * var(--scene-px));padding-right:calc(34 * var(--scene-px)); }
+  .work-app .work-picker-grid .work-card { width:calc((100% - 40 * var(--scene-px))/3); }
+  .work-app .work-picker-list footer { padding-top:calc(57 * var(--scene-px)); }
+  .work-app .work-picker-list footer .work-button { width:calc(350 * var(--scene-px));min-height:max(44px,calc(69 * var(--scene-px)));font-size:max(16px,calc(24 * var(--scene-px))); }
+}
+@media (min-width:700px) and (max-width:1100px) and (min-aspect-ratio:1/1) {
+  .work-app .work-picker-grid .work-card { width:calc((100% - 20 * var(--scene-px))/2); }
+}
+
+/* Home is a document, not a fixed-height scene. Keep the shared 83/1512 gutters
+   and responsive card columns; scale only its wide-screen header by its width. */
+@media (min-width:1051px) {
+  .work-app .work-home { --home-px:calc(100vw / 1512);--home-height:calc(454 * var(--home-px)); }
+  .work-home .work-home-hero h1 { top:calc(200 * var(--home-px));font-size:calc(36 * var(--home-px));line-height:2; }
+  .work-home .work-hero-actions { top:calc(181 * var(--home-px));gap:calc(23.47 * var(--home-px)); }
+  .work-home .work-hero-actions .work-button { min-height:max(48px,calc(69.98 * var(--home-px)));font-size:max(16px,calc(21.9888 * var(--home-px)));line-height:1.18242;padding:calc(12 * var(--home-px)) calc(28 * var(--home-px)); }
+  .work-home .work-home-pet { height:calc(286 * var(--home-px)); }
+  .work-home .work-profile-wrap { top:calc(52 * var(--home-px));gap:calc(35 * var(--home-px)); }
+  .work-home .work-profile { width:max(44px,calc(56 * var(--home-px)));height:max(44px,calc(56 * var(--home-px))); }
+  .work-home .work-profile .work-portrait { width:134%;left:-3.57%;top:10.71%; }
+  .work-home .work-about { min-height:38px; }
+  .work-home .work-profile-menu { top:calc(100% + 16px); }
+}
+@media (max-width:699px), (max-aspect-ratio:1/1) {
+  /* Content height is intrinsic; the outer gradient continues through all scroll. */
+  .work-app .work-screen,.work-app .timelapse-screen { min-height:100dvh; }
+}
+@media (max-width:699px) {
+  .work-app .work-measuring-grid { grid-template-columns:minmax(0,1fr); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-measure-footer .work-button { width:calc(50% - 6px); }
+  .work-app :is(.work-screen,.timelapse-screen) .work-timer-panel { padding:28px 20px; }
+  .work-app .work-timer-controls { grid-template-columns:1fr; }
+}
+/* Dialogs and popovers stay in viewport coordinates and remain keyboard reachable. */
+.work-app .work-dialog { overscroll-behavior:contain; }
+@media (max-height:600px) {
+  .work-app .work-dialog { max-height:calc(100dvh - 24px); }
+}
+
+@media (min-width:700px) and (min-aspect-ratio:1/1) {
+  .work-app .work-screen.work-measure-screen.stage-active { padding-bottom:min(calc(80 * var(--scene-px)),max(16px,calc(134 * var(--scene-px) - 54px))); }
+  .work-app .work-screen .work-live-metrics>div { min-height:0; }
+  .work-app .work-screen.stage-prepare { padding-inline:max(16px,calc((100% - 1334 * var(--scene-px))/2));padding-bottom:calc(99 * var(--scene-px)); }
+  .work-app .stage-prepare .work-measure-heading { min-height:calc(54 * var(--scene-px)); }
+  .work-app .stage-prepare .work-measure-heading h1 { line-height:1.5; }
+  .work-app .stage-prepare .work-measure-heading p { line-height:1.5; }
+}
+@media (min-width:700px) and (max-aspect-ratio:1/1) {
+  .work-app .work-measuring-grid { grid-template-columns:minmax(0,1fr); }
+  .work-app .work-live-controls { margin:0; }
+}
+@media (min-width:601px) and (max-width:699px) {
+  .work-app .work-picker { display:flex;flex-direction:column;height:auto;min-height:100dvh;padding:112px 24px 40px;gap:24px; }
+  .work-app .work-picker-preview { flex:none;height:400px;margin:0; }
+  .work-app .work-picker-list { flex:none;height:500px; }
+}
+
+/* The guide's two illustrations become stacked crops of the same design export,
+   instead of a 650px-wide image that is cut off on a phone. */
+.work-app .work-preparation-crop.is-followup { display:none; }
+@media (max-width:699px) {
+  .work-app .work-preparation-guide { overflow:hidden; }
+  .work-app .work-preparation-crop { min-width:0;aspect-ratio:557.5/420; }
+  .work-app .work-preparation-crop img { width:271.2108%;left:-37.3094%; }
+  .work-app .work-preparation-crop.is-followup { display:block; }
+  .work-app .work-preparation-crop.is-followup img { left:-137.3094%; }
+}

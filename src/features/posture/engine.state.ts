@@ -1,6 +1,5 @@
-import { isUsablePoint } from "./engine.pose.landmarks";
 import { POSTURE_SPEC } from "./engine.spec";
-import type { LandmarkSelection, PostureEngineState } from "./engine.types";
+import type { PostureEngineState } from "./engine.types";
 
 export function updatePostureState(
   previous: PostureEngineState,
@@ -68,59 +67,44 @@ export function updatePostureState(
   };
 }
 
-export function areBothShouldersUsable(selected: LandmarkSelection) {
-  return isUsablePoint(selected.SL) && isUsablePoint(selected.SR);
+/** Interruptions are not elapsed landmark-loss time. Keep the calibrated baseline. */
+export function resetLandmarkTracking(previous: PostureEngineState): PostureEngineState {
+  return { ...previous, landmarksEstablished: false, landmarkDropActive: false,
+    landmarkMissingSinceMs: null, landmarkRecoverySinceMs: null, landmarkDropLastTsMs: null,
+    postureState: "hold", stableState: "good", badAccumMs: 0, goodAccumMs: 0, lastTsMs: null };
 }
 
-export function updateShoulderDropMonitor(
+/** Called only for decoded camera frames, after calibration. */
+export function updateLandmarkDropMonitor(
   previous: PostureEngineState,
-  shouldersVisible: boolean,
+  landmarksVisible: boolean,
   nowMs: number,
 ): PostureEngineState {
-  const deltaMs = boundedDeltaMs(previous.shoulderDropLastTsMs, nowMs);
-
-  const shoulderEstablished = previous.shoulderEstablished || shouldersVisible;
-  let shoulderDropActive = previous.shoulderDropActive;
-  let shoulderMissingAccumMs = previous.shoulderMissingAccumMs;
-  let shoulderRecoveryAccumMs = previous.shoulderRecoveryAccumMs;
-
-  if (!shoulderEstablished) {
-    return {
-      ...previous,
-      shoulderDropLastTsMs: nowMs,
-    };
+  if (previous.landmarkDropLastTsMs !== null && nowMs - previous.landmarkDropLastTsMs > 1500) {
+    previous = resetLandmarkTracking(previous);
   }
-
-  if (shouldersVisible) {
-    shoulderMissingAccumMs = 0;
-    if (shoulderDropActive) {
-      shoulderRecoveryAccumMs += deltaMs;
-      if (shoulderRecoveryAccumMs >= POSTURE_SPEC.shoulderDropExitMs) {
-        shoulderDropActive = false;
-        shoulderRecoveryAccumMs = 0;
+  const landmarksEstablished = previous.landmarksEstablished || landmarksVisible;
+  let landmarkDropActive = previous.landmarkDropActive;
+  let landmarkMissingSinceMs = previous.landmarkMissingSinceMs;
+  let landmarkRecoverySinceMs = previous.landmarkRecoverySinceMs;
+  if (landmarksVisible) {
+    landmarkMissingSinceMs = null;
+    if (landmarkDropActive) {
+      landmarkRecoverySinceMs ??= nowMs;
+      if (nowMs - landmarkRecoverySinceMs >= POSTURE_SPEC.landmarkDropExitMs) {
+        landmarkDropActive = false;
+        landmarkRecoverySinceMs = null;
       }
-    } else {
-      shoulderRecoveryAccumMs = 0;
     }
   } else {
-    shoulderRecoveryAccumMs = 0;
-    if (!shoulderDropActive) {
-      shoulderMissingAccumMs += deltaMs;
-      if (shoulderMissingAccumMs >= POSTURE_SPEC.shoulderDropEnterMs) {
-        shoulderDropActive = true;
-        shoulderMissingAccumMs = 0;
-      }
+    landmarkRecoverySinceMs = null;
+    if (landmarksEstablished) {
+      landmarkMissingSinceMs ??= nowMs;
+      if (nowMs - landmarkMissingSinceMs >= POSTURE_SPEC.landmarkDropEnterMs) landmarkDropActive = true;
     }
   }
-
-  return {
-    ...previous,
-    shoulderEstablished,
-    shoulderDropActive,
-    shoulderMissingAccumMs,
-    shoulderRecoveryAccumMs,
-    shoulderDropLastTsMs: nowMs,
-  };
+  return { ...previous, landmarksEstablished, landmarkDropActive,
+    landmarkMissingSinceMs, landmarkRecoverySinceMs, landmarkDropLastTsMs: nowMs };
 }
 
 export function forceBadState(state: PostureEngineState, nowMs: number): PostureEngineState {

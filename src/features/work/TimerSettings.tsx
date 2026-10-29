@@ -24,7 +24,7 @@ export function TimerSettings({ saved, onSubmit, onClose }: { saved: Settings | 
 
   return <main className="work-screen work-timer-screen">
     <Brand />
-    <button className="work-close screen-close" onClick={onClose} aria-label="ホームへ戻る"><Icon name="close" /></button>
+    <button className="work-close screen-close" onClick={onClose} aria-label="ホームへ戻る"><img src="/figma/timelapse-close.svg" alt="" /></button>
     <form className="work-glass work-timer-panel" noValidate onSubmit={event => {
       event.preventDefault();
       const corrected = normalizeTimer(timer);

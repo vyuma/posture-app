@@ -4,8 +4,10 @@ import App from "./features/work/WorkApp";
 
 const WorkPreview = import.meta.env.DEV && location.pathname === "/dev/work" ? React.lazy(() => import("./features/work/WorkPreview")) : null;
 
+const TimelapsePreview = import.meta.env.DEV && location.pathname === "/dev/timelapse" ? React.lazy(() => import("./features/timelapse/TimelapsePreview")) : null;
+
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    {WorkPreview ? <React.Suspense fallback={null}><WorkPreview /></React.Suspense> : <App />}
+    {TimelapsePreview ? <React.Suspense fallback={null}><TimelapsePreview /></React.Suspense> : WorkPreview ? <React.Suspense fallback={null}><WorkPreview /></React.Suspense> : <App />}
   </React.StrictMode>,
 );

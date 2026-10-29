@@ -35,11 +35,7 @@ function isTauriRuntime(): boolean {
 }
 
 export function shouldPreferNativeClipboardShare(): boolean {
-  return (
-    isTauriRuntime() &&
-    typeof navigator !== "undefined" &&
-    /\bWindows\b/i.test(navigator.userAgent)
-  );
+  return isTauriRuntime();
 }
 
 export async function copyShareImageNative(blob: Blob): Promise<boolean> {

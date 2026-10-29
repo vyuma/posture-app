@@ -1,0 +1,77 @@
+[
+  {
+    "id": "sakura-nago",
+    "number": 41,
+    "name": "サクラナゴ",
+    "stars": 2,
+    "rarity": "rare",
+    "story": "桜とだんごが大好きな、春の気分を届けるピンアナゴ。",
+    "portraitSrc": "/characters/anago/sakura-nago/portrait.png",
+    "characterColor": {
+      "primary": "#ac3e70",
+      "soft": "#fbe4f0"
+    },
+    "personalityTags": [
+      "お花見好き",
+      "甘党"
+    ],
+    "presentation": {
+      "color": "#ac3e70",
+      "background": "#fbe4f0",
+      "artWidth": 81.034483,
+      "artTop": 13.793103,
+      "pickerSpeech": "ひと息ついたら、\nおだんごにしよう。",
+      "effect": "sakura"
+    }
+  },
+  {
+    "id": "miira-nago",
+    "number": 75,
+    "name": "ミイラナゴ",
+    "stars": 3,
+    "rarity": "epic",
+    "story": "包帯にくるまって目を覚ます、不思議なピンアナゴ。",
+    "portraitSrc": "/characters/anago/miira-nago/portrait.png",
+    "characterColor": {
+      "primary": "#626262",
+      "soft": "#e1e1e1"
+    },
+    "personalityTags": [
+      "ねぼすけ",
+      "不思議ちゃん"
+    ],
+    "presentation": {
+      "color": "#626262",
+      "background": "#e1e1e1",
+      "artWidth": 81.034483,
+      "artTop": 13.793103,
+      "pickerSpeech": "ゆっくりでも、\n続けるのだ…。",
+      "effect": "miira"
+    }
+  },
+  {
+    "id": "king-nago",
+    "number": 92,
+    "name": "キングナゴ",
+    "stars": 4,
+    "rarity": "ultra-rare",
+    "story": "マントと宝石をまとい、堂々と見守る王様のピンアナゴ。",
+    "portraitSrc": "/characters/anago/king-nago/portrait.png",
+    "characterColor": {
+      "primary": "#876600",
+      "soft": "#f8f0d0"
+    },
+    "personalityTags": [
+      "王様気質",
+      "ほめ上手"
+    ],
+    "presentation": {
+      "color": "#876600",
+      "background": "#f8f0d0",
+      "artWidth": 81.034483,
+      "artTop": 13.793103,
+      "pickerSpeech": "よい姿勢だ。\nその調子じゃ！",
+      "effect": "king"
+    }
+  }
+]

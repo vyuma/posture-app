@@ -25,8 +25,18 @@
   isolation: isolate;
 }
 .onboarding-header { position: absolute; inset: 0 0 auto; height: 120px; z-index: 3; }
-.onboarding-header img { position: absolute; left: 80px; top: 40px; width: 134px; height: 80px; }
-.onboarding-main-logo { position: absolute; left: 518px; top: 307px; width: 476.278px; height: 285.711px; }
+
+/* Restore the pre-redesign splash motion; retain the current Figma geometry. */
+.onboarding--splash { animation: onboarding-fade-in .32s ease both; }
+.onboarding-splash { position: absolute; inset: 0; animation: onboarding-slide-forward .42s cubic-bezier(.2, .8, .2, 1) both; }
+.onboarding-main-logo {
+  position: absolute; left: 518px; top: 307px; width: 476.278px; height: 285.711px;
+  transform-origin: 50% 52%;
+  filter: drop-shadow(0 12px 19px rgba(48, 83, 96, .22));
+  user-select: none;
+  animation: onboarding-logo-underwater-float 5.6s ease-in-out infinite,
+    onboarding-logo-underwater-light 4.2s ease-in-out infinite;
+}
 .onboarding-start {
   position: absolute;
   left: 556px;
@@ -50,6 +60,17 @@
 .onboarding-arrow:focus-visible,
 .onboarding-gallery:focus-visible { outline: 3px solid #134d68; outline-offset: 5px; }
 .onboarding-copy { position: absolute; z-index: 2; top: 491px; left: 662px; }
+.onboarding--intro .onboarding-copy,
+.onboarding--happy .onboarding-copy,
+.onboarding--angry .onboarding-copy,
+.onboarding--friends .onboarding-copy,
+.onboarding--collection .onboarding-copy {
+  font-family: "SF Pro", "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, sans-serif;
+  letter-spacing: 0;
+  /* Match Figma's bold text instead of the app-wide thinner grayscale rendering. */
+  -webkit-font-smoothing: auto;
+  -moz-osx-font-smoothing: auto;
+}
 .onboarding-copy p {
   margin: 0;
   font-size: 40px;
@@ -59,11 +80,11 @@
 }
 .onboarding-copy small { font-size: 20px; line-height: 0; }
 .onboarding-copy-phrase { display: inline-block; }
-.onboarding--happy .onboarding-copy { left: 756px; }
-.onboarding--angry .onboarding-copy { left: 723px; }
+.onboarding--happy .onboarding-copy { left: 756px; width: 520px; }
+.onboarding--angry .onboarding-copy { left: 723px; width: 479px; min-height: 222px; }
 .onboarding--friends .onboarding-copy,
 .onboarding--collection .onboarding-copy { top: 317px; left: 755.5px; transform: translateX(-50%); text-align: center; }
-.onboarding--friends .onboarding-copy { left: 749.5px; }
+.onboarding--friends .onboarding-copy { left: 749.5px; width: 827px; }
 .onboarding-navigation { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
 .onboarding-arrow {
   position: absolute;
@@ -97,19 +118,21 @@
 .onboarding-pet-fallback { position: absolute; inset: 0; width: 1512px; height: 4000px; filter: drop-shadow(-14.4px 14.4px 9.6px #00000026); }
 .onboarding-expression { position: absolute; inset: 0; opacity: 0; translate: 0 12px; transition: opacity 380ms ease, translate 480ms cubic-bezier(.2, 0, 0, 1); }
 .onboarding-expression.is-visible { opacity: 1; translate: 0; }
-.onboarding-expression--intro img { position: absolute; left: 250.6px; top: 331px; width: 405.78px; height: 652.055px; transform: scaleX(-1); }
-.onboarding-happy-body { position: absolute; left: 421.25px; top: 386.36px; width: 211.866px; height: 1528.72px; clip-path: inset(10.31px 0 0); }
+.onboarding-expression--intro img { position: absolute; left: 151.604px; top: 347px; width: 405.78px; height: 652.055px; transform: scaleX(-1); }
+.onboarding-happy-body { position: absolute; left: 341.25px; top: 386.36px; width: 211.866px; height: 1528.72px; clip-path: inset(10.31px 0 0); }
 .onboarding-cheek { position: absolute; top: 471.85px; width: 29.94px; height: 29.95px; mix-blend-mode: multiply; }
-.onboarding-cheek--left { left: 448.16px; }
-.onboarding-cheek--right { left: 539.78px; }
-.onboarding-angry-fallback { position: absolute; left: 286.91px; top: 315.16px; width: 408.99px; height: 2061.19px; transform: scaleX(-1); }
-.onboarding--angry .onboarding-pet-lottie { transform-origin: 518px 945px; animation: onboarding-angry-shake 680ms ease-in-out 1050ms 4; }
+.onboarding-cheek--left { left: 368.16px; }
+.onboarding-cheek--right { left: 459.78px; }
+.onboarding-angry-fallback { position: absolute; left: 199.91px; top: 315.16px; width: 408.99px; height: 2061.19px; transform: scaleX(-1); }
+.onboarding--angry .onboarding-pet-lottie { transform-origin: 431px 945px; animation: onboarding-angry-shake 680ms ease-in-out 1050ms 4; }
 
 /* Extend past the fitted artboard's lower letterbox to the actual window floor. */
 .onboarding-friends-stage { position: absolute; inset: 0; bottom: calc((982px - 100dvh / var(--story-scale)) / 2); pointer-events: none; }
 .onboarding-friends { position: absolute; left: 151px; bottom: 0; width: 1263px; height: 400px; }
 .onboarding-friends img { position: absolute; top: 0; width: 249px; height: 400px; transform-origin: center bottom; animation: onboarding-friend-rise 460ms cubic-bezier(.22, 1, .36, 1) var(--character-delay) both, onboarding-friend-float 3.1s ease-in-out calc(var(--character-delay) + 420ms) infinite; }
-.onboarding-gallery { position: absolute; top: 563px; left: 0; width: 100%; height: 320px; overflow: clip; cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+/* Fill the actual window, including the fitted artboard's horizontal margins.
+   Keep the track centered and scaled so its motion and card sizes stay intact. */
+.onboarding-gallery { position: absolute; top: 563px; left: calc((1512px - 100vw / var(--story-scale)) / 2); width: calc(100vw / var(--story-scale)); height: 320px; overflow: clip; cursor: grab; touch-action: pan-y; user-select: none; -webkit-user-select: none; animation: onboarding-gallery-arrive 420ms cubic-bezier(.22, 1, .36, 1) both; }
 .onboarding-gallery.is-dragging { cursor: grabbing; }
 .onboarding-card-track { position: absolute; top: 24px; left: 50%; display: flex; width: max-content; animation: onboarding-gallery-drift 72s linear .9s infinite both; }
 .onboarding-card-group { display: flex; flex: none; gap: 24px; padding-right: 24px; }
@@ -132,6 +155,53 @@
   .onboarding-gallery:not(.is-dragging):not(.is-coasting) .onboarding-card-slot:hover img { animation: onboarding-card-peek 720ms cubic-bezier(.22, 1, .36, 1) both; }
 }
 .onboarding-sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@keyframes onboarding-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes onboarding-slide-forward {
+  from {
+    opacity: 0;
+    translate: 36px 0;
+    scale: 0.97;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+    scale: 1;
+  }
+}
+
+@keyframes onboarding-logo-underwater-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(-0.45deg) scale(1);
+  }
+  35% {
+    transform: translate3d(0, -8px, 0) rotate(0.35deg) scale(1.012);
+  }
+  70% {
+    transform: translate3d(0, 5px, 0) rotate(-0.15deg) scale(0.996);
+  }
+}
+
+@keyframes onboarding-logo-underwater-light {
+  0%,
+  100% {
+    filter:
+      drop-shadow(0 12px 19px rgba(48, 83, 96, 0.22))
+      drop-shadow(0 0 0 rgba(255, 255, 255, 0));
+    opacity: 0.96;
+  }
+  45% {
+    filter:
+      drop-shadow(0 16px 24px rgba(48, 83, 96, 0.2))
+      drop-shadow(0 0 18px rgba(255, 255, 255, 0.24));
+    opacity: 1;
+  }
+}
+
 @keyframes onboarding-line-in { from { opacity: 0; translate: 0 8px; } to { opacity: 1; translate: 0; } }
 @keyframes onboarding-hero-rise {
   0% { transform: translateY(var(--story-rise-start)); animation-timing-function: cubic-bezier(.16, 1, .3, 1); }
@@ -150,7 +220,7 @@
 }
 @keyframes onboarding-card-peek { 0%, 100% { translate: 0; } 45% { translate: 0 -6%; } }
 @keyframes onboarding-gallery-drift { from { transform: translateX(calc(-25% - 885px)); } to { transform: translateX(calc(-50% - 885px)); } }
-@keyframes onboarding-bubble-rise { from { opacity: 0; translate: 0 18px; } 15%, 80% { opacity: .58; } to { opacity: 0; translate: 0 -100dvh; } }
+@keyframes onboarding-bubble-rise { from { opacity: 0; translate: 0 18px; } 15%, 80% { opacity: .58; } to { opacity: 0; translate: 0 -86vh; } }
 @keyframes onboarding-bubble-wobble { 0%, 100% { transform: translateX(0) scale(1); } 35% { transform: translateX(-10px) scale(1.08); } 70% { transform: translateX(8px) scale(.94); } }
 
 /* A narrow desktop window is still a landscape composition. Reflow only
@@ -159,16 +229,16 @@
   .onboarding-screen { overflow-x: clip; overflow-y: auto; }
   .onboarding-canvas { position: relative; left: 0; top: 0; width: 100%; height: auto; min-height: 100%; transform: none; display: flex; flex-direction: column; }
   .onboarding--collection .onboarding-canvas { min-height: max(100dvh, calc(50dvh + 372px)); }
-  .onboarding-header { position: relative; height: clamp(80px, 12dvh, 120px); flex: none; }
-  .onboarding-header img { left: max(16px, env(safe-area-inset-left)); top: 12px; width: 120px; height: 72px; }
-  .onboarding-splash { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(20px, 4dvh, 32px); padding: 24px; }
+  .onboarding-header-space { height: clamp(80px, 12dvh, 120px); flex: none; }
+
+  .onboarding-splash { position: relative; inset: auto; min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: clamp(20px, 4dvh, 32px); padding: 24px; }
   .onboarding-main-logo { position: static; width: min(100%, 390px); height: auto; max-height: 45dvh; object-fit: contain; }
   .onboarding-start { position: static; width: min(100%, 400px); min-height: 56px; padding: 14px 20px; font-size: 21px; }
   .onboarding-copy,
   .onboarding--happy .onboarding-copy,
   .onboarding--angry .onboarding-copy,
   .onboarding--friends .onboarding-copy,
-  .onboarding--collection .onboarding-copy { position: relative; top: auto; left: auto; width: auto; margin: 0 24px; padding-top: 20px; transform: none; text-align: center; flex: none; }
+  .onboarding--collection .onboarding-copy { position: relative; top: auto; left: auto; width: auto; min-height: 0; margin: 0 24px; padding-top: 20px; transform: none; text-align: center; flex: none; }
   .onboarding-copy p { font-size: clamp(20px, 4.8vw, 32px); line-height: 1.75; white-space: normal; overflow-wrap: anywhere; }
   .onboarding-copy small { font-size: .6em; }
   .onboarding-hero { position: relative; inset: auto; flex: 1 0 240px; min-height: 240px; margin-top: 24px; overflow: hidden; }
@@ -177,7 +247,7 @@
   .onboarding-friends-stage { position: relative; inset: auto; flex: 1 0 240px; min-height: 240px; margin-top: 24px; overflow: hidden; }
   .onboarding-friends { left: 50%; bottom: 0; transform: translateX(-50%) scale(var(--friends-scale)); transform-origin: bottom center; }
   /* Keep the moving card row below the shared arrow line, including short windows. */
-  .onboarding-gallery { top: max(calc(50dvh + 52px), calc(100dvh - 320px)); height: 320px; }
+  .onboarding-gallery { top: max(calc(50dvh + 52px), calc(100dvh - 320px)); left: 0; width: 100%; height: 320px; }
   .onboarding-navigation { top: calc(50dvh - 28px); bottom: auto; height: 56px; }
   .onboarding--friends .onboarding-navigation { position: fixed; top: calc(50% - 28px); }
   .onboarding-arrow { top: 0; left: max(16px, env(safe-area-inset-left)); width: 56px; height: 56px; transform: none; }
@@ -195,12 +265,46 @@
    Enlarged text can wrap inside its column without touching the character. */
 @media (min-width: 680px) and (min-aspect-ratio: 1 / 1) and (max-height: 500px) {
   .onboarding-copy { right: 80px; }
+  .onboarding--happy .onboarding-copy,
+  .onboarding--angry .onboarding-copy { width: auto; }
   .onboarding-copy p { font-size: max(40px, calc(18px / var(--story-scale))); line-height: 1.65; white-space: normal; }
   .onboarding-copy small { font-size: .6em; }
   .onboarding--friends .onboarding-copy,
   .onboarding--collection .onboarding-copy { width: 1240px; right: auto; }
 }
+/* Animate wrappers so the Lottie poses, breathing and draggable track keep their own clocks. */
+.onboarding-copy { transition: opacity 180ms ease-in, translate 180ms ease-in; }
+.onboarding-screen[data-leaving] .onboarding-copy { opacity: 0; translate: 0 -10px; }
+.onboarding-hero { transition: opacity 180ms ease-in, translate 180ms ease-in; }
+.onboarding-screen[data-destination="friends"] .onboarding-hero { opacity: 0; translate: 0 24px; }
+.onboarding-friends-stage { transition: opacity 220ms ease-in, translate 220ms ease-in; }
+.onboarding--friends[data-leaving] .onboarding-friends-stage { opacity: 0; translate: 0 64px; }
+.onboarding-screen[data-leaving] .onboarding-gallery,
+.onboarding-screen[data-leaving] .onboarding-splash { animation: onboarding-scene-leave 180ms ease-in both; }
+@keyframes onboarding-gallery-arrive {
+  from { opacity: 0; translate: 0 48px; }
+  to { opacity: 1; translate: 0 0; }
+}
+@keyframes onboarding-scene-leave {
+  from { opacity: 1; translate: 0 0; }
+  to { opacity: 0; translate: 0 24px; }
+}
+.story-home-transition { min-height: 100dvh; background: linear-gradient(180deg, #13a2d7, #f1edcc); }
+.story-home-transition:not([data-phase="idle"]) { height: 100dvh; overflow: clip; }
+.story-home-transition[data-phase="exit"] > .story-home-transition-content { animation: onboarding-page-leave 180ms ease-in both; }
+.story-home-transition[data-phase="enter"] > .story-home-transition-content { animation: onboarding-page-arrive 320ms cubic-bezier(.22, 1, .36, 1) both; }
+@keyframes onboarding-page-leave {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-12px); }
+}
+@keyframes onboarding-page-arrive {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .story-home-transition > .story-home-transition-content { animation: none !important; }
+  .onboarding-screen { animation: none !important; }
   .onboarding-screen *, .onboarding-screen *::after { animation: none !important; transition: none !important; }
   .onboarding-bubbles { display: none; }
   .onboarding-card-track { transform: translateX(calc(-25% - 885px)); }

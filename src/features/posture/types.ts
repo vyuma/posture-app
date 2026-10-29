@@ -1,8 +1,10 @@
+import type { FeedbackObservation } from "./feedback";
 import type {
   PostureExperimentMetrics,
   PostureFeatures,
   PostureState,
   ViewClass,
+  TrackingStatus,
 } from "./engine.types";
 
 export type TrackingMode = "foreground" | "background";
@@ -14,7 +16,10 @@ export type PostureExperimentSample = {
 };
 
 export type RuntimeSnapshot = {
+  trackingStatus?: TrackingStatus;
+  presentationPosture?: PostureState;
   observedAtMs?: number;
+  feedback?: FeedbackObservation;
   postureState: PostureState;
   qualityOk: boolean;
   view: ViewClass;

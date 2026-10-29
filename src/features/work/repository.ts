@@ -112,14 +112,26 @@ export class WorkRepository {
   }
   select(id: string) { return this.update(value => ({ ...value, selectedId: value.cards.some(card => card.characterId === id) ? id : value.selectedId })); }
   timer(timer: TimerSettings | null) { return this.update(value => ({ ...value, timer: timer && normalizeTimer(timer) })); }
-  reset() { return this.update(value => ({ ...value, generation: value.generation + 1, cards: [], selectedId: null })); }
+  nextReward(id: string | null, catalogIds: string[]) {
+    return this.update(value => {
+      if (id !== null && (!catalogIds.includes(id) || value.cards.some(card => card.characterId === id))) {
+        throw new Error('未獲得のピンアナゴを選んでください。');
+      }
+      return { ...value, nextRewardId: id };
+    });
+  }
+  reset() { return this.update(value => ({ ...value, generation: value.generation + 1, cards: [], selectedId: null, nextRewardId: null })); }
   async finish(input: Session, catalogIds: string[]) {
     for (let attempt = 0; attempt < 8; attempt++) {
       const current = await this.collection(); const existing = await this.driver.session(input.id);
       if (existing && ['completed', 'interrupted'].includes(existing.status) && !existing.legacy) return { session: existing, collection: current };
       const session = structuredClone(input); const next = structuredClone(current); next.revision += 1;
       if (session.rewardQualified && session.generation === current.generation) {
-        session.acquiredCharacterId = chooseReward(current.cards, catalogIds);
+        const requested = current.nextRewardId;
+        const available = requested && catalogIds.includes(requested) && !current.cards.some(card => card.characterId === requested);
+        session.acquiredCharacterId = available ? requested : chooseReward(current.cards, catalogIds);
+        // Consume the choice in the same commit as the reward, never on a failed save.
+        next.nextRewardId = null;
         if (session.acquiredCharacterId) next.cards.push({ characterId: session.acquiredCharacterId, measurementId: session.id, acquiredAt: session.endedAt!, generation: current.generation });
       }
       if (await this.driver.compareAndSet(current.revision, next, session)) return { session, collection: next };

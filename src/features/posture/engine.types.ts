@@ -121,7 +121,10 @@ export type ScoreResult = {
 
 export type NormalizedFeatureMap = Record<FeatureKey, number | null>;
 
+export type TrackingStatus = "tracked" | "grace" | "missing" | "unavailable";
 export type PostureFrameResult = {
+  trackingStatus: TrackingStatus;
+  presentationPosture: PostureState;
   eval: PostureEval;
   features: PostureFeatures | null;
   postureState: PostureState;
@@ -141,11 +144,11 @@ export type PostureEngineState = {
   baselineHeadWidthRatio: number | null;
   emaScore: number | null;
   candidateBadState: boolean;
-  shoulderEstablished: boolean;
-  shoulderDropActive: boolean;
-  shoulderMissingAccumMs: number;
-  shoulderRecoveryAccumMs: number;
-  shoulderDropLastTsMs: number | null;
+  landmarksEstablished: boolean;
+  landmarkDropActive: boolean;
+  landmarkMissingSinceMs: number | null;
+  landmarkRecoverySinceMs: number | null;
+  landmarkDropLastTsMs: number | null;
   stableState: Exclude<PostureState, "hold">;
   postureState: PostureState;
   badAccumMs: number;

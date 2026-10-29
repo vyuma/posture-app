@@ -16,6 +16,8 @@ export type AcquisitionConfettiOptions = {
 };
 
 export type TapConfettiOptions = {
+  /** Cancel pending bursts when the result screen closes. */
+  signal?: AbortSignal;
   /** 画面座標（viewport基準） */
   clientX: number;
   clientY: number;
@@ -68,13 +70,13 @@ function shiftHexLightness(color: string, deltaRate: number): string {
  */
 export function playAcquisitionConfetti(
   options?: AcquisitionConfettiOptions,
-): void {
+): () => void {
   if (typeof window === "undefined") {
-    return;
+    return () => {};
   }
 
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    return;
+    return () => {};
   }
 
   const colors =
@@ -139,7 +141,7 @@ export function playAcquisitionConfetti(
   fireSides();
   shower();
 
-  window.setTimeout(() => {
+  const centerTimer = window.setTimeout(() => {
     confetti({
       ...base,
       particleCount: 55,
@@ -150,9 +152,15 @@ export function playAcquisitionConfetti(
     });
   }, 260);
 
-  window.setTimeout(() => {
+  const sidesTimer = window.setTimeout(() => {
     fireSides();
   }, 520);
+
+  return () => {
+    window.clearTimeout(centerTimer);
+    window.clearTimeout(sidesTimer);
+    confetti.reset();
+  };
 }
 
 /**
@@ -202,7 +210,9 @@ export function playCardTapConfetti(options: TapConfettiOptions): void {
     disableForReducedMotion: true,
   });
 
-  window.setTimeout(() => {
+  const cancel = () => window.clearTimeout(secondBurstTimer);
+  const secondBurstTimer = window.setTimeout(() => {
+    options.signal?.removeEventListener("abort", cancel);
     confetti({
       particleCount: Math.round(12 * sizeFactor),
       spread: 40,
@@ -216,4 +226,6 @@ export function playCardTapConfetti(options: TapConfettiOptions): void {
       disableForReducedMotion: true,
     });
   }, 95);
+
+  options.signal?.addEventListener("abort", cancel, { once: true });
 }

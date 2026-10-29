@@ -1,3 +1,5 @@
+import { resetLandmarkTracking } from "../engine.state";
+import { VideoFrameGate } from "../videoFrameGate";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   FilesetResolver,
@@ -29,6 +31,8 @@ import type {
   RuntimeSnapshot,
   TrackingMode,
 } from "../types";
+
+import { FeedbackObserver, type FeedbackBaseline } from "../feedback";
 
 const EXPERIMENT_HISTORY_LIMIT = 600;
 const EXPERIMENT_SMOOTHING_WINDOW = 8;
@@ -188,10 +192,11 @@ type UsePostureTrackingOptions = {
   enabled?: boolean;
   overlayEnabled?: boolean;
   paused?: boolean;
+  captureHeight?: 720 | 1080;
 };
 
 export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
-  const { enabled = true, overlayEnabled = true, paused = false } = options;
+  const { enabled = true, overlayEnabled = true, paused = false, captureHeight = 720 } = options;
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const trackingTimerRef = useRef<number | null>(null);
@@ -205,6 +210,8 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
   const overlayEnabledRef = useRef(overlayEnabled);
   const pausedRef = useRef(paused);
   const engineStateRef = useRef(createPostureEngineState());
+  const frameGateRef = useRef(new VideoFrameGate());
+  const feedbackRef = useRef(new FeedbackObserver());
   const experimentHistoryRef = useRef<PostureExperimentSample[]>([]);
   const experimentSmoothingRef = useRef<PostureExperimentMetrics[]>([]);
   const isBadPostureRef = useRef(false);
@@ -228,6 +235,8 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
 
   const resetPostureEngine = useCallback(() => {
     engineStateRef.current = createPostureEngineState();
+    feedbackRef.current.reset();
+    frameGateRef.current.reset();
     experimentHistoryRef.current = [];
     experimentSmoothingRef.current = [];
     setExperimentHistory([]);
@@ -253,6 +262,9 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
     }
 
     if (paused) {
+      engineStateRef.current = resetLandmarkTracking(engineStateRef.current);
+      frameGateRef.current.reset();
+      setSnapshot(previous => ({ ...previous, qualityOk: false, trackingStatus: 'unavailable', presentationPosture: 'hold', observedAtMs: undefined }));
       isBadPostureRef.current = false;
       setIsBadPosture(false);
       setStatus("一時停止中です。");
@@ -287,11 +299,13 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
       poseLandmarkerRef.current?.close();
       poseLandmarkerRef.current = null;
       lastInferenceAtRef.current = 0;
+      frameGateRef.current.reset();
       lastUiUpdateAtRef.current = 0;
       lastRuntimeErrorAtRef.current = 0;
       lastBackgroundAlertAtRef.current = 0;
       trackingModeRef.current = "foreground";
       engineStateRef.current = createPostureEngineState();
+      feedbackRef.current.reset();
       experimentHistoryRef.current = [];
       experimentSmoothingRef.current = [];
       isBadPostureRef.current = false;
@@ -327,8 +341,8 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
         return await navigator.mediaDevices.getUserMedia({
           video: {
             facingMode: "user",
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
+            width: { ideal: captureHeight === 1080 ? 1920 : 1280 },
+            height: { ideal: captureHeight },
           },
           audio: false,
         });
@@ -486,7 +500,10 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
 
       await maybeResumeVideo(video);
 
-      if (video.readyState < 2) {
+      const track = streamRef.current?.getVideoTracks()[0];
+      if (video.readyState < 2 || !track || track.readyState !== 'live' || track.muted || !track.enabled) {
+        engineStateRef.current = resetLandmarkTracking(engineStateRef.current);
+        setSnapshot(previous => previous.trackingStatus === 'unavailable' && !previous.qualityOk ? previous : { ...previous, qualityOk: false, trackingStatus: 'unavailable', presentationPosture: 'hold', observedAtMs: undefined });
         scheduleNext(120, () => {
           void trackOnce();
         });
@@ -499,6 +516,10 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
         scheduleNext(trackingIntervalMs - elapsedSinceLastInference, () => {
           void trackOnce();
         });
+        return;
+      }
+      if (!frameGateRef.current.accept(video.currentTime, !video.paused && !video.ended)) {
+        scheduleNext(trackingIntervalMs, () => { void trackOnce(); });
         return;
       }
       lastInferenceAtRef.current = now;
@@ -527,6 +548,9 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
           worldLandmarks,
         );
         engineStateRef.current = state;
+        const feedback = feedbackRef.current.observe(imageLandmarks, worldLandmarks,
+          video.videoWidth, video.videoHeight, streamRef.current?.getVideoTracks()[0]?.getSettings().deviceId ?? 'camera',
+          result.baselineReady, result.features !== null && (!result.baselineReady || result.eval.qualityOk), now);
         experimentSmoothingRef.current = appendLimited(
           experimentSmoothingRef.current,
           result.experiment,
@@ -573,6 +597,9 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
           lastUiUpdateAtRef.current = now;
           setSnapshot({
             observedAtMs: now,
+            trackingStatus: result.trackingStatus,
+            presentationPosture: result.presentationPosture,
+            feedback,
             postureState: result.postureState,
             qualityOk: result.eval.qualityOk,
             view: result.eval.view,
@@ -674,6 +701,7 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
       poseLandmarkerRef.current?.close();
       poseLandmarkerRef.current = null;
       lastInferenceAtRef.current = 0;
+      frameGateRef.current.reset();
       lastUiUpdateAtRef.current = 0;
       lastRuntimeErrorAtRef.current = 0;
       lastBackgroundAlertAtRef.current = 0;
@@ -684,11 +712,12 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
 
   const captureBaseline = useCallback(() => {
     const state = engineStateRef.current;
-    return state.baseline ? structuredClone({ stats: state.baseline, headWidthRatio: state.baselineHeadWidthRatio }) : null;
+    return state.baseline ? structuredClone({ stats: state.baseline, headWidthRatio: state.baselineHeadWidthRatio, feedback: feedbackRef.current.capture() }) : null;
   }, []);
-  const restoreBaseline = useCallback((baseline: { stats: BaselineStats; headWidthRatio: number | null }) => {
+  const restoreBaseline = useCallback((baseline: { stats: BaselineStats; headWidthRatio: number | null; feedback?: FeedbackBaseline }) => {
     resetPostureEngine();
     engineStateRef.current = { ...createPostureEngineState(), baseline: structuredClone(baseline.stats), baselineHeadWidthRatio: baseline.headWidthRatio };
+    feedbackRef.current.reset(baseline.feedback ?? null);
     setSnapshot({ ...DEFAULT_SNAPSHOT, baselineReady: true, warmupRemainingMs: 0 });
   }, [resetPostureEngine]);
 

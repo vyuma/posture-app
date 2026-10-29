@@ -1,0 +1,105 @@
+/* Picker frames 4007:2616 / 4051:4725 use the 264×348 card at a smaller
+   scale. Keep its contents in the same coordinate system, including stars. */
+.work-app .work-picker {
+  font-family: 'SF Pro', -apple-system, BlinkMacSystemFont, 'Noto Sans JP', sans-serif;
+}
+.work-app .work-picker-grid { align-items: stretch; }
+.work-app .work-picker-grid .work-card {
+  container-type: inline-size;
+  aspect-ratio: 264 / 348;
+  border-radius: 12.121212% / 9.195402%;
+  color: #000;
+}
+.work-app .work-picker-grid .work-card-art {
+  position: relative;
+  top: auto;
+  left: auto;
+  width: 87.878788%;
+  margin: 6.060606% auto 0;
+  flex: none;
+  border-radius: 10.344828%;
+}
+.work-app .work-picker-grid .work-card-art .work-portrait {
+  width: 81.034483%;
+  top: 13.793103%;
+}
+.work-app .work-picker-grid .work-card-copy {
+  position: static;
+  width: 87.878788%;
+  margin: 6.060606% auto;
+  gap: 6.060606cqw;
+}
+.work-app .work-picker-grid .work-card-name {
+  gap: 1.515152cqw;
+  flex-wrap: wrap;
+}
+.work-app .work-picker-grid .work-card-name > strong {
+  font-size: max(12px, 7.575758cqw);
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+.work-app .work-picker-grid .character-stars {
+  flex: none;
+  gap: .378788cqw;
+}
+.work-app .work-picker-grid .character-stars svg {
+  width: max(10px, 7.575758cqw);
+  height: max(10px, 7.575758cqw);
+}
+.work-app .work-picker-grid .work-card-copy .work-tags {
+  gap: 3.030303cqw;
+}
+.work-app .work-picker-grid .work-card-copy .work-tags > span {
+  font-size: max(7px, 3.787879cqw);
+  font-weight: 700;
+  line-height: 1.2;
+  padding: max(4px, 3.030303cqw);
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.work-app .work-picker-grid .work-card:has(.work-portrait[data-character="oto-anago"]) .work-tags > span {
+  background: #f0f0f0;
+}
+/* Small cards grow with wrapped names/stars/tags instead of clipping them. */
+@media (max-width: 1349px) {
+  .work-app .work-picker-grid .work-card { aspect-ratio: auto; }
+}
+@container (max-width: 159px) {
+  .work-app .work-picker-grid .work-card-name {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+/* Only the large preview breathes. The bottom stays anchored, while the head
+   rises by about 4px at the reference size. Keep card hover/speech motion. */
+.work-picker-pet-motion {
+  position: absolute;
+  inset: 0;
+  container-type: size;
+  transform-origin: center bottom;
+  animation: picker-pet-breathe 4.6s ease-in-out .6s infinite;
+  animation-play-state: paused;
+}
+.work-app .work-picker-pet .work-portrait {
+  /* Preserve the source aspect ratio while reaching the bottom in tall panels. */
+  width: max(65.2%, 44.6332cqh);
+}
+.work-app .work-picker-pet .work-portrait[data-character="oto-anago"] {
+  width: max(63.67%, 44.0466cqh);
+}
+@media (max-width: 600px) {
+  .work-app .work-picker-pet .work-portrait { width: max(190px, calc((100cqh - 100px) * .622919)); }
+  .work-app .work-picker-pet .work-portrait[data-character="oto-anago"] { width: max(186px, calc((100cqh - 105px) * .622919)); }
+}
+.work-picker-pet-motion[data-character="oto-anago"] { animation-duration: 6s; }
+.work-picker-pet[data-moving="true"] .work-picker-pet-motion { animation-play-state: running; }
+@keyframes picker-pet-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.012, 1.009); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .work-picker-pet-motion { animation: none; transform: none; }
+}
