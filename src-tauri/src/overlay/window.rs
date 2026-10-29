@@ -19,7 +19,7 @@ const OVERLAY_HEIGHT: f64 = 238.0;
 /// Expand around the timer's bottom-center, keeping its screen anchor stable.
 pub fn set_work_widget(app: &AppHandle, visible: bool, bad: bool) -> Result<(), String> {
     let window = ensure_overlay_window(app)?;
-    let (width, height) = if bad { (360.0, 822.0) } else { (300.0, 300.0) };
+    let (width, height): (f64, f64) = if bad { (360.0, 822.0) } else { (300.0, 300.0) };
     #[cfg(target_os = "macos")]
     {
         let _ = window;
