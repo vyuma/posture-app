@@ -103,3 +103,21 @@
 @media(max-width:540px){.no-reward .work-detail-character>.work-card-number,.no-reward .work-detail-name,.no-reward .work-tags{margin-left:0;margin-right:0}.no-reward .work-detail-name h2{letter-spacing:7px}.no-reward .work-tags>span{letter-spacing:4px}.work-detail-card .work-detail-body>p{margin-inline:6.9825% 3.4913%}.work-graph-tooltip{min-width:92px;padding:8px;max-width:55%}.work-graph-tooltip>div{gap:8px}}
 
 .no-reward .work-graph-tooltip strong{color:#505050}
+
+/* Metric anchors from the 911.39px collection card: digit count cannot move units. */
+@media(min-width:541px){
+  .work-result-metrics{position:relative;display:block;height:13.86963cqw;margin-right:0;flex:none}
+  .work-result-metrics>div{position:absolute;inset:0 auto auto 0;display:block;width:22.3cqw;height:100%}
+  .work-result-metrics>div+div{left:28.57174cqw;width:16.1cqw}
+  .work-result-metrics>div>span{display:block;width:16.67782cqw}
+  .work-result-metrics>div+div>span{width:10.97225cqw}
+  .work-result-metrics strong{position:absolute;top:3.32871cqw;left:7.81663cqw;width:max-content;transform:translateX(-50%)}
+  .work-result-metrics>div+div strong{left:5.43126cqw}
+  .work-result-metrics small{position:absolute;top:6.51872cqw;left:16.22796cqw;margin-top:0}
+  .work-result-metrics>div+div small{left:10.95689cqw}
+  .work-result-metrics>div[data-full-rate="true"] small{left:13.8cqw}
+  .work-detail-card .work-detail-body>p{margin-left:4.29958cqw;line-height:2.4139cqw;text-align:center}
+}
+
+@media(min-width:541px){.work-result-metrics>div:first-child>strong[data-long="true"]{font-size:6.5cqw}}
+@media(max-width:540px){.work-result-metrics>div:first-child>strong[data-long="true"]{font-size:36px}}

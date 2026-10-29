@@ -15,6 +15,7 @@ import { MeasureScreen, type MeasureStage } from './MeasureScreen';
 import { ResultCard } from './ResultCard';
 import { ResultScreen } from './ResultScreen';
 import { Dialog } from './Dialog';
+import { FinishDialog } from './FinishDialog';
 import { Widget, type WidgetAction, type WidgetState } from './Widget';
 import { catalog } from './CharacterCard';
 import { isDesktop, openWorkRepository, publishWidget, subscribeWidgetActions } from './platform';
@@ -210,7 +211,7 @@ export default function WorkApp() {
     {!isDesktop && widget && <Widget state={widget} onAction={action} />}
     {detail && !timelapse && <Dialog title="獲得カードの詳細" className="work-detail-dialog" onClose={() => setDetail(null)}><ResultCard session={detail} variant="collection" onTimelapse={() => setTimelapse(detail)} /></Dialog>}
     {dialog === 'reset' && <Dialog title="コレクションを初期化" onClose={() => !busy && setDialog(null)}><h2>コレクションを初期化しますか？</h2><p>獲得したカード、選択中のピンアナゴ、アプリ内のすべてのタイムラプスを削除します。測定記録・タイマー設定と、保存して外に書き出したファイルは残ります。</p><div className="work-dialog-actions"><button className="work-button white" onClick={() => setDialog(null)} disabled={busy}>キャンセル</button><button className="work-button orange" onClick={() => void reset()} disabled={busy}>初期化する</button></div></Dialog>}
-    {dialog === 'finish' && <Dialog title="測定を終了" onClose={() => !busy && setDialog(null)}><h2>測定を終了しますか？</h2><p>ここまでの集中時間と姿勢を記録します。</p><div className="work-dialog-actions"><button className="work-button white" disabled={busy} onClick={() => setDialog(null)}>続ける</button><button className="work-button orange" disabled={busy} onClick={finish}>終了する</button></div></Dialog>}
+    {dialog === 'finish' && <FinishDialog busy={busy} onContinue={() => setDialog(null)} onFinish={finish} />}
     {dialog === 'sound' && <SoundSettingsDialog settings={sound} onChange={setSound} onClose={() => setDialog(null)} onPreview={() => void playSoundPreview({ src: sound.selectedSound, volume: sound.volume })} />}
     {dialog === 'settings' && <TimelapseSettings value={videoSettings} onChange={changeVideoSettings} onClose={() => setDialog(null)}><NextRewardSetting collection={collection} onChange={changeNextReward} /></TimelapseSettings>}
     </div>

@@ -145,8 +145,11 @@
   .work-app .stage-prepare .work-registration-panel>.work-button { width:calc(408 * var(--scene-px));min-height:max(44px,calc(77 * var(--scene-px)));margin-top:calc(30 * var(--scene-px));font-size:max(16px,calc(24 * var(--scene-px))); }
   .work-app .work-result-screen .work-result-actions { flex-direction:column;gap:calc(24 * var(--scene-px)); }
   .work-app .work-result-screen .work-result-actions>button { width:max(36px,calc(64 * var(--scene-px)));height:max(36px,calc(64 * var(--scene-px))); }
-  .work-app .work-result-navigation { gap:calc(30 * var(--scene-px));margin-top:calc(57 * var(--scene-px)); }
-  .work-app .work-result-navigation>.work-button { width:calc(270 * var(--scene-px));min-height:max(44px,calc(77 * var(--scene-px)));padding:calc(20 * var(--scene-px)) calc(16 * var(--scene-px));font-size:max(16px,calc(24 * var(--scene-px)));line-height:1.21; }
+  .work-app .work-result-navigation { gap:calc(30 * var(--scene-px));margin-top:calc(53.68 * var(--scene-px)); }
+  .work-app .work-result-navigation>.work-button { width:max(220px,calc(270 * var(--scene-px)));min-height:max(44px,calc(74.32 * var(--scene-px)));padding:max(10px,calc(20.3384 * var(--scene-px))) max(18px,calc(27.1179 * var(--scene-px)));font-size:max(16px,calc(20.3384 * var(--scene-px)));line-height:1.18;border-radius:calc(84.7434 * var(--scene-px));box-shadow:0 0 calc(7.22014 * var(--scene-px)) #00000026; }
+  .work-app .work-result-navigation>.white { border-width:max(1.5px,calc(2.5 * var(--scene-px))); }
+  .work-app .timelapse-result-icon { left:max(12.5px,calc(22.5 * var(--scene-px)));width:max(32px,calc(38 * var(--scene-px)));height:max(31.16px,calc(37 * var(--scene-px))); }
+  .work-app .timelapse-result-label { width:max(178px,calc(216 * var(--scene-px))); }
   .work-app .timelapse-screen { min-height:100dvh;padding:calc(162 * var(--scene-px)) 0 calc(91 * var(--scene-px));overflow:clip; }
   .work-app :is(.work-screen,.timelapse-screen) .timelapse-panel>header { flex-wrap:nowrap; }
   .work-app :is(.work-screen,.timelapse-screen) .timelapse-panel>header>p { margin:0; }

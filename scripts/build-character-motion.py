@@ -35,13 +35,13 @@ for character in ['sakura-nago', 'miira-nago', 'king-nago']:
         head = matches('cls-13')[0]
         for eye in [e for e in head if e.tag.endswith('circle')]: wrap(head,[eye],'eye')
     else:
-        body = matches('cls-16')[0]
-        cape = matches('cls-11')[0]
+        body = matches('cls-20')[0]
+        cape = matches('cls-16')[0]
         wrap(cape,list(cape),'cape-back')
-        wrap(body,[matches('cls-6')[0]],'cape-front')
-        wrap(body,[matches('cls-4')[0]],'gem')
-        staff = matches('cls-5')[0]
-        wrap(staff,[e for e in staff if e.tag.endswith(('circle','ellipse')) and e.get('class') != 'cls-8'],'orb')
+        wrap(body,[matches('cls-5')[0]],'cape-front')
+        wrap(body,[matches('cls-9')[0]],'gem')
+        staff = matches('cls-4')[0]
+        wrap(staff,[e for e in staff if e.tag.endswith(('circle','ellipse')) and e.get('class') != 'cls-7'],'orb')
     # Resolve Illustrator's global .cls-* rules into presentation attributes.
     # This avoids collisions when several characters exist in the same DOM.
     rules = {}

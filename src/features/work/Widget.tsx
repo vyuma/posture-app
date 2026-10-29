@@ -20,7 +20,8 @@ export function Widget({ state, onAction, native = false, onDrag }: { state: Wid
     reduced.addEventListener('change', update); window.addEventListener('resize', update);
     return () => { clearInterval(timer); reduced.removeEventListener('change', update); window.removeEventListener('resize', update); };
   }, [pose, state.badSince, state.bad, state.paused, state.phase]);
-  const baseGeometry = widgetGeometry(pose, motion.growth, motion.height - (native ? 0 : 20));
+  // Reserve room for the shadow and longer, tilted feedback messages.
+  const baseGeometry = widgetGeometry(pose, motion.growth, motion.height - (native ? 40 : 60));
   const geometry = state.feedbackVersion === 1 ? speechGeometry(baseGeometry, state.speech?.text ?? '') : baseGeometry;
   const message = widgetMessage(pose, motion.growth);
   const variables = Object.fromEntries(Object.entries(geometry).map(([key, value]) => [`--widget-${key}`, `${value}${['growth'].includes(key) ? '' : key === 'bubbleAngle' ? 'deg' : 'px'}`]));
@@ -28,7 +29,7 @@ export function Widget({ state, onAction, native = false, onDrag }: { state: Wid
   const time = timeLabel(remaining).padStart(5, '0');
   return <aside className={`work-widget is-${pose}${native ? ' is-native' : ''}${motion.reduced ? ' is-reduced' : ''}`} aria-label="姿勢ウィジェット" style={variables as CSSProperties}>
     <div className="work-widget-character" onPointerDown={event => { if (event.button === 0) onDrag?.(); }}>
-      <div className="work-widget-mask"><div className="work-widget-shake"><WidgetPetRig pose={pose} /></div></div>
+      <div className="work-widget-character-shadow"><div className="work-widget-mask"><div className="work-widget-shake"><WidgetPetRig pose={pose} /></div></div></div>
       {state.feedbackVersion === 1 ? <WidgetSpeech bad={pose === 'bad'} event={state.speech ?? null} reduced={motion.reduced} /> : <div className="work-widget-speech"><span key={message}>{message}</span></div>}
     </div>
     <div className="work-widget-bar">

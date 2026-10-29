@@ -8,6 +8,7 @@ import { TimelapseRecorder } from './recorder';
 import { TimelapseScreen } from './TimelapseScreen';
 import { TimelapseSettings } from './TimelapseSettings';
 import { ResultCard } from '../work/ResultCard';
+import { ResultScreen } from '../work/ResultScreen';
 import { openVideoFrames } from './videoFrames';
 import { exportVideo } from './exportVideo';
 import '../../styles/base.css';
@@ -19,7 +20,7 @@ const newSession = () => createSession(`qa-${crypto.randomUUID()}`, { ...DEFAULT
 export default function TimelapsePreview() {
   const [session, setSession] = useState<Session>(() => { try { return JSON.parse(sessionStorage.getItem('piiin.timelapse.qa-session') ?? 'null') ?? newSession(); } catch { return newSession(); } }), [store, setStore] = useState<TimelapseStore>();
   const [clip, setClip] = useState<Clip | null>(null), [settings, setSettings] = useState(() => structuredClone(DEFAULT_TIMELAPSE));
-  const [screen, setScreen] = useState<'controls' | 'video' | 'card'>('controls'), [config, setConfig] = useState(false);
+  const [screen, setScreen] = useState<'controls' | 'video' | 'card' | 'result'>('controls'), [config, setConfig] = useState(false);
   const [busy, setBusy] = useState(false), [report, setReport] = useState('QA storage only. 18s source → 12s focus video.');
   const controller = useRef<AbortController | null>(null);
   useEffect(() => { void openTimelapseTestStore().then(async value => { setStore(value); const saved = await value.get(session.id); if (saved) { setClip(saved); setReport(JSON.stringify(saved, null, 2)); } }).catch(error => setReport(String(error))); return () => controller.current?.abort(); }, []);
@@ -141,11 +142,12 @@ export default function TimelapsePreview() {
     setReport(JSON.stringify({ viewport: [innerWidth, innerHeight], video: [video?.readyState, video?.currentTime, video?.paused], elements: rows.map(row => [row.selector.replace('.timelapse-', ''), ...[row.x,row.y,row.width,row.height].map(Math.round), row.loaded, row.transform]) }));
     setScreen('controls');
   }
+  if (screen === 'result' && store) return <div className="work-app"><ResultScreen session={session} timelapseStore={store} onTimelapse={() => setScreen('video')} onHome={() => setScreen('controls')} /></div>;
   if (screen === 'video' && store) return <div className="work-app"><TimelapseScreen session={session} settings={settings} store={store} onClose={inspectAndClose} onHome={() => setScreen('controls')} /></div>;
   return <div className="work-app" style={{ minHeight: '100vh', padding: 24, background: '#d9eef6' }}><h1>Timelapse QA</h1><div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
     <a href="/dev/timelapse">QAを再読み込み</a> <a href="/dev/work">ホームの表示検証</a>{canResizeTimelapsePreview && [[1512,982],[1200,780],[720,540]].map(([width,height]) => <button key={width} onClick={() => void resizeTimelapsePreview(width,height).catch(error => setReport(String(error)))}>{width}×{height}</button>)}
     <button disabled={busy || !store} onClick={() => void run(false)}>シーケンステスト（18秒）</button><button disabled={busy || !store} onClick={() => void run(true)}>カメラでテスト（18秒）</button><button disabled={busy || !store} onClick={() => void run(false, true)}>長時間テスト（3分）</button>
-    <button onClick={() => controller.current?.abort()} disabled={!busy}>中止</button><button onClick={() => setConfig(true)}>設定</button><button disabled={!clip} onClick={() => setScreen('video')}>再生画面</button><button onClick={() => setScreen(screen === 'card' ? 'controls' : 'card')}>コレクションカード</button>
+    <button onClick={() => controller.current?.abort()} disabled={!busy}>中止</button><button onClick={() => setConfig(true)}>設定</button><button disabled={!clip} onClick={() => setScreen('video')}>再生画面</button><button onClick={() => setScreen('result')}>結果画面</button><button onClick={() => setScreen(screen === 'card' ? 'controls' : 'card')}>コレクションカード</button>
     <button disabled={!clip || busy} onClick={() => void inspectCodecs()}>コーデック診断</button><button disabled={!clip || busy} onClick={() => void verifyExports()}>全4構成を書き出して検証</button><button disabled={busy} onClick={() => setSession({ ...session, acquiredCharacterId: session.acquiredCharacterId ? null : 'yozora-nago' })}>獲得・未獲得を切り替え</button>
     <button disabled={busy || !store} onClick={() => { void store?.clear().then(() => { setClip(null); setReport('QA videos deleted'); }); }}>QA動画のみ削除</button>
   </div>{screen === 'card' && <div style={{ marginTop: 24 }}><ResultCard timelapseStore={store} session={session} variant="collection" onTimelapse={() => setScreen('video')} /></div>}

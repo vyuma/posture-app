@@ -1,0 +1,15 @@
+.acquisition-intro{position:relative;width:100%;height:100dvh;min-height:320px;overflow:hidden;background:linear-gradient(180deg,#13a2d7,#f2edcc);font-family:'SF Pro',-apple-system,BlinkMacSystemFont,sans-serif;--intro-u:min(100vw / 1512,100dvh / 982)}
+.acquisition-skip{position:absolute;z-index:10;right:5.291%;top:calc(51 * var(--intro-u));width:calc(179 * var(--intro-u));min-width:154px;white-space:nowrap;min-height:42px;height:calc(50.52 * var(--intro-u));padding:10px 16px;background:white;color:#13a2d7;border:1.098px solid #f5f5f5;border-radius:63px;box-shadow:0 4.39px 4.39px #0004;font-size:16px;font-weight:700;cursor:pointer}
+.acquisition-skip:focus-visible{outline:3px solid #111f6e;outline-offset:4px}
+.acquisition-scene{position:absolute;inset:0;animation:acquisition-scene-in .45s ease-out both}
+.acquisition-copy{position:absolute;z-index:2;top:20.16%;left:5%;width:90%;text-align:center;color:white;letter-spacing:0}
+.acquisition-intro .acquisition-copy p{margin:0 0 calc(30 * var(--intro-u));font-size:calc(38.3333 * var(--intro-u));font-weight:590;line-height:1.2}
+.acquisition-intro .acquisition-copy h1{margin:0;font-size:calc(50 * var(--intro-u));line-height:1.2;font-weight:700}
+.scene-1 .acquisition-copy{top:23.32%}
+.acquisition-character{position:absolute;top:auto;bottom:calc(-106 * var(--intro-u));left:50%;width:calc(460 * var(--intro-u));height:calc(738 * var(--intro-u));margin-left:calc(-230 * var(--intro-u));transform-origin:center bottom;animation:acquisition-pop .8s cubic-bezier(.18,.74,.28,1) both}
+.scene-1 .acquisition-character{bottom:calc(-60 * var(--intro-u));width:calc(434 * var(--intro-u));height:calc(696 * var(--intro-u));margin-left:calc(-217 * var(--intro-u))}
+.acquisition-character .work-portrait{position:static;display:block;width:100%;height:100%;max-width:none;object-fit:contain;object-position:bottom;transform:none}
+@keyframes acquisition-pop{0%{transform:translateY(110%) scale(.9)}60%{transform:translateY(-5%) scale(1.025,.975)}80%{transform:translateY(1.5%) scale(.99,1.01)}100%{transform:none}}
+@keyframes acquisition-scene-in{from{opacity:.25}to{opacity:1}}
+@media(max-aspect-ratio:1/1){.acquisition-copy{top:22%}.acquisition-intro .acquisition-copy p{font-size:clamp(16px,4.2vw,28px);margin-bottom:20px}.acquisition-intro .acquisition-copy h1{font-size:clamp(22px,5.7vw,38px)}.scene-1 .acquisition-copy{top:27%}.acquisition-character,.scene-1 .acquisition-character{top:auto;bottom:-6vh;width:min(80vw,460px);height:auto;aspect-ratio:460/738;margin-left:0;left:50%;translate:-50% 0}.acquisition-skip{top:24px}}
+@media(prefers-reduced-motion:reduce){.acquisition-scene,.acquisition-character{animation:none}}
