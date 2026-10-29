@@ -31,9 +31,11 @@
 .timelapse-file-actions>button:focus-visible,.timelapse-close:focus-visible{outline:3px solid #075c80;outline-offset:4px}
 .timelapse-file-actions>button:disabled{opacity:.45;cursor:default}
 .timelapse-file-actions img{display:block;width:100%;height:100%}
-.timelapse-side{position:absolute;z-index:1;bottom:0;pointer-events:none;object-fit:contain;object-position:center bottom;height:336px;width:209px;animation:timelapse-rise 580ms cubic-bezier(.2,.8,.2,1) both}
+.timelapse-side{position:absolute;z-index:1;bottom:0;pointer-events:none;object-fit:contain;object-position:center bottom;height:336px;width:209px;transform-origin:center bottom;--side-lift:-2.4%;animation:timelapse-rise 580ms cubic-bezier(.2,.8,.2,1) both,timelapse-side-breathe 4s ease-in-out .9s infinite}
 .timelapse-side.left{left:max(0px,calc(50% - 707px));transform:scaleX(-1);--side-mirror:-1}
-.timelapse-side.right{left:calc(50% + 510px);width:203px;height:326px;animation-delay:70ms;--side-mirror:1}
+.timelapse-side.right{left:calc(50% + 510px);width:203px;height:326px;animation-duration:580ms,5.2s;animation-delay:70ms,1.65s;--side-mirror:1;--side-lift:-2%}
+/* Entrance uses translate; breathing uses transform, preserving the mirrored left art. */
+@keyframes timelapse-side-breathe{0%,100%{transform:scaleX(var(--side-mirror)) translateY(0) rotate(0) scale(1)}50%{transform:scaleX(var(--side-mirror)) translateY(var(--side-lift)) rotate(.3deg) scale(1.006)}}
 @keyframes timelapse-rise{from{translate:0 100%;opacity:0}to{translate:0 0;opacity:1}}
 .timelapse-status{margin:20px 84px 0;color:#52616a;font-size:14px;line-height:1.6;overflow-wrap:anywhere}
 .timelapse-status:empty{display:none}
@@ -54,9 +56,14 @@
  .work-detail-body>.timelapse-card-entry{width:max(110px,14.5931cqw);height:max(28px,3.5495cqw);padding:0 10px;gap:3px;font-size:max(10px,1.3114693cqw);line-height:max(12px,1.5361152cqw)}
  .work-detail-body>.timelapse-card-entry>svg{width:max(14px,1.9725156cqw);height:auto;aspect-ratio:17.9773/10.7873}
 }
-.work-result-navigation{display:flex;justify-content:center;gap:30px;width:100%;margin-top:57px}
-.work-result-navigation>.work-button{width:270px;min-height:77px;font-size:24px;line-height:29px;padding:20px 16px;box-shadow:0 0 8.52px #00000026}
-.work-result-navigation>.white{color:#f78000}
+.work-result-navigation{display:flex;justify-content:center;gap:30px;width:100%;margin-top:53.68px}
+.work-result-navigation>.work-button{width:270px;min-height:74.32px;font-size:20.3384px;line-height:24px;padding:20.3384px 27.1179px;border-radius:84.7434px;gap:6.78px;box-shadow:0 0 7.22014px #00000026}
+.work-result-navigation>.work-button.white{background:#fff;color:#f78000;border:2.5px solid #f78000}
+.timelapse-result-entry{position:relative;white-space:nowrap}
+.timelapse-result-icon{position:absolute;left:22.5px;top:50%;transform:translateY(-50%);width:38px;height:37px}
+.timelapse-result-label{width:216px;flex:none;text-align:right}
+@media(max-width:800px){.work-result-navigation>.timelapse-result-entry{min-width:220px;font-size:16px;padding-inline:18px}.timelapse-result-icon{left:14px;width:32px;height:31.16px}}
+@media(max-width:540px){.work-result-navigation{flex-wrap:wrap}.work-result-navigation>.work-button.timelapse-result-entry{width:100%;max-width:270px;min-width:0}.work-result-navigation>.timelapse-result-entry .timelapse-result-label{width:100%;text-align:center;padding-left:20px}}
 .work-dialog.timelapse-settings{width:min(760px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;color:#354953}
 .timelapse-settings h1{margin:0 0 24px;font-size:30px;color:#13a2d7}.timelapse-settings h2{font-size:22px;margin:0 0 24px}
 .timelapse-settings fieldset{border:0;padding:0;margin:0 0 12px;min-width:0}.timelapse-settings legend{font-size:16px;font-weight:700;padding:0;margin-bottom:12px}
@@ -88,3 +95,6 @@
 @media(max-width:540px){.timelapse-buttons>.work-button.orange{font-size:16px;gap:6px;white-space:nowrap}}
 
 .timelapse-status .timelapse-share-ready { min-height: 44px; height: auto; padding: 10px 24px; margin: 8px auto; font-size: 16px; }
+
+.work-result-home-icon{width:24px;height:24px;flex:none}
+@media(max-width:540px){.work-result-navigation>.work-button.orange{width:100%;max-width:270px}}

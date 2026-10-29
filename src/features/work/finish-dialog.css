@@ -1,0 +1,10 @@
+.work-dialog.work-finish-dialog{--finish-color:#f78000;font-family:'SF Pro',-apple-system,BlinkMacSystemFont,'Noto Sans JP',sans-serif;letter-spacing:0}
+.work-dialog.work-finish-dialog h2{color:var(--finish-color)}
+.work-dialog.work-finish-dialog>p{position:relative;top:-.5em}
+/* Keep the reduced button widths; close only the space between them. */
+.work-finish-dialog .work-dialog-actions{display:grid;grid-template-columns:repeat(2,minmax(0,calc((100% - 16px)/3)));justify-content:center;gap:23.26px}
+.work-finish-dialog .work-dialog-actions>.work-button{flex:1;justify-self:center;width:100%;min-width:0;min-height:42.4867px;padding:8px 13.3333px;font-size:16px;line-height:19.3333px}
+.work-finish-dialog .work-dialog-actions>.white{background:transparent;border:1.6667px solid var(--finish-color);color:var(--finish-color);filter:drop-shadow(1px 1px 4px #00000040)}
+.work-finish-dialog .work-dialog-actions>.white:hover:not(:disabled){filter:drop-shadow(1px 1px 4px #00000040) brightness(.96)}
+.work-finish-dialog .work-dialog-actions>.orange{background:var(--finish-color)}
+@media(max-width:600px){.work-finish-dialog .work-dialog-actions{grid-template-columns:repeat(2,minmax(0,calc((100% - 12px)/3)));gap:12px}.work-finish-dialog .work-dialog-actions>.work-button{min-height:37.3333px;padding:6.6667px;font-size:12px;line-height:16px}}

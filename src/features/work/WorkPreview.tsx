@@ -12,6 +12,7 @@ import { MeasureScreen, type MeasureStage } from './MeasureScreen';
 import { ResultCard } from './ResultCard';
 import { ResultScreen } from './ResultScreen';
 import { Dialog } from './Dialog';
+import { FinishDialog } from './FinishDialog';
 import { Widget, type WidgetState } from './Widget';
 import { catalog } from './CharacterCard';
 import { isDesktop, publishWidget, subscribeWidgetActions } from './platform';
@@ -37,6 +38,7 @@ export default function WorkPreview() {
   const [sound, setSound] = useState(DEFAULT_SOUND_SETTINGS);
   const [videoSettings, setVideoSettings] = useState(DEFAULT_TIMELAPSE);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [finishOpen, setFinishOpen] = useState(false);
   const [calibrationMs, setCalibrationMs] = useState(5000);
   const [widgetEnabled, setWidgetEnabled] = useState(true);
   const [previewCharacter, setPreviewCharacter] = useState('oto-anago');
@@ -64,9 +66,10 @@ export default function WorkPreview() {
     </StoryHomeTransition>}
   {screen === 'picker' && <CharacterPicker collection={collection} onConfirm={id => { setCollection(value => ({ ...value, selectedId: id })); setScreen('home'); }} onClose={() => setScreen('home')} />}
   {screen === 'timer' && <TimerSettings saved={null} onSubmit={() => setScreen('prepare')} onClose={() => setScreen('home')} />}
-  {['prepare', 'calibrate', 'ready', 'active', 'rest', 'pause'].includes(screen) && <MeasureScreen stage={stage} session={session} videoRef={video} canvasRef={canvas} status="カメラを使わない表示検証です" ready remainingCalibrationMs={calibrationMs} tracking onRegister={() => setScreen('calibrate')} onCancel={() => setScreen('home')} onRecalibrate={() => setScreen('prepare')} onPause={() => setScreen(screen === 'pause' ? 'active' : 'pause')} onFinish={() => setScreen('result')} sound={sound} onSoundChange={setSound} widgetEnabled={widgetEnabled} onWidgetChange={setWidgetEnabled} />}
+  {['prepare', 'calibrate', 'ready', 'active', 'rest', 'pause'].includes(screen) && <MeasureScreen stage={stage} session={session} videoRef={video} canvasRef={canvas} status="カメラを使わない表示検証です" ready remainingCalibrationMs={calibrationMs} tracking onRegister={() => setScreen('calibrate')} onCancel={() => setScreen('home')} onRecalibrate={() => setScreen('prepare')} onPause={() => setScreen(screen === 'pause' ? 'active' : 'pause')} onFinish={() => setFinishOpen(true)} sound={sound} onSoundChange={setSound} widgetEnabled={widgetEnabled} onWidgetChange={setWidgetEnabled} />}
   {screen === 'rarity' && <RarityPreview session={result(previewCharacter)} />}
-  {['result', 'no-reward', 'no-graph'].includes(screen) && <ResultScreen key={screen} session={screen === 'no-reward' ? { ...result(previewCharacter), acquiredCharacterId: null, rewardQualified: false, goodMs: 49_000 } : screen === 'no-graph' ? { ...result(previewCharacter), samples: [] } : result(previewCharacter)} onHome={() => setScreen('home')} />}
+  {['result', 'no-reward', 'no-graph'].includes(screen) && <ResultScreen key={screen} session={screen === 'no-reward' ? { ...result(previewCharacter), acquiredCharacterId: null, rewardQualified: false, goodMs: 49_000 } : screen === 'no-graph' ? { ...result(previewCharacter), samples: [] } : result(previewCharacter)} onHome={() => setScreen('home')} onTimelapse={() => {}} />}
+  {finishOpen && <FinishDialog onContinue={() => setFinishOpen(false)} onFinish={() => { setFinishOpen(false); setScreen('result'); }} />}
   {settingsOpen && <TimelapseSettings value={videoSettings} onChange={setVideoSettings} onClose={() => setSettingsOpen(false)}><NextRewardSetting collection={collection} onChange={async id => { setCollection(value => ({ ...value, nextRewardId: id })); }} /></TimelapseSettings>}
   {detail && <Dialog title="獲得カードの詳細" className="work-detail-dialog" onClose={() => setDetail(null)}><ResultCard session={detail} variant="collection" /></Dialog>}
   {!isDesktop && widget && <Widget state={widget} onAction={action => { if (action === 'finish') { publish(null); } else if (action !== 'open') { publish({ ...widget, paused: action === 'pause' }); } }} />}
