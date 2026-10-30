@@ -115,3 +115,5 @@ Store Rust 検査は `TAURI_CONFIG` に `tauri.appstore.conf.json` の JSON 内�
 - ユーザーが報告した実際の左右差の原因は、生のランドマーク記録がなく未確定。対称な入力では旧加重スコアが左右ともgoodに残ることは再現した。実際のカメラでの左右確認はbuild 4で実施する。
 
 - 基準登録完了フレームで説明用の較正も確定し、保存/復元時に欠落しないことを回帰検証。対応Web PR: https://github.com/Kyoung9/PiiiN/pull/31
+
+- 最終PKG `PiiiN-1.0.0-4-final.pkg`（SHA256 `d77637aaa1acdf3bfec55e7283ebd89a11aaaa1328106908351763b87337a213`）の厳格codesign/PKG署名検証が成功。2026-10-30 20:32 JSTにTransporterデリバリ成功。Apple処理中で、TestFlight build 4実機確認は未完了。Web/desktop統合は各51 tests / 491 assertions成功。macOS CI成功、Windows CIは確認待ち。
