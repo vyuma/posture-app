@@ -151,35 +151,6 @@ mod tests {
     }
 }
 
-/// The Store sandbox grants access to the URL chosen in this panel, not Downloads.
-#[cfg(all(target_os = "macos", feature = "mac-app-store"))]
-async fn choose_video_destination(window: &tauri::WebviewWindow, extension: String) -> Result<Option<std::path::PathBuf>, String> {
-    use objc2::MainThreadMarker;
-    use objc2_app_kit::{NSSavePanel, NSWindow, NSModalResponseOK, NSModalResponseCancel};
-    use objc2_foundation::{NSArray, NSString};
-    let host = window.clone();
-    let (sender, receiver) = std::sync::mpsc::channel();
-    window.run_on_main_thread(move || {
-        let pointer = match host.ns_window() { Ok(v) => v, Err(e) => { let _ = sender.send(Err(e.to_string())); return; } };
-        let native = unsafe { &*pointer.cast::<NSWindow>() };
-        let panel = NSSavePanel::savePanel(MainThreadMarker::new().expect("AppKit main thread"));
-        let stamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis();
-        panel.setNameFieldStringValue(&NSString::from_str(&format!("PiiiN-{stamp}.{extension}")));
-        panel.setCanCreateDirectories(true);
-        panel.setTitle(Some(&NSString::from_str("動画を保存")));
-        #[allow(deprecated)]
-        panel.setAllowedFileTypes(Some(&NSArray::from_slice(&[&*NSString::from_str(&extension)])));
-        let selected = panel.clone();
-        let completion = block2::RcBlock::new(move |response| {
-            let result = if response == NSModalResponseOK {
-                selected.URL().and_then(|url| url.path()).map(|path| Some(std::path::PathBuf::from(path.to_string()))).ok_or_else(|| "保存先を取得できませんでした".to_string())
-            } else if response == NSModalResponseCancel { Ok(None) } else { Err("保存ダイアログを開けませんでした".into()) };
-            let _ = sender.send(result);
-        });
-        panel.beginSheetModalForWindow_completionHandler(native, &completion);
-    }).map_err(|e| e.to_string())?;
-    tauri::async_runtime::spawn_blocking(move || receiver.recv().map_err(|e| e.to_string())?).await.map_err(|e| e.to_string())?
-}
 
 #[cfg(all(target_os = "macos", feature = "mac-app-store"))]
 async fn deliver_store_video(_app: &tauri::AppHandle, window: &tauri::WebviewWindow, root: std::path::PathBuf, payload: Value, share: bool) -> Result<Value, String> {
@@ -194,7 +165,7 @@ async fn deliver_store_video(_app: &tauri::AppHandle, window: &tauri::WebviewWin
         return Ok(json!({"path":path,"shared":true}));
     }
     let extension = if name.ends_with(".mp4") { "mp4" } else { "webm" };
-    let Some(target) = choose_video_destination(window, extension.into()).await? else { return Ok(Value::Null); };
+    let Some(target) = super::save_dialog::choose_export_destination(window, extension.into(), "動画を保存").await? else { return Ok(Value::Null); };
     tauri::async_runtime::spawn_blocking(move || {
         let _guard = MEDIA_LOCK.lock().map_err(|e| e.to_string())?;
         let source = root.join("timelapse").join(name);

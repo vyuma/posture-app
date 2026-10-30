@@ -1,6 +1,6 @@
 # Mac App Store 配布準備
 
-2026-10-30。作業ブランチ: `feat/mac-app-store`。**未提出・未公開。設定は開発用であり、審査に提出できるパッケージではない。**
+2026-10-30。作業ブランチ: `feat/mac-app-store`。**App Review 未提出・一般公開前。署名済み universal PKG を Transporter に送り、TestFlight で検証中。アップロード成功は審査合格を意味しない。**
 
 ## 確定した方針
 
@@ -22,7 +22,7 @@
 1. **透明ペット**: Store 専用の AppKit + Lottie 描画を実装し、公開 NSPanel に接続した。既存 JSON のポーズ・遷移区間を再利用する。直接配布版は従来の描画を維持。Store ARM64 debug バイナリのリンクと、既知の `drawsBackground` / `fullScreenEnabled` 文字列がないことは確認済み。ただし実際の Tauri Store アプリ内でカメラ連携、ボタン、ドラッグ、画面端、Spaces、縮小表示、Reduce Motion、性能を通して検証する必要がある。単体プローブの表示確認だけでは同等性を保証しない。
 2. **保存・共有**: Store 向けに NSSavePanel と Cocoa の atomic 保存を実装。共有は元の export が解放されても読めるよう app container 内へ一時コピーして NSSharingServicePicker に渡す。取消、既存ファイル置換、容量不足、共有サービスの読み取りを sandbox 実機で確認する必要がある。共有コピーは現在コレクション初期化で消えるが、共有完了後の安全な回収・上限管理も提出前に実装する。直接配布版の Downloads 保存は変更しない。
 3. **データ移行**: identifier と sandbox container が変わる。旧アプリの測定 DB、コレクション、設定、動画をユーザー操作で移行する方法が必要。SQLite の稼働中ファイルを単純コピーしない。旧データを上書き・削除しない。
-4. **署名**: ユーザー承認後、Mac App Distribution（7AJM9U7DK5）と Mac Installer Distribution（7D8YUQG497）を発行し、対応する秘密鍵と共に login keychain にインポート済み。名義は GWAK KYOUNGPIN、期限は2027-10-30。対応 provisioning profile と実際の署名済みパッケージは未検証。秘密鍵を資料へ記載しない。kokuri-notary は既存 DMG 公証用のローカル名であり Store の表示名ではない。
+4. **署名**: ユーザー承認後、Mac App Distribution（7AJM9U7DK5）と Mac Installer Distribution（7D8YUQG497）を発行し、対応する秘密鍵と共に login keychain にインポート済み。名義は GWAK KYOUNGPIN、期限は2027-10-30。承認された「PiiiN Mac App Store 2026」profile を組み込み、Application / Installer 証明書で署名済み。codesign --verify --deep --strict と pkgutil --check-signature が成功。秘密鍵を資料へ記載しない。kokuri-notary は既存 DMG 公証用のローカル名であり Store の表示名ではない。
 5. **提出資料**: 実機スクリーンショット、最新の日本語説明、サポート・プライバシー URL、年齢レーティング、カテゴリ、価格と配信地域、審査連絡先、輸出コンプライアンスの確認が必要。旧 `store-listing.ja.draft.md` は Windows 向けで、削除済みのお気に入り・スマホ機能を含むため流用しない。
 
 ## 検証
@@ -47,7 +47,7 @@ Store Rust 検査は `TAURI_CONFIG` に `tauri.appstore.conf.json` の JSON 内�
 - 通常/Store 設定で cargo check 成功（既存の未使用 pairing コードの警告あり）。
 - Store の依存ツリーに updater/process plugin がないこと、生成 JS に updater command/menu がないことを確認。
 - Store entitlement の plutil 検査と git diff --check 成功。
-- sandbox 実機動作、署名済み Store パッケージ、データ移行は未検証。
+- 以降に追加した署名・TestFlight の実行結果は次節を参照。データ移行は未検証。
 
 
 ### ネイティブペットの追加検証（2026-10-30）
@@ -67,3 +67,18 @@ Store Rust 検査は `TAURI_CONFIG` に `tauri.appstore.conf.json` の JSON 内�
 - パスワードはユーザーが直接入力し、チャット・ログ・リポジトリに保存していない。`.p12` もリポジトリ外で保管する。
 - **別端末・外部媒体へのコピーは未実施**。暗号化された外部媒体、またはユーザー指定の安全な個人保管先を選んでからコピーし、ハッシュ照合する。
 - このバックアップに既存DMG用のupdater秘密鍵は含まれない。
+
+
+### TestFlight と保存経路の実機検証（2026-10-30）
+
+- Store `1.0.0 (1)` を 15:08 に Transporter でデリバリし、15:10 に TestFlight からインストール。初回ストーリー→ホーム、カメラ許可、基準姿勢登録、測定、停止、結果カード、コレクションからの再表示を確認。
+- 実際の録画をタイムラプス画面で再生・一時停止できた。NSSavePanel で指定したローカル MP4 が生成された。ffprobe: H.264 / 1280×720 / 30fps / 124.431667秒 / 28,628,889 bytes / 音声ストリームなし。検証後、録画設定はオフに戻した。
+- 動画の共有メニューにサムネイルと28.6MBのファイル情報が表示された。外部の相手への送信は行っていないため、受信側の確認は未実施。
+- build 1 のカード画像保存は、ブラウザーの Blob ダウンロードを呼ぶだけで「保存しました」と表示し、保存先選択もファイル生成もなかった。所有者も保存ダイアログが見えなかったと回答。これは不具合であり成功扱いしない。
+- build 2 は Store 画像保存を `save_result_image` に接続。動画と共有する NSSavePanel で保存先を選び、Cocoa の atomic write 成功後のみ成功を返す。取消は `aborted`、失敗はエラーにする。通常配布とWebのフォールバックは維持。
+- 回帰テストは修正前7成功/4失敗、修正後11成功/0失敗（39 assertions）。通常/Store frontend build、通常/Store cargo check、universal Store build、コード署名・PKG署名検証が成功。
+- `PiiiN-1.0.0-2.pkg` を 15:53 に Transporter デリバリ。SHA256: `bf306b6d6c64ed748c56897f3d66cf12f071d4c03fedf6408112733dfcae0af8`。TestFlightでbuild 2へ更新し、保存ダイアログ→PNG生成（1822×1034、195,247 bytes、alpha有り）、取消後に成功メッセージを出さないことを確認。Finderの「クリップボードを表示」でカード画像の実データも確認した。更新後に1件のコレクションとそのカード・動画の入口が保持されている。
+- App Store Connect: 日本だけ・無料（JPY 0）・手動公開。日本語説明、サポート/プライバシーURL、カテゴリ、年齢評価9+を保存。レビュー連絡先、スクリーンショット、コンテンツ権利、App Privacy詳細は未完了。
+- 生のカメラ映像は公開の証拠・Store画像・Gitへ含めない。顔を含む検証用動画はローカルのみ。
+
+残る実機確認: Storeペットの画面上の外観・ドラッグ・ボタン・Spaces・画面端・Reduce Motion・性能、共有先での読み取り、動画を含む更新後データの全件保持。既存 JSON やアニメーションのタイミングは変更していない。

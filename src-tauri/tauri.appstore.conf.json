@@ -20,7 +20,7 @@
     "macOS": {
       "entitlements": "entitlements.appstore.plist",
       "minimumSystemVersion": "12.0",
-      "bundleVersion": "1"
+      "bundleVersion": "2"
     },
     "resources": {
       "../public/animations/anago/normal-nago/widget-states-v2.json": "native-pet/widget-states-v2.json",

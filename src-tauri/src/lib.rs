@@ -73,7 +73,8 @@ pub fn run() {
             overlay_reset_position_offset,
             overlay_open_main_window,
             overlay_on_posture_change,
-            copy_share_image_to_clipboard
+            copy_share_image_to_clipboard,
+            commands::result_image_commands::save_result_image
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
