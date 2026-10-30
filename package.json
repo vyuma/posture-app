@@ -15,7 +15,8 @@
     "release:macos": "node scripts/release-macos.mjs",
     "test:updates": "bun test scripts/desktop-updater.test.tsx",
     "test:overlay-position": "bun test scripts/overlay-position.test.tsx",
-    "test:work": "bun test scripts/work-session.test.ts"
+    "test:work": "bun test scripts/work-session.test.ts",
+    "build:store": "VITE_DISTRIBUTION_CHANNEL=mac-app-store bun run build && node scripts/prepare-store-posture-assets.mjs"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^0.10.34",

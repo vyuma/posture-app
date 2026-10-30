@@ -26,12 +26,12 @@ export function LegalContent({ page }: { page: LegalPage }) {
       <p>ウェブ版の記録をすべて削除するには、ブラウザーの設定でPiiiNのサイトデータを削除してください。デスクトップ版の保存領域を含む全データの削除方法はサポートでご案内します。アプリの削除だけでは保存領域が残る場合があります。運営者は利用者の端末内の記録を遠隔で閲覧・削除できません。</p>
       <p>利用者がアプリの外へ保存・共有したファイルは、コレクションの初期化では削除されません。保存先や共有先で管理・削除してください。</p>
       <h2>通信先と外部サービス</h2>
-      <p>ウェブサイトの配信にはVercel、姿勢推定用モデルの取得にはGoogleの配信基盤、推定プログラムの取得にはjsDelivrを利用します。Macの直接配布版ではGitHubから更新情報や更新ファイルを取得します。Microsoft Store版・Mac App Store版の配布と更新には各ストアを利用します。Windows版はMicrosoft WebView2上で動作します。</p>
+      <p>ウェブサイトの配信にはVercelを利用します。Mac App Store版は姿勢推定用モデルと推定プログラムをアプリに同梱し、姿勢推定のための外部ダウンロードを行いません。その他の配布版では、モデルの取得にGoogleの配信基盤、推定プログラムの取得にjsDelivrを利用します。Macの直接配布版ではGitHubから更新情報や更新ファイルを取得します。Microsoft Store版・Mac App Store版の配布と更新には各ストアを利用します。Windows版はMicrosoft WebView2上で動作します。</p>
       <p>これらの通信では、接続元IPアドレス、ブラウザー・端末に関する情報、アクセス日時、要求したURLなどが通信先に伝わる場合があります。これはカメラ映像のアップロードとは別の処理です。各サービスの処理には各提供者のプライバシーポリシーが適用され、日本国外で処理される場合があります。</p>
       <ul className="piiin-legal-providers">
         <li>Vercel：vercel.com/legal/privacy-policy</li>
         <li>Google（モデル配信・Gmail）：policies.google.com/privacy</li>
-        <li>jsDelivr：jsdelivr.com/terms/privacy-policy-jsdelivr-net</li>
+        <li>jsDelivr：jsdelivr.com/terms/privacy-policy</li>
         <li>GitHub：docs.github.com/site-policy/privacy-policies/github-general-privacy-statement</li>
         <li>Apple：apple.com/legal/privacy/</li>
         <li>Microsoft：privacy.microsoft.com/privacystatement</li>
@@ -54,7 +54,7 @@ export function LegalContent({ page }: { page: LegalPage }) {
       <p>顔と肩がカメラに映り、十分に明るい場所で基準姿勢を登録し直してください。カメラの位置、距離、服装、照明、遮蔽物などで推定が変わる場合があります。顔や肩を認識できない状態が続いた場合にも、姿勢を戻す案内が表示されます。</p>
       <p>スコアは登録した姿勢との差をもとにした目安です。医学的な診断や治療、姿勢改善の効果を保証するものではありません。</p>
       <h2>カメラを使えないとき</h2>
-      <p>OSとブラウザーの設定でPiiiNのカメラ許可を確認し、カメラを使用する他のアプリを閉じて再度お試しください。推定プログラムとモデルの取得にはインターネット接続が必要です。</p>
+      <p>OSとブラウザーの設定でPiiiNのカメラ許可を確認し、カメラを使用する他のアプリを閉じて再度お試しください。Mac App Store版の姿勢推定はインターネット接続なしで利用できます。その他の配布版は推定プログラムとモデルの取得にインターネット接続が必要です。</p>
       <h2>動画の保存と削除</h2>
       <p>プロフィールの「設定」でタイムラプスを有効にすると、集中時間のみを無音で記録します。動画は利用者が削除するまでこの端末に残ります。プロフィールの「コレクションを初期化」でアプリ内のカードと動画を削除できます。測定記録・設定と、アプリ外に書き出したファイルは残ります。</p>
       <p>ウェブ版の全記録はブラウザーのサイトデータ削除で消せます。デスクトップ版の全記録の削除は、利用しているOSと配布版を添えてお問い合わせください。動画や測定記録をメールで送る必要はありません。</p>

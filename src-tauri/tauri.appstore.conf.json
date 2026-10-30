@@ -3,13 +3,18 @@
   "identifier": "com.kyoungpin.piiin",
   "version": "1.0.0",
   "build": {
-    "beforeBuildCommand": "VITE_DISTRIBUTION_CHANNEL=mac-app-store bun run build"
+    "beforeBuildCommand": "bun run build:store"
   },
   "app": {
     "security": {
       "capabilities": [
         "default"
-      ]
+      ],
+      "csp": {
+        "connect-src": "'self' ipc: http://ipc.localhost asset: http://asset.localhost blob: data:",
+        "script-src": "'self' 'unsafe-eval' 'wasm-unsafe-eval' blob:",
+        "img-src": "'self' asset: http://asset.localhost blob: data:"
+      }
     },
     "macOSPrivateApi": false
   },
@@ -20,7 +25,7 @@
     "macOS": {
       "entitlements": "entitlements.appstore.plist",
       "minimumSystemVersion": "12.0",
-      "bundleVersion": "2"
+      "bundleVersion": "3"
     },
     "resources": {
       "../public/animations/anago/normal-nago/widget-states-v2.json": "native-pet/widget-states-v2.json",

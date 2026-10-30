@@ -29,7 +29,7 @@
 
 既存配布: `bun run build` / `bun run test:updates` / `cargo check --manifest-path src-tauri/Cargo.toml`。
 
-Store フロントエンド: `VITE_DISTRIBUTION_CHANNEL=mac-app-store bun run build` と `VITE_DISTRIBUTION_CHANNEL=mac-app-store bun test scripts/appstore-updater.test.tsx`。
+Store フロントエンドと同梱モデル: `bun run build:store` と `VITE_DISTRIBUTION_CHANNEL=mac-app-store bun test scripts/appstore-updater.test.tsx`。
 
 Store Rust 検査は `TAURI_CONFIG` に `tauri.appstore.conf.json` の JSON 内容を設定し `cargo check --manifest-path src-tauri/Cargo.toml --no-default-features --features mac-app-store`。設定ファイルを既定設定へ上書きしない。
 
@@ -78,7 +78,19 @@ Store Rust 検査は `TAURI_CONFIG` に `tauri.appstore.conf.json` の JSON 内�
 - build 2 は Store 画像保存を `save_result_image` に接続。動画と共有する NSSavePanel で保存先を選び、Cocoa の atomic write 成功後のみ成功を返す。取消は `aborted`、失敗はエラーにする。通常配布とWebのフォールバックは維持。
 - 回帰テストは修正前7成功/4失敗、修正後11成功/0失敗（39 assertions）。通常/Store frontend build、通常/Store cargo check、universal Store build、コード署名・PKG署名検証が成功。
 - `PiiiN-1.0.0-2.pkg` を 15:53 に Transporter デリバリ。SHA256: `bf306b6d6c64ed748c56897f3d66cf12f071d4c03fedf6408112733dfcae0af8`。TestFlightでbuild 2へ更新し、保存ダイアログ→PNG生成（1822×1034、195,247 bytes、alpha有り）、取消後に成功メッセージを出さないことを確認。Finderの「クリップボードを表示」でカード画像の実データも確認した。更新後に1件のコレクションとそのカード・動画の入口が保持されている。
-- App Store Connect: 日本だけ・無料（JPY 0）・手動公開。日本語説明、サポート/プライバシーURL、カテゴリ、年齢評価9+を保存。レビュー連絡先、スクリーンショット、コンテンツ権利、App Privacy詳細は未完了。
+- App Store Connect: 日本だけ・無料（JPY 0）。所有者が選んだ承認後の自動公開を維持。日本語説明、サポート/プライバシーURL、カテゴリ、年齢評価9+、レビュー連絡先を保存。TestFlight実機のホーム・タイマー設定画像（各2560×1600）2枚を登録。所有者が自己制作または再配布権を確認したためコンテンツ権利も保存した。App Privacy詳細と最終審査提出は未完了。
 - 生のカメラ映像は公開の証拠・Store画像・Gitへ含めない。顔を含む検証用動画はローカルのみ。
 
 残る実機確認: Storeペットの画面上の外観・ドラッグ・ボタン・Spaces・画面端・Reduce Motion・性能、共有先での読み取り、動画を含む更新後データの全件保持。既存 JSON やアニメーションのタイミングは変更していない。
+
+
+### Mac App Store の姿勢推定を端末内で完結させる変更（build 3）
+
+- 所有者の承認に基づき、Mac App Store版だけモデル・WASMを同梱する。Web・直接配布・現在のWindows Storeパッケージは従来の取得経路を維持し、公開ポリシーで区別する。
+- `bun run build:store` はSDK 0.10.34を確認し、公式のLiteモデルv1をビルド時に取得する。SHA256 `59929e1d1ee95287735ddd833b19cf4ac46d29bc7afddbbf6753c459690d574a` に一致しない場合は失敗する。インストール後の外部フォールバックはない。
+- modelと6種類のJS/WASMを含む7ファイル、40,476,641 bytes。Apache 2.0 LICENSE/NOTICEとファイルごとのhash manifestを同梱。元のモデル・SDK内容は変更しない。全推移依存のSBOM監査が完了したという意味ではない。
+- StoreのCSPで外部接続を制限。既存Lottie/WASMに必要な評価とローカルIPC/asset/blob/dataを許可する。ペット画像・アニメーションは変更しない。
+- キャッシュ利用時のネットワークなしビルド、全ファイルのmanifest照合、不正model拒否、Store updater非表示の4テスト/26 assertionsが成功。Web・通常desktop・Store frontend build、通常cargo check、universal署名付きStore buildが成功した。
+- `PiiiN-1.0.0-3.pkg` は2026-10-30 18:48にTransporterでデリバリ済み。SHA256 `e12f53109c76fdcb87b5eb7b87803bcda2026447021d1a6e7b427542051d8ac0`。codesign厳格検証とPKG署名検証が成功。
+- この時点ではApple処理待ち。TestFlight build 3のカメラ・保存・共有とCSP互換性は未確認。build 2の検証結果をbuild 3の実機結果として扱わない。
+- 公開ポリシーの対応PR: https://github.com/Kyoung9/PiiiN/pull/30
