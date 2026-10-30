@@ -3,7 +3,7 @@ mod commands;
 mod main_window;
 mod overlay;
 mod pairing;
-#[cfg(target_os = "macos")]
+#[cfg(all(target_os = "macos", feature = "direct-distribution"))]
 mod updates;
 
 use commands::clipboard_commands::copy_share_image_to_clipboard;
@@ -31,7 +31,7 @@ pub fn run() {
         .manage(overlay_state)
         .manage(commands::work_widget_commands::WorkWidgetState::default())
         .setup(|app| {
-            #[cfg(target_os = "macos")]
+            #[cfg(all(target_os = "macos", feature = "direct-distribution"))]
             updates::setup(app)?;
             #[cfg(desktop)]
             if let Some(window) = app.get_webview_window("main") {

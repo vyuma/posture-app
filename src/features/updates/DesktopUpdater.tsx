@@ -6,7 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 type Phase = 'checking' | 'available' | 'current' | 'installing' | 'installed' | 'error';
 
-export function DesktopUpdater({ canInstall }: { canInstall: boolean }) {
+function DirectDesktopUpdater({ canInstall }: { canInstall: boolean }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const candidate = useRef<Update | null>(null);
   const running = useRef(false);
@@ -102,4 +102,10 @@ export function DesktopUpdater({ canInstall }: { canInstall: boolean }) {
       </div>
     </dialog>
   );
+}
+
+// Compile-time channel boundary: Store bundles do not mount the direct updater.
+export function DesktopUpdater(props: { canInstall: boolean }) {
+  return import.meta.env.VITE_DISTRIBUTION_CHANNEL === 'mac-app-store'
+    ? null : <DirectDesktopUpdater {...props} />;
 }

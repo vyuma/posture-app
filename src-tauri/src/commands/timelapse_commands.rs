@@ -45,7 +45,9 @@ fn execute(root: &Path, downloads: &Path, operation: &str, payload: Value) -> Re
             // Bump first: delayed recorder/export commands cannot recreate deleted files.
             db.execute("UPDATE meta SET epoch=epoch+1 WHERE id=1", []).map_err(|e| e.to_string())?;
             db.execute("DELETE FROM clips", []).map_err(|e| e.to_string())?;
-            if media.exists() { fs::remove_dir_all(&media).map_err(|e| format!("動画の削除を再試行してください: {e}"))?; }
+            for directory in [&media, &root.join("timelapse-shared")] {
+                if directory.exists() { fs::remove_dir_all(directory).map_err(|e| format!("動画の削除を再試行してください: {e}"))?; }
+            }
             Ok(Value::Null)
         },
         "recover" => {
@@ -85,6 +87,10 @@ pub async fn timelapse_store(app: tauri::AppHandle, window: tauri::WebviewWindow
     if qa == Some(true) {
         if !cfg!(debug_assertions) { return Err("test storage is only available in development".into()); }
         root = root.join("timelapse-qa");
+    }
+    #[cfg(all(target_os = "macos", feature = "mac-app-store"))]
+    if operation == "deliver" || operation == "share" {
+        return deliver_store_video(&app, &window, root, payload.unwrap_or(Value::Null), operation == "share").await;
     }
     let downloads = app.path().download_dir().map_err(|e| e.to_string())?;
     let share = operation == "share";
@@ -143,4 +149,66 @@ mod tests {
         assert!(execute(&root, &downloads, "create", json!({"name":"../escape.webm","epoch":1})).is_err());
         fs::remove_dir_all(root).unwrap();
     }
+}
+
+/// The Store sandbox grants access to the URL chosen in this panel, not Downloads.
+#[cfg(all(target_os = "macos", feature = "mac-app-store"))]
+async fn choose_video_destination(window: &tauri::WebviewWindow, extension: String) -> Result<Option<std::path::PathBuf>, String> {
+    use objc2::MainThreadMarker;
+    use objc2_app_kit::{NSSavePanel, NSWindow, NSModalResponseOK, NSModalResponseCancel};
+    use objc2_foundation::{NSArray, NSString};
+    let host = window.clone();
+    let (sender, receiver) = std::sync::mpsc::channel();
+    window.run_on_main_thread(move || {
+        let pointer = match host.ns_window() { Ok(v) => v, Err(e) => { let _ = sender.send(Err(e.to_string())); return; } };
+        let native = unsafe { &*pointer.cast::<NSWindow>() };
+        let panel = NSSavePanel::savePanel(MainThreadMarker::new().expect("AppKit main thread"));
+        let stamp = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_millis();
+        panel.setNameFieldStringValue(&NSString::from_str(&format!("PiiiN-{stamp}.{extension}")));
+        panel.setCanCreateDirectories(true);
+        panel.setTitle(Some(&NSString::from_str("動画を保存")));
+        #[allow(deprecated)]
+        panel.setAllowedFileTypes(Some(&NSArray::from_slice(&[&*NSString::from_str(&extension)])));
+        let selected = panel.clone();
+        let completion = block2::RcBlock::new(move |response| {
+            let result = if response == NSModalResponseOK {
+                selected.URL().and_then(|url| url.path()).map(|path| Some(std::path::PathBuf::from(path.to_string()))).ok_or_else(|| "保存先を取得できませんでした".to_string())
+            } else if response == NSModalResponseCancel { Ok(None) } else { Err("保存ダイアログを開けませんでした".into()) };
+            let _ = sender.send(result);
+        });
+        panel.beginSheetModalForWindow_completionHandler(native, &completion);
+    }).map_err(|e| e.to_string())?;
+    tauri::async_runtime::spawn_blocking(move || receiver.recv().map_err(|e| e.to_string())?).await.map_err(|e| e.to_string())?
+}
+
+#[cfg(all(target_os = "macos", feature = "mac-app-store"))]
+async fn deliver_store_video(_app: &tauri::AppHandle, window: &tauri::WebviewWindow, root: std::path::PathBuf, payload: Value, share: bool) -> Result<Value, String> {
+    let name = file_name(&payload)?.to_string();
+    if share {
+        // Keep a stable local copy while the share service reads it. Removing the
+        // temporary export in the frontend must not invalidate the selected file.
+        let cache = root.join("timelapse-shared");
+        let path = tauri::async_runtime::spawn_blocking(move || execute(&root, &cache, "deliver", payload)).await.map_err(|e| e.to_string())??;
+        let path = path.as_str().ok_or("missing exported video")?.to_string();
+        show_video_share(window, path.clone()).await?;
+        return Ok(json!({"path":path,"shared":true}));
+    }
+    let extension = if name.ends_with(".mp4") { "mp4" } else { "webm" };
+    let Some(target) = choose_video_destination(window, extension.into()).await? else { return Ok(Value::Null); };
+    tauri::async_runtime::spawn_blocking(move || {
+        let _guard = MEDIA_LOCK.lock().map_err(|e| e.to_string())?;
+        let source = root.join("timelapse").join(name);
+        // AppKit has already asked for replacement permission if target exists.
+        // Open the source first so a missing original cannot truncate an existing file.
+        use objc2_foundation::{NSData, NSDataReadingOptions, NSDataWritingOptions, NSURL, NSString};
+        let source_path = fs::canonicalize(&source).map_err(|e| e.to_string())?;
+        if fs::canonicalize(&target).ok().as_ref() == Some(&source_path) { return Err("元の録画ファイルと別の保存先を選んでください".to_string()); }
+        let source_url = NSURL::fileURLWithPath(&NSString::from_str(&source_path.to_string_lossy()));
+        let target_url = NSURL::fileURLWithPath(&NSString::from_str(&target.to_string_lossy()));
+        // Memory-map the app-owned file, then let Cocoa replace the destination
+        // atomically. A failed copy must not truncate an existing chosen file.
+        let data = NSData::dataWithContentsOfURL_options_error(&source_url, NSDataReadingOptions::MappedIfSafe).map_err(|e| e.to_string())?;
+        data.writeToURL_options_error(&target_url, NSDataWritingOptions::Atomic).map_err(|e| format!("動画を保存できませんでした: {e}"))?;
+        Ok(json!(target))
+    }).await.map_err(|e| e.to_string())?
 }

@@ -137,8 +137,16 @@ pub fn create(window: &WebviewWindow) -> Result<(), String> {
             .ok_or("pet panel has no content view")?;
         // Removing the root view breaks Tao's window bookkeeping. Its child WKWebView
         // retains the existing Tauri IPC bridge and frontend when reparented.
+        #[cfg(not(feature = "mac-app-store"))]
         for child in source_view.subviews() {
             destination.addSubview(&child);
+        }
+        #[cfg(feature = "mac-app-store")]
+        {
+            let _ = source_view;
+            let view = super::store_pet::create_view(host.app_handle(), mtm)?;
+            view.setFrame(destination.bounds());
+            destination.addSubview(&view);
         }
         let state = Rc::new(PetPanel {
             target: Cell::new(native.frame().origin),

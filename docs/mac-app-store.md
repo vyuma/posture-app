@@ -1,0 +1,69 @@
+# Mac App Store 配布準備
+
+2026-10-30。作業ブランチ: `feat/mac-app-store`。**未提出・未公開。設定は開発用であり、審査に提出できるパッケージではない。**
+
+## 確定した方針
+
+- 個人会員 GWAK KYOUNGPIN / Team ID `XR3N5USJR9` を使用。アプリ名は PiiiN。猫背〜ずの法人登録やアプリ内へのチーム名追加はしない。
+- 最初は日本向けの無料 Mac アプリ。課金は今回実装しない。モバイル公開は保留。
+- App Store Connect の既存 PiiiN（Apple ID `6813624120`）に macOS 1.0 を追加済み。状態は提出準備中。Bundle ID は `com.kyoungpin.piiin`。iOS 版も同じレコードにあるが未公開。
+- 既存 DMG の `com.vyuma.posture-app` と更新経路は当面維持する。Store 移行時にユーザーデータを消さない。
+
+## 今回の分離
+
+- 既定の `direct-distribution` feature は従来の macOS 更新プラグインとメニューを維持。
+- `--no-default-features --features mac-app-store` では更新・再起動プラグインをリンクせず、更新 ACL も読み込まない。両 feature 同時指定は build.rs で拒否。
+- フロントエンドは `VITE_DISTRIBUTION_CHANNEL=mac-app-store` で外部アップデーターを表示・起動しない。
+- `tauri.appstore.conf.json` は Store の識別子・1.0.0・sandbox entitlement・capability を分離する。既定設定と既存配布版の識別子は変更しない。
+- `entitlements.appstore.plist` は camera、network client、ユーザーが選んだファイルへのアクセスを設定。Downloads フォルダ全体への権限は追加しない。
+
+## 提出を止めている項目
+
+1. **透明ペット**: Store 専用の AppKit + Lottie 描画を実装し、公開 NSPanel に接続した。既存 JSON のポーズ・遷移区間を再利用する。直接配布版は従来の描画を維持。Store ARM64 debug バイナリのリンクと、既知の `drawsBackground` / `fullScreenEnabled` 文字列がないことは確認済み。ただし実際の Tauri Store アプリ内でカメラ連携、ボタン、ドラッグ、画面端、Spaces、縮小表示、Reduce Motion、性能を通して検証する必要がある。単体プローブの表示確認だけでは同等性を保証しない。
+2. **保存・共有**: Store 向けに NSSavePanel と Cocoa の atomic 保存を実装。共有は元の export が解放されても読めるよう app container 内へ一時コピーして NSSharingServicePicker に渡す。取消、既存ファイル置換、容量不足、共有サービスの読み取りを sandbox 実機で確認する必要がある。共有コピーは現在コレクション初期化で消えるが、共有完了後の安全な回収・上限管理も提出前に実装する。直接配布版の Downloads 保存は変更しない。
+3. **データ移行**: identifier と sandbox container が変わる。旧アプリの測定 DB、コレクション、設定、動画をユーザー操作で移行する方法が必要。SQLite の稼働中ファイルを単純コピーしない。旧データを上書き・削除しない。
+4. **署名**: ユーザー承認後、Mac App Distribution（7AJM9U7DK5）と Mac Installer Distribution（7D8YUQG497）を発行し、対応する秘密鍵と共に login keychain にインポート済み。名義は GWAK KYOUNGPIN、期限は2027-10-30。対応 provisioning profile と実際の署名済みパッケージは未検証。秘密鍵を資料へ記載しない。kokuri-notary は既存 DMG 公証用のローカル名であり Store の表示名ではない。
+5. **提出資料**: 実機スクリーンショット、最新の日本語説明、サポート・プライバシー URL、年齢レーティング、カテゴリ、価格と配信地域、審査連絡先、輸出コンプライアンスの確認が必要。旧 `store-listing.ja.draft.md` は Windows 向けで、削除済みのお気に入り・スマホ機能を含むため流用しない。
+
+## 検証
+
+既存配布: `bun run build` / `bun run test:updates` / `cargo check --manifest-path src-tauri/Cargo.toml`。
+
+Store フロントエンド: `VITE_DISTRIBUTION_CHANNEL=mac-app-store bun run build` と `VITE_DISTRIBUTION_CHANNEL=mac-app-store bun test scripts/appstore-updater.test.tsx`。
+
+Store Rust 検査は `TAURI_CONFIG` に `tauri.appstore.conf.json` の JSON 内容を設定し `cargo check --manifest-path src-tauri/Cargo.toml --no-default-features --features mac-app-store`。設定ファイルを既定設定へ上書きしない。
+
+コンパイル成功は sandbox 上のカメラ・ペット・保存・共有の動作検証や Apple の審査合格を意味しない。提出前に universal 署名済みアプリで各動作、再起動後のデータ保持、旧版からの移行を実行する。
+
+## 一次資料
+
+- https://v2.tauri.app/distribute/app-store/
+- https://developer.apple.com/app-store/review/guidelines/
+- https://developer.apple.com/help/app-store-connect/create-an-app-record/add-platforms/
+
+### 2026-10-30 の実行結果
+
+- 通常/Store フロントエンドの build 成功。通常 updater 4 tests、Store updater 1 test 成功。
+- 通常/Store 設定で cargo check 成功（既存の未使用 pairing コードの警告あり）。
+- Store の依存ツリーに updater/process plugin がないこと、生成 JS に updater command/menu がないことを確認。
+- Store entitlement の plutil 検査と git diff --check 成功。
+- sandbox 実機動作、署名済み Store パッケージ、データ移行は未検証。
+
+
+### ネイティブペットの追加検証（2026-10-30）
+
+- Swift package は Lottie 4.6.1 に固定。公式 MIT ライセンスと PrivacyInfo.xcprivacy を同梱する。
+- 元の Lottie JSON は変更しない。Web/native の out-point 判定差のみ、読み込み時にレイヤー終端を exclusive に合わせる。
+- `scripts/native-pet-fixtures.ts` は実際の `widgetPresentation.ts` から72件の期待値を作る。4ポーズ×3ウィンドウ高×Reduce Motion有無×3時点の形状比較と、怒りの揺れの周期テストが成功した。
+- Swift単体プローブで通常・怒り・休憩・一時停止、吹き出しと影を表示した。全遷移の映像比較、実際のStoreビルドでのパネル操作、読み上げ、CPU計測は未完了。吹き出し期限後のaccessibility labelも要確認。
+- 元のタイマーは178×65、ボタン30×30、バー148×8を維持する。テストは計算値の一致であり、フォントや描画結果の全ピクセル一致を意味しない。
+- 通常ビルドでは Cargo の `direct-distribution` が `tauri/macos-private-api` を有効化する。Storeでは無効。tauri-build の検査に合わせて既定JSONのmacOSPrivateApiはfalseにし、機能選択はCargo featureで行う。
+- Store アプリの正式署名・sandbox 検証とデータ移行が終わるまで、既存版の置換、公開、審査提出はしない。
+
+### 署名バックアップ（2026-10-30）
+
+- ユーザーが Keychain Access でパスワード保護した `.p12` に、Store配布用の証明書2件と対応秘密鍵2件を書き出した。
+- ローカルの一時検証で復号・秘密鍵による試験署名・公開証明書との照合が成功。検証でキーチェーンの内容は変更していない。
+- パスワードはユーザーが直接入力し、チャット・ログ・リポジトリに保存していない。`.p12` もリポジトリ外で保管する。
+- **別端末・外部媒体へのコピーは未実施**。暗号化された外部媒体、またはユーザー指定の安全な個人保管先を選んでからコピーし、ハッシュ照合する。
+- このバックアップに既存DMG用のupdater秘密鍵は含まれない。
