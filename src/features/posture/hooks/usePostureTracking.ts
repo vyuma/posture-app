@@ -18,8 +18,8 @@ import {
 } from "../constants";
 import {
   createPostureEngineState,
-  evaluatePostureFrame,
 } from "../engine";
+import { evaluatePostureObservation } from "../observation";
 import {
   EMPTY_POSTURE_EXPERIMENT,
   POSTURE_SPEC,
@@ -541,16 +541,16 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
             ? poseResult.worldLandmarks[0]
             : null;
 
-        const { state, result } = evaluatePostureFrame(
+        const { state, result, feedback } = evaluatePostureObservation(
           engineStateRef.current,
+          feedbackRef.current,
           now,
           imageLandmarks,
           worldLandmarks,
+          { width: video.videoWidth, height: video.videoHeight,
+            id: track.getSettings().deviceId ?? 'camera' },
         );
         engineStateRef.current = state;
-        const feedback = feedbackRef.current.observe(imageLandmarks, worldLandmarks,
-          video.videoWidth, video.videoHeight, streamRef.current?.getVideoTracks()[0]?.getSettings().deviceId ?? 'camera',
-          result.baselineReady, result.features !== null && (!result.baselineReady || result.eval.qualityOk), now);
         experimentSmoothingRef.current = appendLimited(
           experimentSmoothingRef.current,
           result.experiment,

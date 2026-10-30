@@ -72,10 +72,17 @@ public final class PetRig: NSView {
         current = next
         guard let range else { animationView.currentFrame = still[current]!; return }
         moving = true
-        animationView.play(fromFrame: range.0, toFrame: range.1 + 1, loopMode: .playOnce) { [weak self] finished in
+        // Web segment ends are exclusive. Keep its duration without sampling the next pose.
+        animationView.play(fromFrame: range.0, toFrame: (range.1 + 1).nextDown, loopMode: .playOnce) { [weak self] finished in
             guard let self, finished else { return }
             self.moving = false
             self.animationView.currentFrame = self.still[self.current]!
+            // Lottie 4.6.1's completion delegate writes currentFrame before this
+            // callback, adding a Core Animation implicit sweep across the atlas.
+            // Remove only that implicit animation; explicit pose segments stay intact.
+            let playback = self.animationView.layer?.sublayers?.compactMap { $0 as? LottieAnimationLayer }.first
+            playback?.animationLayer?.removeAnimation(forKey: "currentFrame")
+            self.animationView.forceDisplayUpdate()
             self.advance()
         }
     }

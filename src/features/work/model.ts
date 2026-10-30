@@ -13,7 +13,7 @@ export function normalizeTimer(timer: TimerSettings): TimerSettings {
   return { focusMinutes: clampTimerValue('focusMinutes', timer.focusMinutes),
     restMinutes: cycles === 1 ? 0 : clampTimerValue('restMinutes', timer.restMinutes), cycles };
 }
-export const SCORE_VERSION = 'baseline-distance-v1';
+export const SCORE_VERSION = 'baseline-distance-v1-head-tilt-v1';
 export type Baseline = { stats: BaselineStats; headWidthRatio: number | null; feedback?: FeedbackBaseline };
 export type Calibration = { id: string; focusMs: number; elapsedMs: number; baseline: Baseline; scoreVersion: string };
 export type Sample = { sequence: number; focusMs: number; elapsedMs: number; calibrationId: string; segment: number; score: number | null; deviation: number | null; state: 'good' | 'bad' | 'untracked' };

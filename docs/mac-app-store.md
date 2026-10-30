@@ -92,5 +92,26 @@ Store Rust 検査は `TAURI_CONFIG` に `tauri.appstore.conf.json` の JSON 内�
 - StoreのCSPで外部接続を制限。既存Lottie/WASMに必要な評価とローカルIPC/asset/blob/dataを許可する。ペット画像・アニメーションは変更しない。
 - キャッシュ利用時のネットワークなしビルド、全ファイルのmanifest照合、不正model拒否、Store updater非表示の4テスト/26 assertionsが成功。Web・通常desktop・Store frontend build、通常cargo check、universal署名付きStore buildが成功した。
 - `PiiiN-1.0.0-3.pkg` は2026-10-30 18:48にTransporterでデリバリ済み。SHA256 `e12f53109c76fdcb87b5eb7b87803bcda2026447021d1a6e7b427542051d8ac0`。codesign厳格検証とPKG署名検証が成功。
-- この時点ではApple処理待ち。TestFlight build 3のカメラ・保存・共有とCSP互換性は未確認。build 2の検証結果をbuild 3の実機結果として扱わない。
+- TestFlight build 3へ更新し、同梱モデルでカメラ初期化・基準登録・集中→休憩→集中・結果カードを実機確認。録画はオフ。build 3での保存・共有の再検証は未完了。App Store Connectの提出前ドラフトはbuild 3を選択して保存済み。
 - 公開ポリシーの対応PR: https://github.com/Kyoung9/PiiiN/pull/30
+
+
+### ペットの瞬間的な別ポーズ表示（build 4修正）
+
+- TestFlight build 3で、操作していないのに睡眠/一時停止のようなポーズが瞬間的に挟まると所有者が報告。審査提出を保留した。
+- オフスクリーンNSWindowに実際のPetRigを載せ、good→badの1回だけで再現。Lottie 4.6.1の完了delegateがcurrentFrameを書き換え、明示的な遷移終了後にcurrentFrameの暗黙アニメーション（約0.25秒）を追加していた。183→213の後に約213→1を補間し、間にある別のポーズを描画していた。
+- 完了時の暗黙currentFrameアニメーションだけ除去し、目的の静止フレームを即時描画。遷移終端はWeb同様exclusiveにする。元のJSON、形状、色、30fps、遷移時間と怒りの揺れ/拡大は維持する。直接配布・Windows・Webの描画は変更しない。
+- `PetPlaybackTests`で12遷移、連続要求の最終状態、Reduce Motion割込み、実際のPetWidgetでの反復snapshot/怒りの拡大/休憩遷移を検証。修正前の再現テストは失敗、修正後はSwift全5テスト（既存72ケース含む）成功。macOS CIにも同じテストを追加。
+- 実行: `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift test --package-path src-tauri/native-pet`。単体描画の検証をTestFlight実機の検証済みとは扱わない。build 4の実機確認はこれから。
+- 頭の傾きの案内と怒り/ピーン率は既存仕様で別判定。`feedback.ts`の耳・目の傾きは案内専用、`engine.spec.ts`の総合スコアには直接加算されない。案内が残っても総合goodならピーン率は上がる。その後、所有者が持続する頭の傾きをbad/ピーン率にも反映することを承認。下記の変更をbuild 4に同梱する。
+
+
+### 頭の傾きとbad判定の接続（build 4）
+
+- 同一カメラフレームの耳と目のロール差（基準姿勢からの絶対変化、両者の方向/角度が一致する場合のみ）をbad候補に含める。左右・ミラー表示で対称。基準値12度または基準測定のMAD×5の大きい方を使用し、既存の1200ms持続判定・350ms回復を通す。解除側は0.65倍で境界の点滅を抑える。医学的な閾値ではない。
+- ピーン率とペットは同じ確定postureStateを参照する。数値の加重偏差スコア/グラフ式そのものは変更しない。新規測定のscoreVersionを`baseline-distance-v1-head-tilt-v1`にし、過去のカード・測定結果は再計算しない。
+- 閾値未満の短い動作、目の欠落、カメラ変更、長い観測間隔は頭傾きだけではbad確定しない。以前の基準にfeedback較正が保存されていない場合は推測せず、再登録後に有効になる。
+- 左右18度・ミラー有無の4ケース、基準自体が6度のケース、回復/短期ノイズ、実際のmeasurementReading→advanceSessionのgoodMs/ピーン率まで回帰検証。デスクトップとWebに同一ドメイン変更を反映。モバイル通信のフィールドは変更しない。
+- ユーザーが報告した実際の左右差の原因は、生のランドマーク記録がなく未確定。対称な入力では旧加重スコアが左右ともgoodに残ることは再現した。実際のカメラでの左右確認はbuild 4で実施する。
+
+- 基準登録完了フレームで説明用の較正も確定し、保存/復元時に欠落しないことを回帰検証。対応Web PR: https://github.com/Kyoung9/PiiiN/pull/31
