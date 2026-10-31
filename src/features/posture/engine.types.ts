@@ -144,6 +144,7 @@ export type PostureEngineState = {
   baselineHeadWidthRatio: number | null;
   emaScore: number | null;
   candidateBadState: boolean;
+  headTiltCandidateBad: boolean;
   landmarksEstablished: boolean;
   landmarkDropActive: boolean;
   landmarkMissingSinceMs: number | null;

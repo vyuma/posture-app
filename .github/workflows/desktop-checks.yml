@@ -24,7 +24,11 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run test:updates
       - run: bun run test:overlay-position
+      - run: bun test scripts/head-tilt-posture.test.ts scripts/landmark-loss.test.ts scripts/work-session.test.ts
       - run: bun run build
+      - if: runner.os == 'macOS'
+        name: Validate native pet playback
+        run: xcrun swift test --package-path src-tauri/native-pet
       - if: runner.os == 'Windows'
         name: Validate MSIX packaging script syntax
         shell: pwsh
