@@ -121,8 +121,8 @@ Store Rust 検査は `TAURI_CONFIG` に `tauri.appstore.conf.json` の JSON 内�
 
 ### 2026-10-31 リリース継続時の確認
 
-- TestFlight `1.0.0 (4)` は前日にインストール済み。インストール済みInfo.plistでもbuild 4を確認し、ホームで既存の2件のコレクションを確認。これはペット動作・実際の左右傾きの合格確認ではない。所有者の再確認待ち。
+- TestFlight `1.0.0 (4)` は前日にインストール済み。2026-10-31に実行中のプロセスが `/Applications/PiiiN.app/Contents/MacOS/posture-app` であること、同アプリのInfo.plistが `com.kyoungpin.piiin / 1.0.0 / build 4` であることを照合した。所有者はこのアプリについて、ペットの瞬間的な別ポーズ表示と左右の頭の傾き判定が正常と回答した。この2項目を実機確認済みとする。ホームの既存コレクション2件も保持されていた。Spaces・画面端・性能・build 4での保存/共有の再検証まで完了したとは扱わない。
 - 最終コード `e0a13b1`、記録追加 `faefc11` の [Mac/Windows CI](https://github.com/vyuma/posture-app/actions/runs/41048906178) と [Windows Store package](https://github.com/vyuma/posture-app/actions/runs/41049368735) が成功。Windows実機の検証とは区別する。
 - 所有者の指定: Apple審査通過まではLPのMacダウンロードを従来版のまま維持する。公開GET `https://www.piiin.app/api/download-mac` は302で `https://github.com/vyuma/posture-app/releases/download/v0.1.9/PiiiN_0.1.9_universal.dmg` を返した。LPコード・既存Release・updater配信は変更していない。
 - LPは最新GitHub Releaseを参照するため、審査中に新しい直接配布Releaseを公開しない。Store用PKGをこの経路へ置換しない。App Storeへの導線変更は審査通過の確認後に別途行う。
-- ブラウザー操作はWork設定で無効という応答が続いており、App Store Connectのbuild 4選択・App Privacy詳細・審査提出はまだ実施できていない。提出済み/公開済みとは扱わない。
+- ブラウザー操作はWork設定で無効という応答が続いていた。その後、2026-10-31に所有者がブラウザー作業の保留を明示したため、以後のブラウザー操作を停止する。App Store Connectのbuild 4選択・App Privacy詳細・審査提出は未実施。提出済み/公開済みとは扱わない。
