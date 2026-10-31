@@ -41,8 +41,26 @@ pub fn set_work_widget(app: &AppHandle, visible: bool, bad: bool) -> Result<(), 
             x = x.clamp(area.position.x, (area.position.x + area.size.width as i32 - (width * scale) as i32).max(area.position.x));
             y = y.clamp(area.position.y, (area.position.y + area.size.height as i32 - (height * scale) as i32).max(area.position.y));
         }
-        window.set_size(tauri::LogicalSize::new(width, height)).map_err(|e| e.to_string())?;
-        window.set_position(PhysicalPosition::new(x, y)).map_err(|e| e.to_string())?;
+        // Windows must move and resize atomically: separate calls expose a frame
+        // with the new viewport at the old origin, making the pet jump vertically.
+        #[cfg(target_os = "windows")]
+        {
+            #[link(name = "user32")]
+            extern "system" {
+                fn SetWindowPos(hwnd: *mut std::ffi::c_void, after: *mut std::ffi::c_void,
+                    x: i32, y: i32, cx: i32, cy: i32, flags: u32) -> i32;
+            }
+            let hwnd = window.hwnd().map_err(|e| e.to_string())?;
+            // SWP_NOZORDER | SWP_NOACTIVATE preserves focus and topmost state.
+            let ok = unsafe { SetWindowPos(hwnd.0 as _, std::ptr::null_mut(), x, y,
+                (width * scale).round() as i32, (height * scale).round() as i32, 0x0014) };
+            if ok == 0 { return Err(std::io::Error::last_os_error().to_string()); }
+        }
+        #[cfg(not(target_os = "windows"))]
+        {
+            window.set_size(tauri::LogicalSize::new(width, height)).map_err(|e| e.to_string())?;
+            window.set_position(PhysicalPosition::new(x, y)).map_err(|e| e.to_string())?;
+        }
         if visible { window.show() } else { window.hide() }.map_err(|e| e.to_string())
     }
 }
