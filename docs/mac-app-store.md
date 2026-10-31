@@ -117,3 +117,12 @@ Store Rust 検査は `TAURI_CONFIG` に `tauri.appstore.conf.json` の JSON 内�
 - 基準登録完了フレームで説明用の較正も確定し、保存/復元時に欠落しないことを回帰検証。対応Web PR: https://github.com/Kyoung9/PiiiN/pull/31
 
 - 最終PKG `PiiiN-1.0.0-4-final.pkg`（SHA256 `d77637aaa1acdf3bfec55e7283ebd89a11aaaa1328106908351763b87337a213`）の厳格codesign/PKG署名検証が成功。2026-10-30 20:32 JSTにTransporterデリバリ成功。Apple処理中で、TestFlight build 4実機確認は未完了。Web/desktop統合は各51 tests / 491 assertions成功。macOS CI成功、Windows CIは確認待ち。
+
+
+### 2026-10-31 リリース継続時の確認
+
+- TestFlight `1.0.0 (4)` は前日にインストール済み。インストール済みInfo.plistでもbuild 4を確認し、ホームで既存の2件のコレクションを確認。これはペット動作・実際の左右傾きの合格確認ではない。所有者の再確認待ち。
+- 最終コード `e0a13b1`、記録追加 `faefc11` の [Mac/Windows CI](https://github.com/vyuma/posture-app/actions/runs/41048906178) と [Windows Store package](https://github.com/vyuma/posture-app/actions/runs/41049368735) が成功。Windows実機の検証とは区別する。
+- 所有者の指定: Apple審査通過まではLPのMacダウンロードを従来版のまま維持する。公開GET `https://www.piiin.app/api/download-mac` は302で `https://github.com/vyuma/posture-app/releases/download/v0.1.9/PiiiN_0.1.9_universal.dmg` を返した。LPコード・既存Release・updater配信は変更していない。
+- LPは最新GitHub Releaseを参照するため、審査中に新しい直接配布Releaseを公開しない。Store用PKGをこの経路へ置換しない。App Storeへの導線変更は審査通過の確認後に別途行う。
+- ブラウザー操作はWork設定で無効という応答が続いており、App Store Connectのbuild 4選択・App Privacy詳細・審査提出はまだ実施できていない。提出済み/公開済みとは扱わない。
