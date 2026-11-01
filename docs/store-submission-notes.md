@@ -77,3 +77,12 @@ Windows 実機でのカメラ許可・姿勢測定・オーバーレイ・LAN �
 - `faefc11` の [Windows Store CI](https://github.com/vyuma/posture-app/actions/runs/41049368735) が成功。頭傾きの左右共通bad判定と基準較正の保存修正を含む。
 - 最新MSIXは331,883,570 bytes。SHA256 `5ee87811a43b34cba76a66b04d51d8ec5d03b01d37b68411c6506e48bcdeafb8`。ダウンロード後のCIハッシュ照合、ZIP CRC全件、Identity `Kyoung.PiiiN` / `1.1.9.0` / x64を確認。
 - Partner Centerへの置換アップロードは未実施。現在の登録パッケージは前節の旧ハッシュのもの。Windows実機検証と実画面スクリーンショットも未完了。
+
+## Windows の終了・ペット不具合の再確認（2026-11-01）
+
+- 所有者から、修正版を再テストしてもペットの瞬間移動・点滅が継続するとの報告あり。`aa1dbae` の SetWindowPos / 復帰待機変更だけで解決したとは扱わない。これらの症状は未解決。
+- メインウィンドウの X 後にプロセスが残る現象を、既存パッケージ run `41213888491` で再現した。[再現CI](https://github.com/vyuma/posture-app/actions/runs/41304357865)では、SC_CLOSE の15秒後も `posture-app` と8個の WebView2 プロセスが残った。
+- `f52b47b` は Windows の `main` の CloseRequested にのみ `AppHandle::exit(0)` を接続。隠れた `cat_overlay` が残ってイベントループを維持する経路を解消する。プロダクトコードで taskkill / 強制プロセス終了を追加しない。macOS の赤い閉じるボタン、ペットの素材・アニメーション、Web版は変更しない。
+- 回帰スクリプト `scripts/test-windows-close.ps1` は使い捨ての Windows CI 限定。実MSIX内のEXEと同梱WebView2を起動し、メインとペットの両ウィンドウを確認してからタイトルバーXと同じSC_CLOSEを送る。ペット非表示/表示の2ケースで当該アプリの子プロセスまで終了することを検証する。カメラを使った測定や実機のモーション検証を代替しない。
+- デスクトップ `bun run build` と macOS `cargo check --locked --manifest-path src-tauri/Cargo.toml` は成功（既存警告あり）。[WindowsパッケージCI 41304553518](https://github.com/vyuma/posture-app/actions/runs/41304553518)も成功。非表示/表示の両ケースでPiiiNと9個のWebView2プロセスが終了し、終了コード0を確認した。テスト対象はMSIXから配置した同一EXE・同梱ランタイムであり、Storeインストール経由やユーザー実機のカメラ測定は今回未検証。
+- 修正版Artifact: [piiin-store-submission](https://github.com/vyuma/posture-app/actions/runs/41304553518/artifacts/13082687190)。この終了修正版はまだPartner Centerの下書きへ置換していない。Apple審査中のbuild 4とLPの既存Macダウンロードは変更しない。
