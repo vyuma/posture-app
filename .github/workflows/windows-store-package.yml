@@ -2,6 +2,10 @@ name: Windows Store package
 on:
   workflow_dispatch:
     inputs:
+      test_package_run_id:
+        description: Test X-close against an existing package instead of building
+        required: false
+        type: string
       runtime_url:
         description: Official Microsoft x64 Fixed Version WebView2 CAB URL (license accepted)
         required: false
@@ -12,8 +16,10 @@ on:
         type: string
 permissions:
   contents: read
+  actions: read
 jobs:
   package:
+    if: ${{ !inputs.test_package_run_id }}
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -56,3 +62,22 @@ jobs:
             release-artifacts/windows-*/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 14
+  close:
+    if: ${{ inputs.test_package_run_id != '' }}
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: piiin-store-submission
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.test_package_run_id }}
+          path: package-download
+      - name: Test title-bar close with hidden and visible pet windows
+        shell: pwsh
+        run: |
+          $packages = @(Get-ChildItem package-download -Recurse -Filter *.msix)
+          if ($packages.Count -ne 1) { throw 'Expected exactly one MSIX.' }
+          $destination = Join-Path $env:RUNNER_TEMP 'close-smoke-package'
+          [System.IO.Compression.ZipFile]::ExtractToDirectory($packages[0].FullName, $destination)
+          ./scripts/test-windows-close.ps1 -Executable "$destination/posture-app.exe"
