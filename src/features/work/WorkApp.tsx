@@ -56,6 +56,7 @@ export default function WorkApp() {
   const pendingBaseline = useRef<Baseline | null>(null);
   const previousBaseline = useRef<Baseline | null>(null); const queue = useRef<Promise<unknown>>(Promise.resolve());
   const finalizePending = useRef(false); const calibrationAt = useRef(0); const [calibrationNonce, setCalibrationNonce] = useState(0);
+  const finishConfirmation = useRef<{ sessionId: string; resume: boolean } | null>(null);
   const stageRef = useRef(screen); stageRef.current = screen;
   const camera = ['prepare', 'calibrate', 'ready', 'active'].includes(screen);
   const posture = usePostureTracking({ enabled: camera, captureHeight: videoSettings.enabled ? videoSettings.quality : 720, overlayEnabled: screen === 'prepare' || screen === 'calibrate', paused: screen === 'prepare' || screen === 'ready' || (screen === 'active' && (session?.status !== 'running' || session?.phase === 'rest')) });
@@ -91,7 +92,7 @@ export default function WorkApp() {
     const current = live.current; if (!current || !repository.current || finalizePending.current) return;
     finalizePending.current = true; setBusy(true); setError('');
     void recorder.current?.stop();
-    try { const result = await enqueue(() => repository.current!.finish(structuredClone(current), catalogIds)); live.current = result.session; setSession(result.session); setCollection(result.collection); setDialog(null); setScreen('result'); releaseMeasurement(); void publishWidget(null).catch(report); }
+    try { const result = await enqueue(() => repository.current!.finish(structuredClone(current), catalogIds)); live.current = result.session; setSession(result.session); setCollection(result.collection); finishConfirmation.current = null; setDialog(null); setScreen('result'); releaseMeasurement(); void publishWidget(null).catch(report); }
     catch (cause) { report(cause); }
     finally { finalizePending.current = false; setBusy(false); }
   }, [enqueue, report, releaseMeasurement]);
@@ -105,8 +106,29 @@ export default function WorkApp() {
     return () => clearInterval(interval);
   }, [checkpoint, finalize, reading, refresh]);
 
-  const pause = useCallback(() => { const current = live.current; if (!current || stageRef.current !== 'active') return; advanceWithRestCue(current, performance.now(), reading(), playRecoverySound); if (current.status === 'completed') { void finalize(); return; } if (current.status === 'paused') resumeSession(current); else pauseSession(current, reading()); refresh(); checkpoint(); }, [checkpoint, finalize, reading, refresh]);
-  const action = useCallback((name: WidgetAction) => { if (name === 'pause' || name === 'resume') pause(); else if (name === 'finish') setDialog('finish'); }, [pause]);
+  const pause = useCallback(() => { const current = live.current; if (!current || stageRef.current !== 'active' || finishConfirmation.current || finalizePending.current) return; advanceWithRestCue(current, performance.now(), reading(), playRecoverySound); if (current.status === 'completed') { void finalize(); return; } if (current.status === 'paused') resumeSession(current); else pauseSession(current, reading()); refresh(); checkpoint(); }, [checkpoint, finalize, reading, refresh]);
+  const requestFinish = useCallback(() => {
+    const current = live.current;
+    if (!current || stageRef.current !== 'active' || finishConfirmation.current || finalizePending.current) return;
+    advanceWithRestCue(current, performance.now(), reading(), playRecoverySound);
+    if (current.status === 'completed') { refresh(); void finalize(); return; }
+    // Keep the original pause state even if the native widget sends finish twice.
+    finishConfirmation.current = { sessionId: current.id, resume: current.status === 'running' };
+    pauseSession(current, reading());
+    refresh(); checkpoint(); setDialog('finish');
+  }, [checkpoint, finalize, reading, refresh]);
+  function continueMeasurement() {
+    if (finalizePending.current) return;
+    const confirmation = finishConfirmation.current;
+    finishConfirmation.current = null;
+    const current = live.current;
+    if (current && current.id === confirmation?.sessionId && confirmation.resume && current.status === 'paused') {
+      advanceWithRestCue(current, performance.now(), NO_READING, playRecoverySound);
+      resumeSession(current); refresh(); checkpoint();
+    }
+    setDialog(null);
+  }
+  const action = useCallback((name: WidgetAction) => { if (name === 'pause' || name === 'resume') pause(); else if (name === 'finish') requestFinish(); }, [pause, requestFinish]);
   useEffect(() => { let dispose: (() => void) | undefined; let cancelled = false; void subscribeWidgetActions((id, name) => { if (live.current?.id === id && stageRef.current === 'active') action(name); }).then(stop => { if (cancelled) stop(); else dispose = stop; }).catch(report); return () => { cancelled = true; dispose?.(); }; }, [action, report]);
   const bad = screen === 'active' && session?.status === 'running' && session.phase === 'focus' && petPosture(posture.snapshot, performance.now()) === 'bad';
   useEffect(() => {
@@ -209,12 +231,12 @@ export default function WorkApp() {
     </StoryHomeTransition>}
     {screen === 'picker' && <CharacterPicker collection={collection} onClose={home} onConfirm={id => { void enqueue(() => repository.current!.select(id)).then(value => { setCollection(value); home(); }).catch(report); }} />}
     {screen === 'timer' && <TimerSettings saved={collection.timer} onClose={home} onSubmit={(timer, remember) => { if (!busy) void start(timer, remember); }} />}
-    {camera && <MeasureScreen recording={recording} widgetEnabled={widgetEnabled} onWidgetChange={setWidgetEnabled} sound={sound} onSoundChange={setSound} stage={screen as MeasureStage} session={session} videoRef={posture.videoRef} canvasRef={posture.canvasRef} status={posture.status} ready={posture.ready} remainingCalibrationMs={posture.snapshot.warmupRemainingMs} tracking={posture.snapshot.qualityOk} onRegister={beginRegistration} onCancel={cancelRegistration} onRecalibrate={prepareRegistration} onPause={pause} onFinish={() => setDialog('finish')} />}
+    {camera && <MeasureScreen recording={recording} widgetEnabled={widgetEnabled} onWidgetChange={setWidgetEnabled} sound={sound} onSoundChange={setSound} stage={screen as MeasureStage} session={session} videoRef={posture.videoRef} canvasRef={posture.canvasRef} status={posture.status} ready={posture.ready} remainingCalibrationMs={posture.snapshot.warmupRemainingMs} tracking={posture.snapshot.qualityOk} onRegister={beginRegistration} onCancel={cancelRegistration} onRecalibrate={prepareRegistration} onPause={pause} onFinish={requestFinish} />}
     {screen === 'result' && session && <ResultScreen session={session} onHome={home} onTimelapse={() => setTimelapse(session)} />}
     {!isDesktop && widget && <Widget state={widget} onAction={action} />}
     {detail && !timelapse && <Dialog title="獲得カードの詳細" className="work-detail-dialog" onClose={() => setDetail(null)}><ResultCard session={detail} variant="collection" onTimelapse={() => setTimelapse(detail)} /></Dialog>}
     {dialog === 'reset' && <Dialog title="コレクションを初期化" onClose={() => !busy && setDialog(null)}><h2>コレクションを初期化しますか？</h2><p>獲得したカード、選択中のピンアナゴ、アプリ内のすべてのタイムラプスを削除します。測定記録・タイマー設定と、保存して外に書き出したファイルは残ります。</p><div className="work-dialog-actions"><button className="work-button white" onClick={() => setDialog(null)} disabled={busy}>キャンセル</button><button className="work-button orange" onClick={() => void reset()} disabled={busy}>初期化する</button></div></Dialog>}
-    {dialog === 'finish' && <FinishDialog busy={busy} onContinue={() => setDialog(null)} onFinish={finish} />}
+    {dialog === 'finish' && <FinishDialog busy={busy} onContinue={continueMeasurement} onFinish={finish} />}
     {dialog === 'sound' && <SoundSettingsDialog settings={sound} onChange={setSound} onClose={() => setDialog(null)} onPreview={() => void playSoundPreview({ src: sound.selectedSound, volume: sound.volume })} />}
     {legal && <Dialog title={LEGAL_TITLES[legal]} className="piiin-legal-dialog" onClose={() => setLegal(null)}><LegalContent page={legal} /></Dialog>}
     {dialog === 'settings' && <TimelapseSettings value={videoSettings} onChange={changeVideoSettings} onClose={() => setDialog(null)}><NextRewardSetting collection={collection} onChange={changeNextReward} /></TimelapseSettings>}

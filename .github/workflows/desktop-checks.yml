@@ -25,6 +25,8 @@ jobs:
       - run: bun run test:updates
       - run: bun run test:overlay-position
       - run: bun test scripts/head-tilt-posture.test.ts scripts/landmark-loss.test.ts scripts/work-session.test.ts
+      - name: Validate finish confirmation pause
+        run: bun test scripts/finish-confirmation.test.tsx
       - run: bun run build
       - if: runner.os == 'macOS'
         name: Validate native pet playback
