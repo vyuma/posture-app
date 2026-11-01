@@ -5,3 +5,5 @@ pub mod window;
 
 #[cfg(all(target_os = "macos", feature = "mac-app-store"))]
 pub(crate) mod store_pet;
+#[cfg(target_os = "windows")]
+pub mod windows_region;

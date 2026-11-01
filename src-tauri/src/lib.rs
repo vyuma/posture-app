@@ -61,6 +61,7 @@ pub fn run() {
             commands::work_widget_commands::work_widget_update,
             commands::work_widget_commands::work_widget_get,
             commands::work_widget_commands::work_widget_compact,
+            commands::work_widget_commands::work_widget_set_regions,
             commands::work_widget_commands::work_preview_window,
             commands::work_widget_commands::work_widget_action,
             get_pairing_info,

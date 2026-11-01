@@ -3,10 +3,12 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { Widget, type WidgetState, type WidgetAction } from '../features/work/Widget';
 import { widgetPose } from '../features/work/widgetPresentation';
+import { useWindowsWidgetRegion } from './useWindowsWidgetRegion';
 import '../features/work/work.css';
 import './work-overlay.css';
 export function WorkOverlayApp() {
   const [state, setState] = useState<WidgetState | null>(null); const [error, setError] = useState('');
+  useWindowsWidgetRegion(state !== null);
   useEffect(() => {
     let cancelled = false; let stop: (() => void) | undefined;
     void (async () => { const unlisten = await listen<WidgetState | null>('work:widget', event => setState(event.payload)); if (cancelled) { unlisten(); return; } stop = unlisten; const initial = await invoke<WidgetState | null>('work_widget_get'); if (!cancelled) setState(initial); })().catch(() => setError('接続を確認してください'));

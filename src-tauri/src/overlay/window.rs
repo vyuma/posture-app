@@ -20,7 +20,15 @@ const OVERLAY_HEIGHT: f64 = 238.0;
 pub fn set_work_widget(app: &AppHandle, visible: bool, bad: bool) -> Result<(), String> {
     let window = ensure_overlay_window(app)?;
     // Transparent padding lets the character shadow fade beyond the clipped artwork.
+    // Keep a stable Windows canvas to avoid pose-dependent HWND moves/resizes
+    // and their possible mismatch with WebView2 surface presentation. The
+    // window region excludes unused transparent space from drawing and input.
+    #[cfg(target_os = "windows")]
+    let (width, height): (f64, f64) = (400.0, 870.0);
+    #[cfg(not(target_os = "windows"))]
     let (width, height): (f64, f64) = if bad { (400.0, 870.0) } else { (300.0, 324.0) };
+    #[cfg(target_os = "windows")]
+    let _ = bad;
     #[cfg(target_os = "macos")]
     {
         let _ = window;
@@ -35,14 +43,15 @@ pub fn set_work_widget(app: &AppHandle, visible: bool, bad: bool) -> Result<(), 
         let area = window.current_monitor().map_err(|e| e.to_string())?.map(|monitor| *monitor.work_area());
         let width = area.map_or(width, |area| width.min(area.size.width as f64 / scale));
         let height = area.map_or(height, |area| height.min(area.size.height as f64 / scale));
-        let mut x = position.x + (old.width as i32 - (width * scale) as i32) / 2;
-        let mut y = position.y + old.height as i32 - (height * scale) as i32;
+        let physical_width = (width * scale).round() as i32;
+        let physical_height = (height * scale).round() as i32;
+        let mut x = position.x + (old.width as i32 - physical_width) / 2;
+        let mut y = position.y + old.height as i32 - physical_height;
         if let Some(area) = area {
             x = x.clamp(area.position.x, (area.position.x + area.size.width as i32 - (width * scale) as i32).max(area.position.x));
             y = y.clamp(area.position.y, (area.position.y + area.size.height as i32 - (height * scale) as i32).max(area.position.y));
         }
-        // Windows must move and resize atomically: separate calls expose a frame
-        // with the new viewport at the old origin, making the pet jump vertically.
+        // Set the initial Windows canvas atomically. Pose changes keep its bounds.
         #[cfg(target_os = "windows")]
         {
             #[link(name = "user32")]
@@ -52,9 +61,11 @@ pub fn set_work_widget(app: &AppHandle, visible: bool, bad: bool) -> Result<(), 
             }
             let hwnd = window.hwnd().map_err(|e| e.to_string())?;
             // SWP_NOZORDER | SWP_NOACTIVATE preserves focus and topmost state.
-            let ok = unsafe { SetWindowPos(hwnd.0 as _, std::ptr::null_mut(), x, y,
-                (width * scale).round() as i32, (height * scale).round() as i32, 0x0014) };
-            if ok == 0 { return Err(std::io::Error::last_os_error().to_string()); }
+            if old.width as i32 != physical_width || old.height as i32 != physical_height {
+                let ok = unsafe { SetWindowPos(hwnd.0 as _, std::ptr::null_mut(), x, y,
+                    physical_width, physical_height, 0x0014) };
+                if ok == 0 { return Err(std::io::Error::last_os_error().to_string()); }
+            }
         }
         #[cfg(not(target_os = "windows"))]
         {

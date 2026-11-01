@@ -25,9 +25,12 @@ export function Widget({ state, onAction, native = false, onDrag }: { state: Wid
   const geometry = state.feedbackVersion === 1 ? speechGeometry(baseGeometry, state.speech?.text ?? '') : baseGeometry;
   const message = widgetMessage(pose, motion.growth);
   const variables = Object.fromEntries(Object.entries(geometry).map(([key, value]) => [`--widget-${key}`, `${value}${['growth'].includes(key) ? '' : key === 'bubbleAngle' ? 'deg' : 'px'}`]));
+  // Keep Lottie's SVG viewport constant; scale its wrapper instead of forcing
+  // WebView2 to relayout/rasterize the SVG at every size-transition frame.
+  variables['--widget-rigScale'] = String(geometry.rigWidth / 860);
   const duration = Math.max(1, state.durationMs), remaining = Math.max(0, Math.min(duration, state.remainingMs));
   const time = timeLabel(remaining).padStart(5, '0');
-  return <aside className={`work-widget is-${pose}${native ? ' is-native' : ''}${motion.reduced ? ' is-reduced' : ''}`} aria-label="姿勢ウィジェット" style={variables as CSSProperties}>
+  return <aside className={`work-widget is-${pose}${native ? ' is-native' : ''}${native && /\bWindows\b/i.test(navigator.userAgent) ? ' is-windows-native' : ''}${motion.reduced ? ' is-reduced' : ''}`} aria-label="姿勢ウィジェット" style={variables as CSSProperties}>
     <div className="work-widget-character" onPointerDown={event => { if (event.button === 0) onDrag?.(); }}>
       <div className="work-widget-character-shadow"><div className="work-widget-mask"><div className="work-widget-shake"><WidgetPetRig pose={pose} /></div></div></div>
       {state.feedbackVersion === 1 ? <WidgetSpeech bad={pose === 'bad'} event={state.speech ?? null} reduced={motion.reduced} /> : <div className="work-widget-speech"><span key={message}>{message}</span></div>}

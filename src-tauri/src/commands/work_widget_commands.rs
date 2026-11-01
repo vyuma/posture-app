@@ -27,6 +27,15 @@ pub fn work_widget_get(state: State<'_, WorkWidgetState>) -> Result<Option<Value
 }
 
 #[tauri::command]
+pub fn work_widget_set_regions(window: WebviewWindow, rects: Vec<[f64; 4]>) -> Result<(), String> {
+    if window.label() != "cat_overlay" { return Err("only widget can set its input region".into()); }
+    #[cfg(target_os = "windows")]
+    return crate::overlay::windows_region::set_regions(&window, rects);
+    #[cfg(not(target_os = "windows"))]
+    { let _ = rects; Ok(()) }
+}
+
+#[tauri::command]
 pub fn work_widget_update(app: AppHandle, window: WebviewWindow, state: State<'_, WorkWidgetState>, value: Option<Value>) -> Result<(), String> {
     if window.label() != "main" { return Err("only main owns the measurement".into()); }
     let mut stored = state.0.lock().map_err(|e| e.to_string())?;
