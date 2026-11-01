@@ -54,6 +54,12 @@ jobs:
       - name: Build MSIX for the registered PiiiN Store identity
         shell: pwsh
         run: ./scripts/package-windows-store.ps1 -WebView2Directory $env:RUNTIME_DIRECTORY
+      - name: Verify X closes the app and its WebView2 processes
+        shell: pwsh
+        run: |
+          $executables = @(Get-ChildItem release-artifacts/windows-*/package/posture-app.exe)
+          if ($executables.Count -ne 1) { throw 'Expected exactly one packaged executable.' }
+          ./scripts/test-windows-close.ps1 -Executable $executables[0].FullName
       - uses: actions/upload-artifact@v4
         with:
           name: piiin-store-submission

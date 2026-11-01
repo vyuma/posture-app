@@ -46,6 +46,15 @@ pub fn run() {
             }
             Ok(())
         })
+        .on_window_event(|_window, _event| {
+            #[cfg(target_os = "windows")]
+            if _window.label() == "main"
+                && matches!(_event, tauri::WindowEvent::CloseRequested { .. })
+            {
+                // The hidden pet window would otherwise keep the app alive after X.
+                _window.app_handle().exit(0);
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             commands::work_commands::work_database,
             commands::timelapse_commands::timelapse_store,

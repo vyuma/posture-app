@@ -69,6 +69,7 @@ foreach ($overlayVisible in @($false, $true)) {
     if ($remaining.Count -gt 0) {
       throw "FAIL: processes survived main X: $(($remaining | ForEach-Object { "$($_.ProcessName):$($_.Id)" }) -join ', ')"
     }
+    $app.WaitForExit()
     if ($app.ExitCode -ne 0) { throw "App exited with code $($app.ExitCode)" }
     Write-Output "PASS: X closed PiiiN, overlay and WebView2 (overlayVisible=$overlayVisible)."
   } finally {
