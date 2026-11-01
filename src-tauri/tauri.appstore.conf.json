@@ -1,0 +1,40 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "identifier": "com.kyoungpin.piiin",
+  "version": "1.0.0",
+  "build": {
+    "beforeBuildCommand": "bun run build:store"
+  },
+  "app": {
+    "security": {
+      "capabilities": [
+        "default"
+      ],
+      "csp": {
+        "connect-src": "'self' ipc: http://ipc.localhost asset: http://asset.localhost blob: data:",
+        "script-src": "'self' 'unsafe-eval' 'wasm-unsafe-eval' blob:",
+        "img-src": "'self' asset: http://asset.localhost blob: data:"
+      }
+    },
+    "macOSPrivateApi": false
+  },
+  "bundle": {
+    "targets": [
+      "app"
+    ],
+    "macOS": {
+      "entitlements": "entitlements.appstore.plist",
+      "minimumSystemVersion": "12.0",
+      "bundleVersion": "4"
+    },
+    "resources": {
+      "../public/animations/anago/normal-nago/widget-states-v2.json": "native-pet/widget-states-v2.json",
+      "native-pet/Resources/Lottie_Lottie.bundle": "Lottie_Lottie.bundle",
+      "native-pet/THIRD-PARTY-NOTICES.txt": "ThirdPartyNotices/Lottie.txt"
+    },
+    "category": "HealthcareAndFitness"
+  },
+  "plugins": {
+    "updater": null
+  }
+}

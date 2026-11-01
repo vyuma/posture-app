@@ -14,11 +14,16 @@ edition = "2021"
 name = "posture_app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+[features]
+default = ["direct-distribution"]
+direct-distribution = ["dep:tauri-plugin-updater", "dep:tauri-plugin-process", "tauri/macos-private-api"]
+mac-app-store = []
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = ["macos-private-api", "protocol-asset"] }
+tauri = { version = "2", features = ["protocol-asset"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 sha1 = "0.10"
@@ -30,7 +35,7 @@ rusqlite = { version = "0.41.0", features = ["bundled"] }
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6"
 block2 = "0.6"
-objc2-foundation = { version = "0.3", default-features = false, features = ["NSNotification", "NSOperation", "NSProcessInfo", "block2", "NSArray", "NSURL", "NSString"] }
-objc2-app-kit = { version = "0.3", default-features = false, features = ["NSWindow", "NSPanel", "NSView", "NSColor", "NSScreen", "NSGraphics", "NSGraphicsContext", "NSEvent", "NSWorkspace", "NSSharingService"] }
-tauri-plugin-updater = "2"
-tauri-plugin-process = "2"
+objc2-foundation = { version = "0.3", default-features = false, features = ["NSNotification", "NSOperation", "NSProcessInfo", "block2", "NSArray", "NSURL", "NSString", "NSData", "NSError"] }
+objc2-app-kit = { version = "0.3", default-features = false, features = ["NSWindow", "NSPanel", "NSView", "NSColor", "NSScreen", "NSGraphics", "NSGraphicsContext", "NSEvent", "NSWorkspace", "NSSharingService", "NSSavePanel", "NSApplication", "block2"] }
+tauri-plugin-updater = { version = "2", optional = true }
+tauri-plugin-process = { version = "2", optional = true }

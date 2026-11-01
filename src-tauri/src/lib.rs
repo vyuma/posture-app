@@ -3,7 +3,7 @@ mod commands;
 mod main_window;
 mod overlay;
 mod pairing;
-#[cfg(target_os = "macos")]
+#[cfg(all(target_os = "macos", feature = "direct-distribution"))]
 mod updates;
 
 use commands::clipboard_commands::copy_share_image_to_clipboard;
@@ -31,7 +31,7 @@ pub fn run() {
         .manage(overlay_state)
         .manage(commands::work_widget_commands::WorkWidgetState::default())
         .setup(|app| {
-            #[cfg(target_os = "macos")]
+            #[cfg(all(target_os = "macos", feature = "direct-distribution"))]
             updates::setup(app)?;
             #[cfg(desktop)]
             if let Some(window) = app.get_webview_window("main") {
@@ -45,6 +45,15 @@ pub fn run() {
                 eprintln!("failed to initialize cat overlay window: {error}");
             }
             Ok(())
+        })
+        .on_window_event(|_window, _event| {
+            #[cfg(target_os = "windows")]
+            if _window.label() == "main"
+                && matches!(_event, tauri::WindowEvent::CloseRequested { .. })
+            {
+                // The hidden pet window would otherwise keep the app alive after X.
+                _window.app_handle().exit(0);
+            }
         })
         .invoke_handler(tauri::generate_handler![
             commands::work_commands::work_database,
@@ -73,7 +82,8 @@ pub fn run() {
             overlay_reset_position_offset,
             overlay_open_main_window,
             overlay_on_posture_change,
-            copy_share_image_to_clipboard
+            copy_share_image_to_clipboard,
+            commands::result_image_commands::save_result_image
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

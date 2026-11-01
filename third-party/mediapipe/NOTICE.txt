@@ -1,0 +1,13 @@
+MediaPipe Tasks Vision 0.10.34 and Pose Landmarker Lite float16/1
+Copyright Google LLC / The MediaPipe Authors
+Unmodified runtime and model assets, distributed under Apache License 2.0.
+The accompanying LICENSE.txt is the upstream MediaPipe license text.
+
+SDK source and license: https://github.com/google-ai-edge/mediapipe
+NPM package: https://www.npmjs.com/package/@mediapipe/tasks-vision/v/0.10.34
+Model: https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task
+Model documentation: https://developers.google.com/edge/mediapipe/solutions/vision/pose_landmarker
+Maintainer license clarification: https://github.com/google-ai-edge/mediapipe/issues/6355
+
+The build records exact asset SHA-256 hashes in manifest.json. No model weights,
+SDK binaries, pose thresholds, or input processing have been modified.

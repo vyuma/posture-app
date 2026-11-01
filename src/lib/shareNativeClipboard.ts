@@ -53,3 +53,11 @@ export async function copyShareImageNative(blob: Blob): Promise<boolean> {
     return false;
   }
 }
+
+
+/** Store sandbox exports must be acknowledged by the native save panel. */
+export async function saveResultImageNative(blob: Blob): Promise<'downloaded' | 'aborted' | undefined> {
+  if (import.meta.env.VITE_DISTRIBUTION_CHANNEL !== 'mac-app-store' || !isTauriRuntime()) return undefined;
+  const saved = await invoke<boolean>('save_result_image', { pngBase64: await blobToBase64(blob) });
+  return saved ? 'downloaded' : 'aborted';
+}

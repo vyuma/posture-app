@@ -16,7 +16,7 @@ export function widgetGrowth(state: Pick<WidgetState, 'paused' | 'phase' | 'bad'
 export function widgetGeometry(pose: WidgetPose, growth: number, availableHeight = 822) {
   // Keep the timer at 178×65; only the character and speech use the available height.
   const fit = Math.max(0, Math.min(1, (availableHeight - 300) / 517));
-  const g = pose === 'bad' ? Math.min(growth, fit) : 0;
+  const g = pose === 'bad' || pose === 'good' ? Math.max(0, Math.min(growth, fit)) : 0;
   const scale = pose === 'rest' ? 27.3894 / 226 : pose === 'paused' ? 35.9935 / 226 : (34.5135 + (130.754 - 34.5135) * g) / 226;
   return {
     growth: g, rigWidth: 860 * scale, rigHeight: 1280 * scale,

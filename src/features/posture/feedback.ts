@@ -1,4 +1,4 @@
-/** Observations for dialogue only. Never feeds back into the posture score. */
+/** Calibrated observations for dialogue. Head tilt also informs the bad/good decision; weighted score stays separate. */
 export type Reason = 'faceNear' | 'headForward' | 'headTilt' | 'bodyTilt';
 export const REASONS: Reason[] = ['faceNear', 'headForward', 'headTilt', 'bodyTilt'];
 export type Evidence = Record<Reason, number | null>;

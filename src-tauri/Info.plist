@@ -2,9 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>NSCameraUsageDescription</key>
-    <string>姿勢推定のためにカメラ映像を使用します。</string>
-    <key>NSAppSleepDisabled</key>
-    <true/>
+	<key>NSCameraUsageDescription</key>
+	<string>登録した基準姿勢からの変化を推定します。設定で有効にした場合のみ、集中時間の映像をこの端末に無音で保存します。</string>
+	<key>NSAppSleepDisabled</key>
+	<true/>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>

@@ -33,6 +33,7 @@ import { notifyClipsChanged } from '../timelapse/useClip';
 import { TimelapseScreen } from '../timelapse/TimelapseScreen';
 import { TimelapseSettings } from '../timelapse/TimelapseSettings';
 import { NextRewardSetting } from './NextRewardSetting';
+import { LegalContent, LEGAL_TITLES, type LegalPage } from '../legal/LegalContent';
 
 type Screen = 'home' | 'story' | 'picker' | 'timer' | MeasureStage | 'result';
 import './responsive-layout.css';
@@ -41,6 +42,8 @@ export default function WorkApp() {
   const [screen, setScreen] = useState<Screen>(() => hasCompletedOnboardingStory() ? 'home' : 'story');
   const [collection, setCollection] = useState<Collection | null>(null); const [session, setSession] = useState<Session | null>(null);
   const [detail, setDetail] = useState<Session | null>(null); const [dialog, setDialog] = useState<'reset' | 'finish' | 'sound' | 'settings' | null>(null);
+  const [legal, setLegal] = useState<LegalPage | null>(null);
+  const [recording, setRecording] = useState(false);
   const [videoSettings, setVideoSettings] = useState(loadTimelapseSettings);
   const [timelapse, setTimelapse] = useState<Session | null>(null);
   const recorder = useRef<TimelapseRecorder | null>(null); const recordingSession = useRef<string | null>(null);
@@ -125,7 +128,7 @@ export default function WorkApp() {
       if (!(stream instanceof MediaStream)) { setNotice('カメラ映像を記録できません。姿勢測定は続けられます。'); return; }
       void openTimelapseStore().then(store => {
         if (!mounted.current || live.current?.id !== session.id || ['completed', 'interrupted'].includes(live.current.status)) return;
-        const instance = new TimelapseRecorder(store, setNotice, notifyClipsChanged); recorder.current = instance;
+        const instance = new TimelapseRecorder(store, setNotice, notifyClipsChanged, active => { if (mounted.current && recorder.current === instance) setRecording(active); }); recorder.current = instance;
         instance.update(recordingAllowed(live.current, stageRef.current === 'active'), value, widgetEnabled && stageRef.current === 'active');
         void instance.begin(session, stream, videoSettings.quality);
       }).catch(cause => setNotice(cause instanceof Error ? cause.message : '録画を開始できませんでした'));
@@ -202,17 +205,18 @@ export default function WorkApp() {
     <DesktopUpdater canInstall={screen === 'home' && !busy && !dialog && !detail && !timelapse} />
     <div className="work-flow" hidden={Boolean(timelapse)}>
     {(screen === 'home' || screen === 'story') && <StoryHomeTransition view={screen}>
-      {shown => shown === 'story' ? <OnboardingStoryScreen onComplete={() => { saveOnboardingStoryCompleted(); setScreen('home'); }} /> : <Home collection={collection} onStart={() => setScreen('timer')} onPick={() => setScreen('picker')} onCard={card => void openCard(card)} onReset={() => setDialog('reset')} onStory={() => setScreen('story')} onSound={() => setDialog('sound')} onSettings={() => setDialog('settings')} />}
+      {shown => shown === 'story' ? <OnboardingStoryScreen onComplete={() => { saveOnboardingStoryCompleted(); setScreen('home'); }} /> : <Home collection={collection} onStart={() => setScreen('timer')} onPick={() => setScreen('picker')} onCard={card => void openCard(card)} onReset={() => setDialog('reset')} onStory={() => setScreen('story')} onSound={() => setDialog('sound')} onSettings={() => setDialog('settings')} onLegal={setLegal} />}
     </StoryHomeTransition>}
     {screen === 'picker' && <CharacterPicker collection={collection} onClose={home} onConfirm={id => { void enqueue(() => repository.current!.select(id)).then(value => { setCollection(value); home(); }).catch(report); }} />}
     {screen === 'timer' && <TimerSettings saved={collection.timer} onClose={home} onSubmit={(timer, remember) => { if (!busy) void start(timer, remember); }} />}
-    {camera && <MeasureScreen widgetEnabled={widgetEnabled} onWidgetChange={setWidgetEnabled} sound={sound} onSoundChange={setSound} stage={screen as MeasureStage} session={session} videoRef={posture.videoRef} canvasRef={posture.canvasRef} status={posture.status} ready={posture.ready} remainingCalibrationMs={posture.snapshot.warmupRemainingMs} tracking={posture.snapshot.qualityOk} onRegister={beginRegistration} onCancel={cancelRegistration} onRecalibrate={prepareRegistration} onPause={pause} onFinish={() => setDialog('finish')} />}
+    {camera && <MeasureScreen recording={recording} widgetEnabled={widgetEnabled} onWidgetChange={setWidgetEnabled} sound={sound} onSoundChange={setSound} stage={screen as MeasureStage} session={session} videoRef={posture.videoRef} canvasRef={posture.canvasRef} status={posture.status} ready={posture.ready} remainingCalibrationMs={posture.snapshot.warmupRemainingMs} tracking={posture.snapshot.qualityOk} onRegister={beginRegistration} onCancel={cancelRegistration} onRecalibrate={prepareRegistration} onPause={pause} onFinish={() => setDialog('finish')} />}
     {screen === 'result' && session && <ResultScreen session={session} onHome={home} onTimelapse={() => setTimelapse(session)} />}
     {!isDesktop && widget && <Widget state={widget} onAction={action} />}
     {detail && !timelapse && <Dialog title="獲得カードの詳細" className="work-detail-dialog" onClose={() => setDetail(null)}><ResultCard session={detail} variant="collection" onTimelapse={() => setTimelapse(detail)} /></Dialog>}
     {dialog === 'reset' && <Dialog title="コレクションを初期化" onClose={() => !busy && setDialog(null)}><h2>コレクションを初期化しますか？</h2><p>獲得したカード、選択中のピンアナゴ、アプリ内のすべてのタイムラプスを削除します。測定記録・タイマー設定と、保存して外に書き出したファイルは残ります。</p><div className="work-dialog-actions"><button className="work-button white" onClick={() => setDialog(null)} disabled={busy}>キャンセル</button><button className="work-button orange" onClick={() => void reset()} disabled={busy}>初期化する</button></div></Dialog>}
     {dialog === 'finish' && <FinishDialog busy={busy} onContinue={() => setDialog(null)} onFinish={finish} />}
     {dialog === 'sound' && <SoundSettingsDialog settings={sound} onChange={setSound} onClose={() => setDialog(null)} onPreview={() => void playSoundPreview({ src: sound.selectedSound, volume: sound.volume })} />}
+    {legal && <Dialog title={LEGAL_TITLES[legal]} className="piiin-legal-dialog" onClose={() => setLegal(null)}><LegalContent page={legal} /></Dialog>}
     {dialog === 'settings' && <TimelapseSettings value={videoSettings} onChange={changeVideoSettings} onClose={() => setDialog(null)}><NextRewardSetting collection={collection} onChange={changeNextReward} /></TimelapseSettings>}
     </div>
     {timelapse && <TimelapseScreen key={timelapse.id} session={timelapse} settings={videoSettings} onClose={() => setTimelapse(null)} onHome={home} />}

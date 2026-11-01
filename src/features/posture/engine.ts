@@ -68,6 +68,7 @@ export function createPostureEngineState(): PostureEngineState {
     baselineHeadWidthRatio: null,
     emaScore: null,
     candidateBadState: false,
+    headTiltCandidateBad: false,
     landmarksEstablished: false,
     landmarkDropActive: false,
     landmarkMissingSinceMs: null,
@@ -249,6 +250,7 @@ export function evaluatePostureFrame(
   nowMs: number,
   landmarks: NormalizedLandmark[] | null,
   worldLandmarks: Landmark[] | null,
+  headTiltEvidence: number | null = null,
 ): { state: PostureEngineState; result: PostureFrameResult } {
 
   const selected = pickLandmarkSet(landmarks, worldLandmarks);
@@ -280,6 +282,7 @@ export function evaluatePostureFrame(
   next = next.baseline ? updateLandmarkDropMonitor(next, landmarksVisible, nowMs) : resetLandmarkTracking(next);
 
   if (!extracted.qualityOk) {
+    next = { ...next, headTiltCandidateBad: false };
     next = updatePostureState(next, false, false, nowMs);
     if (next.landmarkDropActive) {
       next = forceBadState(next, nowMs);
@@ -364,16 +367,21 @@ export function evaluatePostureFrame(
     scoreResult.scoreEma,
     scoreResult.confidence,
   );
+  // The calibrated ear/eye roll evidence is symmetric in direction and camera
+  // mirroring. Keep its hysteresis separate from the weighted deviation score.
+  const headTiltCandidateBad = headTiltEvidence !== null && Number.isFinite(headTiltEvidence) &&
+    headTiltEvidence >= (next.headTiltCandidateBad ? 0.65 : 1);
   const mergedCandidateBad =
-    next.landmarkDropActive || isHeadTurnedSevere || nextCandidateBad;
+    next.landmarkDropActive || isHeadTurnedSevere || nextCandidateBad || headTiltCandidateBad;
   const transitionEligible =
-    isHeadTurnedSevere ||
+    isHeadTurnedSevere || headTiltCandidateBad ||
     scoreResult.usableFeatureCount >= POSTURE_SPEC.minUsableFeatureCount;
 
   next = {
     ...next,
     emaScore: scoreResult.scoreEma,
     candidateBadState: nextCandidateBad,
+    headTiltCandidateBad,
   };
 
   next = updatePostureState(

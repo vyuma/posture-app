@@ -13,8 +13,8 @@ const COPY: Record<Exclude<Scene, "splash">, readonly [string, string]> = {
   intro: ["はじめまして、ボクはピンアナゴ。", "キミの姿勢をチェックしにきたよ！"],
   happy: ["ボクは姿勢のいいニンゲンが", "大好きなんだ！"],
   angry: ["姿勢が悪いニンゲンには", "厳しくいかせてもらうよ！"],
-  friends: ["ピーン率（正しい姿勢を継続できた割合）が50％を超えると、", "新しい仲間をここに連れてくるよ！"],
-  collection: ["毎日コツコツ続けていけば、", "全部で111種類のピンアナゴが仲間になるよ！"],
+  friends: ["ピーン率（正しい姿勢を継続できた割合）が50％以上になると、", "新しい仲間をここに連れてくるよ！"],
+  collection: ["毎日コツコツ続けていけば、", "いろんなピンアナゴが仲間になるよ！"],
 };
 const portrait = (id: string) => `/characters/anago/${id}/portrait.png`;
 const FRIENDS = ["shin-anago", "oto-anago", "kuro-anyago", "normal-nago", "dot-nago", "moja-anago", "hat-anago"];
@@ -110,7 +110,7 @@ export function OnboardingStoryScreen({ onComplete }: { onComplete: () => void }
               <span className="onboarding-sr-only">ストーリー {index} / 5。</span>
               {COPY[scene].map((line, i) => (
                 <p key={line} style={{ "--line-delay": `${140 + i * 110}ms` } as CSSProperties}>
-                  {scene === "friends" && i === 0 ? <>ピーン率<small>（正しい姿勢を継続できた割合）</small><span className="onboarding-copy-phrase">が50％を超えると、</span></> : line}
+                  {scene === "friends" && i === 0 ? <>ピーン率<small>（正しい姿勢を継続できた割合）</small><span className="onboarding-copy-phrase">が50％以上になると、</span></> : line}
                 </p>
               ))}
             </div>

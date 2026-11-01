@@ -69,6 +69,7 @@ test('a full disk stops only recording, preserves older clips and releases the c
   const clips = new Map<string, Clip>();
   const older = { id: 'older', file: 'older.mp4', state: 'ready' } as Clip; clips.set('older', older);
   const notices: string[] = [];
+  const recordingStates: boolean[] = [];
   try {
     Object.defineProperty(globalThis, 'MediaRecorder', { value: Recorder, configurable: true });
     Object.defineProperty(globalThis, 'MediaStream', { value: class {}, configurable: true });
@@ -82,9 +83,17 @@ test('a full disk stops only recording, preserves older clips and releases the c
     };
     const baseline = { stats: {}, headWidthRatio: null } as Parameters<typeof createSession>[3];
     const session = createSession('new-recording', DEFAULT_TIMER, 0, baseline);
-    const recording = new TimelapseRecorder(store, message => notices.push(message), () => {});
+    const recording = new TimelapseRecorder(store, message => notices.push(message), () => {}, active => recordingStates.push(active));
     recording.update(true, widget, true);
+    expect(recordingStates).toEqual([]); // Settings / intention alone must not claim capture started.
     await recording.begin(session, { getVideoTracks: () => [track] } as unknown as MediaStream, 720);
+    expect(recordingStates).toEqual([true]);
+    recording.update(false, widget, true);
+    expect(Recorder.latest.state).toBe('paused');
+    expect(recordingStates).toEqual([true, false]);
+    recording.update(false, widget, true);
+    recording.update(true, widget, true);
+    expect(recordingStates).toEqual([true, false, true]);
     Recorder.latest.ondataavailable?.({ data: new Blob(['encoded packet']) });
     await new Promise(resolve => setTimeout(resolve, 0)); await recording.stop();
     expect(writeAttempts).toBe(1);
@@ -93,5 +102,6 @@ test('a full disk stops only recording, preserves older clips and releases the c
     expect(session.status).toBe('running');
     expect(originalStopped).toBe(false); expect(clonedStopped).toBe(true);
     expect(notices.join('')).toContain('録画のみ停止');
+    expect(recordingStates).toEqual([true, false, true, false]);
   } finally { globals.forEach((key, index) => { const descriptor = previous[index]; if (descriptor) Object.defineProperty(globalThis, key, descriptor); else Reflect.deleteProperty(globalThis, key); }); }
 });

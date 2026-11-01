@@ -31,3 +31,6 @@ release-artifacts/
 *.p12
 *.pfx
 *.key
+
+# Native pet renderer build cache
+src-tauri/native-pet/.build/
