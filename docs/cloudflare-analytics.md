@@ -34,6 +34,14 @@ UIテスト用の認証モックと、実際のGoogle/Apple OAuth・署名付き
 
 ## Cloudflare の初期設定
 
+### Appleログインの運用
+
+Appleのウェブ認証は既存のPrimary App ID `com.kyoungpin.piiin` に紐づける。Services IDは本番 `com.kyoungpin.piiin.web`、ステージング `com.kyoungpin.piiin.web.staging` に分離し、それぞれのHTTPS originの `/api/auth/callback/apple` を登録する。Cloudflareには `APPLE_CLIENT_ID` / `APPLE_TEAM_ID` / `APPLE_KEY_ID` / `APPLE_PRIVATE_KEY` をSecretとして保存し、デプロイ環境の `PIIIN_APPLE_ENABLED=true` を維持する。GitHub自動デプロイを再開するときも、production/staging環境の同じ変数を有効にする。秘密鍵とデプロイ用JSONはGitへ追加しない。
+
+Appleの `form_post` は、正確なApple originから正確なcallbackパスへのPOSTだけをWorkerの同一origin制限の例外とする。Better AuthにもApple originを登録するが、OAuth stateの検証や他APIの同一origin制限は維持する。セッションCookieはSecure/HttpOnly/SameSite=Laxを維持し、Better AuthのPOST→同一サイトGETへの転送を利用する。
+
+App IDでSign in with Appleを有効化すると、既存のprovisioning profileは将来のビルド用に再生成が必要になる。次回のMac App Store/iOS配布前に再生成・署名検証する。ウェブの接続確認だけでストア版の実機ログインや審査が完了したとは扱わない。
+
 1. 管理者が `cf auth login` で対象アカウントにログインし、Workers有料プランと非公開R2を用意する。D1は本番・プレビューで分離する。R2の公開URLとカスタムドメイン公開を有効にしない。
 2. D1のUUIDを `PIIIN_D1_ID` に設定。`node node_modules/cf/bin/cf d1 migrations apply "$PIIIN_D1_ID" --dir server/migrations` を実行する。新規デプロイ前に適用し、既存スキーマの破壊的ロールバックはしない。
 3. GitHub environments `cloudflare-production`, `cloudflare-staging`, `cloudflare-preview` に限定した `CLOUDFLARE_API_TOKEN` を登録し、変数 `CLOUDFLARE_ACCOUNT_ID`, `PIIIN_D1_ID`、staging/preview用 `WORKERS_SUBDOMAIN` を登録する。3環境のD1を分離する。fork PRには秘密を渡さない。既存環境の変数登録と、新規環境作成の権限は別であり、後者はリポジトリ管理者が必要。

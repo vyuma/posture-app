@@ -26,7 +26,7 @@ async function route(request:Request,env:Env,ctx:ExecutionContext):Promise<Respo
     // Native requests carry a bearer credential or an explicit, non-cookie handoff.
     const origin=request.headers.get('Origin');
     const native=path==='/api/native/create'||path==='/api/native/exchange';
-    const appleCallback=path==='/api/auth/callback/apple';
+    const appleCallback=path==='/api/auth/callback/apple'&&method==='POST'&&origin==='https://appleid.apple.com';
     if(!appleCallback && origin!==env.APP_ORIGIN && !(origin===null&&(native||request.headers.get('Authorization')?.startsWith('Bearer ')))) throw new HttpError(403,'Origin rejected');
   }
   const ip=request.headers.get('CF-Connecting-IP')??'local';

@@ -17,7 +17,10 @@ before(async()=>{
   temp=await mkdtemp(join(tmpdir(),'piiin-worker-test-'));
   const output=join(temp,'worker.mjs');
   await build({entryPoints:['server/worker.ts'],outfile:output,bundle:true,format:'esm',platform:'node',target:'es2022',external:['node:*'],logLevel:'silent'});
+  const appleKey=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);
+  const applePem=`-----BEGIN PRIVATE KEY-----\n${Buffer.from(await crypto.subtle.exportKey('pkcs8',appleKey.privateKey)).toString('base64')}\n-----END PRIVATE KEY-----`;
   options={modules:true,unsafeTriggerHandlers:true,script:await readFile(output,'utf8'),compatibilityDate:'2026-11-08',compatibilityFlags:['nodejs_compat'],d1Databases:['DB'],r2Buckets:['TELEMETRY'],bindings:{APP_ORIGIN:origin,BETTER_AUTH_SECRET:'local-test-secret-not-for-production-12345678',EXPORT_TOKEN:'local-export-test-token',GOOGLE_CLIENT_ID:'test-client.apps.googleusercontent.com',GOOGLE_CLIENT_SECRET:'test-google-secret'},serviceBindings:{ASSETS:()=>new Response('asset')}};
+  Object.assign(options.bindings,{APPLE_CLIENT_ID:'test.piiin.web',APPLE_TEAM_ID:'TESTTEAM',APPLE_KEY_ID:'TESTKEY',APPLE_PRIVATE_KEY:applePem});
   mf=new Miniflare(convertV4MiniflareOptions(options));
   db=await mf.getD1Database('DB');bucket=await mf.getR2Bucket('TELEMETRY');
   for(const sql of (await readFile('server/migrations/0001_accounts.sql','utf8')).split(';').filter(s=>s.trim()))await db.prepare(sql).run();
@@ -43,6 +46,30 @@ test('Google authorization uses the deployment callback, safe cookies and only b
   assert.equal((await db.prepare('SELECT count(*) n FROM participants').first()).n,0);
   await ok(await call('/api/auth/sign-in/social','POST',{provider:'google',callbackURL:'https://attacker.invalid/app',disableRedirect:true},null),403);
   await ok(await call('/api/auth/sign-in/social','POST',{provider:'google',scopes:['https://www.googleapis.com/auth/user.birthday.read'],disableRedirect:true},null),400);
+});
+test('Apple form callback accepts only Apple origin and still requires valid OAuth state',async()=>{
+  const response=await call('/api/auth/sign-in/social','POST',{provider:'apple',callbackURL:origin+'/app',disableRedirect:true},null);
+  const result=await ok(response),redirect=new URL(result.url);
+  assert.equal(redirect.origin,'https://appleid.apple.com');
+  assert.equal(redirect.searchParams.get('client_id'),'test.piiin.web');
+  assert.equal(redirect.searchParams.get('redirect_uri'),origin+'/api/auth/callback/apple');
+  assert.equal(redirect.searchParams.get('response_mode'),'form_post');
+  assert.ok(redirect.searchParams.get('state'));
+  const post=(source,cookie)=>mf.dispatchFetch(origin+'/api/auth/callback/apple',{method:'POST',redirect:'manual',headers:{Origin:source,'Content-Type':'application/x-www-form-urlencoded',...(cookie?{Cookie:'unrelated=1'}:{})},body:'code=fake-code&state=invalid-state'});
+  for(const cookie of [false,true]) {
+    const callback=await post('https://appleid.apple.com',cookie);
+    assert.equal(callback.status,302);
+    const location=new URL(callback.headers.get('Location'));
+    assert.equal(location.origin,origin);assert.equal(location.pathname,'/api/auth/callback/apple');
+    const rejected=await mf.dispatchFetch(location.href,{redirect:'manual'});
+    assert.equal(rejected.status,302);
+    assert.match(rejected.headers.get('Location'),/error=/);
+    assert.equal(rejected.headers.getSetCookie().some(value=>value.includes('session_token=')),false);
+  }
+  assert.equal((await post('https://attacker.invalid',false)).status,403);
+  assert.equal((await post('https://appleid.apple.com.attacker.invalid',false)).status,403);
+  await ok(await call('/api/consent','POST',{version:'2026-11-08-v1',agree:true},'alice',{Origin:'https://appleid.apple.com'}),403);
+  assert.equal((await db.prepare('SELECT count(*) n FROM participants').first()).n,0);
 });
 test('auth requires consent; A cannot upload with B cookie or forged owner',async()=>{
   assert.equal((await ok(await call('/api/me'))).user.id,'alice');
