@@ -38,6 +38,7 @@ src-tauri/native-pet/.build/
 # Cloud deployment output and private analysis exports
 .cloudflare/
 .dev.vars*
+.env*
 !*.example
 dist-web/
 output/

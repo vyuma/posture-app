@@ -36,7 +36,7 @@ UIテスト用の認証モックと、実際のGoogle/Apple OAuth・署名付き
 
 1. 管理者が `cf auth login` で対象アカウントにログインし、Workers有料プランと非公開R2を用意する。D1は本番・プレビューで分離する。R2の公開URLとカスタムドメイン公開を有効にしない。
 2. D1のUUIDを `PIIIN_D1_ID` に設定。`node node_modules/cf/bin/cf d1 migrations apply "$PIIIN_D1_ID" --dir server/migrations` を実行する。新規デプロイ前に適用し、既存スキーマの破壊的ロールバックはしない。
-3. GitHub environments `cloudflare-production`, `cloudflare-preview` に限定した `CLOUDFLARE_API_TOKEN` を登録し、変数 `CLOUDFLARE_ACCOUNT_ID`, `PIIIN_D1_ID`、プレビュー用 `WORKERS_SUBDOMAIN` を登録する。プレビューのD1を本番UUIDにしない。fork PRには秘密を渡さない。
+3. GitHub environments `cloudflare-production`, `cloudflare-staging`, `cloudflare-preview` に限定した `CLOUDFLARE_API_TOKEN` を登録し、変数 `CLOUDFLARE_ACCOUNT_ID`, `PIIIN_D1_ID`、staging/preview用 `WORKERS_SUBDOMAIN` を登録する。3環境のD1を分離する。fork PRには秘密を渡さない。既存環境の変数登録と、新規環境作成の権限は別であり、後者はリポジトリ管理者が必要。
 4. Google OAuth Web clientに正規URLと `/api/auth/callback/google` を登録。Apple Services IDに `/api/auth/callback/apple` を登録し、Apple Team/Key/秘密鍵を用意する。People追加権限は初期状態で無効。
 5. Worker Secretsに `BETTER_AUTH_SECRET`（32文字以上の無作為値）、Google client ID/secret、`EXPORT_TOKEN` を登録し、ビルド変数 `PIIIN_AUTH_ENABLED=true` を有効にする。Appleを使う場合は `PIIIN_APPLE_ENABLED=true` と `APPLE_CLIENT_ID`, `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` を登録する。キー更新時はApple失効・削除処理も確認する。
 6. 既存開発者ログインは `PIIIN_DEVELOPER_ENABLED=true` と `PIIIN_DEV_USERNAME`, `PIIIN_DEV_PASSWORD`, `PIIIN_DEV_SESSION_SECRET` で引き継ぐ。値をGitやPRに書かない。
@@ -44,11 +44,23 @@ UIテスト用の認証モックと、実際のGoogle/Apple OAuth・署名付き
 
 認証未設定でもゲスト利用は可能で、ログインボタンは準備中のエラーを表示する。Mac App Storeへの提出前にはAppleをGoogleと同等に有効化し、サンドボックス署名後のKeychainとシステムブラウザーを実機確認する。
 
+Google OAuthにはGoogle CloudプロジェクトとWeb clientが必要だが、Cloudflareの課金者と同一の所有者である必要はない。2026-11-08の指示により、Googleプロジェクト作成・鍵発行・実OAuth有効化は保留した。`PIIIN_AUTH_ENABLED=false`、追加プロフィール権限も無効のままでウェブ移行を進める。Googleログインを確認済みとは扱わない。
+
+初回の秘密値投入は、対応する`PIIIN_*_ENABLED=true`でビルドし、`cf deploy --prebuilt --mode preview --secrets-file <private.json>`（本番は`--mode production`）でバージョンと一緒に適用する。JSONは名前→文字列値の対応とし、Git外・所有者のみ読み書き可能なファイルを使って、投入後に削除する。秘密値をコマンド引数やログへ記載しない。無効時の空文字バインディングと同名のsecretを`workers secrets bulk`で先に作ると、`Binding name already in use`になるため注意する。
+
 ## 配布と切り戻し
 
-PRは共通・サーバー・macOS・Windowsの検査後、`piiin-pr-N` Workerにプレビューを出す。本番と共有しないD1・R2を使い、テスターの実データは入れない。mainは検査成功後 `piiin` を更新する。ドメイン切替前は `PIIIN_DOMAIN_ENABLED` を無効のままにする。
+PRは共通・サーバー・macOS・Windowsの検査後、`piiin-pr-N` Workerにプレビューを出す。本番と共有しないD1・R2を使い、テスターの実データは入れない。PRプレビューにはOAuth・開発者ログイン資格情報を渡さない。mainは検査成功後 `piiin` を更新する。ドメイン切替前は `PIIIN_DOMAIN_ENABLED` を無効のままにする。
+
+固定の`piiin-staging`を実OAuth検証に使う。workflow_dispatchの`deploy=staging`で配布し、`checks`では配布しない。`production`の手動配布はmainに限定する。新規ワークフローがデフォルトブランチへ入る前はローカルCLIで同じビルド・配布を行う。preview/stagingはビルドと配布の両方に`--mode preview`を渡す。モードを省略した配布で本番設定を混ぜない。
+
+`scripts/cloudflare-preflight.mjs <preview|staging|production>`は未設定値・Worker名・正確なHTTPS origin・UUID・誤った公開ドメイン/認証フラグを検査する。ローカルOAuth認証なら`--local-auth`を加える。`PIIIN_PRODUCTION_D1_ID`も渡すと、本番DBとの取り違えを拒否する。
+
+配布後に`node scripts/check-web-deployment.mjs <origin>`で公開経路、最新Macインストーラー、匿名セッション、開発者認証設定を検査する。`PIIIN_AUTH_ENABLED=true`の場合はGoogle認証開始とcallback originも検査するが、プロバイダーへの実ログインは別途ブラウザーで行う。診断はOAuth URL/state・Cookie・秘密値を出力しない。
 
 プレビューでLP、`/app`、`/privacy`、`/support`、`/login`、開発者API、`/api/download-mac`を確認する。実OAuthは登録済みの専用検証URLで行う。本番デプロイ確認後、管理者が既存DNS/Vercel設定を保存して `www.piiin.app` をWorkerへ切り替える。同じHTTPS originとパスを保つことで既存ブラウザー保存先を維持する。Vercelプロジェクトは初期移行期間中に削除しない。切り戻しはDNS/ドメインを保存済みのVercel構成へ戻し、新規送信はローカル待機にする。D1・R2を巻き戻したり消したりしない。
+
+Cloudflareから匿名GitHub APIが403になることを実環境で確認した。Macダウンロードはこの場合、GitHubの公開`releases/latest`のリダイレクトから同じ最新タグを確認し、そのタグのuniversal DMGが存在することをHEADで検証してから案内する。過去のインストーラーや任意の外部URLにはフォールバックしない。公開APIにも公開リリースにも到達できなければ503と再試行案内を維持する。
 
 ## リリース
 

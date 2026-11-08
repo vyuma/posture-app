@@ -17,7 +17,7 @@ before(async()=>{
   temp=await mkdtemp(join(tmpdir(),'piiin-worker-test-'));
   const output=join(temp,'worker.mjs');
   await build({entryPoints:['server/worker.ts'],outfile:output,bundle:true,format:'esm',platform:'node',target:'es2022',external:['node:*'],logLevel:'silent'});
-  options={modules:true,unsafeTriggerHandlers:true,script:await readFile(output,'utf8'),compatibilityDate:'2026-11-08',compatibilityFlags:['nodejs_compat'],d1Databases:['DB'],r2Buckets:['TELEMETRY'],bindings:{APP_ORIGIN:origin,BETTER_AUTH_SECRET:'local-test-secret-not-for-production-12345678',EXPORT_TOKEN:'local-export-test-token'},serviceBindings:{ASSETS:()=>new Response('asset')}};
+  options={modules:true,unsafeTriggerHandlers:true,script:await readFile(output,'utf8'),compatibilityDate:'2026-11-08',compatibilityFlags:['nodejs_compat'],d1Databases:['DB'],r2Buckets:['TELEMETRY'],bindings:{APP_ORIGIN:origin,BETTER_AUTH_SECRET:'local-test-secret-not-for-production-12345678',EXPORT_TOKEN:'local-export-test-token',GOOGLE_CLIENT_ID:'test-client.apps.googleusercontent.com',GOOGLE_CLIENT_SECRET:'test-google-secret'},serviceBindings:{ASSETS:()=>new Response('asset')}};
   mf=new Miniflare(convertV4MiniflareOptions(options));
   db=await mf.getD1Database('DB');bucket=await mf.getR2Bucket('TELEMETRY');
   for(const sql of (await readFile('server/migrations/0001_accounts.sql','utf8')).split(';').filter(s=>s.trim()))await db.prepare(sql).run();
@@ -28,6 +28,22 @@ before(async()=>{
   }
 });
 after(async()=>{await mf?.dispose();if(temp)await rm(temp,{recursive:true,force:true});});
+test('Google authorization uses the deployment callback, safe cookies and only basic scopes',async()=>{
+  const response=await call('/api/auth/sign-in/social','POST',{provider:'google',callbackURL:origin+'/app',disableRedirect:true},null);
+  const result=await ok(response);
+  const redirect=new URL(result.url);
+  assert.equal(redirect.origin,'https://accounts.google.com');
+  assert.equal(redirect.searchParams.get('redirect_uri'),origin+'/api/auth/callback/google');
+  assert.equal(redirect.searchParams.get('client_id'),'test-client.apps.googleusercontent.com');
+  assert.ok(redirect.searchParams.get('state'));
+  assert.deepEqual(new Set(redirect.searchParams.get('scope').split(' ')),new Set(['openid','email','profile']));
+  const cookies=response.headers.getSetCookie().join(';');
+  assert.match(cookies,/HttpOnly/i);assert.match(cookies,/Secure/i);assert.match(cookies,/SameSite=Lax/i);
+  assert.equal(result.url.includes('test-google-secret'),false);
+  assert.equal((await db.prepare('SELECT count(*) n FROM participants').first()).n,0);
+  await ok(await call('/api/auth/sign-in/social','POST',{provider:'google',callbackURL:'https://attacker.invalid/app',disableRedirect:true},null),403);
+  await ok(await call('/api/auth/sign-in/social','POST',{provider:'google',scopes:['https://www.googleapis.com/auth/user.birthday.read'],disableRedirect:true},null),400);
+});
 test('auth requires consent; A cannot upload with B cookie or forged owner',async()=>{
   assert.equal((await ok(await call('/api/me'))).user.id,'alice');
   assert.equal((await ok(await call('/api/me','GET',undefined,null))).user,null);
