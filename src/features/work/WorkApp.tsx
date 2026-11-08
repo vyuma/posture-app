@@ -49,7 +49,7 @@ function WorkAppContent() {
   const accountRef=useRef(accounts.state);accountRef.current=accounts.state;
   const [screen, setScreen] = useState<Screen>(() => accounts.state.ownerId!=='guest'||hasCompletedOnboardingStory() ? 'home' : 'story');
   const [collection, setCollection] = useState<Collection | null>(null); const [session, setSession] = useState<Session | null>(null);
-  const [detail, setDetail] = useState<Session | null>(null); const [dialog, setDialog] = useState<'reset' | 'finish' | 'sound' | 'settings' | null>(() => /[?&](settings|profile)=/.test(location.search) ? 'settings' : null);
+  const [detail, setDetail] = useState<Session | null>(null); const [dialog, setDialog] = useState<'reset' | 'finish' | 'sound' | 'settings' | null>(() => /[?&](settings|profile)=/.test(location.search) || new URLSearchParams(location.search).get('account')==='error' ? 'settings' : null);
   useEffect(()=>{if(accounts.homeRevision){setDialog(null);setScreen('home');}},[accounts.homeRevision]);
   const [legal, setLegal] = useState<LegalPage | null>(null);
   const [recording, setRecording] = useState(false);
