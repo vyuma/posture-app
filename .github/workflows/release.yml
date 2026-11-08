@@ -1,0 +1,111 @@
+name: Release channels
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing version tag
+        type: string
+        required: true
+      channel:
+        description: Retry one channel
+        type: choice
+        options: [direct, mac-app-store, microsoft-store]
+        required: true
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}-${{ inputs.channel || 'all' }}
+  cancel-in-progress: false
+jobs:
+  mac:
+    if: github.event_name == 'push' || inputs.channel != 'microsoft-store'
+    strategy:
+      fail-fast: false
+      matrix:
+        channel: [direct, mac-app-store]
+    runs-on: macos-latest
+    environment: ${{ matrix.channel }}
+    permissions:
+      contents: write
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+      RELEASE_CHANNEL: ${{ matrix.channel }}
+      APPLE_CERTIFICATE_BASE64: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+      APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+      APPLE_INSTALLER_IDENTITY: ${{ secrets.APPLE_INSTALLER_IDENTITY }}
+      APPLE_PROVISION_PROFILE_BASE64: ${{ secrets.APPLE_PROVISION_PROFILE_BASE64 }}
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+      TAURI_SIGNING_PUBLIC_KEY: ${{ secrets.TAURI_SIGNING_PUBLIC_KEY }}
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+        if: github.event_name == 'push' || inputs.channel == matrix.channel
+        with:
+          ref: ${{ inputs.tag || github.ref_name }}
+      - uses: actions/setup-node@v4
+        if: github.event_name == 'push' || inputs.channel == matrix.channel
+        with:
+          node-version: 24.22.1
+      - uses: oven-sh/setup-bun@v2
+        if: github.event_name == 'push' || inputs.channel == matrix.channel
+        with:
+          bun-version: 1.3.13
+      - uses: dtolnay/rust-toolchain@stable
+        if: github.event_name == 'push' || inputs.channel == matrix.channel
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - if: github.event_name == 'push' || inputs.channel == matrix.channel
+        run: |
+          bun install --frozen-lockfile
+          node scripts/release-version.mjs
+          bun run test:accounts
+          bun run test:work
+          bun run test:updates
+          node scripts/ci-signing.mjs
+      - if: matrix.channel == 'direct' && (github.event_name == 'push' || inputs.channel == 'direct')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$RELEASE_TAG" --json isDraft --jq '.isDraft' | grep -qx false; then
+            echo 'Published releases are immutable.' >&2
+            exit 1
+          fi
+          bun run release:macos
+          spctl --assess --type execute src-tauri/target/universal-apple-darwin/release/bundle/macos/PiiiN.app
+          gh release view "$RELEASE_TAG" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --draft --verify-tag --title "PiiiN $RELEASE_TAG" --generate-notes
+          gh release upload "$RELEASE_TAG" release-artifacts/"$RELEASE_TAG"/* --clobber
+          gh release edit "$RELEASE_TAG" --draft=false
+      - uses: ruby/setup-ruby@v1
+        if: matrix.channel == 'mac-app-store' && (github.event_name == 'push' || inputs.channel == 'mac-app-store')
+        with:
+          ruby-version: '3.3'
+      - if: matrix.channel == 'mac-app-store' && (github.event_name == 'push' || inputs.channel == 'mac-app-store')
+        run: |
+          bun run tauri build --target universal-apple-darwin --no-default-features --features mac-app-store --config src-tauri/tauri.appstore.conf.json --config "$PIIIN_STORE_PROFILE_CONFIG" --bundles app
+          codesign --verify --deep --strict src-tauri/target/universal-apple-darwin/release/bundle/macos/PiiiN.app
+          mkdir -p release-artifacts/store
+          productbuild --sign "$APPLE_INSTALLER_IDENTITY" --component src-tauri/target/universal-apple-darwin/release/bundle/macos/PiiiN.app /Applications release-artifacts/store/PiiiN.pkg
+          gem install fastlane --no-document
+          PIIIN_STORE_PKG="$PWD/release-artifacts/store/PiiiN.pkg" fastlane mac store
+      - uses: actions/upload-artifact@v4
+        if: always() && (github.event_name == 'push' || inputs.channel == matrix.channel)
+        with:
+          name: release-${{ matrix.channel }}
+          path: release-artifacts/
+          retention-days: 14
+      - if: always() && env.PIIIN_CI_KEYCHAIN != ''
+        run: security delete-keychain "$PIIIN_CI_KEYCHAIN"
+  windows:
+    if: github.event_name == 'push' || inputs.channel == 'microsoft-store'
+    uses: ./.github/workflows/windows-store-package.yml
+    with:
+      release_tag: ${{ inputs.tag || github.ref_name }}
+      submit: true
+    secrets: inherit

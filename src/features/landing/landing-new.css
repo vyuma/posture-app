@@ -1,0 +1,144 @@
+/* 新LP 4061:6342 — 1512 × 7907. Scale artwork and spacing together,
+   then reflow at 1024px so the copy and touch targets remain readable. */
+.landing-page { --lp-canvas: min(100vw, 1920px); --lp6-unit: calc(var(--lp-canvas) / 1512); }
+.lp-hero { --hero-width: var(--lp-canvas); background: linear-gradient(180deg, #13a2d7 0%, #f5f1dc 99.59%); }
+.lp-hero .lp-hero-brand { left: 12.76455%; top: 25.20576%; width: 25.85979%; }
+.lp-hero .lp-hero-title { width: 84.65473%; margin-left: 7.67263%; top: 0; aspect-ratio: 331 / 207; }
+.lp-hero .lp-hero-actions { margin-top: calc(var(--lp6-unit) * 59); }
+.lp-hero .lp-hero-web { background: #9fd1d4; }
+.lp-hero .lp-header-web { border-width: 1px; }
+.lp-hero .lp-header-download { color: #0095c4; }
+.lp-hero .lp-header-web, .lp-hero .lp-header-download { box-shadow: 0 0 8.52px #00000026; }
+.lp6-concept-inner, .lp6-secret-intro, .lp6-point-inner, .lp-character-bed .lp-beach-scene { width: min(100%, 1920px); }
+.lp6-seven-anago { left: calc(50% - var(--lp6-unit) * 9.48); width: calc(var(--lp6-unit) * 1011.05); }
+.lp6-seven-anago img { width: calc(var(--lp6-unit) * 173.6); }
+.lp6-seven-anago img + img { margin-left: calc(var(--lp6-unit) * -34.01); }
+.lp6-point--posture .lp6-point-inner { height: calc(var(--lp6-unit) * 1055); }
+/* Revised point 1: text origin (144,108), laptop origin (830,89). */
+@media(min-width:1024px) {
+  .lp6-point--desktop .lp6-point-heading { top:calc(var(--lp6-unit) * 44); width:calc(var(--lp6-unit) * 598); }
+  .lp6-point--desktop .lp6-point-heading h2 { width:calc(var(--lp6-unit) * 548); white-space:nowrap; }
+  .lp6-point--desktop .lp6-point-description { width:calc(var(--lp6-unit) * 466); }
+}
+.lp6-point--acquisition { background: #fff9f2; }
+.lp6-point--acquisition .lp6-point-inner { height: calc(var(--lp6-unit) * 827); }
+.lp6-mechanism-grid { margin-top: calc(var(--lp6-unit) * 48); }
+.lp6-mechanism--straight { top: calc(var(--lp6-unit) * -8); }
+.lp6-mechanism--straight h3 { font-size: calc(var(--lp6-unit) * 20); line-height: 2; }
+.lp6-mechanism--straight > strong { top: calc(var(--lp6-unit) * 520); padding-left: calc(var(--lp6-unit) * 27); color: #f70000; }
+/* Original vector assets include their shadow bounds; origins below align the timer
+   surfaces to the Figma frames rather than centering the SVG export boxes. */
+.lp-example-pet-art { position: absolute; left: calc(var(--lp6-unit) * 72); top: calc(var(--lp6-unit) * 221.487); width: calc(var(--lp6-unit) * 186); height: auto; }
+.lp6-mechanism--normal .lp-example-pet-art { top: calc(var(--lp6-unit) * 227.187); }
+.lp6-mechanism--straight .lp-example-pet-art { top: 0; left: 0; width: 100%; }
+/* Product widgets retain their own geometry inside scaled LP scenes. */
+.lp-desktop-motion { position:absolute; bottom:auto; width:97px; height:35.422px; overflow:visible; }
+.lp-desktop-motion .lp-demo-widget { transform:scale(calc(97 / 178)); transform-origin:top left; }
+.lp-demo-widget { position:absolute; left:0; top:0; right:auto; bottom:auto; z-index:3; }
+.lp-demo-widget, .lp-demo-widget * { pointer-events:none; }
+.lp-demo-widget .work-widget-bar > span, .lp-demo-widget .work-widget-bar > img { position:absolute; }
+.lp-demo-widget.is-scene-paused .work-widget-shake { animation-play-state:paused; }
+.lp-desktop-drag-handle { position:absolute; z-index:4; padding:0; border:0; border-radius:12px; background:transparent; cursor:grab; pointer-events:auto; touch-action:none; user-select:none; -webkit-user-select:none; }
+.landing-page .lp-desktop-drag-handle:focus-visible { outline:2px solid #fff; outline-offset:2px; }
+.landing-page .lp-desktop-drag-handle[data-pointer-focus="true"]:focus { outline:none; }
+.lp-desktop-motion.is-dragging .lp-desktop-drag-handle { cursor:grabbing; }
+.lp6-position-bubble { pointer-events:none; }
+.lp-growing-pet { aspect-ratio:397 / 503; }
+.lp6-mechanism--straight h3 { top:calc(var(--lp6-unit) * -8); }
+.lp-growing-pet .lp-demo-widget { left:calc(123 / 397 * 100%); top:calc(428 / 503 * 100%); transform:scale(var(--growth-scale,1)); transform-origin:top left; }
+/* The acquisition sample uses the app's card, with LP-only orange graph and rate. */
+.lp-new-result { position:absolute; left:calc(50% - var(--lp6-unit) * 346); top:calc(var(--lp6-unit) * 355); width:calc(var(--lp6-unit) * 721); font-family:'SF Pro',-apple-system,BlinkMacSystemFont,'Noto Sans JP',sans-serif; letter-spacing:0; text-align:left; }
+.landing-page .character-stars { display:inline-flex; flex-wrap:nowrap; gap:0; line-height:0; }
+.landing-page .character-stars svg { display:block; width:20%; height:auto; aspect-ratio:1; flex:1 1 0; }
+.lp-new-result .work-detail-name .character-stars svg { width:2.77393cqw; height:2.77393cqw; flex:none; }
+.lp-new-result .work-tags { display:flex; align-items:center; }
+.lp-new-result .work-tags>span { background:var(--character-bg); border-radius:999px; }
+.lp-new-result .work-result-metrics>div+div { color:#f78000; }
+.lp-new-result .work-graph { --graph-color:#f78000; }
+.lp-new-result .work-detail-card:focus-visible { outline:3px solid #13a2d7; outline-offset:5px; }
+.lp-new-result:not(.is-scene-playing) .work-detail-card::before { animation-play-state:paused; }
+/* This card is already visible when the scroll celebration begins. Keep it
+   opaque and animate only its transform, without repainting the large shadow. */
+.lp-new-result .work-detail-card.is-entering:not(.is-tapped) { animation-name:lp-result-card-celebrate; }
+@keyframes lp-result-card-celebrate {
+  0%,100% {
+    transform:perspective(900px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translateY(calc(var(--tilt-lift) + var(--result-card-press-y))) scale(var(--result-card-scale));
+  }
+  50% {
+    transform:perspective(900px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) translateY(calc(var(--tilt-lift) + var(--result-card-press-y) - 6px)) scale(calc(var(--result-card-scale) * 1.012));
+  }
+}
+.lp6-collection { position: relative; }
+.lp6-collection .lp-collection-copy h2 { line-height: 2; }
+.lp-collection-rare { position: absolute; bottom: calc(var(--lp6-unit) * 141); width: 100%; margin: 0; text-align: center; color: #f78000; font-size: calc(var(--lp6-unit) * 24); line-height: 2; letter-spacing: calc(var(--lp6-unit) * 2); }
+.lp6-collection .lp-collection-card { width: calc(var(--lp6-unit) * 200.2); flex-basis: calc(var(--lp6-unit) * 200.2); height: calc(var(--lp6-unit) * 263.9); border-radius: calc(var(--lp6-unit) * 24.2667); font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif; }
+.lp6-collection .lp-collection-group { gap: calc(var(--lp6-unit) * 11.62); padding-right: calc(var(--lp6-unit) * 11.62); }
+.lp-collection-card > .character-stars { position: absolute; top: 82.2cqh; left: 6.0606cqw; width: 26cqw; height: 4cqh; }
+.lp-collection-card > .character-stars svg { height: 100%; }
+.lp-how { --how-unit: var(--lp6-unit); --wave-unit: calc(clamp(760px, 100vw, 1920px) / 1512); margin-top: calc(var(--lp6-unit) * 61); background: #13a2d7; }
+.lp-how::before { background: #13a2d7; }
+.lp-how .lp-how-inner { width: min(100%, 1920px); }
+.lp-how .lp-how-step { width: calc(var(--how-unit) * 393.59); }
+.lp-how .lp-how-step:nth-child(1) { left: calc(var(--how-unit) * 144); }
+.lp-how .lp-how-step:nth-child(2) { left: calc(var(--how-unit) * 578); }
+.lp-how .lp-how-step:nth-child(3) { left: calc(var(--how-unit) * 1031); width: calc(var(--how-unit) * 375); }
+.lp-how .lp-how-step + .lp-how-step::before { left: calc(var(--how-unit) * -39); }
+.lp-how .lp-how-step header > div { padding-left: 0; }
+.lp-how .lp-how-step p { white-space: pre-line; }
+.lp-how .lp-how-step:nth-child(1) p { margin-left: calc(var(--how-unit) * 7); }
+.lp-how .lp-how-step:nth-child(2) p { margin-left: calc(var(--how-unit) * 6); }
+.lp-how .lp-how-devices--2 { margin-left: calc(var(--how-unit) * -1); }
+.lp-how .lp-how-devices, .lp-how .lp-how-step:first-child .lp-how-devices { left: calc(var(--how-unit) * -18); width: calc(var(--how-unit) * 393.59); height: calc(var(--how-unit) * 251); aspect-ratio: 393.59 / 251; overflow: hidden; }
+.lp-how .lp-how-devices > .lp-how-screen-art, .lp-how .lp-how-step:first-child .lp-how-devices > .lp-how-screen-art { position: absolute; inset: 0 auto auto 0; width: 325.38022%; height: 100%; max-width: none; }
+.lp-how .lp-how-devices--2 > .lp-how-screen-art { left: -110.01296%; }
+.lp-how .lp-how-devices--3 > .lp-how-screen-art { left: -225.36142%; }
+.lp-how .lp-how-devices > .lp-how-laptop-shell { position: absolute; inset: 0; width: 100%; height: 100%; }
+.lp-final-cta { height: calc(var(--lp6-unit) * 707); padding-top: calc(var(--lp6-unit) * 121); }
+.lp-final-cta h2 { max-width: none; line-height: calc(85 / 48); }
+.lp-final-cta-buttons { margin-top: calc(var(--lp6-unit) * 56); }
+.lp-character-bed--footer { top: calc(var(--lp6-unit) * 521); }
+.lp-footer { height: calc(var(--lp6-unit) * 124); padding-inline: max(calc(var(--lp6-unit) * 48), calc((100% - 1798px) / 2)); }
+@media (max-width: 1023px) {
+  .lp-hero .lp-hero-brand { inset: auto; width: min(100%, 360px); }
+  .lp-character-bed .lp-beach-scene { width: 760px; margin-left: calc((100% - 760px) / 2); }
+  .lp-hero .lp-hero-title { width: 84.65%; margin-left: 7.67%; }
+  .lp-hero .lp-hero-actions { margin-top: 36px; }
+  .lp6-seven-anago { left: auto; width: min(100%, 600px); aspect-ratio: 1011.05 / 278.77; }
+  .lp6-seven-anago img { width: 17.17%; }
+  .lp6-seven-anago img + img { margin-left: -3.364%; }
+  .lp6-point--posture .lp6-point-inner, .lp6-point--acquisition .lp6-point-inner { height: auto; }
+  .lp6-mechanism-grid { --lp6-unit: calc(min(100vw - 40px, 760px) / 1224); width: min(100%, 760px); height: calc(var(--lp6-unit) * 620); margin-top: 40px; }
+  .lp6-mechanism--straight { top: calc(var(--lp6-unit) * -8); }
+  .lp6-mechanism--straight h3 { font-size: max(12px, calc(var(--lp6-unit) * 20)); }
+  .lp6-mechanism--straight > strong { top: calc(var(--lp6-unit) * 520); font-size: max(17px, calc(var(--lp6-unit) * 32)); }
+  .lp-new-result { position:relative; left:auto; top:auto; width:min(100%,721px); margin:32px auto 0; }
+  .lp6-collection { --lp6-unit: 1px; padding: 48px 0 100px; }
+  .lp-collection-rare { position: static; margin: 42px auto 0; width: min(calc(100% - 40px), 700px); font-size: 16px; line-height: 2; letter-spacing: 1px; text-wrap: balance; }
+  .lp-how { --how-unit: 1px; margin-top: 0; }
+  .lp-how .lp-how-step, .lp-how .lp-how-step:nth-child(1), .lp-how .lp-how-step:nth-child(2), .lp-how .lp-how-step:nth-child(3) { left: auto; width: 100%; }
+  .lp-how .lp-how-step header > div { padding-left: 0; }
+  .lp-how .lp-how-step:nth-child(n) p { margin-left: 0; }
+  .lp-how .lp-how-devices, .lp-how .lp-how-step:first-child .lp-how-devices { position: relative; inset: auto; width: min(100%, 460px); height: auto; aspect-ratio: 393.59 / 251; margin: 24px auto 0; }
+  .lp-how .lp-how-step + .lp-how-step::before { left: 0; }
+  .lp-final-cta { height: auto; padding-top: 64px; }
+  .lp-final-cta h2 { line-height: 2; }
+  .lp-final-cta-buttons { margin-top: 32px; }
+  .lp-character-bed--footer { top: auto; }
+  .lp-footer { height: auto; padding: 24px; }
+}
+@media (max-width: 599px) {
+  .lp6-mechanism-grid { display: flex; flex-direction: column; align-items: center; gap: 32px; height: auto; --lp6-unit: .8px; }
+  .lp6-mechanism { width: 256.8px; height: 479.2px; }
+  .lp6-mechanism--straight { top: auto; width: min(100%, 317.6px); }
+  .lp6-mechanism h3 { top: 25.6px; font-size: 15px; letter-spacing: 1px; }
+  .lp6-mechanism--straight h3 { top:calc(var(--lp6-unit) * -8); font-size: 16px; }
+  .lp6-posture-person, .lp6-mechanism--bad .lp6-posture-person { top: 64px; width: 81.6px; height: 96px; }
+  .lp6-mechanism > strong { top: 414.4px; font-size: 15px; letter-spacing: 1px; }
+  .lp6-mechanism--straight > strong { font-size: 24px; }
+  .lp6-mechanism-arrows, .lp6-mechanism--straight .lp6-mechanism-arrows { left: calc(50% - 30px); top: 468px; width: 60px; height: 24px; transform: rotate(90deg); }
+  .lp6-mechanism-arrows img { top: 0; }
+  .lp-new-result { width:100%; }
+}
+@media(max-width:540px) {
+  .lp-new-result .work-detail-name .character-stars svg { width:18px; height:18px; }
+}

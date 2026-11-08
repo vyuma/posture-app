@@ -75,6 +75,8 @@
 .timelapse-edit-item{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;touch-action:none;user-select:none;-webkit-user-select:none;cursor:move;outline:2px solid transparent;outline-offset:-2px}
 .timelapse-edit-item.camera{background:#cddde5;color:#3a6377;font-weight:700;z-index:1}.timelapse-edit-item.pet{z-index:2;color:#263c49;font-size:12px;line-height:1.5;min-width:0}
 .timelapse-pet-preview{display:block;position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.timelapse-edit-item.pet{outline:2px dashed #126083;outline-offset:-2px}
+.timelapse-edit-item.pet[data-selected="true"],.timelapse-edit-item.pet:focus-visible{outline-style:solid}
 .timelapse-pet-preview-status{position:absolute;inset:0;display:grid;place-items:center;padding:8px;text-align:center;font-size:12px;overflow-wrap:anywhere;pointer-events:none}
 .timelapse-edit-item[data-selected="true"],.timelapse-edit-item:focus-visible{outline-color:#126083}
 .timelapse-resize{position:absolute;right:0;bottom:0;width:28px;height:28px;min-width:0;border:0;border-radius:8px 0 0 0;background:#126083;cursor:nwse-resize;touch-action:none}

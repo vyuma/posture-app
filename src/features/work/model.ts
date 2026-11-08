@@ -1,3 +1,4 @@
+import type { AnalysisTicket, Provenance } from '../accounts/types';
 import type { FeedbackBaseline } from '../posture/feedback';
 import type { BaselineStats } from '../posture/engine.types';
 
@@ -20,6 +21,8 @@ export type Sample = { sequence: number; focusMs: number; elapsedMs: number; cal
 export type EventKind = 'start' | 'rest' | 'focus' | 'pause' | 'resume' | 'recalibrate' | 'calibrated' | 'calibration_cancelled' | 'tracking_lost' | 'tracking_restored' | 'finish';
 export type SessionEvent = { kind: EventKind; focusMs: number; elapsedMs: number; segment: number };
 export type Session = {
+  analysis?: AnalysisTicket;
+  provenance?: Provenance;
   id: string; startedAt: string; endedAt: string | null; status: 'running' | 'paused' | 'recalibrating' | 'completed' | 'interrupted';
   settings: TimerSettings; phase: 'focus' | 'rest'; cycle: number; remainingMs: number;
   ratioBasis?: 'focus-v1';

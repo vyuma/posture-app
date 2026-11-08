@@ -45,3 +45,9 @@
 .work-widget-speech-frame .work-widget-speech{inset:0;transform-origin:50% 85%;transition:none}
 .work-widget-speech.is-feedback span{animation:none}
 .work-widget-announcement{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+/* The character/speech is the drag handle; timer controls remain ordinary buttons. */
+.work-widget:not(.is-native) .work-widget-character{touch-action:none;user-select:none;-webkit-user-select:none}
+.work-widget:not(.is-native) .work-widget-character:focus-visible{outline:none}
+.work-widget:not(.is-native) .work-widget-character:focus-visible .work-widget-mask{outline:2px solid #111f6e;outline-offset:3px;border-radius:12px}
+.work-widget.is-dragging .work-widget-mask,.work-widget.is-dragging .work-widget-speech-frame,.work-widget.is-dragging .work-widget-speech{cursor:grabbing}

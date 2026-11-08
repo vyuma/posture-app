@@ -1,0 +1,47 @@
+.anago-preview {
+  min-height: 100dvh;
+  color: #254b49;
+  background: #eaf5ef;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  padding: clamp(28px, 7vw, 96px);
+  box-sizing: border-box;
+}
+.anago-preview-copy { position: relative; z-index: 1; max-width: 540px; }
+.anago-preview-eyebrow { font-size: 12px; letter-spacing: .18em; }
+.anago-preview h1 { font-size: clamp(30px, 3.4vw, 44px); line-height: 1.3; margin: 26px 0 20px; letter-spacing: -.05em; text-wrap: balance; }
+.anago-preview p { line-height: 1.8; font-size: 16px; margin: 0 0 28px; }
+.anago-preview-controls { display: flex; flex-wrap: wrap; gap: 8px; }
+.anago-preview button { font: inherit; border: 1px solid #c4d9cf; border-radius: 24px; padding: 11px 17px; background: transparent; color: inherit; cursor: pointer; }
+.anago-preview button[aria-pressed="true"] { background: #254b49; border-color: #254b49; color: white; }
+.anago-preview button:focus-visible, .anago-preview a:focus-visible { outline: 3px solid #f78000; outline-offset: 4px; }
+.anago-preview .anago-preview-play { margin: 24px 0 36px; border: 0; padding-left: 0; font-weight: 650; }
+.anago-preview .anago-preview-note { font-size: 12px; opacity: .7; }
+.anago-preview-sink-toggle { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; font-size: 13px; cursor: pointer; }
+.anago-preview-sink-toggle input { accent-color: #254b49; }
+.anago-preview a { color: inherit; font-size: 13px; }
+.anago-preview .web-inline-character-overlay { right: 0; }
+.anago-preview .web-inline-character { width: min(480px, 42vw, 72dvh); --web-inline-character-scale: 1; }
+.anago-preview .web-inline-character-lottie { filter: none; }
+.anago-preview-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 28px; }
+.anago-playful-choices { display: grid; gap: 12px; }
+.anago-playful-choices button { text-align: left; border-radius: 16px; padding: 16px 20px; }
+.anago-playful-choices button span, .anago-playful-choices strong { display: block; }
+.anago-playful-choices strong { font-size: 23px; margin: 4px 0 6px; }
+.anago-playful-choices button span { font-size: 13px; line-height: 1.7; }
+.anago-playful-choices .anago-playful-meta { font-size: 11px; opacity: .75; }
+.anago-preview button:disabled { cursor: default; opacity: .6; }
+.anago-playful-transport { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; margin: 20px 0 14px; font-size: 13px; }
+.anago-playful-transport select { font: inherit; color: inherit; background: transparent; border: 1px solid #c4d9cf; border-radius: 8px; padding: 8px; margin-left: 6px; }
+.anago-playful-transport select:focus-visible { outline: 3px solid #f78000; outline-offset: 3px; }
+.anago-playful-effects-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; line-height: 1.6; margin: 0 0 14px; cursor: pointer; }
+.anago-playful-effects-toggle input { accent-color: #254b49; }
+/* Lottie writes an inline display value on each frame; this switch must win. */
+.anago-preview [data-effects-enabled="false"] .anago-playful-effect { display: none !important; }
+@media (min-width: 761px) {
+  .anago-preview-copy { max-width: min(540px, 49vw); }
+}
+@media (max-width: 760px) {
+  .anago-preview .web-inline-character-overlay { position: relative; right: auto; bottom: auto; padding: 0; margin: 20px auto; width: min(298px, 100%); z-index: 0; }
+  .anago-preview .web-inline-character { width: 100%; }
+  .anago-preview { padding-bottom: 40px; }
+}

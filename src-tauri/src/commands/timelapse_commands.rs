@@ -81,9 +81,9 @@ fn execute(root: &Path, downloads: &Path, operation: &str, payload: Value) -> Re
 }
 
 #[tauri::command]
-pub async fn timelapse_store(app: tauri::AppHandle, window: tauri::WebviewWindow, operation: String, payload: Option<Value>, qa: Option<bool>) -> Result<Value, String> {
+pub async fn timelapse_store(app: tauri::AppHandle, window: tauri::WebviewWindow, operation: String, payload: Option<Value>, qa: Option<bool>, space: Option<String>) -> Result<Value, String> {
     if window.label() != "main" { return Err("timelapse is owned by the main window".into()); }
-    let mut root = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    let mut root = super::account_commands::profile_root(&app, space.as_deref())?;
     if qa == Some(true) {
         if !cfg!(debug_assertions) { return Err("test storage is only available in development".into()); }
         root = root.join("timelapse-qa");

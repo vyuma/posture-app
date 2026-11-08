@@ -1,0 +1,123 @@
+/* LP-6 Blue 2260:436: 1512 × 980. The steps sit directly on the blue. */
+.lp-how { position: relative; background: #0095c4; }
+.lp-how::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--wave-unit) * -72);
+  height: calc(var(--wave-unit) * 102);
+  background: #0095c4;
+  mask: url('/lp/lp6/wave-blue.svg') calc(50% - var(--wave-unit) * 68) top / calc(var(--wave-unit) * 1648) 100% repeat-x;
+  pointer-events: none;
+}
+/* Keep the Figma 1648 × 102 wave proportional, including narrow screens. */
+.lp-how { --wave-unit: calc(clamp(760px, 100vw, 1512px) / 1512); --how-unit: calc(min(100vw, 1512px) / 1512); }
+.lp-how .lp-how-inner {
+  position: relative;
+  width: min(100%, 1512px);
+  height: calc(var(--how-unit) * 980);
+  padding: 0;
+}
+.lp-how .lp-how-inner > h2 {
+  position: absolute;
+  left: calc(var(--how-unit) * 144);
+  top: calc(var(--how-unit) * 84);
+  margin: 0;
+  gap: calc(var(--how-unit) * 29);
+  align-items: flex-start;
+  font-size: calc(var(--how-unit) * 32);
+  font-weight: 600;
+  line-height: 2;
+  letter-spacing: calc(var(--how-unit) * 2);
+}
+.lp-how .lp-how-inner > h2 .lp-brand-mark {
+  width: calc(var(--how-unit) * 221);
+  height: calc(var(--how-unit) * 83);
+  object-fit: contain;
+  filter: none;
+}
+.lp-how-inner > h2 > span { margin-top: calc(var(--how-unit) * 30); }
+.lp-how .lp-how-list { display: block; }
+.lp-how-step {
+  position: absolute;
+  top: calc(var(--how-unit) * 254);
+  left: calc(var(--how-unit) * 144);
+  width: calc(var(--how-unit) * 331.6);
+}
+.lp-how-step:nth-child(2) { left: calc(var(--how-unit) * 522); width: calc(var(--how-unit) * 393.59); }
+.lp-how-step:nth-child(3) { left: calc(var(--how-unit) * 964); width: calc(var(--how-unit) * 404); }
+.lp-how-step + .lp-how-step::before {
+  content: "";
+  position: absolute;
+  top: calc(var(--how-unit) * 8);
+  left: calc(var(--how-unit) * -24);
+  width: calc(var(--how-unit) * 2);
+  height: calc(var(--how-unit) * 478);
+  background: #ffffff33;
+}
+.lp-how-step header { display: flex; gap: calc(var(--how-unit) * 16); }
+.lp-how-step header > span {
+  display: grid;
+  flex: 0 0 calc(var(--how-unit) * 48);
+  height: calc(var(--how-unit) * 48);
+  margin-top: calc(var(--how-unit) * 8);
+  place-items: center;
+  border-radius: 50%;
+  color: #0095c4;
+  background: white;
+  font-size: calc(var(--how-unit) * 24);
+  font-weight: 600;
+  letter-spacing: calc(var(--how-unit) * 2);
+}
+.lp-how-step header > div { min-width: 0; }
+.lp-how-step h3 { margin: 0; font-size: calc(var(--how-unit) * 32); font-weight: 600; line-height: 2; letter-spacing: calc(var(--how-unit) * 2); white-space: nowrap; }
+.lp-how-step p { margin: calc(var(--how-unit) * 16) 0 0; font-size: calc(var(--how-unit) * 16); font-weight: 600; line-height: 2; letter-spacing: calc(var(--how-unit) * 2); white-space: pre; }
+.lp-how-step small { display: block; font-size: calc(var(--how-unit) * 12); font-weight: 600; line-height: 2; letter-spacing: calc(var(--how-unit) * 2); white-space: nowrap; }
+.lp-how-step > .lp-how-devices { position: absolute; top: calc(var(--how-unit) * 192); left: 0; display: block; width: calc(var(--how-unit) * 393.59); height: auto; }
+.lp-how-step:first-child > .lp-how-devices { width: 100%; }
+.lp-how .lp-video-link {
+  position: absolute;
+  top: calc(var(--how-unit) * 796);
+  left: calc(var(--how-unit) * 610);
+  width: calc(var(--how-unit) * 292);
+  height: calc(var(--how-unit) * 64);
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  justify-content: center;
+  gap: calc(var(--how-unit) * 16);
+  color: #0095c4;
+  font-size: calc(var(--how-unit) * 20);
+  font-weight: 600;
+  line-height: 2;
+  letter-spacing: 0;
+  box-shadow: 0 0 8.52px #00000026;
+}
+.lp-video-link > img { width: calc(var(--how-unit) * 32); height: calc(var(--how-unit) * 32); }
+@media (max-width: 1023px) {
+  .lp-how { --how-unit: 1px; }
+  .lp-how .lp-how-inner { height: auto; padding: 48px 24px 64px; }
+  .lp-how .lp-how-inner > h2 { position: static; gap: 16px; font-size: 24px; letter-spacing: 1px; margin-bottom: 48px; align-items: center; }
+  .lp-how .lp-how-inner > h2 .lp-brand-mark { width: 142px; height: auto; }
+  .lp-how-inner > h2 > span { margin-top: 0; }
+  .lp-how .lp-how-list { display: grid; gap: 36px; }
+  .lp-how-step, .lp-how-step:nth-child(n) { position: relative; inset: auto; width: min(100%, 420px); margin: 0 auto; }
+  .lp-how-step + .lp-how-step::before { top: -18px; left: 0; width: 100%; height: 1px; }
+  .lp-how-step header { gap: 12px; }
+  .lp-how-step header > span { flex-basis: 36px; height: 36px; margin-top: 4px; font-size: 20px; }
+  .lp-how-step h3 { font-size: 22px; letter-spacing: 1px; }
+  .lp-how-step p { font-size: 14px; letter-spacing: 1px; white-space: pre-line; margin-top: 12px; }
+  .lp-how-step small { font-size: 11px; letter-spacing: .5px; white-space: normal; }
+  .lp-how-step > .lp-how-devices, .lp-how-step:first-child > .lp-how-devices { position: static; width: 100%; margin-top: 24px; }
+  .lp-how .lp-video-link { position: static; width: min(100%, 292px); height: 56px; margin: 40px auto 0; font-size: 18px; gap: 12px; }
+}
+
+/* The device artwork is exported from the current LP-6 nodes, without labels
+   or the surrounding blue layout baked into the image. */
+.lp-how-devices { aspect-ratio: 393.591 / 251; }
+.lp-how-devices > img { display: block; width: 100%; height: 100%; }
+.lp-how-step:first-child > .lp-how-devices { aspect-ratio: 331.598 / 277.004; }
+.lp-how-step:first-child .lp-how-devices > img:first-child { position: absolute; top: 0; left: 0; width: 100%; height: 76.178%; }
+.lp-how-devices > .lp-how-phone { position: absolute; top: 12.101%; left: 49.349%; width: 36.293%; height: 87.899%; }
+@media (max-width: 1023px) { .lp-how-step > .lp-how-devices, .lp-how-step:first-child > .lp-how-devices { position: relative; inset: auto; } }

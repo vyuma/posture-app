@@ -57,6 +57,11 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::work_commands::work_database,
+            commands::account_commands::account_local_state,
+            commands::account_auth::account_request,
+            commands::account_auth::account_login,
+            commands::account_auth::account_forget,
+            commands::account_auth::account_open_settings,
             commands::timelapse_commands::timelapse_store,
             commands::work_widget_commands::work_widget_update,
             commands::work_widget_commands::work_widget_get,

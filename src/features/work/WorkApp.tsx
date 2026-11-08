@@ -1,4 +1,7 @@
 import { measurementReading, petPosture } from './postureReading';
+import { AccountBoundary, useAccounts } from '../accounts/AccountBoundary';
+import { AccountSettings } from '../accounts/AccountSettings';
+import { flushOutbox, makeTicket, provenance } from '../accounts/outbox';
 import { usePostureSpeech } from './usePostureSpeech';
 import { useWorkScreenTransition } from './useWorkScreenTransition';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -39,9 +42,14 @@ type Screen = 'home' | 'story' | 'picker' | 'timer' | MeasureStage | 'result';
 import './responsive-layout.css';
 const catalogIds = catalog.map(item => item.id);
 export default function WorkApp() {
+  return <AccountBoundary><WorkAppContent /></AccountBoundary>;
+}
+function WorkAppContent() {
+  const accounts=useAccounts();
+  const accountRef=useRef(accounts.state);accountRef.current=accounts.state;
   const [screen, setScreen] = useState<Screen>(() => hasCompletedOnboardingStory() ? 'home' : 'story');
   const [collection, setCollection] = useState<Collection | null>(null); const [session, setSession] = useState<Session | null>(null);
-  const [detail, setDetail] = useState<Session | null>(null); const [dialog, setDialog] = useState<'reset' | 'finish' | 'sound' | 'settings' | null>(null);
+  const [detail, setDetail] = useState<Session | null>(null); const [dialog, setDialog] = useState<'reset' | 'finish' | 'sound' | 'settings' | null>(() => /[?&](settings|profile|account)=/.test(location.search) ? 'settings' : null);
   const [legal, setLegal] = useState<LegalPage | null>(null);
   const [recording, setRecording] = useState(false);
   const [videoSettings, setVideoSettings] = useState(loadTimelapseSettings);
@@ -79,11 +87,13 @@ export default function WorkApp() {
         if (release && !cancelled) await openTimelapseStore().then(store => store.recover()).catch(() => setNotice('タイムラプスの保存状態を確認できませんでした。姿勢測定は利用できます。'));
         if (cancelled) return;
         setCollection(value);
+        void flushOutbox(repo,accountRef.current.ownerId).catch(()=>{});
         if (count) setNotice('前回の中断した測定記録を保存しました。新しく測定を始められます。');
       } finally { release?.(); }
     })().catch(cause => { if (!cancelled) report(cause); });
     return () => { cancelled = true; mounted.current = false; void recorder.current?.stop(); releaseMeasurement(); };
   }, [report, releaseMeasurement]);
+  useEffect(()=>{const send=()=>{if(repository.current)void flushOutbox(repository.current,accountRef.current.ownerId).catch(()=>{});};const timer=setInterval(send,60_000);window.addEventListener('online',send);return()=>{clearInterval(timer);window.removeEventListener('online',send);};},[]);
   useEffect(() => { configureRecoverySound({ enabled: sound.enabled, src: sound.selectedSound, volume: sound.volume }); saveSoundSettings(sound); }, [sound]);
   useEffect(() => { const flush = () => checkpoint(); window.addEventListener('pagehide', flush); const interval = setInterval(flush, 5000); return () => { clearInterval(interval); window.removeEventListener('pagehide', flush); }; }, [checkpoint]);
 
@@ -91,7 +101,7 @@ export default function WorkApp() {
     const current = live.current; if (!current || !repository.current || finalizePending.current) return;
     finalizePending.current = true; setBusy(true); setError('');
     void recorder.current?.stop();
-    try { const result = await enqueue(() => repository.current!.finish(structuredClone(current), catalogIds)); live.current = result.session; setSession(result.session); setCollection(result.collection); setDialog(null); setScreen('result'); releaseMeasurement(); void publishWidget(null).catch(report); }
+    try { const result = await enqueue(() => repository.current!.finish(structuredClone(current), catalogIds)); live.current = result.session; setSession(result.session); setCollection(result.collection); setDialog(null); setScreen('result'); releaseMeasurement(); void flushOutbox(repository.current!,accountRef.current.ownerId).catch(()=>{}); void publishWidget(null).catch(report); }
     catch (cause) { report(cause); }
     finally { finalizePending.current = false; setBusy(false); }
   }, [enqueue, report, releaseMeasurement]);
@@ -175,7 +185,7 @@ export default function WorkApp() {
       const baseline = pendingBaseline.current;
       if (!baseline || live.current?.status === 'completed' || live.current?.status === 'interrupted') return;
       if (live.current?.status === 'recalibrating') endCalibration(live.current, baseline);
-      else live.current = createSession(crypto.randomUUID(), settings.current, collection.generation, baseline);
+      else { live.current = createSession(crypto.randomUUID(), settings.current, collection.generation, baseline);live.current.provenance=provenance(accountRef.current);live.current.analysis=makeTicket(accountRef.current,'automatic'); }
       refresh(); checkpoint(); setScreen('active');
     }, 1000);
     return () => clearTimeout(timer);
@@ -217,7 +227,7 @@ export default function WorkApp() {
     {dialog === 'finish' && <FinishDialog busy={busy} onContinue={() => setDialog(null)} onFinish={finish} />}
     {dialog === 'sound' && <SoundSettingsDialog settings={sound} onChange={setSound} onClose={() => setDialog(null)} onPreview={() => void playSoundPreview({ src: sound.selectedSound, volume: sound.volume })} />}
     {legal && <Dialog title={LEGAL_TITLES[legal]} className="piiin-legal-dialog" onClose={() => setLegal(null)}><LegalContent page={legal} /></Dialog>}
-    {dialog === 'settings' && <TimelapseSettings value={videoSettings} onChange={changeVideoSettings} onClose={() => setDialog(null)}><NextRewardSetting collection={collection} onChange={changeNextReward} /></TimelapseSettings>}
+    {dialog === 'settings' && <TimelapseSettings value={videoSettings} onChange={changeVideoSettings} onClose={() => setDialog(null)} footer={<AccountSettings />}><NextRewardSetting collection={collection} onChange={changeNextReward} /></TimelapseSettings>}
     </div>
     {timelapse && <TimelapseScreen key={timelapse.id} session={timelapse} settings={videoSettings} onClose={() => setTimelapse(null)} onHome={home} />}
     {(error || notice) && <div className="work-notice" role={error ? 'alert' : 'status'}><span>{error || notice}</span>{error && session?.status === 'completed' && screen !== 'result' && <button disabled={busy} onClick={() => void finalize()}>保存を再試行</button>}<button onClick={() => { setError(''); setNotice(''); }}>閉じる</button></div>}

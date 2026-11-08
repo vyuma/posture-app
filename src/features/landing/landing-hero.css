@@ -1,0 +1,149 @@
+/* LP-6 Hero 2260:205. Shared desktop coordinate system; latest desktop
+   scene and full-width sand layers are defined in landing-lp6.css. */
+.lp-hero {
+  --hero-width: min(100vw, 1512px);
+  height: calc(var(--hero-width) * 972 / 1512);
+  min-height: 0;
+  background: linear-gradient(180deg, #0095c4 0%, #f5f1dc 100%);
+}
+
+.lp-hero .lp-header {
+  position: absolute;
+  inset: 0 0 auto;
+  width: var(--hero-width);
+  height: calc(var(--hero-width) * 76 / 1512);
+  padding: calc(var(--hero-width) * 16 / 1512) calc(var(--hero-width) * 48 / 1512);
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+.lp-hero .lp-header-logo { width: calc(var(--hero-width) * 90 / 1512); }
+.lp-hero .lp-header .lp-brand-mark--light { filter: brightness(0) invert(1); }
+.lp-hero .lp-header nav { gap: calc(var(--hero-width) * 16 / 1512); }
+.lp-hero .lp-header nav a,
+.lp-hero .lp-header nav button {
+  min-height: 0;
+  height: calc(var(--hero-width) * 44 / 1512);
+  padding: 0;
+  font-size: calc(var(--hero-width) * 14 / 1512);
+  font-weight: 600;
+  line-height: 2;
+  letter-spacing: 0;
+}
+.lp-hero .lp-header-web {
+  width: calc(var(--hero-width) * 150 / 1512);
+  min-width: 0;
+  border: 1px solid white;
+  color: white;
+  background: transparent;
+}
+.lp-hero .lp-header-download {
+  width: calc(var(--hero-width) * 188 / 1512);
+  min-width: 0;
+  color: #0095c4;
+  background: white;
+  box-shadow: 0 0 8.52px #00000026;
+}
+.lp-hero .lp-header-download span { display: inline; }
+
+.lp-hero .lp-hero-content {
+  position: relative;
+  display: block;
+  width: var(--hero-width);
+  max-width: none;
+  height: 100%;
+  margin: 0 auto;
+  pointer-events: none;
+}
+.lp-hero .lp-hero-brand {
+  position: absolute;
+  top: 23.868313%; /* 232 / 972; designer's revised hero reference */
+  left: 13.558201%; /* 205 / 1512 */
+  width: 25%; /* 378 / 1512 */
+  margin: 0;
+  pointer-events: auto;
+}
+.lp-hero .lp-hero-title {
+  position: relative;
+  top: calc(var(--hero-width) * -8 / 1512);
+  width: 92.592593%; /* 350 / 378; artwork stays slightly narrower than the buttons */
+  margin: 0 auto;
+  aspect-ratio: 407 / 255;
+  overflow: hidden;
+}
+/* Source PNG has transparent margins; preserve its artwork proportions. */
+.lp-hero .lp-hero-logo {
+  position: absolute;
+  width: 139.08%;
+  max-width: none;
+  height: auto;
+  left: -19.6%;
+  top: -19.4%;
+  margin: 0;
+}
+.lp-hero .lp-hero-actions {
+  width: 100%;
+  margin: calc(var(--hero-width) * 36 / 1512) auto 0;
+  gap: calc(var(--hero-width) * 24 / 1512);
+}
+.lp-hero .lp-hero-actions a,
+.lp-hero .lp-hero-actions button {
+  height: calc(var(--hero-width) * 64 / 1512);
+  min-height: 0;
+  padding: 0;
+  font-size: calc(var(--hero-width) * 20 / 1512);
+  font-weight: 600;
+  line-height: 2;
+  letter-spacing: 0;
+  box-shadow: 0 0 8.52px #00000026;
+}
+.lp-hero .lp-hero-download { color: #0095c4; }
+.lp-hero .lp-hero-web { border: 1px solid white; background: #9fd1d4; }
+.lp-hero .lp-hero-laptop {
+  position: absolute;
+  top: 19.686214%; /* 191.35 / 972 */
+  left: 45.502646%; /* 688 / 1512 */
+  width: 48.015873%; /* 726 / 1512 */
+  height: auto;
+  aspect-ratio: 726 / 461.65;
+  margin: 0;
+  overflow: visible;
+}
+.lp-hero-laptop > img { position: absolute; inset: 0 auto auto 0; display: block; width: 103.292011%; max-width: none; height: auto; }
+.lp-hero .lp-character-bed--hero {
+  position: absolute;
+  inset: auto 0 calc(var(--hero-width) * 2 / 1512);
+  width: var(--hero-width);
+  height: auto;
+  aspect-ratio: 1512 / 229;
+  margin: 0 auto;
+}
+.lp-hero .lp-beach-scene { width: 100%; height: 100%; left: 0; transform: none; }
+.lp-hero .lp-beach-sand { height: 44.541485%; mask-size: 100% 100%; mask-repeat: no-repeat; }
+.lp-hero .lp-beach-sand--back { bottom: 18.777293%; background: #e8e5cb; mask-image: url('/lp/sand-back.svg'); }
+.lp-hero .lp-beach-sand--front { bottom: 0; background: #f5f1dc; mask-image: url('/lp/sand-front.svg'); }
+
+@media (max-width: 1023px) {
+  .lp-hero { height: auto; }
+  .lp-hero .lp-header {
+    position: relative;
+    height: auto;
+    min-height: 64px;
+    padding: 12px 16px;
+    gap: 10px;
+  }
+  .lp-hero .lp-header-logo { width: 60px; }
+  .lp-hero .lp-header nav { gap: 8px; }
+  .lp-hero .lp-header nav a,
+  .lp-hero .lp-header nav button { height: 44px; font-size: 10px; }
+  .lp-hero .lp-header-web { width: 92px; }
+  .lp-hero .lp-header-download { width: 112px; }
+  .lp-hero .lp-hero-content { width: min(calc(100% - 40px), 480px); height: auto; }
+  .lp-hero .lp-hero-brand { position: relative; inset: auto; width: min(100%, 360px); margin: 28px auto 0; }
+  .lp-hero .lp-hero-actions { width: 100%; margin: 20px auto 0; gap: 16px; }
+  .lp-hero .lp-hero-actions a,
+  .lp-hero .lp-hero-actions button { height: 52px; font-size: 16px; }
+  .lp-hero .lp-hero-laptop { position: relative; inset: auto; width: 96.81%; margin: 32px 0 0; }
+  .lp-hero .lp-character-bed--hero { position: relative; inset: auto; width: 100%; height: 115.1px; aspect-ratio: auto; margin-top: 28px; }
+  .lp-hero .lp-beach-scene { width: max(100%, 760px); height: 115.1px; left: 50%; transform: translateX(-50%); }
+}

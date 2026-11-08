@@ -1,0 +1,92 @@
+# 統合・分析の運用
+
+## 基準と移行
+
+この変更はデスクトップ PR #34 の `e8a1186` を基準に、ウェブ PR #31 の `af8e477` と保存用 PR #32 の `c997009` から選別した現行ファイルを取り込んだ。非公開リポジトリのGit履歴や内部監査資料は公開リポジトリへ取り込んでいない。ストア審査状況はコード統合の完了条件とは別であり、PR #34 自体を承認・マージしたわけではない。
+
+| 責任 | 場所 |
+| --- | --- |
+| 共通測定・キャラクター・設定 | `src/features/` |
+| ウェブ入口・プラットフォーム差し替え | `web/`, `vite.web.config.ts`, `*.web.ts` |
+| デスクトップ入口・OS保存・通信 | `src/main.tsx`, `src-tauri/` |
+| 分析契約とサーバー | `shared/telemetry.ts`, `server/` |
+| モバイル同伴アプリ | 別リポジトリ `vyuma/vibe-app`。今回変更なし |
+
+## ローカル開発と検査
+
+Node 24.22.1、Bun 1.3.13 を使う。Bun のパッケージ管理は維持し、cf はNodeで実行する。Cloudflareの設定APIとVite v2はベータのため、`bun.lock` の版を固定して更新時にWorkerの実行検査を行う。
+
+```
+bun install --frozen-lockfile
+bun run build
+bun run build:web
+bun run test:accounts
+npm run test:server
+bun run test:work
+bun run test:updates
+bun run test:overlay-position
+cargo check --locked --manifest-path src-tauri/Cargo.toml
+cargo check --locked --manifest-path src-tauri/Cargo.toml --no-default-features --features mac-app-store
+bun run dev:web
+```
+
+UIテスト用の認証モックと、実際のGoogle/Apple OAuth・署名付きアプリ・ストア審査は別の検証である。既存のBunモジュールモックを使うUIテストはコマンドを分ける（同じプロセスにまとめるとモックが漏れる）。
+
+## Cloudflare の初期設定
+
+1. 管理者が `cf auth login` で対象アカウントにログインし、Workers有料プランと非公開R2を用意する。D1は本番・プレビューで分離する。R2の公開URLとカスタムドメイン公開を有効にしない。
+2. D1のUUIDを `PIIIN_D1_ID` に設定。`node node_modules/cf/bin/cf d1 migrations apply "$PIIIN_D1_ID" --dir server/migrations` を実行する。新規デプロイ前に適用し、既存スキーマの破壊的ロールバックはしない。
+3. GitHub environments `cloudflare-production`, `cloudflare-preview` に限定した `CLOUDFLARE_API_TOKEN` を登録し、変数 `CLOUDFLARE_ACCOUNT_ID`, `PIIIN_D1_ID`、プレビュー用 `WORKERS_SUBDOMAIN` を登録する。プレビューのD1を本番UUIDにしない。fork PRには秘密を渡さない。
+4. Google OAuth Web clientに正規URLと `/api/auth/callback/google` を登録。Apple Services IDに `/api/auth/callback/apple` を登録し、Apple Team/Key/秘密鍵を用意する。People追加権限は初期状態で無効。
+5. Worker Secretsに `BETTER_AUTH_SECRET`（32文字以上の無作為値）、Google client ID/secret、`EXPORT_TOKEN` を登録し、ビルド変数 `PIIIN_AUTH_ENABLED=true` を有効にする。Appleを使う場合は `PIIIN_APPLE_ENABLED=true` と `APPLE_CLIENT_ID`, `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_PRIVATE_KEY` を登録する。キー更新時はApple失効・削除処理も確認する。
+6. 既存開発者ログインは `PIIIN_DEVELOPER_ENABLED=true` と `PIIIN_DEV_USERNAME`, `PIIIN_DEV_PASSWORD`, `PIIIN_DEV_SESSION_SECRET` で引き継ぐ。値をGitやPRに書かない。
+7. Workers/D1/R2使用量と請求通知をCloudflareアカウントで設定する。月5〜10米ドルは運用目標であり上限ではない。サンプル数・D1行読み取り/書き込み・R2容量/操作・Worker CPUを監視する。アプリ側は圧縮・分割・入力上限・レート制限を設ける。
+
+認証未設定でもゲスト利用は可能で、ログインボタンは準備中のエラーを表示する。Mac App Storeへの提出前にはAppleをGoogleと同等に有効化し、サンドボックス署名後のKeychainとシステムブラウザーを実機確認する。
+
+## 配布と切り戻し
+
+PRは共通・サーバー・macOS・Windowsの検査後、`piiin-pr-N` Workerにプレビューを出す。本番と共有しないD1・R2を使い、テスターの実データは入れない。mainは検査成功後 `piiin` を更新する。ドメイン切替前は `PIIIN_DOMAIN_ENABLED` を無効のままにする。
+
+プレビューでLP、`/app`、`/privacy`、`/support`、`/login`、開発者API、`/api/download-mac`を確認する。実OAuthは登録済みの専用検証URLで行う。本番デプロイ確認後、管理者が既存DNS/Vercel設定を保存して `www.piiin.app` をWorkerへ切り替える。同じHTTPS originとパスを保つことで既存ブラウザー保存先を維持する。Vercelプロジェクトは初期移行期間中に削除しない。切り戻しはDNS/ドメインを保存済みのVercel構成へ戻し、新規送信はローカル待機にする。D1・R2を巻き戻したり消したりしない。
+
+## リリース
+
+`vMAJOR.MINOR.PATCH` タグで各チャネルを独立実行する。現在のMac Store版が1.0.0のため全チャネル共通タグは1.0.0以上とする。既存版からの増加を確認してタグを作る。識別子・アップデート公開鍵・ダウンロードURLは変更しない。Store build番号は既存値とGitHub run番号から増加する。
+
+`direct`, `mac-app-store`, `microsoft-store` GitHub environmentsに専用の資格情報を設定する。Macは署名証明書（StoreはApplicationとInstallerの両方）、パスワード、署名ID、ASC API key/issuer/private keyを必要とする。直接配布は既存の updater private/public keyも必要。Storeは配布用provision profileを必要とする。Macは署名・公証後にReleaseを公開し、StoreはFastlaneで審査提出・承認後自動公開を指定する。Windowsは既存MSIX identityで作成し、Partner Centerに提出して承認後自動公開を指定する。
+
+Microsoft APIには初回の年齢区分を含む提出とAzureアプリの関連付けが必要。`MS_TENANT_ID`, `MS_CLIENT_ID`, `MS_CLIENT_SECRET` を環境に設定する。既存の未完了提出を自動で破棄しない。チャネル失敗は同じタグを `workflow_dispatch` の `channel` で選び再試行する。公開済みGitHub Releaseは上書きしない。Store処理中の再試行は提出状況を確認してから行う。
+
+## 分析の読み方・内訳の保管
+
+`measurements.completed_at` がある記録だけを完了測定として集計する。部分アップロードもエクスポートには `complete=false` で残す。初回受信日時は別のreceiptで固定し、同意世代が変わっても同じ測定を重複集計しない。過去記録の取得環境が不明な場合は `metadataBasis=reconstructed` と `appVersion=unknown` を明示する。
+
+良い姿勢率は `ratioBasis` とセットで扱う。`observableRatio=validMs/focusMs`、判定版、基準区間数、手動/自動送信を併記する。サーバーに来ていないローカル記録の存在は分からないため、未送信日を不使用日と断定しない。顔・肩の認識不能を悪い姿勢の実測値として扱わない。部位別原因や医学的な改善は分析対象外。
+
+```
+PIIIN_EXPORT_TOKEN=... node scripts/export-analysis.mjs output=/private/analysis.json from=2026-11-01T00:00:00Z to=2026-12-01T00:00:00Z
+```
+
+トークンはシェル履歴に直接入力せず安全な環境から渡す。`format=csv`、`user=<analysisId>`、`platform=web|macos|windows`で絞る。`view=series` は点数・偏差・認識状態とイベントをJSON/CSVで返し、`recordType` で区別する。各ページは最大10分割分で、未完了記録には `complete=false` が付く。任意プロフィールは `view=profiles` のJSONで取得する。エクスポート先は公開Gitリポジトリ外にする。
+
+観測時間がゼロならアプリの良い姿勢率と観測中の良い姿勢率は `null` であり、0%とは区別する。同一測定の手動再試行では最初に保存された送信区分・受信日時を維持する。エクスポートは逐次ページ取得であり、更新中のデータベースの固定スナップショットではない。
+
+## 削除・保持・復旧
+
+最大24か月は最初の受信を基準とし、APIとエクスポートは期限切れを即座に除外する。15分ごとの処理で期限切れデータを削除する。R2削除ジョブは遅れて到着するアップロードを清掃するため24時間残る。削除済みIDをreceiptに残して古い端末からの自動復活を防ぐ。
+
+D1 Time Travelなどのバックアップは最大30日までとし、別の長期バックアップを作らない。R2 `deletions/` の最小限の削除台帳はD1の復元で戻さない。復旧時は `PIIIN_RESTORE_LOCK=true` でデプロイして送信・エクスポートを止める。D1復元後、運営者トークンで `POST /api/operator/reconcile` を呼び、返された `nextCursor` がある間は `?cursor=...` で繰り返す。台帳に基づく分析データ・プロフィール・セッションの削除を適用し、アカウント削除も反映したことを確認してからロックを解除する。復旧直後に無条件でCronやアップロードを再開しない。
+
+公式資料: [Cloudflare設定](https://developers.cloudflare.com/cf/projects/cloudflare-config/)、[Workers Vite v2](https://developers.cloudflare.com/workers/vite-plugin/v2-beta/)、[Better Auth Drizzle](https://better-auth.com/docs/adapters/drizzle)、[Google People API](https://developers.google.com/people/api/rest/v1/people/get)、[Tauri App Store](https://v2.tauri.app/distribute/app-store/)、[Microsoft提出API](https://learn.microsoft.com/en-us/windows/uwp/monetize/manage-app-submissions)。
+
+## 2026-11-08 の検証記録
+
+- 共通フロントエンド、Cloudflare Web/Worker、Mac Storeフロントエンドのビルドを実行。Storeの姿勢推定用7資産（40,476,641 bytes）の同梱検査も成功。
+- ブラウザー保存・送信待ち7テスト、実MiniflareのD1/R2サーバー9テストが成功。A/B隔離、オフライン、認証切れ、応答消失、ゲスト選択中の中断、同一測定の再送、部分アップロード、詳細エクスポート、24か月期限の清掃、削除台帳による復元拒否を検査。
+- 測定・追跡・タイムラプス配置・ウィジェット53、更新4、オーバーレイ1、MacダウンロードAPI2テストが成功。
+- Rustの通常/Store `cargo check --locked`、Rustライブラリ7テスト、XcodeのSwift 5テストが成功。Command Line ToolsではSwiftUIマクロが見つからなかったため、Swiftは `DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcrun swift test --package-path src-tauri/native-pet` で実行した。
+- Chromiumで1512×982・1024×640・390×844の設定を確認。アカウント領域はタイムラプスの案内より後、完了ボタンの直前。SSOボタンは高さ48px、幅360px（390px画面では272px）、フォーカス輪郭3px。文書幅は各画面幅と一致し、長い日本語/韓国語の名前・空の記録一覧・削除確認・Escapeで閉じる操作を確認した。認証応答はモックであり、Google/Appleとの実通信ではない。
+- `actionlint 1.7.12` で変更した4ワークフローを検査し、Nodeスクリプト/Fastlaneの構文と `git diff --check` を検査。依存性の修正版を固定し、`bun audit --json` の検出は0件。Bunモジュールモックを使うテストは別プロセスで実行した。
+
+残る検証: Cloudflareアカウント接続、実D1/R2作成と使用量通知、Google/Apple OAuthと追加権限審査、署名付きMac/StoreでのOS安全保管・実機UI、Windows実機、ストア提出/承認後公開、実ドメイン切替/切り戻し。既存カメラ・LAN・タイムラプスの実機全行程は今回再実行していない。Viteの大きなチャンク警告と既存の未使用ペアリングRust警告は残る。Cloudflare cf/Vite v2ベータは版を固定している。

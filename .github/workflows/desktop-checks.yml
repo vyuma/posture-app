@@ -1,10 +1,9 @@
 name: Desktop checks
 on:
-  pull_request:
-    branches: [main]
+  workflow_call:
   workflow_dispatch:
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: desktop-checks-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 permissions:
   contents: read
@@ -17,6 +16,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.22.1
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.13
@@ -26,6 +28,8 @@ jobs:
       - run: bun run test:overlay-position
       - run: bun test scripts/head-tilt-posture.test.ts scripts/landmark-loss.test.ts scripts/work-session.test.ts
       - run: bun run build
+      - if: runner.os == 'macOS'
+        run: bun run build:store
       - if: runner.os == 'macOS'
         name: Validate native pet playback
         run: xcrun swift test --package-path src-tauri/native-pet
@@ -38,6 +42,8 @@ jobs:
           [System.Management.Automation.Language.Parser]::ParseFile("$PWD/scripts/package-windows-store.ps1", [ref]$tokens, [ref]$parseErrors) | Out-Null
           if ($parseErrors.Count -gt 0) { throw ($parseErrors | Out-String) }
       - run: cargo check --locked --manifest-path src-tauri/Cargo.toml
+      - if: runner.os == 'macOS'
+        run: cargo check --locked --manifest-path src-tauri/Cargo.toml --no-default-features --features mac-app-store
       - if: runner.os == 'Windows'
         run: bun run tauri build --no-bundle
       - if: runner.os == 'Windows'
