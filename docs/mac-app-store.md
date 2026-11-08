@@ -1,5 +1,13 @@
 # Mac App Store 配布準備
 
+### 2026-11-08 TestFlight 更新（1.0.0 / build 5）
+
+- 統合ブランチ `feat/unified-cloudflare-analytics` の `db6ac70` を基に、Store の build 番号のみ 4 → 5 に更新。Google / Apple ログイン、初回分析同意、アカウント別ローカル保存・選択送信を含む。iOS と直接配布版のバージョンは変更しない。
+- Sign in with Apple 有効化後に Invalid になった既存「PiiiN Mac App Store 2026」profile を、同じ App ID・配布証明書で再生成。秘密鍵・profile 本体はコミットしない。
+- Xcode 27.2 で arm64 / x86_64 universal Store アプリをビルド。`codesign --verify --deep --strict`、`productbuild`、`pkgutil --check-signature` が成功。アカウント・送信待ち・同意テスト16件と Store updater 非表示テスト1件が成功。
+- パッケージ: `release-artifacts/mac-app-store/PiiiN-1.0.0-5.pkg`（75,517,004 bytes）。SHA256: `939d9fd8afaa505e3da5347cacb978776734066a4d67ad354a489b524910e838`。
+- 2026-11-08 23:08 JST に Transporter でデリバリ完了。Apple の処理完了後、build 5 と既存内部グループ `Team (Expo)` の紐付けを確認。Mac の TestFlight に 1.0.0 (5) のアップデートが表示され、同 Mac への更新後に「開く」へ変わったことを確認。新しい Store ビルドでの実機ログイン・計測・更新後データ保持は未検証。App Store 本審査への提出は実行しない。
+
 2026-10-30。作業ブランチ: `feat/mac-app-store`。**App Review 未提出・一般公開前。署名済み universal PKG を Transporter に送り、TestFlight で検証中。アップロード成功は審査合格を意味しない。**
 
 ## 確定した方針
