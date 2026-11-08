@@ -227,7 +227,7 @@ function WorkAppContent() {
     {dialog === 'finish' && <FinishDialog busy={busy} onContinue={() => setDialog(null)} onFinish={finish} />}
     {dialog === 'sound' && <SoundSettingsDialog settings={sound} onChange={setSound} onClose={() => setDialog(null)} onPreview={() => void playSoundPreview({ src: sound.selectedSound, volume: sound.volume })} />}
     {legal && <Dialog title={LEGAL_TITLES[legal]} className="piiin-legal-dialog" onClose={() => setLegal(null)}><LegalContent page={legal} /></Dialog>}
-    {dialog === 'settings' && <TimelapseSettings value={videoSettings} onChange={changeVideoSettings} onClose={() => setDialog(null)} footer={<AccountSettings />}><NextRewardSetting collection={collection} onChange={changeNextReward} /></TimelapseSettings>}
+    {dialog === 'settings' && !accounts.choosingAccount && <TimelapseSettings value={videoSettings} onChange={changeVideoSettings} onClose={() => setDialog(null)} footer={<AccountSettings />}><NextRewardSetting collection={collection} onChange={changeNextReward} /></TimelapseSettings>}
     </div>
     {timelapse && <TimelapseScreen key={timelapse.id} session={timelapse} settings={videoSettings} onClose={() => setTimelapse(null)} onHome={home} />}
     {(error || notice) && <div className="work-notice" role={error ? 'alert' : 'status'}><span>{error || notice}</span>{error && session?.status === 'completed' && screen !== 'result' && <button disabled={busy} onClick={() => void finalize()}>保存を再試行</button>}<button onClick={() => { setError(''); setNotice(''); }}>閉じる</button></div>}

@@ -8,7 +8,7 @@ import { acquireMeasurementLock } from '../work/measurementLock';
 import { Dialog } from '../work/Dialog';
 import './accounts.css';
 
-type AccountsContext={state:LocalAccounts;info:AccountInfo|null;status:string;refresh:()=>Promise<void>;login:(provider:'google'|'apple',link?:boolean,profile?:boolean)=>Promise<void>;logout:()=>Promise<void>;participate:(active:boolean)=>Promise<void>;erase:(account:boolean)=>Promise<void>};
+type AccountsContext={state:LocalAccounts;info:AccountInfo|null;status:string;choosingAccount:boolean;refresh:()=>Promise<void>;login:(provider:'google'|'apple',link?:boolean,profile?:boolean)=>Promise<void>;logout:()=>Promise<void>;participate:(active:boolean)=>Promise<void>;erase:(account:boolean)=>Promise<void>};
 const Context=createContext<AccountsContext|null>(null);
 export function useAccounts() { const value=useContext(Context);if(!value) throw new Error('AccountBoundary is missing');return value; }
 export function AccountBoundary({children}:{children:ReactNode}) {
@@ -70,7 +70,7 @@ export function AccountBoundary({children}:{children:ReactNode}) {
     });
   };
   if(!state)return <main className="work-app work-loading"><p role="status">{status||'記録を読み込んでいます…'}</p>{status&&<button onClick={()=>void refresh()}>再試行</button>}</main>;
-  return <Context.Provider value={{state,info,status,refresh,login,logout,participate,erase}}><div key={`${state.ownerId}:${state.profiles[state.ownerId].space}`}>{children}</div>
+  return <Context.Provider value={{state,info,status,choosingAccount:!!candidate?.user,refresh,login,logout,participate,erase}}><div key={`${state.ownerId}:${state.profiles[state.ownerId].space}`}>{children}</div>
     {candidate?.user&&<Dialog title="この端末の記録" onClose={()=>{loginPending.current=false;setCandidate(null);}}><h2>{candidate.user.name} でログイン</h2><p>ログインだけでは測定データを送信しません。分析への参加は設定から選べます。</p>
       {state.ownerId==='guest'&&!state.profiles[candidate.user.id]&&<><p>現在のゲスト記録・キャラクター・設定を、このアカウントのローカル記録として引き継ぎますか？ 過去の記録は自動送信しません。</p><button className="work-button blue" disabled={busy} onClick={()=>void choose(true)}>自分の記録として引き継ぐ</button></>}
       <button className="work-button white" disabled={busy} onClick={()=>void choose(false)}>アカウントの記録を開く</button>{status&&<p role="alert">{status}</p>}
