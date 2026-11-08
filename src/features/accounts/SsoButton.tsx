@@ -9,7 +9,7 @@ export function SsoButton({ provider, className = '', ...props }: Props) {
   const google = provider === 'google';
   return <button {...props} type="button" className={`account-sso account-sso--${provider} ${className}`}>
     <span className="account-sso-icon" aria-hidden="true">
-      <img className="account-sso-logo" src={google ? '/identity/google-g.png' : '/identity/apple-sign-in.svg'} alt="" />
+      <img className="account-sso-logo" src={google ? '/identity/google-g.png' : '/identity/apple-sign-in-transparent.svg'} alt="" />
     </span>
     <span className="account-sso-label">{google ? 'Google でログイン' : 'Apple でサインイン'}</span>
   </button>;
