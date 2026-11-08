@@ -8,8 +8,9 @@ export default defineConfig(({mode,isPreview})=>{
   return { worker: {
     name, entrypoint:'./server/worker.ts',compatibilityDate:'2026-11-08',compatibilityFlags:['nodejs_compat'],
     assets:{notFoundHandling:'single-page-application',runWorkerFirst:['/api/*']},
-    // Domain cutover is a separate, verified operation. The Vercel fallback stays live.
-    ...(production&&process.env.PIIIN_DOMAIN_ENABLED==='true'?{domains:['www.piiin.app']}:{}),
+    // Keep the Vercel CNAME during migration; an HTTPS route intercepts traffic
+    // once its DNS record is proxied. Removing the route restores the old origin.
+    workersDev:true,previewUrls:false,
     env:{
       ASSETS:bindings.assets(),DB:bindings.d1({name:`${name}-accounts`,...(process.env.PIIIN_D1_ID?{id:process.env.PIIIN_D1_ID}:{})}),
       TELEMETRY:bindings.r2({name:`${name}-telemetry`}),
@@ -20,7 +21,9 @@ export default defineConfig(({mode,isPreview})=>{
       APPLE_CLIENT_ID:secret(apple),APPLE_TEAM_ID:secret(apple),APPLE_KEY_ID:secret(apple),APPLE_PRIVATE_KEY:secret(apple),
       PIIIN_DEV_USERNAME:secret(developer),PIIIN_DEV_PASSWORD:secret(developer),PIIIN_DEV_SESSION_SECRET:secret(developer),EXPORT_TOKEN:secret(auth),
     },
-    triggers:[triggers.scheduled({schedule:'*/15 * * * *'})],
+    triggers:[triggers.scheduled({schedule:'*/15 * * * *'}),
+      ...(production&&process.env.PIIIN_DOMAIN_ENABLED==='true'?[triggers.fetch({pattern:'https://www.piiin.app/*',zone:'piiin.app'})]:[]),
+    ],
     limits:{cpuMs:30000},
     observability:{enabled:true,headSamplingRate:0.1,redactQueryString:true,logs:{invocationLogs:false}},
   }};

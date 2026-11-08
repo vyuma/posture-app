@@ -44,7 +44,7 @@ UIテスト用の認証モックと、実際のGoogle/Apple OAuth・署名付き
 
 認証未設定でもゲスト利用は可能で、ログインボタンは準備中のエラーを表示する。Mac App Storeへの提出前にはAppleをGoogleと同等に有効化し、サンドボックス署名後のKeychainとシステムブラウザーを実機確認する。
 
-Google OAuthにはGoogle CloudプロジェクトとWeb clientが必要だが、Cloudflareの課金者と同一の所有者である必要はない。2026-11-08の指示により、Googleプロジェクト作成・鍵発行・実OAuth有効化は保留した。`PIIIN_AUTH_ENABLED=false`、追加プロフィール権限も無効のままでウェブ移行を進める。Googleログインを確認済みとは扱わない。
+Google OAuthにはGoogle CloudプロジェクトとWeb clientが必要だが、Cloudflareの課金者と同一の所有者である必要はない。Google設定が完了するまでは`PIIIN_AUTH_ENABLED=false`、追加プロフィール権限も無効のままにする。Googleログインを確認済みとは扱わない。
 
 初回の秘密値投入は、対応する`PIIIN_*_ENABLED=true`でビルドし、`cf deploy --prebuilt --mode preview --secrets-file <private.json>`（本番は`--mode production`）でバージョンと一緒に適用する。JSONは名前→文字列値の対応とし、Git外・所有者のみ読み書き可能なファイルを使って、投入後に削除する。秘密値をコマンド引数やログへ記載しない。無効時の空文字バインディングと同名のsecretを`workers secrets bulk`で先に作ると、`Binding name already in use`になるため注意する。
 
@@ -54,11 +54,15 @@ PRは共通・サーバー・macOS・Windowsの検査後、`piiin-pr-N` Worker�
 
 固定の`piiin-staging`を実OAuth検証に使う。workflow_dispatchの`deploy=staging`で配布し、`checks`では配布しない。`production`の手動配布はmainに限定する。新規ワークフローがデフォルトブランチへ入る前はローカルCLIで同じビルド・配布を行う。preview/stagingはビルドと配布の両方に`--mode preview`を渡す。モードを省略した配布で本番設定を混ぜない。
 
+リポジトリ変数`PIIIN_CLOUDFLARE_CI_ENABLED=true`のときだけGitHubから配布する。2026-11-08にCI接続を保留する指示があったため、現在は無効。共通・サーバー・macOS・Windowsの検査は継続する。管理者が3環境の資格情報を登録した後に有効化する。配布のskipを実デプロイ成功と扱わない。
+
 `scripts/cloudflare-preflight.mjs <preview|staging|production>`は未設定値・Worker名・正確なHTTPS origin・UUID・誤った公開ドメイン/認証フラグを検査する。ローカルOAuth認証なら`--local-auth`を加える。`PIIIN_PRODUCTION_D1_ID`も渡すと、本番DBとの取り違えを拒否する。
 
 配布後に`node scripts/check-web-deployment.mjs <origin>`で公開経路、最新Macインストーラー、匿名セッション、開発者認証設定を検査する。`PIIIN_AUTH_ENABLED=true`の場合はGoogle認証開始とcallback originも検査するが、プロバイダーへの実ログインは別途ブラウザーで行う。診断はOAuth URL/state・Cookie・秘密値を出力しない。
 
 プレビューでLP、`/app`、`/privacy`、`/support`、`/login`、開発者API、`/api/download-mac`を確認する。実OAuthは登録済みの専用検証URLで行う。本番デプロイ確認後、管理者が既存DNS/Vercel設定を保存して `www.piiin.app` をWorkerへ切り替える。同じHTTPS originとパスを保つことで既存ブラウザー保存先を維持する。Vercelプロジェクトは初期移行期間中に削除しない。切り戻しはDNS/ドメインを保存済みのVercel構成へ戻し、新規送信はローカル待機にする。D1・R2を巻き戻したり消したりしない。
+
+実際の切替はCustom Domainではなく、既存Vercel CNAMEを残すHTTPS Worker routeを採用した。`www`のDNSをプロキシ有効にし、`PIIIN_DOMAIN_ENABLED=true`で`https://www.piiin.app/*`を`piiin`へ接続する。既存CNAMEがある場合、Custom Domain APIは100117で拒否する。route方式ではCNAME削除による空白期間を作らない。切り戻しは`PIIIN_DOMAIN_ENABLED=false`で再ビルドしてtriggerを配布し、`www`を元の`proxied=false`に戻す。apexの既存Vercel 308転送も維持する。バージョン単位のPreview URLsは無効にし、固定staging/PR Workerを検証に使う。
 
 Cloudflareから匿名GitHub APIが403になることを実環境で確認した。Macダウンロードはこの場合、GitHubの公開`releases/latest`のリダイレクトから同じ最新タグを確認し、そのタグのuniversal DMGが存在することをHEADで検証してから案内する。過去のインストーラーや任意の外部URLにはフォールバックしない。公開APIにも公開リリースにも到達できなければ503と再試行案内を維持する。
 

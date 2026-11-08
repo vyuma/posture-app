@@ -38,7 +38,8 @@ jobs:
       - run: node node_modules/cf/bin/cf deploy --prebuilt --mode production --dry-run
   preview:
     needs: [checks, desktop]
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    # Enable only after the administrator finishes the deployment credentials.
+    if: vars.PIIIN_CLOUDFLARE_CI_ENABLED == 'true' && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     environment: cloudflare-preview
     env:
@@ -67,7 +68,7 @@ jobs:
         run: printf '%s\n' "Preview ${PIIIN_APP_ORIGIN}" >> "$GITHUB_STEP_SUMMARY"
   staging:
     needs: [checks, desktop]
-    if: github.event_name == 'workflow_dispatch' && inputs.deploy == 'staging'
+    if: vars.PIIIN_CLOUDFLARE_CI_ENABLED == 'true' && github.event_name == 'workflow_dispatch' && inputs.deploy == 'staging'
     runs-on: ubuntu-latest
     environment: cloudflare-staging
     concurrency:
@@ -102,7 +103,7 @@ jobs:
         run: printf '%s\n' "Staging ${PIIIN_APP_ORIGIN}/app" >> "$GITHUB_STEP_SUMMARY"
   production:
     needs: [checks, desktop]
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.deploy == 'production'))
+    if: vars.PIIIN_CLOUDFLARE_CI_ENABLED == 'true' && github.ref == 'refs/heads/main' && (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.deploy == 'production'))
     runs-on: ubuntu-latest
     environment: cloudflare-production
     env:
