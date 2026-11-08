@@ -14,15 +14,17 @@
 .account-native-page { max-width: 560px; margin: 60px auto; padding: 24px; font-family: sans-serif; color: #254a54; }
 .account-sso-options { display: grid; gap: 12px; width: 100%; max-width: 360px; margin-block: 20px 4px; }
 .timelapse-settings .account-settings .account-sso, .account-settings .account-sso {
-  display: flex; align-items: center; justify-content: center; position: relative;
-  width: 100%; min-width: 0; height: 48px; min-height: 48px; padding: 0 42px;
-  border: 1px solid #747775; border-radius: 24px; background: #fff; color: #1f1f1f;
-  font-family: Arial, sans-serif; font-size: 14px; font-weight: 500; line-height: 1.4;
-  letter-spacing: .25px; box-shadow: none;
+  display: grid; grid-template-columns: 32px minmax(0, 1fr) 32px; align-items: center; column-gap: 8px;
+  width: 100%; min-width: 0; min-height: 48px; padding: 0 12px;
+  border: 1px solid #747775; border-radius: 24px; background: #fff; color: #000;
+  font-family: inherit; font-size: 16px; font-weight: 500; line-height: 24px;
+  letter-spacing: 0; text-align: center; box-shadow: none; overflow: hidden;
 }
-.account-sso-logo { position: absolute; left: 16px; width: 20px; height: auto; }
-.timelapse-settings .account-settings .account-sso--apple, .account-settings .account-sso--apple { color: #000; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: 18px; letter-spacing: 0; }
-.account-sso--apple .account-sso-logo { position: static; flex: 0 0 auto; width: auto; height: 46px; margin-left: -12px; }
+.account-sso-icon { display: grid; place-items: center; width: 32px; height: 46px; }
+.account-sso-logo { display: block; width: 20px; height: 20px; object-fit: contain; }
+/* Apple's supplied artwork includes its own clear space; preserve the full image. */
+.account-sso--apple .account-sso-logo { width: auto; height: 46px; }
+.account-sso-label { min-width: 0; padding-block: 10px; }
 .account-settings .account-sso:hover:enabled { border-color: #254a54; box-shadow: 0 2px 5px #254a5414; }
 .account-settings .account-sso:active:enabled { box-shadow: inset 0 0 0 1px #254a54; }
 @media (max-width: 540px) { .account-settings { padding: 20px 16px; } }

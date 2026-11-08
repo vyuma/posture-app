@@ -8,7 +8,9 @@ type Props = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> & {
 export function SsoButton({ provider, className = '', ...props }: Props) {
   const google = provider === 'google';
   return <button {...props} type="button" className={`account-sso account-sso--${provider} ${className}`}>
-    <img className="account-sso-logo" src={google ? '/identity/google-g.png' : '/identity/apple-sign-in.svg'} alt="" aria-hidden="true" />
-    <span>{google ? 'Google でログイン' : 'Apple でサインイン'}</span>
+    <span className="account-sso-icon" aria-hidden="true">
+      <img className="account-sso-logo" src={google ? '/identity/google-g.png' : '/identity/apple-sign-in.svg'} alt="" />
+    </span>
+    <span className="account-sso-label">{google ? 'Google でログイン' : 'Apple でサインイン'}</span>
   </button>;
 }
