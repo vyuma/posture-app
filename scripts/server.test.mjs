@@ -71,6 +71,27 @@ test('Apple form callback accepts only Apple origin and still requires valid OAu
   await ok(await call('/api/consent','POST',{version:'2026-11-08-v1',agree:true},'alice',{Origin:'https://appleid.apple.com'}),403);
   assert.equal((await db.prepare('SELECT count(*) n FROM participants').first()).n,0);
 });
+test('Apple state survives the POST to GET round trip and expired state returns to app retry',async()=>{
+  for(const expired of [false,true]) {
+    const start=await call('/api/auth/sign-in/social','POST',{provider:'apple',callbackURL:origin+'/app?account=return',errorCallbackURL:origin+'/app?account=error',disableRedirect:true},null);
+    const cookie=start.headers.getSetCookie().map(value=>value.split(';')[0]).join('; ');
+    const state=new URL((await ok(start)).url).searchParams.get('state');
+    if(expired) {
+      // Model the scheduled deletion of the ten-minute verification record.
+      const deleted=await db.prepare("DELETE FROM verification WHERE json_extract(value,'$.oauthState')=?").bind(state).run();
+      assert.equal(deleted.meta.changes,1);
+    }
+    const post=await mf.dispatchFetch(origin+'/api/auth/callback/apple',{method:'POST',redirect:'manual',headers:{Origin:'https://appleid.apple.com','Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({state,error:'access_denied'}).toString()});
+    assert.equal(post.status,302);
+    const get=await mf.dispatchFetch(post.headers.get('Location'),{redirect:'manual',headers:{Cookie:cookie}});
+    assert.equal(get.status,302);
+    const target=new URL(get.headers.get('Location'));
+    assert.equal(target.origin,origin);assert.equal(target.pathname,'/app');
+    assert.equal(target.searchParams.get('account'),'error');
+    assert.equal(target.searchParams.get('error'),expired?'state_mismatch':'access_denied');
+    assert.equal(get.headers.getSetCookie().some(value=>value.includes('session_token=')),false);
+  }
+});
 test('auth requires consent; A cannot upload with B cookie or forged owner',async()=>{
   assert.equal((await ok(await call('/api/me'))).user.id,'alice');
   assert.equal((await ok(await call('/api/me','GET',undefined,null))).user,null);

@@ -40,6 +40,8 @@ Appleのウェブ認証は既存のPrimary App ID `com.kyoungpin.piiin` に紐�
 
 Appleの `form_post` は、正確なApple originから正確なcallbackパスへのPOSTだけをWorkerの同一origin制限の例外とする。Better AuthにもApple originを登録するが、OAuth stateの検証や他APIの同一origin制限は維持する。セッションCookieはSecure/HttpOnly/SameSite=Laxを維持し、Better AuthのPOST→同一サイトGETへの転送を利用する。
 
+OAuthの検証レコードは10分、状態Cookieは5分で期限切れになる。認証画面を開いたまま作業を待たせず、利用者が認証できるタイミングで新しいログインを開始する。期限切れ・使用済みstateからの復帰先は固定の `/app?account=error` とし、Better Authの汎用エラー画面で止めず既存設定から再試行できるようにする。state/Cookie検証は無効にしない。回帰テストは実際に発行した状態をPOST→GETで往復し、期限切れレコードを削除した場合の復帰先も検証する。
+
 App IDでSign in with Appleを有効化すると、既存のprovisioning profileは将来のビルド用に再生成が必要になる。次回のMac App Store/iOS配布前に再生成・署名検証する。ウェブの接続確認だけでストア版の実機ログインや審査が完了したとは扱わない。
 
 1. 管理者が `cf auth login` で対象アカウントにログインし、Workers有料プランと非公開R2を用意する。D1は本番・プレビューで分離する。R2の公開URLとカスタムドメイン公開を有効にしない。

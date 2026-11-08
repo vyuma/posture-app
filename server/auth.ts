@@ -24,6 +24,8 @@ export async function createAuth(env: Env) {
   const apple = await appleSecret(env);
   const options: BetterAuthOptions = {
     appName: 'PiiiN', baseURL: env.APP_ORIGIN, secret: env.BETTER_AUTH_SECRET,
+    // Expired state no longer contains the per-request errorCallbackURL.
+    onAPIError: { errorURL: `${env.APP_ORIGIN}/app?account=error` },
     // Apple returns the authorization result using a cross-origin form POST.
     trustedOrigins: [env.APP_ORIGIN, ...(apple ? ['https://appleid.apple.com'] : [])],
     database: drizzleAdapter(drizzle(env.DB), { provider: 'sqlite', schema, transaction: false }),
