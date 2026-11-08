@@ -28,3 +28,18 @@
 .account-settings .account-sso:hover:enabled { border-color: #254a54; box-shadow: 0 2px 5px #254a5414; }
 .account-settings .account-sso:active:enabled { box-shadow: inset 0 0 0 1px #254a54; }
 @media (max-width: 540px) { .account-settings { padding: 20px 16px; } }
+.work-dialog.account-consent-dialog { width: min(620px, calc(100vw - 32px)); color: #254a54; text-align: left; overflow-wrap: anywhere; }
+.work-dialog.account-consent-dialog h2 { margin: 0 0 8px; font-size: 24px; line-height: 1.4; }
+.account-consent-dialog p { font-size: 14px; line-height: 1.7; margin-block: 12px; }
+.account-consent-identity { font-weight: 600; }
+.account-consent-details { margin-block: 20px; }
+.account-consent-dialog .work-dialog-actions { flex-wrap: wrap; margin-top: 24px; }
+.account-consent-dialog .work-button { min-height: 48px; font: inherit; }
+.account-privacy-link { min-height: 44px; border: 0; padding: 10px 0; background: transparent; color: #205d70; font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.account-consent-dialog :focus-visible { outline: 3px solid #246f8a; outline-offset: 3px; }
+.account-privacy { margin-top: 24px; }
+.account-transfer-status { font-variant-numeric: tabular-nums; }
+@media (max-width: 540px) { .account-consent-dialog .work-dialog-actions { flex-direction: column; } .account-consent-dialog .work-button { width: 100%; } }
+
+.work-dialog.account-consent-dialog .work-button.blue { background: #076b88; color: #fff; border: 0; }
+.work-dialog.account-consent-dialog .work-button.white { background: #fff; color: #254a54; border: 1px solid #adc4ca; }

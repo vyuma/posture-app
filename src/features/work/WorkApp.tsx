@@ -47,9 +47,10 @@ export default function WorkApp() {
 function WorkAppContent() {
   const accounts=useAccounts();
   const accountRef=useRef(accounts.state);accountRef.current=accounts.state;
-  const [screen, setScreen] = useState<Screen>(() => hasCompletedOnboardingStory() ? 'home' : 'story');
+  const [screen, setScreen] = useState<Screen>(() => accounts.state.ownerId!=='guest'||hasCompletedOnboardingStory() ? 'home' : 'story');
   const [collection, setCollection] = useState<Collection | null>(null); const [session, setSession] = useState<Session | null>(null);
-  const [detail, setDetail] = useState<Session | null>(null); const [dialog, setDialog] = useState<'reset' | 'finish' | 'sound' | 'settings' | null>(() => /[?&](settings|profile|account)=/.test(location.search) ? 'settings' : null);
+  const [detail, setDetail] = useState<Session | null>(null); const [dialog, setDialog] = useState<'reset' | 'finish' | 'sound' | 'settings' | null>(() => /[?&](settings|profile)=/.test(location.search) ? 'settings' : null);
+  useEffect(()=>{if(accounts.homeRevision){setDialog(null);setScreen('home');}},[accounts.homeRevision]);
   const [legal, setLegal] = useState<LegalPage | null>(null);
   const [recording, setRecording] = useState(false);
   const [videoSettings, setVideoSettings] = useState(loadTimelapseSettings);
@@ -215,7 +216,7 @@ function WorkAppContent() {
     <DesktopUpdater canInstall={screen === 'home' && !busy && !dialog && !detail && !timelapse} />
     <div className="work-flow" hidden={Boolean(timelapse)}>
     {(screen === 'home' || screen === 'story') && <StoryHomeTransition view={screen}>
-      {shown => shown === 'story' ? <OnboardingStoryScreen onComplete={() => { saveOnboardingStoryCompleted(); setScreen('home'); }} /> : <Home collection={collection} onStart={() => setScreen('timer')} onPick={() => setScreen('picker')} onCard={card => void openCard(card)} onReset={() => setDialog('reset')} onStory={() => setScreen('story')} onSound={() => setDialog('sound')} onSettings={() => setDialog('settings')} onLegal={setLegal} />}
+      {shown => shown === 'story' ? <OnboardingStoryScreen onComplete={() => { saveOnboardingStoryCompleted(); setScreen('home'); }} /> : <Home collection={collection} onStart={() => setScreen('timer')} onPick={() => setScreen('picker')} onCard={card => void openCard(card)} onReset={() => setDialog('reset')} onStory={() => setScreen('story')} onSound={() => setDialog('sound')} onSettings={() => setDialog('settings')} onLegal={page=>page==='privacy'?accounts.openPrivacy():setLegal(page)} />}
     </StoryHomeTransition>}
     {screen === 'picker' && <CharacterPicker collection={collection} onClose={home} onConfirm={id => { void enqueue(() => repository.current!.select(id)).then(value => { setCollection(value); home(); }).catch(report); }} />}
     {screen === 'timer' && <TimerSettings saved={collection.timer} onClose={home} onSubmit={(timer, remember) => { if (!busy) void start(timer, remember); }} />}

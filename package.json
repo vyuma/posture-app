@@ -21,7 +21,7 @@
     "build:web": "tsc -p tsconfig.web.json && tsc -p tsconfig.server.json && vite build --config vite.web.config.ts",
     "preview:web": "vite preview --config vite.web.config.ts",
     "deploy:web": "cf deploy --prebuilt",
-    "test:accounts": "bun test scripts/accounts.test.ts && bun test scripts/outbox.test.ts",
+    "test:accounts": "bun test scripts/accounts.test.ts && bun test scripts/outbox.test.ts && bun test scripts/account-consent.test.tsx",
     "test:server": "node --experimental-strip-types scripts/server.test.mjs"
   },
   "dependencies": {

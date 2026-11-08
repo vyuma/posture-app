@@ -6,74 +6,104 @@ import type { AccountInfo, Consent, LocalAccounts } from './types';
 import { CONSENT_VERSION } from './types';
 import { acquireMeasurementLock } from '../work/measurementLock';
 import { Dialog } from '../work/Dialog';
+import { ConsentDetails } from './ConsentDetails';
+import { AccountPrivacy } from './AccountPrivacy';
 import './accounts.css';
 
-type AccountsContext={state:LocalAccounts;info:AccountInfo|null;status:string;choosingAccount:boolean;refresh:()=>Promise<void>;login:(provider:'google'|'apple',link?:boolean,profile?:boolean)=>Promise<void>;logout:()=>Promise<void>;participate:(active:boolean)=>Promise<void>;erase:(account:boolean)=>Promise<void>};
+type AccountsContext={state:LocalAccounts;info:AccountInfo|null;status:string;choosingAccount:boolean;homeRevision:number;openPrivacy:()=>void;refresh:()=>Promise<void>;login:(provider:'google'|'apple',link?:boolean,profile?:boolean)=>Promise<void>;logout:()=>Promise<void>;participate:(active:boolean)=>Promise<void>;erase:(account:boolean)=>Promise<void>};
 const Context=createContext<AccountsContext|null>(null);
 export function useAccounts() { const value=useContext(Context);if(!value) throw new Error('AccountBoundary is missing');return value; }
+async function locked<T>(operation:()=>Promise<T>):Promise<T> {
+  const release=await acquireMeasurementLock();if(!release)throw new Error('測定を終了してからアカウントを変更してください。');
+  try{return await operation();}finally{release();}
+}
+function clearLoginReturn() {
+  const url=new URL(location.href);url.searchParams.delete('account');history.replaceState(null,'',url.pathname+url.search+url.hash);
+}
 export function AccountBoundary({children}:{children:ReactNode}) {
-  const [state,setState]=useState<LocalAccounts|null>(null),[info,setInfo]=useState<AccountInfo|null>(null),[candidate,setCandidate]=useState<AccountInfo|null>(null),[status,setStatus]=useState(''),[busy,setBusy]=useState(false);
+  const [state,setState]=useState<LocalAccounts|null>(null),[info,setInfo]=useState<AccountInfo|null>(null),[status,setStatus]=useState(''),[busy,setBusy]=useState(false);
+  const [checked,setChecked]=useState(false),[privacy,setPrivacy]=useState(false),[homeRevision,setHomeRevision]=useState(0);
   const loginPending=useRef(new URLSearchParams(location.search).get('account')==='return');
   const oauthFailed=useRef(new URLSearchParams(location.search).get('account')==='error');
+  const epoch=useRef(0),refreshing=useRef<Promise<void>|null>(null);
   const apply=useCallback((value:LocalAccounts)=>{setActiveOwner(value.ownerId);setActiveSpace(value.profiles[value.ownerId].space);setState(value);},[]);
-  const refresh=useCallback(async()=>{
-    const local=await readAccounts();apply(local);
-    try {
-      if(local.ownerId!=='guest'&&local.profiles[local.ownerId].pendingStop) {
-        const result=await accountRequest<{consent:Consent}>('/api/consent','DELETE',undefined,local.ownerId);
-        apply(await updateAccounts(s=>{s.profiles[local.ownerId].consent=result.consent;s.profiles[local.ownerId].pendingStop=false;}));
-      }
-      const remote=await accountRequest<AccountInfo>('/api/me');setInfo(remote);setStatus(oauthFailed.current?'ログインや追加権限の設定を完了できませんでした。記録は端末に残っています。必要なときに再試行してください。':'');
-      if(remote.user&&remote.user.id!==local.ownerId) {if(loginPending.current)setCandidate(remote);return;}
-      if(remote.user) {
-        loginPending.current=false;
-        apply(await updateAccounts(s=>{if(s.ownerId===remote.user!.id&&!s.profiles[s.ownerId].pendingStop)s.profiles[s.ownerId].consent=remote.consent??undefined;}));
-      }
-    } catch(error) {setStatus(error instanceof Error?error.message:'オフラインです。記録は端末に保存します。');}
+  const refresh=useCallback(()=>{
+    if(refreshing.current)return refreshing.current;
+    const started=epoch.current;
+    const operation=(async()=>{
+      const local=await readAccounts();if(started!==epoch.current)return;apply(local);
+      try {
+        if(local.ownerId!=='guest'&&local.profiles[local.ownerId].pendingStop) {
+          const result=await accountRequest<{consent:Consent}>('/api/consent','DELETE',undefined,local.ownerId);
+          if(started!==epoch.current)return;
+          apply(await updateAccounts(s=>{s.profiles[local.ownerId].consent=result.consent;s.profiles[local.ownerId].pendingStop=false;}));
+        }
+        const remote=await accountRequest<AccountInfo>('/api/me');if(started!==epoch.current)return;
+        setInfo(remote);setStatus(oauthFailed.current?'ログインを完了できませんでした。記録は端末に残っています。再試行してください。':'');
+        if(remote.user&&remote.user.id!==local.ownerId) {
+          if(!loginPending.current)return;
+          await locked(async()=>{
+            if(started!==epoch.current)return;
+            const next=await updateAccounts(s=>{
+              if(s.ownerId!==local.ownerId)throw new Error('別の画面でアカウントが変更されました。再試行してください。');
+              const user=remote.user!;
+              // Guest records stay untouched; past records require explicit selection later.
+              s.profiles[user.id]??={space:crypto.randomUUID()};s.ownerId=user.id;
+              s.profiles[user.id].name=user.name;
+              if(!s.profiles[user.id].pendingStop)s.profiles[user.id].consent=remote.consent??undefined;
+            });
+            if(started===epoch.current)apply(next);
+          });
+        } else if(remote.user) {
+          apply(await updateAccounts(s=>{if(s.ownerId===remote.user!.id&&!s.profiles[s.ownerId].pendingStop)s.profiles[s.ownerId].consent=remote.consent??undefined;}));
+        }
+        if(remote.user&&loginPending.current&&started===epoch.current){loginPending.current=false;clearLoginReturn();setPrivacy(false);setHomeRevision(v=>v+1);}
+      } catch(error) {if(started===epoch.current)setStatus(error instanceof Error?error.message:'オフラインです。記録は端末に保存します。');}
+      finally{if(started===epoch.current)setChecked(true);}
+    })();
+    refreshing.current=operation;
+    const done=()=>{if(refreshing.current===operation)refreshing.current=null;};
+    void operation.then(done,done);
+    return operation;
   },[apply]);
   useEffect(()=>{void refresh().catch(e=>setStatus(String(e)));const channel=new BroadcastChannel('piiin-accounts');channel.onmessage=()=>{void readAccounts().then(apply);};const online=()=>{void refresh();};window.addEventListener('online',online);return()=>{channel.close();window.removeEventListener('online',online);};},[refresh,apply]);
-  async function locked<T>(operation:()=>Promise<T>):Promise<T> {
-    const release=await acquireMeasurementLock();if(!release)throw new Error('測定を終了してからアカウントを変更してください。');
-    try{return await operation();}finally{release();}
-  }
-  async function choose(adopt:boolean) {
-    if(!candidate?.user)return;
-    setBusy(true);setStatus('');
-    try{await locked(async()=>{
-      const remote=await accountRequest<AccountInfo>('/api/me','GET',undefined,candidate.user!.id);if(!remote.user)throw new Error('ログインし直してください。');
-      apply(await updateAccounts(s=>{
-        const user=remote.user!;const exists=!!s.profiles[user.id];
-        if(adopt&&(s.ownerId!=='guest'||exists))throw new Error('このアカウントには既にローカル記録があります。個別の選択送信を利用してください。');
-        s.profiles[user.id]??={space:adopt?s.profiles.guest.space:crypto.randomUUID()};
-        if(adopt)s.profiles.guest={space:crypto.randomUUID()};
-        s.ownerId=user.id;s.profiles[user.id].name=user.name;s.profiles[user.id].consent=remote.consent??undefined;
-      }));loginPending.current=false;setCandidate(null);setInfo(remote);
-    });}catch(e){setStatus(e instanceof Error?e.message:String(e));}finally{setBusy(false);}
-  }
-  const login=async(provider:'google'|'apple',link=false,profile=false)=>{await locked(async()=>{oauthFailed.current=false;loginPending.current=true;await startLogin(provider,link,profile);await refresh();});};
+  const login=async(provider:'google'|'apple',link=false,profile=false)=>{
+    await locked(async()=>{epoch.current++;refreshing.current=null;oauthFailed.current=false;loginPending.current=true;await startLogin(provider,link,profile);});
+    await refresh();
+  };
   const logout=async()=>{await locked(async()=>{
-    loginPending.current=false;
-    try{await accountRequest('/api/auth/sign-out','POST',{},state?.ownerId);}catch{/* An explicit offline logout must still switch new records to guest. */}
-    await forgetNativeLogin();apply(await updateAccounts(s=>{s.ownerId='guest';}));setInfo(null);setCandidate(null);
+    epoch.current++;refreshing.current=null;loginPending.current=false;clearLoginReturn();
+    try{await accountRequest('/api/auth/sign-out','POST',{},state?.ownerId);}catch{/* Offline logout still makes all subsequent records guest-owned. */}
+    await forgetNativeLogin();apply(await updateAccounts(s=>{s.ownerId='guest';}));setInfo(null);setStatus('');setHomeRevision(v=>v+1);
   });};
   const participate=async(active:boolean)=>{
-    if(!active) apply(await updateAccounts(s=>{const p=s.profiles[state!.ownerId];if(p.consent)p.consent.active=false;p.pendingStop=true;}));
-    const result=await accountRequest<{consent:Consent}>('/api/consent',active?'POST':'DELETE',active?{version:CONSENT_VERSION,agree:true}:undefined,state!.ownerId);
-    apply(await updateAccounts(s=>{s.profiles[state!.ownerId].consent=result.consent;s.profiles[state!.ownerId].pendingStop=false;}));await refresh();
+    const owner=state!.ownerId;
+    if(!active) apply(await updateAccounts(s=>{const p=s.profiles[owner];if(p.consent)p.consent.active=false;p.pendingStop=true;}));
+    const result=await accountRequest<{consent:Consent}>('/api/consent',active?'POST':'DELETE',active?{version:CONSENT_VERSION,agree:true}:undefined,owner);
+    apply(await updateAccounts(s=>{if(s.ownerId!==owner)throw new Error('アカウントが変更されました。');s.profiles[owner].consent=result.consent;s.profiles[owner].pendingStop=false;}));
+    if(active)setHomeRevision(v=>v+1);await refresh();
   };
-  const erase=async(account:boolean)=>{
-    await locked(async()=>{
-      const owner=state!.ownerId;
-      await accountRequest(account?'/api/account':'/api/analysis','DELETE',undefined,owner);
-      apply(await updateAccounts(s=>{if(s.profiles[owner].consent)s.profiles[owner].consent!.active=false;if(account)s.ownerId='guest';}));
-      if(account){await forgetNativeLogin();setInfo(null);}else await refresh();
-    });
-  };
+  const erase=async(account:boolean)=>{await locked(async()=>{
+    const owner=state!.ownerId;
+    await accountRequest(account?'/api/account':'/api/analysis','DELETE',undefined,owner);
+    apply(await updateAccounts(s=>{if(s.profiles[owner].consent)s.profiles[owner].consent!.active=false;if(account)s.ownerId='guest';}));
+    if(account){epoch.current++;await forgetNativeLogin();setInfo(null);clearLoginReturn();setHomeRevision(v=>v+1);}else await refresh();
+  });};
+  async function consentAction(action:()=>Promise<void>){if(busy)return;setBusy(true);setStatus('');try{await action();}catch(e){setStatus(e instanceof Error?e.message:String(e));}finally{setBusy(false);}}
   if(!state)return <main className="work-app work-loading"><p role="status">{status||'記録を読み込んでいます…'}</p>{status&&<button onClick={()=>void refresh()}>再試行</button>}</main>;
-  return <Context.Provider value={{state,info,status,choosingAccount:!!candidate?.user,refresh,login,logout,participate,erase}}><div key={`${state.ownerId}:${state.profiles[state.ownerId].space}`}>{children}</div>
-    {candidate?.user&&<Dialog title="この端末の記録" onClose={()=>{loginPending.current=false;setCandidate(null);}}><h2>{candidate.user.name} でログイン</h2><p>ログインだけでは測定データを送信しません。分析への参加は設定から選べます。</p>
-      {state.ownerId==='guest'&&!state.profiles[candidate.user.id]&&<><p>現在のゲスト記録・キャラクター・設定を、このアカウントのローカル記録として引き継ぎますか？ 過去の記録は自動送信しません。</p><button className="work-button blue" disabled={busy} onClick={()=>void choose(true)}>自分の記録として引き継ぐ</button></>}
-      <button className="work-button white" disabled={busy} onClick={()=>void choose(false)}>アカウントの記録を開く</button>{status&&<p role="alert">{status}</p>}
+  const profile=state.profiles[state.ownerId];
+  const needsConsent=checked&&state.ownerId!=='guest'&&(!profile.consent?.active||profile.consent.version!==CONSENT_VERSION||!!profile.pendingStop);
+  return <Context.Provider value={{state,info,status,choosingAccount:needsConsent||privacy,homeRevision,openPrivacy:()=>setPrivacy(true),refresh,login,logout,participate,erase}}>
+    <div key={`${state.ownerId}:${profile.space}`}>{children}</div>
+    {needsConsent&&!privacy&&<Dialog title="分析への参加" className="account-consent-dialog" dismissible={false} onClose={()=>{}}>
+      <h2>分析への参加</h2><p className="account-consent-identity">{profile.name??'ログイン済み'}</p>
+      <ConsentDetails />
+      <p>参加しない場合はログアウトしてください。ログインしなくても、測定・キャラクターなどの機能を引き続き利用できます。</p>
+      <p>同意の撤回・データやアカウントの削除は、プロフィールの「プライバシー・データ管理」から行えます。</p>
+      <button className="account-privacy-link" onClick={()=>setPrivacy(true)}>プライバシー・データ管理</button>
+      {status&&<p role="alert">{status}</p>}
+      <div className="work-dialog-actions"><button className="work-button blue" disabled={busy} onClick={()=>void consentAction(()=>participate(true))}>{busy?'処理しています…':'同意して続ける'}</button><button className="work-button white" disabled={busy} onClick={()=>void consentAction(logout)}>ログアウト</button></div>
     </Dialog>}
+    {privacy&&<Dialog title="プライバシー・データ管理" className="piiin-legal-dialog" onClose={()=>setPrivacy(false)}><AccountPrivacy /></Dialog>}
   </Context.Provider>;
 }
