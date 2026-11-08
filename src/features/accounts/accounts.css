@@ -39,6 +39,9 @@
 .account-consent-dialog :focus-visible { outline: 3px solid #246f8a; outline-offset: 3px; }
 .account-privacy { margin-top: 24px; }
 .account-transfer-status { font-variant-numeric: tabular-nums; }
+.timelapse-settings .account-settings .account-withdraw-link, .account-settings .account-withdraw-link { display: block; padding: 6px 0; border: 0; border-radius: 0; background: transparent; color: #205d70; font-size: 14px; line-height: 1.5; text-align: left; text-decoration: underline; text-underline-offset: 3px; box-shadow: none; }
+.work-dialog.account-control-dialog { width: min(560px, calc(100vw - 32px)); color: #254a54; text-align: left; }
+.account-settings.account-management { margin: 0; padding: 0; background: transparent; }
 @media (max-width: 540px) { .account-consent-dialog .work-dialog-actions { flex-direction: column; } .account-consent-dialog .work-button { width: 100%; } }
 
 .work-dialog.account-consent-dialog .work-button.blue { background: #076b88; color: #fff; border: 0; }

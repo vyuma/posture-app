@@ -7,10 +7,10 @@ import { CONSENT_VERSION } from './types';
 import { acquireMeasurementLock } from '../work/measurementLock';
 import { Dialog } from '../work/Dialog';
 import { ConsentDetails } from './ConsentDetails';
-import { AccountPrivacy } from './AccountPrivacy';
+import { AccountPrivacy, type AccountPrivacyAction } from './AccountPrivacy';
 import './accounts.css';
 
-type AccountsContext={state:LocalAccounts;info:AccountInfo|null;status:string;choosingAccount:boolean;homeRevision:number;openPrivacy:()=>void;refresh:()=>Promise<void>;login:(provider:'google'|'apple',link?:boolean,profile?:boolean)=>Promise<void>;logout:()=>Promise<void>;participate:(active:boolean)=>Promise<void>;erase:(account:boolean)=>Promise<void>};
+type AccountsContext={state:LocalAccounts;info:AccountInfo|null;status:string;choosingAccount:boolean;homeRevision:number;openPrivacy:(action?:AccountPrivacyAction)=>void;refresh:()=>Promise<void>;login:(provider:'google'|'apple',link?:boolean,profile?:boolean)=>Promise<void>;logout:()=>Promise<void>;participate:(active:boolean)=>Promise<void>;erase:(account:boolean)=>Promise<void>};
 const Context=createContext<AccountsContext|null>(null);
 export function useAccounts() { const value=useContext(Context);if(!value) throw new Error('AccountBoundary is missing');return value; }
 async function locked<T>(operation:()=>Promise<T>):Promise<T> {
@@ -22,7 +22,7 @@ function clearLoginReturn() {
 }
 export function AccountBoundary({children}:{children:ReactNode}) {
   const [state,setState]=useState<LocalAccounts|null>(null),[info,setInfo]=useState<AccountInfo|null>(null),[status,setStatus]=useState(''),[busy,setBusy]=useState(false);
-  const [checked,setChecked]=useState(false),[privacy,setPrivacy]=useState(false),[homeRevision,setHomeRevision]=useState(0);
+  const [checked,setChecked]=useState(false),[privacy,setPrivacy]=useState<false|'policy'|AccountPrivacyAction>(false),[homeRevision,setHomeRevision]=useState(0);
   const loginPending=useRef(new URLSearchParams(location.search).get('account')==='return');
   const oauthFailed=useRef(new URLSearchParams(location.search).get('account')==='error');
   const epoch=useRef(0),refreshing=useRef<Promise<void>|null>(null);
@@ -93,17 +93,17 @@ export function AccountBoundary({children}:{children:ReactNode}) {
   if(!state)return <main className="work-app work-loading"><p role="status">{status||'記録を読み込んでいます…'}</p>{status&&<button onClick={()=>void refresh()}>再試行</button>}</main>;
   const profile=state.profiles[state.ownerId];
   const needsConsent=checked&&state.ownerId!=='guest'&&(!profile.consent?.active||profile.consent.version!==CONSENT_VERSION||!!profile.pendingStop);
-  return <Context.Provider value={{state,info,status,choosingAccount:needsConsent||privacy,homeRevision,openPrivacy:()=>setPrivacy(true),refresh,login,logout,participate,erase}}>
+  return <Context.Provider value={{state,info,status,choosingAccount:needsConsent||!!privacy,homeRevision,openPrivacy:action=>setPrivacy(action??'policy'),refresh,login,logout,participate,erase}}>
     <div key={`${state.ownerId}:${profile.space}`}>{children}</div>
     {needsConsent&&!privacy&&<Dialog title="分析への参加" className="account-consent-dialog" dismissible={false} onClose={()=>{}}>
       <h2>分析への参加</h2><p className="account-consent-identity">{profile.name??'ログイン済み'}</p>
       <ConsentDetails />
       <p>参加しない場合はログアウトしてください。ログインしなくても、測定・キャラクターなどの機能を引き続き利用できます。</p>
-      <p>同意の撤回・データやアカウントの削除は、プロフィールの「プライバシー・データ管理」から行えます。</p>
-      <button className="account-privacy-link" onClick={()=>setPrivacy(true)}>プライバシー・データ管理</button>
+      <p>参加後も、設定から参加をやめたり、アカウントとサーバーの分析データを削除したりできます。</p>
+      <button className="account-privacy-link" onClick={()=>setPrivacy('policy')}>プライバシー・データ管理</button>
       {status&&<p role="alert">{status}</p>}
       <div className="work-dialog-actions"><button className="work-button blue" disabled={busy} onClick={()=>void consentAction(()=>participate(true))}>{busy?'処理しています…':'同意して続ける'}</button><button className="work-button white" disabled={busy} onClick={()=>void consentAction(logout)}>ログアウト</button></div>
     </Dialog>}
-    {privacy&&<Dialog title="プライバシー・データ管理" className="piiin-legal-dialog" onClose={()=>setPrivacy(false)}><AccountPrivacy /></Dialog>}
+    {privacy&&<Dialog title={privacy==='policy'?'プライバシー・データ管理':privacy==='account'?'アカウントの削除':'分析への参加をやめる'} className={privacy==='policy'?'piiin-legal-dialog':'account-control-dialog'} onClose={()=>setPrivacy(false)}><AccountPrivacy key={privacy} action={privacy==='policy'?null:privacy} showControls={needsConsent} onComplete={()=>setPrivacy(false)} /></Dialog>}
   </Context.Provider>;
 }

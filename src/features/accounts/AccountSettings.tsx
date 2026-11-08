@@ -51,7 +51,8 @@ export function AccountSettings() {
     {guest&&<p>ログインは分析に参加する方のための機能です。ログインせずに利用することもできます。</p>}
     {guest?<div className="account-sso-options"><SsoButton provider="google" disabled={busy} onClick={()=>void action(()=>account.login('google'))}/>{(info?.appleEnabled||import.meta.env.VITE_DISTRIBUTION_CHANNEL==='mac-app-store')&&<SsoButton provider="apple" disabled={busy} onClick={()=>void action(()=>account.login('apple'))}/>}</div>:<>
       <p><strong>{profile.name??'ログイン済み'}</strong></p>
-      <div className="account-actions"><button disabled={busy} onClick={()=>void action(account.logout)}>ログアウト</button></div>
+      <div className="account-actions"><button disabled={busy} onClick={()=>void action(account.logout)}>ログアウト</button><button disabled={busy} onClick={()=>account.openPrivacy('account')}>アカウントを削除</button></div>
+      <button className="account-withdraw-link" disabled={busy} onClick={()=>account.openPrivacy('withdraw')}>分析への参加をやめる</button>
       <div className="account-actions"><button disabled={busy||!profile.consent?.active} onClick={()=>void action(listRecords)}>ローカル記録を選んで送信</button><button disabled={busy} onClick={()=>void action(async()=>{await flushOutbox(await openWorkRepository(profile.space,state.ownerId),state.ownerId);await refreshCount();})}>送信を再試行</button></div>
       <p className="account-transfer-status">送信待ち：{pending}件{profile.lastSentAt&&<> ／ 最後の送信：{new Date(profile.lastSentAt).toLocaleString()}</>}</p>
       {records&&<fieldset className="account-records"><legend>送信する記録</legend><p>現在のアカウントと未帰属の記録だけを表示します。選んだゲスト記録はこのアカウントに所属します。</p>{!records.length&&<p>送信できる未送信の記録はありません。</p>}
