@@ -62,6 +62,11 @@ async function route(request:Request,env:Env,ctx:ExecutionContext):Promise<Respo
     if(['/api/auth/set-password','/api/auth/link-account'].includes(path))throw new HttpError(404,'Not found');
     const response=await auth.handler(request);
     if(mailError)throw mailError;
+    if(['/api/auth/sign-in/email','/api/auth/sign-in/social','/api/auth/sign-up/email','/api/auth/sign-out'].includes(path)) {
+      const headers=new Headers(response.headers);
+      headers.append('Set-Cookie',devLogout(request).headers.get('Set-Cookie')!);
+      return new Response(response.body,{status:response.status,headers});
+    }
     return response;
   }
   if(path==='/api/native/create'||path==='/api/native/exchange') {

@@ -1,3 +1,4 @@
+import { useDeveloperAccess } from '../developer/DeveloperAccessContext';
 import { useEffect, useState } from 'react';
 import { useAccounts } from './AccountBoundary';
 import { openWorkRepository } from '../work/platform';
@@ -8,6 +9,7 @@ import { flushOutbox, makeTicket } from './outbox';
 
 type Selectable={record:Session;space:string};
 export function AccountSettings() {
+  const developer=useDeveloperAccess();
   const account=useAccounts(),{state}=account,profile=state.profiles[state.ownerId],guest=state.ownerId==='guest';
   const [busy,setBusy]=useState(false),[message,setMessage]=useState(''),[manualAgree,setManualAgree]=useState(false),[records,setRecords]=useState<Selectable[]|null>(null),[selected,setSelected]=useState<Set<string>>(new Set()),[pending,setPending]=useState(0);
   async function action(fn:()=>Promise<unknown>) {setBusy(true);setMessage('');try{await fn();await account.refresh();}catch(e){setMessage(e instanceof Error?e.message:String(e));}finally{setBusy(false);}}
@@ -47,6 +49,7 @@ export function AccountSettings() {
   }
   return <section className="account-settings" aria-labelledby="account-heading" aria-busy={busy}>
     <h2 id="account-heading">アカウント</h2>
+    {developer.canLogout&&<div className="account-actions"><button disabled={busy} onClick={()=>void action(developer.logout)}>開発者ログアウト</button></div>}
     {guest?<div className="account-actions"><button disabled={busy} onClick={()=>void action(()=>account.openAuth('login'))}>ログイン</button><button disabled={busy} onClick={()=>void action(()=>account.openAuth('signup'))}>新規登録</button></div>:<>
       <p><strong>{profile.name??'ログイン済み'}</strong></p>
       <div className="account-actions"><button disabled={busy} onClick={()=>void action(account.logout)}>ログアウト</button><button disabled={busy} onClick={()=>account.openPrivacy('account')}>アカウントを削除</button></div>

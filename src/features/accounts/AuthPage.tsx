@@ -27,7 +27,7 @@ export function AuthPage({mode='login',nativeId}:{mode?:Mode;nativeId?:string}) 
   async function submit(event:FormEvent) {
     event.preventDefault();await action(async()=>{
       if(mode==='login') {await accountRequest('/api/auth/sign-in/email','POST',{email,password});location.assign(callback);}
-      if(mode==='signup') {await accountRequest('/api/auth/sign-up/email','POST',{email,password,name:'PiiiN',callbackURL:`${location.origin}/login${suffix}${suffix?'&':'?'}verified=1`});setPassword('');setNotice('確認メールをご確認ください。届かない場合は再送できます。');}
+      if(mode==='signup') {await accountRequest('/api/auth/sign-up/email','POST',{email,password,name:'PiiiN',callbackURL:`${location.origin}/login${suffix}${suffix?'&':'?'}verified=1`});setPassword('');setNotice('登録できるアドレスには確認メールを送信します。登録済みの場合は、以前の方法でログインしてください。');}
       if(mode==='forgot-password') {await accountRequest('/api/auth/request-password-reset','POST',{email,redirectTo:`${location.origin}/reset-password${suffix}`});setNotice('登録済みのメールアドレスには再設定リンクを送信します。');}
       if(mode==='reset-password') {await accountRequest('/api/auth/reset-password','POST',{token:query.get('token'),newPassword:password});location.assign(`/login${suffix}`);}
     });
@@ -45,7 +45,7 @@ export function AuthPage({mode='login',nativeId}:{mode?:Mode;nativeId?:string}) 
     </form>
     {(mode==='login'||mode==='signup')&&<>
       <div className="auth-links">{mode==='login'&&<a href={`/forgot-password${suffix}`}>パスワードを忘れた方</a>}
-        <button type="button" disabled={busy||!email||!info?.emailEnabled} onClick={()=>void action(async()=>{await accountRequest('/api/auth/send-verification-email','POST',{email,callbackURL:`${location.origin}/login${suffix}${suffix?'&':'?'}verified=1`});setNotice('確認メールをご確認ください。');})}>確認メールを再送</button></div>
+        <button type="button" disabled={busy||!email||!info?.emailEnabled} onClick={()=>void action(async()=>{await accountRequest('/api/auth/send-verification-email','POST',{email,callbackURL:`${location.origin}/login${suffix}${suffix?'&':'?'}verified=1`});setNotice('未確認のアドレスには確認メールを送信します。登録済みの場合はログインしてください。');})}>確認メールを再送</button></div>
       <div className="auth-divider">または</div><div className="account-sso-options auth-sso">
         <SsoButton provider="google" disabled={busy||!info} onClick={()=>void action(()=>social('google'))}/>
         <SsoButton provider="apple" disabled={busy||!info?.appleEnabled} onClick={()=>void action(()=>social('apple'))}/>

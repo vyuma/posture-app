@@ -183,6 +183,9 @@ test('legacy developer login remains separate from ordinary analysis sessions',a
   const cookie=login.headers.getSetCookie().map(x=>x.split(';')[0]).join('; ');
   assert.equal((await ok(await call('/api/dev-session','GET',undefined,null,{Cookie:cookie}))).authenticated,true);
   assert.equal((await ok(await call('/api/me','GET',undefined,null,{Cookie:cookie}))).user,null);
+  const normalLogin=await call('/api/auth/sign-in/social','POST',{provider:'google',callbackURL:origin+'/app',disableRedirect:true},null,{Cookie:cookie});
+  const cleared=normalLogin.headers.getSetCookie().find(value=>value.startsWith(cookie.split('=')[0]+'='));assert.ok(cleared);assert.match(cleared,/Max-Age=0|Expires=Thu, 01 Jan 1970/i);
+  assert.equal((await ok(await call('/api/dev-session','GET',undefined,null,{Cookie:cleared.split(';')[0]}))).authenticated,false);
 });
 test('adult consent, verified email and current version are enforced on the server',async()=>{
   await ok(await call('/api/consent','POST',{version:'2026-11-09-v2',agree:true},'bob'),400);
@@ -253,6 +256,10 @@ test('email signup verifies on a different device, resets credentials and revoke
 test('SSO-only reset, nonexistent accounts, duplicate signup, quotas and delivery failures are safe',async()=>{
   await db.prepare('DELETE FROM rate_limits').run();
   const count=mail.length;
+  await db.prepare("INSERT INTO account(id,accountId,providerId,userId,createdAt,updatedAt) VALUES('bob-google','test-google-bob','google','bob',?,?)").bind(Date.now(),Date.now()).run();
+  const repeated=await ok(await call('/api/auth/sign-up/email','POST',{email:'bob@example.invalid',password:'new-test-password-123',name:'PiiiN'},null));
+  assert.equal(repeated.token,null);assert.equal(mail.length,count);
+  assert.equal((await db.prepare("SELECT count(*) n FROM account WHERE userId='bob' AND providerId='credential'").first()).n,0);
   const social=await ok(await call('/api/auth/request-password-reset','POST',{email:'bob@example.invalid'},null));
   const absent=await ok(await call('/api/auth/request-password-reset','POST',{email:'absent@example.invalid'},null));
   assert.deepEqual(social,absent);assert.equal(mail.length,count);

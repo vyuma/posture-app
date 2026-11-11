@@ -48,6 +48,7 @@ export default function WorkApp() {
 function WorkAppContent() {
   const developer=useDeveloperAccess();
   const accounts=useAccounts();
+  useEffect(()=>{void developer.refresh();},[accounts.state.ownerId,developer.refresh]);
   const accountRef=useRef(accounts.state);accountRef.current=accounts.state;
   const [screen, setScreen] = useState<Screen>(() => accounts.state.ownerId!=='guest'||hasCompletedOnboardingStory() ? 'home' : 'story');
   const [collection, setCollection] = useState<Collection | null>(null); const [session, setSession] = useState<Session | null>(null);
