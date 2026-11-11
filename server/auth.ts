@@ -7,8 +7,9 @@ import { decryptOAuthToken } from 'better-auth/oauth2';
 import * as schema from './schema';
 import type { Env } from './env';
 import { HttpError } from './http';
+import { sendAuthMail } from './mail';
 
-export const CONSENT_VERSION = '2026-11-08-v1';
+export { CONSENT_VERSION } from '../shared/account';
 const base64url = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes)).replaceAll('+','-').replaceAll('/','_').replace(/=+$/, '');
 export async function appleSecret(env: Env) {
   if (!env.APPLE_PRIVATE_KEY || !env.APPLE_TEAM_ID || !env.APPLE_KEY_ID || !env.APPLE_CLIENT_ID) return undefined;
@@ -19,13 +20,19 @@ export async function appleSecret(env: Env) {
   const body = `${encoded({ alg: 'ES256', kid: env.APPLE_KEY_ID })}.${encoded({ iss: env.APPLE_TEAM_ID, iat: now, exp: now + 3600, aud: 'https://appleid.apple.com', sub: env.APPLE_CLIENT_ID })}`;
   return `${body}.${base64url(new Uint8Array(await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, key, new TextEncoder().encode(body))))}`;
 }
-export async function createAuth(env: Env) {
+export async function createAuth(env: Env, onMailError?: (error: unknown) => void) {
   if (!env.BETTER_AUTH_SECRET || env.BETTER_AUTH_SECRET.length < 32) throw new HttpError(503, 'ログインの準備中です。ログインせずに利用できます。');
   const apple = await appleSecret(env);
+  // Better Auth logs and suppresses mail callback failures. Preserve the outcome
+  // in this request only so our HTTP boundary cannot report a successful send.
+  const deliver=async(email:string,url:string,kind:'verify'|'reset')=>{
+    try{await sendAuthMail(env,email,url,kind);}catch(error){onMailError?.(error);throw error;}
+  };
   const options: BetterAuthOptions = {
+    logger: {disabled:true},
     appName: 'PiiiN', baseURL: env.APP_ORIGIN, secret: env.BETTER_AUTH_SECRET,
     // Expired state no longer contains the per-request errorCallbackURL.
-    onAPIError: { errorURL: `${env.APP_ORIGIN}/app?account=error` },
+    onAPIError: { errorURL: `${env.APP_ORIGIN}/login?error=oauth` },
     // Apple returns the authorization result using a cross-origin form POST.
     trustedOrigins: [env.APP_ORIGIN, ...(apple ? ['https://appleid.apple.com'] : [])],
     database: drizzleAdapter(drizzle(env.DB), { provider: 'sqlite', schema, transaction: false }),
@@ -33,6 +40,16 @@ export async function createAuth(env: Env) {
       ...(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET ? { google: { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET, prompt: 'select_account' as const } } : {}),
       ...(apple ? { apple: { clientId: env.APPLE_CLIENT_ID!, clientSecret: apple } } : {}),
     },
+    emailAndPassword: {
+      enabled: !!env.RESEND_API_KEY, requireEmailVerification: true, autoSignIn: false,
+      minPasswordLength: 12, maxPasswordLength: 128, revokeSessionsOnPasswordReset: true,
+      sendResetPassword: async ({user,url}) => {
+        const credential=await env.DB.prepare("SELECT id FROM account WHERE userId=? AND providerId='credential' AND password IS NOT NULL").bind(user.id).first();
+        if(credential)await deliver(user.email,url,'reset');
+      },
+    },
+    emailVerification: {sendOnSignUp:true,sendOnSignIn:false,autoSignInAfterVerification:false,
+      sendVerificationEmail:async ({user,url})=>{await deliver(user.email,url,'verify');}},
     account: { encryptOAuthTokens: true, accountLinking: { enabled: true, disableImplicitLinking: true, allowDifferentEmails: true } },
     session: { expiresIn: 30 * 86400, updateAge: 86400, freshAge: 300, cookieCache: { enabled: false } },
     advanced: { useSecureCookies: new URL(env.APP_ORIGIN).protocol === 'https:' },

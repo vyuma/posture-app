@@ -6,7 +6,7 @@ export async function checkDeployment(origin, { auth = false, apple = false, dev
   if (url.origin !== origin || !['https:', 'http:'].includes(url.protocol)) throw new Error('Pass an origin without a path or trailing slash.');
   const request = (path, options = {}) => fetcher(origin + path, { ...options, redirect: 'manual', signal: AbortSignal.timeout(15000) });
   const requireResult = (condition, message) => { if (!condition) throw new Error(message); };
-  for (const path of ['/', '/app', '/privacy', '/support', '/login', '/account/native']) {
+  for (const path of ['/', '/app', '/privacy', '/support', '/login', '/signup', '/forgot-password', '/reset-password', '/dev/login', '/account/native']) {
     const response = await request(path);
     requireResult(response.status === 200 && response.headers.get('Content-Type')?.includes('text/html'), `${path}: expected the HTML application, got ${response.status}`);
     const html = await response.text();

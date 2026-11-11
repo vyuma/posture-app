@@ -5,11 +5,10 @@ import { acquireMeasurementLock } from '../work/measurementLock';
 import type { Session } from '../work/model';
 import { readAccounts, updateAccounts } from './localAccounts';
 import { flushOutbox, makeTicket } from './outbox';
-import { SsoButton } from './SsoButton';
 
 type Selectable={record:Session;space:string};
 export function AccountSettings() {
-  const account=useAccounts(),{state,info}=account,profile=state.profiles[state.ownerId],guest=state.ownerId==='guest';
+  const account=useAccounts(),{state}=account,profile=state.profiles[state.ownerId],guest=state.ownerId==='guest';
   const [busy,setBusy]=useState(false),[message,setMessage]=useState(''),[manualAgree,setManualAgree]=useState(false),[records,setRecords]=useState<Selectable[]|null>(null),[selected,setSelected]=useState<Set<string>>(new Set()),[pending,setPending]=useState(0);
   async function action(fn:()=>Promise<unknown>) {setBusy(true);setMessage('');try{await fn();await account.refresh();}catch(e){setMessage(e instanceof Error?e.message:String(e));}finally{setBusy(false);}}
   async function refreshCount() { const repo=await openWorkRepository(profile.space,state.ownerId);setPending((await repo.list()).filter(s=>s.analysis?.ownerId===state.ownerId&&s.analysis.status==='pending').length); }
@@ -48,10 +47,10 @@ export function AccountSettings() {
   }
   return <section className="account-settings" aria-labelledby="account-heading" aria-busy={busy}>
     <h2 id="account-heading">アカウント</h2>
-    {guest&&<p>ログインは分析に参加する方のための機能です。ログインせずに利用することもできます。</p>}
-    {guest?<div className="account-sso-options"><SsoButton provider="google" disabled={busy} onClick={()=>void action(()=>account.login('google'))}/>{(info?.appleEnabled||import.meta.env.VITE_DISTRIBUTION_CHANNEL==='mac-app-store')&&<SsoButton provider="apple" disabled={busy} onClick={()=>void action(()=>account.login('apple'))}/>}</div>:<>
+    {guest?<div className="account-actions"><button disabled={busy} onClick={()=>void action(()=>account.openAuth('login'))}>ログイン</button><button disabled={busy} onClick={()=>void action(()=>account.openAuth('signup'))}>新規登録</button></div>:<>
       <p><strong>{profile.name??'ログイン済み'}</strong></p>
       <div className="account-actions"><button disabled={busy} onClick={()=>void action(account.logout)}>ログアウト</button><button disabled={busy} onClick={()=>account.openPrivacy('account')}>アカウントを削除</button></div>
+      <button className="account-withdraw-link" disabled={busy} onClick={account.openProfile}>プロフィールを編集</button>
       <button className="account-withdraw-link" disabled={busy} onClick={()=>account.openPrivacy('withdraw')}>分析への参加をやめる</button>
       <div className="account-actions"><button disabled={busy||!profile.consent?.active} onClick={()=>void action(listRecords)}>ローカル記録を選んで送信</button><button disabled={busy} onClick={()=>void action(async()=>{await flushOutbox(await openWorkRepository(profile.space,state.ownerId),state.ownerId);await refreshCount();})}>送信を再試行</button></div>
       <p className="account-transfer-status">送信待ち：{pending}件{profile.lastSentAt&&<> ／ 最後の送信：{new Date(profile.lastSentAt).toLocaleString()}</>}</p>

@@ -139,7 +139,8 @@ export class WorkRepository {
   }
   select(id: string) { return this.update(value => ({ ...value, selectedId: value.cards.some(card => card.characterId === id) ? id : value.selectedId })); }
   timer(timer: TimerSettings | null) { return this.update(value => ({ ...value, timer: timer && normalizeTimer(timer) })); }
-  nextReward(id: string | null, catalogIds: string[]) {
+  nextReward(id: string | null, catalogIds: string[], developerAuthenticated=false) {
+    if(!developerAuthenticated)return Promise.reject(new Error('開発者ログインが必要です。'));
     return this.update(value => {
       if (id !== null && (!catalogIds.includes(id) || value.cards.some(card => card.characterId === id))) {
         throw new Error('未獲得のピンアナゴを選んでください。');
@@ -148,13 +149,13 @@ export class WorkRepository {
     });
   }
   reset() { return this.update(value => ({ ...value, generation: value.generation + 1, cards: [], selectedId: null, nextRewardId: null })); }
-  async finish(input: Session, catalogIds: string[]) {
+  async finish(input: Session, catalogIds: string[], developerAuthenticated=false) {
     for (let attempt = 0; attempt < 8; attempt++) {
       const current = await this.collection(); const existing = await this.driver.session(input.id);
       if (existing && ['completed', 'interrupted'].includes(existing.status) && !existing.legacy) return { session: existing, collection: current };
       const session = structuredClone(input); const next = structuredClone(current); next.revision += 1;
       if (session.rewardQualified && session.generation === current.generation) {
-        const requested = current.nextRewardId;
+        const requested = developerAuthenticated ? current.nextRewardId : null;
         const available = requested && catalogIds.includes(requested) && !current.cards.some(card => card.characterId === requested);
         session.acquiredCharacterId = available ? requested : chooseReward(current.cards, catalogIds);
         // Consume the choice in the same commit as the reward, never on a failed save.

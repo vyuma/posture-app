@@ -1,4 +1,5 @@
 import React from "react";
+import { AuthPage } from '../src/features/accounts/AuthPage';
 import { NativeLogin } from "./NativeLogin";
 import ReactDOM from "react-dom/client";
 
@@ -12,7 +13,7 @@ import { LandingPage } from "../src/features/landing/LandingPage";
 import { LegalPageView } from "../src/features/legal/LegalContent";
 
 const normalizedPath = window.location.pathname.replace(/\/+$/, "") || "/";
-const isDeveloperLogin = normalizedPath === "/login";
+const isDeveloperLogin = normalizedPath === "/dev/login";
 const isAnagoMotionPreview =
   normalizedPath === "/dev/anago";
 const AnagoMotionPreview =
@@ -25,6 +26,7 @@ const TimelapsePreview = import.meta.env.DEV ? React.lazy(() => import("../src/f
 
 function RootRoute() {
   const { enabled, status } = useDeveloperAccess();
+  if (["/login","/signup","/forgot-password","/reset-password"].includes(normalizedPath)) return <AuthPage mode={normalizedPath.slice(1) as "login"|"signup"|"forgot-password"|"reset-password"} />;
   if (normalizedPath === "/account/native") return <NativeLogin />;
 
   if (normalizedPath === '/privacy' || normalizedPath === '/support') return <LegalPageView page={normalizedPath === '/privacy' ? 'privacy' : 'support'} />;
@@ -41,7 +43,7 @@ function RootRoute() {
       return null;
     }
     if (!enabled) {
-      window.location.replace("/login");
+      window.location.replace("/dev/login");
       return null;
     }
 

@@ -1,4 +1,5 @@
-export const CONSENT_VERSION = '2026-11-08-v1';
+export { CONSENT_VERSION } from '../../../shared/account';
+import type { AnalysisProfile } from '../../../shared/account';
 export type Consent = { version: string; generation: number; grantedAt: string; active: boolean };
 export type AnalysisTicket = {
   ownerId: string; installationId: string; platform: 'web' | 'macos' | 'windows';
@@ -13,4 +14,4 @@ export type LocalAccounts = { revision: number; installationId: string; ownerId:
 export function initialAccounts(): LocalAccounts {
   return { revision: 0, installationId: crypto.randomUUID(), ownerId: 'guest', profiles: { guest: { space: 'legacy' } } };
 }
-export type AccountInfo = { user: { id: string; name: string } | null; consent: Consent | null; providers: string[]; googleProfileEnabled: boolean; appleEnabled: boolean };
+export type AccountInfo = { user: { id: string; name: string } | null; consent: Consent | null; providers: string[]; googleProfileEnabled: boolean; appleEnabled: boolean; emailEnabled?: boolean; profile?: AnalysisProfile; emailVerified?: boolean };

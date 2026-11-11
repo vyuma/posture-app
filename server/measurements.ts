@@ -14,7 +14,8 @@ export async function consent(env: Env, user: string) {
 }
 export async function requireConsent(env: Env, user: string, generation: number) {
   const c = await consent(env,user);
-  if (!c?.active || c.version !== CONSENT_VERSION || c.generation !== generation) throw new HttpError(409, '分析への同意が変更されました。自動送信を停止しました。');
+  const eligible=await env.DB.prepare('SELECT a.user_id FROM analysis_profiles a JOIN user u ON u.id=a.user_id WHERE a.user_id=? AND a.adult_confirmed=1 AND u.emailVerified=1').bind(user).first();
+  if (!eligible || !c?.active || c.version !== CONSENT_VERSION || c.generation !== generation) throw new HttpError(409, '分析への同意が変更されました。自動送信を停止しました。');
 }
 export async function changeConsent(env: Env, user: string, active: boolean) {
   await env.DB.prepare(`INSERT INTO participants(user_id,active,generation,version,granted_at) VALUES(?1,?2,1,?3,?4)
@@ -114,5 +115,6 @@ export async function eraseAnalysis(env:Env,user:string,accountDeleted=false) {
     env.DB.prepare('INSERT INTO deletion_tombstones(user_id,deleted_at) VALUES(?,?) ON CONFLICT(user_id) DO UPDATE SET deleted_at=excluded.deleted_at').bind(user,Date.now()),
     env.DB.prepare('DELETE FROM measurements WHERE user_id=?').bind(user),
     env.DB.prepare('DELETE FROM profile_snapshots WHERE user_id=?').bind(user),
+    env.DB.prepare('DELETE FROM survey_responses WHERE user_id=?').bind(user),
   ]);
 }

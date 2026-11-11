@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useAccounts } from './AccountBoundary';
 import { LegalContent } from '../legal/LegalContent';
-import { SsoButton } from './SsoButton';
 
 export type AccountPrivacyAction='withdraw'|'account';
 export function AccountPrivacy({action=null,showControls=false,onComplete}:{action?:AccountPrivacyAction|null;showControls?:boolean;onComplete:()=>void}) {
@@ -25,7 +24,8 @@ export function AccountPrivacy({action=null,showControls=false,onComplete}:{acti
           <p>{confirm==='withdraw'?'同意を撤回して自動送信を停止し、ログアウトします。保存済みの分析データは削除されません。次回ログイン時は再度同意を確認します。':'ログイン方法・セッション・サーバーの分析データを削除します。取り消せません。削除には直前の再ログインが必要です。'} この端末のローカル記録は残ります。</p>
           <div className="account-actions"><button disabled={busy} onClick={()=>void perform()}>{busy?'処理しています…':confirm==='withdraw'?'参加をやめてログアウト':'削除を実行する'}</button><button disabled={busy} onClick={()=>action?onComplete():setConfirm(null)}>キャンセル</button></div>
         </div>}
-        {error&&<><p role="alert">{error}</p><p>再認証が必要な場合は、同じログイン方法を選び、戻ってから操作を再試行してください。</p><div className="account-sso-options"><SsoButton provider="google" disabled={busy} onClick={()=>void account.login('google').catch(e=>setError(String(e)))}/>{account.info?.appleEnabled&&<SsoButton provider="apple" disabled={busy} onClick={()=>void account.login('apple').catch(e=>setError(String(e)))}/>}</div></>}
+        {error&&<><p role="alert">{error}</p><button disabled={busy} onClick={()=>void account.openAuth('login').catch(e=>setError(String(e)))}>再ログイン</button></>}
+
       </>:<p>アカウントを削除するには、設定からログインしてください。</p>}
     </section>}
     {!action&&<LegalContent page="privacy" />}

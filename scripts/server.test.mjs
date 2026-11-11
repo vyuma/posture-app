@@ -1,15 +1,16 @@
 import { test, after, before } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, mkdtemp, rm } from 'node:fs/promises';
+import { readFile, mkdtemp, rm, readdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { build } from 'esbuild';
 import { Miniflare, convertV4MiniflareOptions } from 'miniflare';
 
 let mf,db,bucket,temp,options;
+const mail=[];let mailFailure=false;
 const origin='https://test.piiin.invalid';
 const tokens={alice:'test-alice-session-token-0123456789',bob:'test-bob-session-token-0123456789'};
-const makeSummary=(id,generation=1)=>({schemaVersion:1,measurementId:id,installationId:'f3d371d2-7ce5-40ef-9d22-427e8b3966e8',startedAt:'2026-01-01T00:00:00Z',endedAt:'2026-01-01T00:00:02Z',timeZone:'Asia/Tokyo',platform:'web',channel:'web',appVersion:'0.1.9',status:'completed',mode:'automatic',metadataBasis:'recorded',consentVersion:'2026-11-08-v1',consentGeneration:generation,focusMs:2000,validMs:1000,goodMs:1000,elapsedMs:2000,ratioBasis:'focus-v1',legacyGoodRatio:null,settings:{focusMinutes:1,restMinutes:0,cycles:1},calibrations:[{id:'baseline-1',focusMs:0,elapsedMs:0,scoreVersion:'test-v1'}],sampleCount:2,eventCount:1,chunkCount:1});
+const makeSummary=(id,generation=1)=>({schemaVersion:1,measurementId:id,installationId:'f3d371d2-7ce5-40ef-9d22-427e8b3966e8',startedAt:'2026-01-01T00:00:00Z',endedAt:'2026-01-01T00:00:02Z',timeZone:'Asia/Tokyo',platform:'web',channel:'web',appVersion:'0.1.9',status:'completed',mode:'automatic',metadataBasis:'recorded',consentVersion:'2026-11-09-v2',consentGeneration:generation,focusMs:2000,validMs:1000,goodMs:1000,elapsedMs:2000,ratioBasis:'focus-v1',legacyGoodRatio:null,settings:{focusMinutes:1,restMinutes:0,cycles:1},calibrations:[{id:'baseline-1',focusMs:0,elapsedMs:0,scoreVersion:'test-v1'}],sampleCount:2,eventCount:1,chunkCount:1});
 const chunk={index:0,samples:[{sequence:0,focusMs:1000,elapsedMs:1000,calibrationId:'baseline-1',segment:0,score:100,deviation:0,state:'good'},{sequence:1,focusMs:2000,elapsedMs:2000,calibrationId:'baseline-1',segment:0,score:null,deviation:null,state:'untracked'}],events:[{kind:'finish',focusMs:2000,elapsedMs:2000,segment:0}]};
 const call=(path,method='GET',body,user='alice',headers={})=>mf.dispatchFetch(origin+path,{method,headers:{Origin:origin,...(user?{Authorization:`Bearer ${tokens[user]}`,'X-Piiin-Account':user}:{}),...(body===undefined?{}:{'Content-Type':'application/json'}),...headers},body:body===undefined?undefined:JSON.stringify(body)});
 async function ok(response,status=200){const data=await response.json();assert.equal(response.status,status,JSON.stringify(data));return data;}
@@ -20,10 +21,13 @@ before(async()=>{
   const appleKey=await crypto.subtle.generateKey({name:'ECDSA',namedCurve:'P-256'},true,['sign','verify']);
   const applePem=`-----BEGIN PRIVATE KEY-----\n${Buffer.from(await crypto.subtle.exportKey('pkcs8',appleKey.privateKey)).toString('base64')}\n-----END PRIVATE KEY-----`;
   options={modules:true,unsafeTriggerHandlers:true,script:await readFile(output,'utf8'),compatibilityDate:'2026-11-08',compatibilityFlags:['nodejs_compat'],d1Databases:['DB'],r2Buckets:['TELEMETRY'],bindings:{APP_ORIGIN:origin,BETTER_AUTH_SECRET:'local-test-secret-not-for-production-12345678',EXPORT_TOKEN:'local-export-test-token',GOOGLE_CLIENT_ID:'test-client.apps.googleusercontent.com',GOOGLE_CLIENT_SECRET:'test-google-secret'},serviceBindings:{ASSETS:()=>new Response('asset')}};
+  options.outboundService=async request=>{assert.equal(new URL(request.url).origin,'https://api.resend.com');if(mailFailure)return new Response('{}',{status:429});mail.push(await request.json());return Response.json({id:crypto.randomUUID()});};
+  options.bindings.RESEND_API_KEY='test-resend-key';
+  Object.assign(options.bindings,{PIIIN_DEV_USERNAME:'test-developer',PIIIN_DEV_PASSWORD:'test-developer-password',PIIIN_DEV_SESSION_SECRET:'test-developer-session-secret-long-enough-123456789'});
   Object.assign(options.bindings,{APPLE_CLIENT_ID:'test.piiin.web',APPLE_TEAM_ID:'TESTTEAM',APPLE_KEY_ID:'TESTKEY',APPLE_PRIVATE_KEY:applePem});
   mf=new Miniflare(convertV4MiniflareOptions(options));
   db=await mf.getD1Database('DB');bucket=await mf.getR2Bucket('TELEMETRY');
-  for(const sql of (await readFile('server/migrations/0001_accounts.sql','utf8')).split(';').filter(s=>s.trim()))await db.prepare(sql).run();
+  for(const file of (await readdir('server/migrations')).sort())for(const sql of (await readFile(`server/migrations/${file}`,'utf8')).split(';').filter(s=>s.trim()))await db.prepare(sql).run();
   for(const user of Object.keys(tokens)) {
     const now=Date.now();
     await db.prepare('INSERT INTO user(id,name,email,emailVerified,createdAt,updatedAt) VALUES(?,?,?,1,?,?)').bind(user,user,`${user}@example.invalid`,now,now).run();
@@ -68,7 +72,7 @@ test('Apple form callback accepts only Apple origin and still requires valid OAu
   }
   assert.equal((await post('https://attacker.invalid',false)).status,403);
   assert.equal((await post('https://appleid.apple.com.attacker.invalid',false)).status,403);
-  await ok(await call('/api/consent','POST',{version:'2026-11-08-v1',agree:true},'alice',{Origin:'https://appleid.apple.com'}),403);
+  await ok(await call('/api/consent','POST',{version:'2026-11-09-v2',agree:true,adult:true},'alice',{Origin:'https://appleid.apple.com'}),403);
   assert.equal((await db.prepare('SELECT count(*) n FROM participants').first()).n,0);
 });
 test('Apple state survives the POST to GET round trip and expired state returns to app retry',async()=>{
@@ -86,9 +90,9 @@ test('Apple state survives the POST to GET round trip and expired state returns 
     const get=await mf.dispatchFetch(post.headers.get('Location'),{redirect:'manual',headers:{Cookie:cookie}});
     assert.equal(get.status,302);
     const target=new URL(get.headers.get('Location'));
-    assert.equal(target.origin,origin);assert.equal(target.pathname,'/app');
-    assert.equal(target.searchParams.get('account'),'error');
-    assert.equal(target.searchParams.get('error'),expired?'state_mismatch':'access_denied');
+    assert.equal(target.origin,origin);assert.equal(target.pathname,expired?'/login':'/app');
+    if(!expired)assert.equal(target.searchParams.get('account'),'error');
+    assert.equal(target.searchParams.get('error'),expired?'oauth':'access_denied');
     assert.equal(get.headers.getSetCookie().some(value=>value.includes('session_token=')),false);
   }
 });
@@ -96,9 +100,9 @@ test('auth requires consent; A cannot upload with B cookie or forged owner',asyn
   assert.equal((await ok(await call('/api/me'))).user.id,'alice');
   assert.equal((await ok(await call('/api/me','GET',undefined,null))).user,null);
   await ok(await call('/api/measurements','POST',makeSummary('before-consent')),409);
-  await ok(await call('/api/consent','POST',{version:'2026-11-08-v1',agree:true}));
+  await ok(await call('/api/consent','POST',{version:'2026-11-09-v2',agree:true,adult:true}));
   await ok(await call('/api/measurements','POST',makeSummary('forged'),'bob',{'X-Piiin-Account':'alice'}),409);
-  await ok(await call('/api/consent','POST',{version:'2026-11-08-v1',agree:true},'alice',{Origin:'https://attacker.invalid'}),403);
+  await ok(await call('/api/consent','POST',{version:'2026-11-09-v2',agree:true,adult:true},'alice',{Origin:'https://attacker.invalid'}),403);
   await ok(await call('/api/measurements','POST',{...makeSummary('raw-leak'),landmarks:[1,2,3]}),400);
 });
 test('partial upload, retries, concurrent duplicate chunks, and immutable completion',async()=>{
@@ -134,7 +138,7 @@ test('zero observation exports null ratios and partial uploads remain explicitly
 test('revocation invalidates queued generations; manual resend never duplicates completed records',async()=>{
   await ok(await call('/api/consent','DELETE'));
   await ok(await call('/api/measurements','POST',makeSummary('stopped')),409);
-  const {consent}=await ok(await call('/api/consent','POST',{version:'2026-11-08-v1',agree:true}));assert.equal(consent.generation,3);
+  const {consent}=await ok(await call('/api/consent','POST',{version:'2026-11-09-v2',agree:true,adult:true}));assert.equal(consent.generation,3);
   const complete=await ok(await call('/api/measurements','POST',{...makeSummary('retry',3),mode:'manual'}));assert.equal(complete.complete,true);
   assert.equal((await db.prepare("SELECT count(*) n FROM measurements WHERE id='retry'").first()).n,1);
 });
@@ -143,7 +147,7 @@ test('retention deadline cannot be extended and deleted IDs cannot resurrect',as
   await db.prepare("UPDATE measurement_receipts SET expires_at=? WHERE measurement_id='expired'").bind(Date.now()-1).run();
   await ok(await call('/api/measurements','POST',makeSummary('expired',3)),410);
   await ok(await call('/api/analysis','DELETE'));
-  const {consent}=await ok(await call('/api/consent','POST',{version:'2026-11-08-v1',agree:true}));
+  const {consent}=await ok(await call('/api/consent','POST',{version:'2026-11-09-v2',agree:true,adult:true}));
   await ok(await call('/api/measurements','POST',{...makeSummary('retry',consent.generation),mode:'manual'}),410);
   assert.equal((await db.prepare('SELECT count(*) n FROM measurements').first()).n,0);
 });
@@ -170,6 +174,98 @@ test('scheduled expiry removes detailed objects and profile history without dele
   assert.equal(await db.prepare("SELECT id FROM profile_snapshots WHERE id='expired-profile'").first(),null);
   assert.equal((await bucket.list({prefix:`alice/${participation.generation}/cron-expiry/`})).objects.length,0);
   assert.equal((await bucket.list({prefix:`alice/${participation.generation}/keep-new-generation/`})).objects.length,1);
+});
+test('legacy developer login remains separate from ordinary analysis sessions',async()=>{
+  const ordinary=await ok(await call('/api/dev-session'));assert.equal(ordinary.authenticated,false);
+  await ok(await call('/api/dev-login','POST',{username:'test-developer',password:'wrong'},null),401);
+  const login=await call('/api/dev-login','POST',{username:'test-developer',password:'test-developer-password'},null);
+  assert.equal((await ok(login)).authenticated,true);
+  const cookie=login.headers.getSetCookie().map(x=>x.split(';')[0]).join('; ');
+  assert.equal((await ok(await call('/api/dev-session','GET',undefined,null,{Cookie:cookie}))).authenticated,true);
+  assert.equal((await ok(await call('/api/me','GET',undefined,null,{Cookie:cookie}))).user,null);
+});
+test('adult consent, verified email and current version are enforced on the server',async()=>{
+  await ok(await call('/api/consent','POST',{version:'2026-11-09-v2',agree:true},'bob'),400);
+  await ok(await call('/api/consent','POST',{version:'2026-11-08-v1',agree:true,adult:true},'bob'),400);
+  await db.prepare("UPDATE user SET emailVerified=0 WHERE id='bob'").run();
+  await ok(await call('/api/consent','POST',{version:'2026-11-09-v2',agree:true,adult:true},'bob'),403);
+  await db.prepare("UPDATE user SET emailVerified=1 WHERE id='bob'").run();
+});
+test('survey retries, isolation, skip, language, expiry and clear preserve stable analysis identity',async()=>{
+  const before=await ok(await call('/api/me'));
+  const body={requestId:crypto.randomUUID(),revision:before.profile.revision,generation:before.consent.generation,ageYears:30,sexAtBirth:'female',ageSource:'google_prefill',sexSource:'user',language:'ja'};
+  const saved=await ok(await call('/api/profile','POST',body));
+  assert.notEqual(saved.profile.analysisId,'alice');assert.equal(saved.profile.ageYears,30);
+  const snapshot=await db.prepare('SELECT * FROM survey_responses WHERE id=?').bind(body.requestId).first();
+  await ok(await call('/api/profile','POST',body));
+  assert.deepEqual(await db.prepare('SELECT * FROM survey_responses WHERE id=?').bind(body.requestId).first(),snapshot);
+  await ok(await call('/api/profile','POST',{...body,ageYears:31}),409);
+  await ok(await call('/api/profile','POST',{...body,requestId:crypto.randomUUID()}),409);
+  await ok(await call('/api/profile','GET',undefined,'bob',{'X-Piiin-Account':'alice'}),409);
+  await ok(await call('/api/profile/language','POST',{language:'ko'}));
+  const languageProfile=(await ok(await call('/api/profile'))).profile;
+  assert.equal(languageProfile.language,'ko');assert.equal(languageProfile.observedAt,saved.profile.observedAt);
+  const exports=await ok(await call('/api/operator/export?version=2&view=profiles','GET',undefined,null,{Authorization:'Bearer local-export-test-token'}));
+  assert.equal(exports.records[0].analysisId,saved.profile.analysisId);assert.equal(exports.records[0].sexSource,'user');assert.equal(exports.records[0].exportVersion,2);
+  assert.equal(JSON.stringify(exports).includes('alice@example.invalid'),false);
+  const skipped=await ok(await call('/api/profile/skip','POST',{...body,revision:saved.profile.revision,requestId:crypto.randomUUID()}));
+  assert.equal(skipped.profile.ageYears,null);assert.equal(skipped.profile.sexAtBirth,null);assert.equal(skipped.profile.surveyStatus,'skipped');
+  await ok(await call('/api/profile','DELETE',{revision:skipped.profile.revision}));
+  assert.equal((await db.prepare("SELECT count(*) n FROM survey_responses WHERE user_id='alice'").first()).n,0);
+  await ok(await call('/api/profile','POST',{...body,requestId:crypto.randomUUID()}),409);
+  const cleared=(await ok(await call('/api/profile'))).profile;
+  assert.equal(cleared.analysisId,saved.profile.analysisId);assert.equal(cleared.surveyStatus,'skipped');
+  await ok(await call('/api/profile','POST',{...body,revision:cleared.revision,requestId:crypto.randomUUID()}));
+  await db.prepare("UPDATE survey_responses SET expires_at=1 WHERE user_id='alice'").run();
+  const expired=(await ok(await call('/api/profile'))).profile;assert.equal(expired.ageYears,null);assert.equal(expired.surveyStatus,'completed');
+  await mf.dispatchFetch(origin+'/cdn-cgi/local/scheduled');
+  assert.equal((await db.prepare("SELECT count(*) n FROM survey_responses WHERE user_id='alice'").first()).n,0);
+});
+test('underage answer stops uploads without recording the minor profile',async()=>{
+  await ok(await call('/api/consent','POST',{version:'2026-11-09-v2',agree:true,adult:true},'bob'));
+  const info=await ok(await call('/api/me','GET',undefined,'bob'));
+  const result=await ok(await call('/api/profile','POST',{requestId:crypto.randomUUID(),revision:info.profile.revision,generation:info.consent.generation,ageYears:17,sexAtBirth:null,ageSource:'user',sexSource:null,language:'ja'},'bob'));
+  assert.equal(result.ineligible,true);
+  await ok(await call('/api/measurements','POST',makeSummary('minor',info.consent.generation),'bob'),409);
+  assert.equal((await db.prepare("SELECT count(*) n FROM survey_responses WHERE user_id='bob'").first()).n,0);
+});
+test('email signup verifies on a different device, resets credentials and revokes sessions',async()=>{
+  const email='new@example.invalid',password='correct-test-password-123';
+  const resetLimits=()=>db.prepare('DELETE FROM rate_limits').run();
+  const signup=await ok(await call('/api/auth/sign-up/email','POST',{email,password,name:'PiiiN',callbackURL:origin+'/login?verified=1'},null));
+  assert.equal(signup.token,null);assert.equal(mail.length,1);assert.equal(mail[0].reply_to,'piiin.contact@gmail.com');
+  const stored=await db.prepare("SELECT password FROM account WHERE userId=? AND providerId='credential'").bind(signup.user.id).first();assert.notEqual(stored.password,password);
+  await ok(await call('/api/auth/sign-in/email','POST',{email,password},null),403);
+  const link=mail[0].text.match(/https:\/\/[^\s]+/)[0];
+  const verified=await mf.dispatchFetch(link,{redirect:'manual'});assert.equal(verified.status,302);assert.match(verified.headers.get('Location'),/verified=1/);
+  await resetLimits();
+  const session=await ok(await call('/api/auth/sign-in/email','POST',{email,password},null));assert.ok(session.token);
+  await ok(await call('/api/auth/request-password-reset','POST',{email,redirectTo:origin+'/reset-password'},null));
+  const resetLink=mail.at(-1).text.match(/https:\/\/[^\s]+/)[0];
+  const redirected=await mf.dispatchFetch(resetLink,{redirect:'manual'});const token=new URL(redirected.headers.get('Location')).searchParams.get('token');assert.ok(token);
+  await ok(await call('/api/auth/reset-password','POST',{token,newPassword:'replacement-test-password-123'},null));
+  await resetLimits();
+  await ok(await call('/api/auth/sign-in/email','POST',{email,password},null),401);
+  assert.equal((await ok(await call('/api/me','GET',undefined,null,{Authorization:`Bearer ${session.token}`}))).user,null);
+  await ok(await call('/api/auth/sign-in/email','POST',{email,password:'replacement-test-password-123'},null));
+  await ok(await call('/api/auth/reset-password','POST',{token,newPassword:'replacement-test-password-456'},null),400);
+});
+test('SSO-only reset, nonexistent accounts, duplicate signup, quotas and delivery failures are safe',async()=>{
+  await db.prepare('DELETE FROM rate_limits').run();
+  const count=mail.length;
+  const social=await ok(await call('/api/auth/request-password-reset','POST',{email:'bob@example.invalid'},null));
+  const absent=await ok(await call('/api/auth/request-password-reset','POST',{email:'absent@example.invalid'},null));
+  assert.deepEqual(social,absent);assert.equal(mail.length,count);
+  await ok(await call('/api/auth/set-password','POST',{newPassword:'malicious-password-123'},'bob'),404);
+  const duplicate=await ok(await call('/api/auth/sign-up/email','POST',{email:'new@example.invalid',password:'replacement-test-password-123',name:'PiiiN'},null));assert.equal(duplicate.token,null);
+  await db.prepare('DELETE FROM rate_limits').run();
+  mailFailure=true;
+  const failed=await call('/api/auth/sign-up/email','POST',{email:'failure@example.invalid',password:'valid-password-123',name:'PiiiN'},null);assert.ok(failed.status>=400);mailFailure=false;
+  const day=new Date().toISOString().slice(0,10);
+  await db.prepare("UPDATE mail_quotas SET count=100 WHERE bucket=?").bind(`day:${day}`).run();
+  await ok(await call('/api/auth/send-verification-email','POST',{email:'failure@example.invalid'},null),429);
+  await ok(await call('/api/auth/sign-in/social','POST',{provider:'google',callbackURL:origin+'/app',disableRedirect:true},null));
+  await db.prepare('DELETE FROM mail_quotas').run();await db.prepare('DELETE FROM rate_limits').run();
 });
 test('account deletion revokes all sessions while preserving deletion receipts',async()=>{
   await ok(await call('/api/account','DELETE'));

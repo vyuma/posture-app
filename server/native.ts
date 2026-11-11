@@ -14,6 +14,8 @@ export async function nativeHandoff(env:Env,auth:Auth,request:Request,action:str
   if(action==='approve') {
     const {id}=z.object({id:z.string().uuid()}).strict().parse(await readJson(request));
     if(!userId) throw new HttpError(401,'Login required');
+    const verified=await env.DB.prepare('SELECT id FROM user WHERE id=? AND emailVerified=1').bind(userId).first();
+    if(!verified)throw new HttpError(403,'メールアドレスを確認してください。');
     const result=await env.DB.prepare('UPDATE native_handoffs SET user_id=? WHERE id=? AND expires_at>? AND user_id IS NULL').bind(userId,id,now).run();
     if(!result.meta.changes) throw new HttpError(410,'ログインの有効期限が切れました。アプリからやり直してください。');
     return json({approved:true});

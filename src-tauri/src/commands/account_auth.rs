@@ -40,7 +40,7 @@ fn request(client: &reqwest::blocking::Client,path:&str,method:&str,body:Option<
 pub async fn account_request(app:tauri::AppHandle,window:tauri::WebviewWindow,path:String,method:String,body:Option<String>,owner_id:Option<String>) -> Result<ApiResponse,String> {
     main_only(&window)?;
     let route=path.split('?').next().unwrap_or("");
-    if !["GET","POST","DELETE"].contains(&method.as_str()) || path.contains("..") || path.contains('#') || !(matches!(route,"/api/me"|"/api/consent"|"/api/analysis"|"/api/account"|"/api/measurements"|"/api/profile/google"|"/api/auth/sign-out") || route.starts_with("/api/measurements/")) { return Err("Unsupported account request".into()); }
+    if !["GET","POST","DELETE"].contains(&method.as_str()) || path.contains("..") || path.contains('#') || !(matches!(route,"/api/me"|"/api/consent"|"/api/analysis"|"/api/account"|"/api/measurements"|"/api/profile/google"|"/api/profile"|"/api/profile/skip"|"/api/profile/language"|"/api/profile/google-prefill"|"/api/auth/sign-out") || route.starts_with("/api/measurements/")) { return Err("Unsupported account request".into()); }
     tauri::async_runtime::spawn_blocking(move||{
         let auth=credential(&app)?;
         if let (Some(owner),Some(auth))=(&owner_id,&auth) {if owner!=&auth.user_id{return Err("別のアカウントです。再ログインしてください。".into());}}
@@ -49,7 +49,7 @@ pub async fn account_request(app:tauri::AppHandle,window:tauri::WebviewWindow,pa
 }
 #[tauri::command]
 pub async fn account_login(app:tauri::AppHandle,window:tauri::WebviewWindow,provider:String)->Result<(),String> {
-    main_only(&window)?;if provider!="google"&&provider!="apple" {return Err("Unknown provider".into());}
+    main_only(&window)?;if !["google","apple","login","signup"].contains(&provider.as_str()) {return Err("Unknown provider".into());}
     tauri::async_runtime::spawn_blocking(move||{
         let client=client()?;
         let verifier=format!("{}{}",uuid::Uuid::new_v4().simple(),uuid::Uuid::new_v4().simple());
@@ -59,7 +59,7 @@ pub async fn account_login(app:tauri::AppHandle,window:tauri::WebviewWindow,prov
         let value:Value=serde_json::from_str(&created.body).map_err(|_|"Invalid login response")?;
         let id=value["id"].as_str().ok_or("Missing login id")?;
         uuid::Uuid::parse_str(id).map_err(|_|"Invalid login id")?;
-        let url=format!("{ORIGIN}/account/native?handoff={id}&provider={provider}");
+        let url=if provider=="login"||provider=="signup" {format!("{ORIGIN}/{provider}?handoff={id}")} else {format!("{ORIGIN}/account/native?handoff={id}&provider={provider}")};
         open::that(url).map_err(|_|"ブラウザを開けませんでした。")?;
         let started=Instant::now();
         while started.elapsed()<Duration::from_secs(300) {

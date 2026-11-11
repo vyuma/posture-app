@@ -24,19 +24,15 @@ const DeveloperAccessContext = createContext<DeveloperAccessValue | null>(null);
 
 export function DeveloperAccessProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<DeveloperAccessStatus>(
-    buildEnablesDebugUi ? "authenticated" : "checking",
+    "checking",
   );
 
   const refresh = useCallback(async () => {
-    if (buildEnablesDebugUi) {
-      setStatus("authenticated");
-      return true;
-    }
-
     try {
       const response = await fetch("/api/dev-session", {
         credentials: "same-origin",
         cache: "no-store",
+        signal: AbortSignal.timeout(5000),
       });
       const result = (await response.json()) as { authenticated?: boolean };
       const authenticated = response.ok && result.authenticated === true;
@@ -49,10 +45,6 @@ export function DeveloperAccessProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(async () => {
-    if (buildEnablesDebugUi) {
-      return;
-    }
-
     try {
       await fetch("/api/dev-logout", {
         method: "POST",
@@ -64,15 +56,13 @@ export function DeveloperAccessProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (!buildEnablesDebugUi) {
-      void refresh();
-    }
+    void refresh();
   }, [refresh]);
 
   const value = useMemo<DeveloperAccessValue>(
     () => ({
-      enabled: status === "authenticated",
-      canLogout: !buildEnablesDebugUi && status === "authenticated",
+      enabled: buildEnablesDebugUi || status === "authenticated",
+      canLogout: status === "authenticated",
       status,
       refresh,
       logout,

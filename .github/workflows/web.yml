@@ -85,6 +85,7 @@ jobs:
       PIIIN_AUTH_ENABLED: ${{ vars.PIIIN_AUTH_ENABLED }}
       PIIIN_APPLE_ENABLED: ${{ vars.PIIIN_APPLE_ENABLED }}
       PIIIN_DEVELOPER_ENABLED: ${{ vars.PIIIN_DEVELOPER_ENABLED }}
+      PIIIN_EMAIL_ENABLED: ${{ vars.PIIIN_EMAIL_ENABLED }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -116,6 +117,7 @@ jobs:
       PIIIN_AUTH_ENABLED: ${{ vars.PIIIN_AUTH_ENABLED }}
       PIIIN_APPLE_ENABLED: ${{ vars.PIIIN_APPLE_ENABLED }}
       PIIIN_DEVELOPER_ENABLED: ${{ vars.PIIIN_DEVELOPER_ENABLED }}
+      PIIIN_EMAIL_ENABLED: ${{ vars.PIIIN_EMAIL_ENABLED }}
       PIIIN_GOOGLE_PROFILE_ENABLED: ${{ vars.PIIIN_GOOGLE_PROFILE_ENABLED }}
       PIIIN_RESTORE_LOCK: ${{ vars.PIIIN_RESTORE_LOCK }}
     steps:

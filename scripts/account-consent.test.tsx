@@ -10,9 +10,12 @@ const active={active:true,version:CONSENT_VERSION,generation:1,grantedAt:'2026-1
 mock.module('../src/features/accounts/localAccounts',()=>({readAccounts:async()=>structuredClone(local),updateAccounts:async(fn:(s:LocalAccounts)=>void)=>{fn(local);local.revision++;return structuredClone(local);}}));
 mock.module('../src/features/work/measurementLock',()=>({acquireMeasurementLock:async()=>locked?null:()=>{}}));
 mock.module('../src/features/accounts/api',()=>({
+  openAuthPage:async()=>{remote.user={id:'alice',name:'Alice'};},
   startLogin:async()=>{remote.user={id:'alice',name:'Alice'};},forgetNativeLogin:async()=>{},
-  accountRequest:async(path:string,method='GET')=>{
+  accountRequest:async(path:string,method='GET',body?:Record<string,unknown>)=>{
     if(offline)throw new Error('offline');
+    if(path==='/api/profile/skip'){remote.profile={...remote.profile!,surveyStatus:'skipped',ageYears:null,sexAtBirth:null};return {profile:remote.profile};}
+    if(path==='/api/profile'&&method==='POST'){remote.profile={...remote.profile!,surveyStatus:'completed',ageYears:body?.ageYears as number|null,sexAtBirth:body?.sexAtBirth as null};return {profile:remote.profile};}
     if(path==='/api/me')return structuredClone(remote);
     if(path==='/api/consent'){if(failConsent)throw new Error('consent failed');if(method==='POST'){grants++;remote.consent={...active};}else remote.consent={...active,active:false,generation:2};return {consent:remote.consent};}
     if(path==='/api/account'){if(failDelete)throw new Error('reauthentication required');deletes++;remote.user=null;remote.consent=null;return {};}
@@ -33,11 +36,13 @@ test('first login requires explicit consent, cannot dismiss, and never adopts gu
   await render();await act(()=>api.login('google'));
   expect(local.ownerId).toBe('alice');expect(local.profiles.guest.space).toBe('legacy');expect(local.profiles.alice.space).not.toBe('legacy');
   expect(grants).toBe(0);expect(host.textContent).toContain('同意して続ける');
+  expect(Array.from(host.querySelectorAll('button')).find(b=>b.textContent==='同意して続ける')!.disabled).toBe(true);
   const dialog=host.querySelector('dialog')!;const cancel=new browser.Event('cancel',{cancelable:true});
   await act(()=>dialog.dispatchEvent(cancel as unknown as Event));expect(cancel.defaultPrevented).toBe(true);expect(dialog.open).toBe(true);
   const escape=new browser.KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true});
   await act(()=>dialog.dispatchEvent(escape as unknown as Event));expect(escape.defaultPrevented).toBe(true);
   expect(dialog.querySelector('.work-close')).toBeNull();
+  await act(()=>host.querySelector<HTMLInputElement>('.account-adult input')!.click());
   await click('同意して続ける');expect(grants).toBe(1);expect(host.querySelector('dialog')).toBeNull();expect(api.homeRevision).toBeGreaterThan(0);
   await act(()=>api.logout());expect(local.ownerId).toBe('guest');expect(local.profiles.alice.consent?.active).toBe(true);
   await act(()=>api.login('google'));expect(host.querySelector('dialog')).toBeNull();expect(grants).toBe(1);expect(local.ownerId).toBe('alice');
@@ -47,7 +52,7 @@ test('a returning account on a new device loads existing server consent without 
   await render();expect(local.ownerId).toBe('alice');expect(host.querySelector('dialog')).toBeNull();expect(grants).toBe(0);expect(browser.location.search).toBe('');
 });
 test('failed consent stays blocked and logout still works offline',async()=>{
-  await render();await act(()=>api.login('google'));failConsent=true;await click('同意して続ける');
+  await render();await act(()=>api.login('google'));failConsent=true;await act(()=>host.querySelector<HTMLInputElement>('.account-adult input')!.click());await click('同意して続ける');
   expect(host.textContent).toContain('consent failed');expect(local.profiles.alice.consent).toBeUndefined();
   offline=true;await click('ログアウト');expect(local.ownerId).toBe('guest');expect(host.querySelector('dialog')).toBeNull();
 });
@@ -83,4 +88,16 @@ test('withdrawal confirmation stays available on network failure and closes only
   await act(()=>api.openPrivacy('withdraw'));failConsent=true;await click('参加をやめてログアウト');
   expect(host.textContent).toContain('consent failed');expect(local.ownerId).toBe('alice');expect(local.profiles.alice.pendingStop).toBe(true);
   failConsent=false;await click('参加をやめてログアウト');expect(local.ownerId).toBe('guest');expect(local.profiles.alice.consent?.active).toBe(false);expect(host.querySelector('dialog')).toBeNull();
+});
+
+test('first survey resumes after interruption and skip is never asked again',async()=>{
+  remote.profile={analysisId:'test-analysis-id',revision:0,surveyStatus:'pending',language:'ja',sexAtBirth:null,ageYears:null,observedAt:null,sexSource:null,ageSource:null};
+  await render();await act(()=>api.openAuth('login'));
+  expect(host.querySelector('.profile-form')).toBeNull();
+  await act(()=>host.querySelector<HTMLInputElement>('.account-adult input')!.click());await click('同意して続ける');
+  expect(host.textContent).toContain('出生時の性別');expect(api.choosingAccount).toBe(true);
+  await act(()=>root.unmount());root=createRoot(host);await render();
+  expect(host.textContent).toContain('出生時の性別');expect(grants).toBe(1);
+  await click('スキップ');expect(host.querySelector('dialog')).toBeNull();
+  await act(()=>api.logout());await act(()=>api.openAuth('login'));expect(host.querySelector('dialog')).toBeNull();expect(grants).toBe(1);
 });

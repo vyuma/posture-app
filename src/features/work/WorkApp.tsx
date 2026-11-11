@@ -35,6 +35,7 @@ import { openTimelapseStore } from '../timelapse/platform';
 import { notifyClipsChanged } from '../timelapse/useClip';
 import { TimelapseScreen } from '../timelapse/TimelapseScreen';
 import { TimelapseSettings } from '../timelapse/TimelapseSettings';
+import { useDeveloperAccess } from '../developer/DeveloperAccessContext';
 import { NextRewardSetting } from './NextRewardSetting';
 import { LegalContent, LEGAL_TITLES, type LegalPage } from '../legal/LegalContent';
 
@@ -45,6 +46,7 @@ export default function WorkApp() {
   return <AccountBoundary><WorkAppContent /></AccountBoundary>;
 }
 function WorkAppContent() {
+  const developer=useDeveloperAccess();
   const accounts=useAccounts();
   const accountRef=useRef(accounts.state);accountRef.current=accounts.state;
   const [screen, setScreen] = useState<Screen>(() => accounts.state.ownerId!=='guest'||hasCompletedOnboardingStory() ? 'home' : 'story');
@@ -102,10 +104,10 @@ function WorkAppContent() {
     const current = live.current; if (!current || !repository.current || finalizePending.current) return;
     finalizePending.current = true; setBusy(true); setError('');
     void recorder.current?.stop();
-    try { const result = await enqueue(() => repository.current!.finish(structuredClone(current), catalogIds)); live.current = result.session; setSession(result.session); setCollection(result.collection); setDialog(null); setScreen('result'); releaseMeasurement(); void flushOutbox(repository.current!,accountRef.current.ownerId).catch(()=>{}); void publishWidget(null).catch(report); }
+    try { const allowChosenReward=(await repository.current!.collection()).nextRewardId ? await developer.refresh() : false; const result = await enqueue(() => repository.current!.finish(structuredClone(current), catalogIds, allowChosenReward)); live.current = result.session; setSession(result.session); setCollection(result.collection); setDialog(null); setScreen('result'); releaseMeasurement(); void flushOutbox(repository.current!,accountRef.current.ownerId).catch(()=>{}); void publishWidget(null).catch(report); }
     catch (cause) { report(cause); }
     finally { finalizePending.current = false; setBusy(false); }
-  }, [enqueue, report, releaseMeasurement]);
+  }, [enqueue, report, releaseMeasurement, developer.refresh]);
   useEffect(() => {
     const interval = setInterval(() => { const current = live.current; if (!current || current.status === 'interrupted') return; if (current.status === 'completed') return;
       const previousEvents = current.events.length;
@@ -148,7 +150,7 @@ function WorkAppContent() {
   function changeVideoSettings(value: VideoSettings) { setVideoSettings(value); try { saveTimelapseSettings(value); } catch { setNotice('設定を保存できませんでした。この画面を閉じるまでは適用されます。'); } }
 
   async function changeNextReward(id: string | null) {
-    try { setCollection(await enqueue(() => repository.current!.nextReward(id, catalogIds))); }
+    try { const allowed=await developer.refresh(); setCollection(await enqueue(() => repository.current!.nextReward(id, catalogIds, allowed))); }
     catch (cause) {
       const latest = await repository.current!.collection().catch(() => null);
       if (latest) setCollection(latest);

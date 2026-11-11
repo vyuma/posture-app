@@ -22,6 +22,8 @@ export async function cleanup(env:Env,now=Date.now()) {
   }
   await env.DB.batch([
     env.DB.prepare('DELETE FROM profile_snapshots WHERE expires_at<=?').bind(now),
+    env.DB.prepare('DELETE FROM survey_responses WHERE expires_at<=?').bind(now),
+    env.DB.prepare('DELETE FROM mail_quotas WHERE expires_at<=?').bind(now),
     env.DB.prepare('DELETE FROM native_handoffs WHERE expires_at<=?').bind(now),
     env.DB.prepare('DELETE FROM rate_limits WHERE expires_at<=?').bind(now),
     env.DB.prepare('DELETE FROM session WHERE expiresAt<=?').bind(now),

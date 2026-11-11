@@ -16,6 +16,7 @@ export default defineConfig(({mode,isPreview})=>{
       TELEMETRY:bindings.r2({name:`${name}-telemetry`}),
       APP_ORIGIN:bindings.text(process.env.PIIIN_APP_ORIGIN??(production?'https://www.piiin.app':'http://localhost:5173')),
       GOOGLE_PROFILE_ENABLED:bindings.text(process.env.PIIIN_GOOGLE_PROFILE_ENABLED??'false'),
+      RESEND_API_KEY:secret(process.env.PIIIN_EMAIL_ENABLED==='true'),
       RESTORE_LOCK:bindings.text(process.env.PIIIN_RESTORE_LOCK??'false'),
       BETTER_AUTH_SECRET:secret(auth),GOOGLE_CLIENT_ID:secret(auth),GOOGLE_CLIENT_SECRET:secret(auth),
       APPLE_CLIENT_ID:secret(apple),APPLE_TEAM_ID:secret(apple),APPLE_KEY_ID:secret(apple),APPLE_PRIVATE_KEY:secret(apple),
