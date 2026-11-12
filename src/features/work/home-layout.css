@@ -7,7 +7,8 @@
 .work-home .work-hero-actions{top:181px;left:49.2063492063%;width:24.2380952381%;gap:23.47px}
 .work-home .work-hero-actions .work-button{min-height:69.98px;font-size:21.9888px;line-height:26px}
 .work-home .work-hero-actions .work-button.white{color:#13a2d7}
-.work-home .work-home-pet{left:77.45%;width:13.36%}
+/* Keep the collection edge cropped, with headroom for the upward float. */
+.work-home .work-home-pet{left:77.45%;width:13.36%;overflow:visible;clip-path:inset(-25% 0 0)}
 .work-home .work-collection{padding:43px var(--home-gutter) 64px;box-shadow:0 0 8.52px #00000026}
 .work-home .work-collection-heading{height:54px;margin-bottom:22.06px}
 .work-home .work-collection-heading h2{gap:clamp(18px,5.150794vw,77.88px);font-size:22.8191px;line-height:27px;color:#666}

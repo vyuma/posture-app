@@ -4,7 +4,7 @@ import { clampRect, DEFAULT_TIMELAPSE, type Rect, type TimelapseSettings as Sett
 import { TimelapsePetPreview } from './TimelapsePetPreview';
 import './timelapse.css';
 
-export function TimelapseSettings({ value, onChange, onClose, children }: { value: Settings; onChange: (value: Settings) => void; onClose: () => void; children?: ReactNode }) {
+export function TimelapseSettings({ value, onChange, onClose, children, footer }: { value: Settings; onChange: (value: Settings) => void; onClose: () => void; children?: ReactNode; footer?: ReactNode }) {
   const editor = useRef<HTMLDivElement>(null);
   const drag = useRef<{ kind: 'camera' | 'pet'; pointerId: number; resize: boolean; x: number; y: number; rect: Rect } | null>(null);
   const [selected, select] = useState<'camera' | 'pet'>('camera');
@@ -43,6 +43,7 @@ export function TimelapseSettings({ value, onChange, onClose, children }: { valu
     </fieldset>
     <div className="timelapse-layout-heading"><h3>映像内の配置</h3><button type="button" onClick={() => onChange({ ...value, camera: { ...DEFAULT_TIMELAPSE.camera }, pet: { ...DEFAULT_TIMELAPSE.pet } })}>配置を戻す</button></div>
     <p id="timelapse-layout-help" className="timelapse-help">ドラッグで移動、右下のつまみで大きさを調整できます。矢印キーでも操作できます。</p>
+    {value.includePet && <p className="timelapse-help">ペットの枠は、最大まで成長した姿と吹き出しが収まる範囲です。薄い姿が最大サイズです。枠を大きくすると、通常の姿も最大の姿も一緒に大きくなります。</p>}
     <div className="timelapse-editor" ref={editor} aria-describedby="timelapse-layout-help" onDragStart={event => event.preventDefault()} onLostPointerCapture={() => { drag.current = null; }}>
       {(['camera', 'pet'] as const).filter(kind => kind === 'camera' || value.includePet).map(kind => <div key={kind} role="group" aria-label={`${kind === 'camera' ? 'カメラ' : 'ペット'}の位置を矢印キーで調整`} tabIndex={0} className={`timelapse-edit-item ${kind}`} data-selected={selected === kind} style={{ left: `${value[kind].x * 100}%`, top: `${value[kind].y * 100}%`, width: `${value[kind].width * 100}%`, height: `${value[kind].height * 100}%` } as CSSProperties} onFocus={() => select(kind)} onPointerDown={event => start(event, kind)} onPointerMove={move} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onKeyDown={event => key(event, kind)}>
         {kind === 'camera' ? <span>カメラ</span> : <TimelapsePetPreview />}
@@ -51,6 +52,7 @@ export function TimelapseSettings({ value, onChange, onClose, children }: { valu
     </div>
     <p className="timelapse-help">配置は過去の動画にも共通で適用します。左右のアナゴの位置は固定です。保存済みのファイルは変わりません。</p>
     <p className="timelapse-storage-note">集中時間だけを無音で記録します。動画はコレクションを初期化するまで、この端末に保存されます。保存・共有はいつも1倍速です。</p>
+    {footer}
     <button className="work-button blue" onClick={onClose}>完了</button>
   </Dialog>;
 }

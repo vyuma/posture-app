@@ -1,4 +1,7 @@
 import { measurementReading, petPosture } from './postureReading';
+import { AccountBoundary, useAccounts } from '../accounts/AccountBoundary';
+import { AccountSettings } from '../accounts/AccountSettings';
+import { flushOutbox, makeTicket, provenance } from '../accounts/outbox';
 import { usePostureSpeech } from './usePostureSpeech';
 import { useWorkScreenTransition } from './useWorkScreenTransition';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -32,6 +35,7 @@ import { openTimelapseStore } from '../timelapse/platform';
 import { notifyClipsChanged } from '../timelapse/useClip';
 import { TimelapseScreen } from '../timelapse/TimelapseScreen';
 import { TimelapseSettings } from '../timelapse/TimelapseSettings';
+import { useDeveloperAccess } from '../developer/DeveloperAccessContext';
 import { NextRewardSetting } from './NextRewardSetting';
 import { LegalContent, LEGAL_TITLES, type LegalPage } from '../legal/LegalContent';
 
@@ -39,9 +43,17 @@ type Screen = 'home' | 'story' | 'picker' | 'timer' | MeasureStage | 'result';
 import './responsive-layout.css';
 const catalogIds = catalog.map(item => item.id);
 export default function WorkApp() {
-  const [screen, setScreen] = useState<Screen>(() => hasCompletedOnboardingStory() ? 'home' : 'story');
+  return <AccountBoundary><WorkAppContent /></AccountBoundary>;
+}
+function WorkAppContent() {
+  const developer=useDeveloperAccess();
+  const accounts=useAccounts();
+  useEffect(()=>{void developer.refresh();},[accounts.state.ownerId,developer.refresh]);
+  const accountRef=useRef(accounts.state);accountRef.current=accounts.state;
+  const [screen, setScreen] = useState<Screen>(() => accounts.state.ownerId!=='guest'||hasCompletedOnboardingStory() ? 'home' : 'story');
   const [collection, setCollection] = useState<Collection | null>(null); const [session, setSession] = useState<Session | null>(null);
-  const [detail, setDetail] = useState<Session | null>(null); const [dialog, setDialog] = useState<'reset' | 'finish' | 'sound' | 'settings' | null>(null);
+  const [detail, setDetail] = useState<Session | null>(null); const [dialog, setDialog] = useState<'reset' | 'finish' | 'sound' | 'settings' | null>(() => /[?&](settings|profile)=/.test(location.search) || new URLSearchParams(location.search).get('account')==='error' ? 'settings' : null);
+  useEffect(()=>{if(accounts.homeRevision){setDialog(null);setScreen('home');}},[accounts.homeRevision]);
   const [legal, setLegal] = useState<LegalPage | null>(null);
   const [recording, setRecording] = useState(false);
   const [videoSettings, setVideoSettings] = useState(loadTimelapseSettings);
@@ -79,11 +91,13 @@ export default function WorkApp() {
         if (release && !cancelled) await openTimelapseStore().then(store => store.recover()).catch(() => setNotice('タイムラプスの保存状態を確認できませんでした。姿勢測定は利用できます。'));
         if (cancelled) return;
         setCollection(value);
+        void flushOutbox(repo,accountRef.current.ownerId).catch(()=>{});
         if (count) setNotice('前回の中断した測定記録を保存しました。新しく測定を始められます。');
       } finally { release?.(); }
     })().catch(cause => { if (!cancelled) report(cause); });
     return () => { cancelled = true; mounted.current = false; void recorder.current?.stop(); releaseMeasurement(); };
   }, [report, releaseMeasurement]);
+  useEffect(()=>{const send=()=>{if(repository.current)void flushOutbox(repository.current,accountRef.current.ownerId).catch(()=>{});};const timer=setInterval(send,60_000);window.addEventListener('online',send);return()=>{clearInterval(timer);window.removeEventListener('online',send);};},[]);
   useEffect(() => { configureRecoverySound({ enabled: sound.enabled, src: sound.selectedSound, volume: sound.volume }); saveSoundSettings(sound); }, [sound]);
   useEffect(() => { const flush = () => checkpoint(); window.addEventListener('pagehide', flush); const interval = setInterval(flush, 5000); return () => { clearInterval(interval); window.removeEventListener('pagehide', flush); }; }, [checkpoint]);
 
@@ -91,10 +105,10 @@ export default function WorkApp() {
     const current = live.current; if (!current || !repository.current || finalizePending.current) return;
     finalizePending.current = true; setBusy(true); setError('');
     void recorder.current?.stop();
-    try { const result = await enqueue(() => repository.current!.finish(structuredClone(current), catalogIds)); live.current = result.session; setSession(result.session); setCollection(result.collection); setDialog(null); setScreen('result'); releaseMeasurement(); void publishWidget(null).catch(report); }
+    try { const allowChosenReward=(await repository.current!.collection()).nextRewardId ? await developer.refresh() : false; const result = await enqueue(() => repository.current!.finish(structuredClone(current), catalogIds, allowChosenReward)); live.current = result.session; setSession(result.session); setCollection(result.collection); setDialog(null); setScreen('result'); releaseMeasurement(); void flushOutbox(repository.current!,accountRef.current.ownerId).catch(()=>{}); void publishWidget(null).catch(report); }
     catch (cause) { report(cause); }
     finally { finalizePending.current = false; setBusy(false); }
-  }, [enqueue, report, releaseMeasurement]);
+  }, [enqueue, report, releaseMeasurement, developer.refresh]);
   useEffect(() => {
     const interval = setInterval(() => { const current = live.current; if (!current || current.status === 'interrupted') return; if (current.status === 'completed') return;
       const previousEvents = current.events.length;
@@ -137,7 +151,7 @@ export default function WorkApp() {
   function changeVideoSettings(value: VideoSettings) { setVideoSettings(value); try { saveTimelapseSettings(value); } catch { setNotice('設定を保存できませんでした。この画面を閉じるまでは適用されます。'); } }
 
   async function changeNextReward(id: string | null) {
-    try { setCollection(await enqueue(() => repository.current!.nextReward(id, catalogIds))); }
+    try { const allowed=await developer.refresh(); setCollection(await enqueue(() => repository.current!.nextReward(id, catalogIds, allowed))); }
     catch (cause) {
       const latest = await repository.current!.collection().catch(() => null);
       if (latest) setCollection(latest);
@@ -175,7 +189,7 @@ export default function WorkApp() {
       const baseline = pendingBaseline.current;
       if (!baseline || live.current?.status === 'completed' || live.current?.status === 'interrupted') return;
       if (live.current?.status === 'recalibrating') endCalibration(live.current, baseline);
-      else live.current = createSession(crypto.randomUUID(), settings.current, collection.generation, baseline);
+      else { live.current = createSession(crypto.randomUUID(), settings.current, collection.generation, baseline);live.current.provenance=provenance(accountRef.current);live.current.analysis=makeTicket(accountRef.current,'automatic'); }
       refresh(); checkpoint(); setScreen('active');
     }, 1000);
     return () => clearTimeout(timer);
@@ -205,7 +219,7 @@ export default function WorkApp() {
     <DesktopUpdater canInstall={screen === 'home' && !busy && !dialog && !detail && !timelapse} />
     <div className="work-flow" hidden={Boolean(timelapse)}>
     {(screen === 'home' || screen === 'story') && <StoryHomeTransition view={screen}>
-      {shown => shown === 'story' ? <OnboardingStoryScreen onComplete={() => { saveOnboardingStoryCompleted(); setScreen('home'); }} /> : <Home collection={collection} onStart={() => setScreen('timer')} onPick={() => setScreen('picker')} onCard={card => void openCard(card)} onReset={() => setDialog('reset')} onStory={() => setScreen('story')} onSound={() => setDialog('sound')} onSettings={() => setDialog('settings')} onLegal={setLegal} />}
+      {shown => shown === 'story' ? <OnboardingStoryScreen onComplete={() => { saveOnboardingStoryCompleted(); setScreen('home'); }} /> : <Home collection={collection} onStart={() => setScreen('timer')} onPick={() => setScreen('picker')} onCard={card => void openCard(card)} onReset={() => setDialog('reset')} onStory={() => setScreen('story')} onSound={() => setDialog('sound')} onSettings={() => setDialog('settings')} onLegal={page=>page==='privacy'?accounts.openPrivacy():setLegal(page)} />}
     </StoryHomeTransition>}
     {screen === 'picker' && <CharacterPicker collection={collection} onClose={home} onConfirm={id => { void enqueue(() => repository.current!.select(id)).then(value => { setCollection(value); home(); }).catch(report); }} />}
     {screen === 'timer' && <TimerSettings saved={collection.timer} onClose={home} onSubmit={(timer, remember) => { if (!busy) void start(timer, remember); }} />}
@@ -217,7 +231,7 @@ export default function WorkApp() {
     {dialog === 'finish' && <FinishDialog busy={busy} onContinue={() => setDialog(null)} onFinish={finish} />}
     {dialog === 'sound' && <SoundSettingsDialog settings={sound} onChange={setSound} onClose={() => setDialog(null)} onPreview={() => void playSoundPreview({ src: sound.selectedSound, volume: sound.volume })} />}
     {legal && <Dialog title={LEGAL_TITLES[legal]} className="piiin-legal-dialog" onClose={() => setLegal(null)}><LegalContent page={legal} /></Dialog>}
-    {dialog === 'settings' && <TimelapseSettings value={videoSettings} onChange={changeVideoSettings} onClose={() => setDialog(null)}><NextRewardSetting collection={collection} onChange={changeNextReward} /></TimelapseSettings>}
+    {dialog === 'settings' && !accounts.choosingAccount && <TimelapseSettings value={videoSettings} onChange={changeVideoSettings} onClose={() => setDialog(null)} footer={<AccountSettings />}><NextRewardSetting collection={collection} onChange={changeNextReward} /></TimelapseSettings>}
     </div>
     {timelapse && <TimelapseScreen key={timelapse.id} session={timelapse} settings={videoSettings} onClose={() => setTimelapse(null)} onHome={home} />}
     {(error || notice) && <div className="work-notice" role={error ? 'alert' : 'status'}><span>{error || notice}</span>{error && session?.status === 'completed' && screen !== 'result' && <button disabled={busy} onClick={() => void finalize()}>保存を再試行</button>}<button onClick={() => { setError(''); setNotice(''); }}>閉じる</button></div>}

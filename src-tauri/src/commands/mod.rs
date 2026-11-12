@@ -10,3 +10,6 @@ pub mod work_widget_commands;
 pub mod result_image_commands;
 #[cfg(all(target_os = "macos", feature = "mac-app-store"))]
 mod save_dialog;
+
+pub mod account_commands;
+pub mod account_auth;

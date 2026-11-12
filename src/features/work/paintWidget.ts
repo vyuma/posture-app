@@ -48,7 +48,9 @@ export function paintWidget(context: CanvasRenderingContext2D, image: HTMLCanvas
 
 /** Same assets, positions and dimensions as widget.css; icons are part of the video. */
 export function paintWidgetTimer(context: CanvasRenderingContext2D, pose: WidgetPose, remainingMs: number, durationMs: number, controls: WidgetControlArt) {
-  context.save(); context.fillStyle = pose === 'rest' ? '#f6edd8' : '#ecf8fc'; context.shadowColor = '#00000040'; context.shadowOffsetX = 4; context.shadowOffsetY = 6; context.shadowBlur = 4;
+  const transform = context.getTransform();
+  const pixelScale = Math.max(.01, Math.hypot(transform.a, transform.b), Math.hypot(transform.c, transform.d));
+  context.save(); context.fillStyle = pose === 'rest' ? '#f6edd8' : '#ecf8fc'; context.shadowColor = '#00000040'; context.shadowOffsetX = 4 * pixelScale; context.shadowOffsetY = 6 * pixelScale; context.shadowBlur = 4 * pixelScale;
   context.beginPath(); context.roundRect(0, 0, 178, 65, 32.5); context.fill(); context.restore();
   const seconds = Math.ceil(Math.max(0, remainingMs) / 1000), time = `${String(Math.floor(seconds / 60)).padStart(2,'0')}:${String(seconds % 60).padStart(2,'0')}`;
   context.fillStyle = pose === 'rest' ? '#6e4211' : '#111f6e'; context.font = `700 ${time.length > 5 ? 22 : 27.6279}px "SF Pro", -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif`; context.textAlign = 'left'; context.textBaseline = 'alphabetic'; context.letterSpacing = time.length > 5 ? '.2px' : '1.15116px';

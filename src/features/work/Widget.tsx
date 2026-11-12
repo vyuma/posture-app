@@ -6,6 +6,8 @@ import { widgetGeometry, widgetGrowth, widgetMessage, widgetPose } from './widge
 import './widget.css';
 import { WidgetSpeech } from './WidgetSpeech';
 import type { SpeechEvent } from '../posture/feedbackSpeech';
+import { useWidgetDrag } from './useWidgetDrag';
+import { widgetBounds } from './widgetPosition';
 import { speechGeometry } from './widgetPresentation';
 export type WidgetState = { sessionId: string; remainingMs: number; durationMs: number; phase: 'focus' | 'rest'; paused: boolean; bad: boolean; badSince: number | null; cycle: number; cycles: number; feedbackVersion?: 1; speech?: SpeechEvent | null };
 export type WidgetAction = 'pause' | 'resume' | 'finish' | 'open';
@@ -23,12 +25,15 @@ export function Widget({ state, onAction, native = false, onDrag }: { state: Wid
   // Reserve room for the shadow and longer, tilted feedback messages.
   const baseGeometry = widgetGeometry(pose, motion.growth, motion.height - (native ? 40 : 60));
   const geometry = state.feedbackVersion === 1 ? speechGeometry(baseGeometry, state.speech?.text ?? '') : baseGeometry;
+  const drag = useWidgetDrag(!native, widgetBounds(pose, geometry));
   const message = widgetMessage(pose, motion.growth);
   const variables = Object.fromEntries(Object.entries(geometry).map(([key, value]) => [`--widget-${key}`, `${value}${['growth'].includes(key) ? '' : key === 'bubbleAngle' ? 'deg' : 'px'}`]));
   const duration = Math.max(1, state.durationMs), remaining = Math.max(0, Math.min(duration, state.remainingMs));
   const time = timeLabel(remaining).padStart(5, '0');
-  return <aside className={`work-widget is-${pose}${native ? ' is-native' : ''}${motion.reduced ? ' is-reduced' : ''}`} aria-label="姿勢ウィジェット" style={variables as CSSProperties}>
-    <div className="work-widget-character" onPointerDown={event => { if (event.button === 0) onDrag?.(); }}>
+  return <aside className={`work-widget is-${pose}${native ? ' is-native' : ''}${motion.reduced ? ' is-reduced' : ''}${drag.dragging ? ' is-dragging' : ''}`} aria-label="姿勢ウィジェット" style={{ ...variables, ...drag.style } as CSSProperties}>
+    <div className="work-widget-character" tabIndex={native ? undefined : 0} role={native ? undefined : "group"}
+      aria-label={native ? undefined : "ウィジェットを移動。ドラッグまたは矢印キー、Shiftで大きく移動"}
+      {...drag.handlers} onPointerDown={event => { if (native) { if (event.button === 0) onDrag?.(); } else drag.handlers.onPointerDown?.(event); }}>
       <div className="work-widget-character-shadow"><div className="work-widget-mask"><div className="work-widget-shake"><WidgetPetRig pose={pose} /></div></div></div>
       {state.feedbackVersion === 1 ? <WidgetSpeech bad={pose === 'bad'} event={state.speech ?? null} reduced={motion.reduced} /> : <div className="work-widget-speech"><span key={message}>{message}</span></div>}
     </div>

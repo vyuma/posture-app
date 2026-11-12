@@ -1,0 +1,129 @@
+.developer-login-page {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.62), transparent 44%),
+    linear-gradient(160deg, #28a8d4 0%, #8ad9e6 58%, #f5fbfc 100%);
+  color: #10242d;
+  font-family: Inter, ui-rounded, "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+}
+
+.developer-login-card {
+  width: min(100%, 420px);
+  padding: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 24px 80px rgba(5, 73, 99, 0.2);
+  backdrop-filter: blur(18px);
+}
+
+.developer-login-brand {
+  color: #139bc8;
+  font-size: 1.55rem;
+  font-weight: 950;
+  letter-spacing: -0.05em;
+  text-decoration: none;
+}
+
+.developer-login-heading-group {
+  margin: 30px 0 26px;
+}
+
+.developer-login-eyebrow {
+  margin: 0 0 8px;
+  color: #148db5;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.developer-login-heading-group h1 {
+  margin: 0;
+  font-size: clamp(1.7rem, 7vw, 2.15rem);
+  letter-spacing: -0.04em;
+}
+
+.developer-login-heading-group > p:last-child,
+.developer-login-checking {
+  margin: 12px 0 0;
+  color: #62727a;
+  font-size: 0.9rem;
+  font-weight: 650;
+  line-height: 1.65;
+}
+
+.developer-login-form {
+  display: grid;
+  gap: 18px;
+}
+
+.developer-login-form label {
+  display: grid;
+  gap: 8px;
+  color: #354952;
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.developer-login-form input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px 14px;
+  border: 1px solid #d1e0e5;
+  border-radius: 12px;
+  outline: none;
+  background: #fff;
+  color: #10242d;
+  font: inherit;
+  font-size: 1rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.developer-login-form input:focus {
+  border-color: #26a6d0;
+  box-shadow: 0 0 0 4px rgba(38, 166, 208, 0.14);
+}
+
+.developer-login-form button {
+  min-height: 48px;
+  margin-top: 2px;
+  border: 0;
+  border-radius: 999px;
+  background: #169fcf;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.98rem;
+  font-weight: 900;
+  box-shadow: 0 10px 24px rgba(22, 159, 207, 0.24);
+}
+
+.developer-login-form button:hover:not(:disabled) {
+  background: #118db8;
+}
+
+.developer-login-form button:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
+.developer-login-error {
+  margin: -4px 0 0;
+  color: #c43f4e;
+  font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1.5;
+}
+
+@media (max-width: 520px) {
+  .developer-login-page {
+    padding: 16px;
+  }
+
+  .developer-login-card {
+    padding: 26px 22px;
+    border-radius: 22px;
+  }
+}

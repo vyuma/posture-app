@@ -1,0 +1,23 @@
+.auth-page { box-sizing: border-box; color: #254a54; }
+.auth-page .developer-login-card { box-sizing: border-box; }
+.auth-page .developer-login-form button { background: #076b88; }
+.auth-page .developer-login-form button:hover:enabled { background: #075970; }
+.auth-page .developer-login-brand { color: #076b88; }
+.auth-page a { color: #205d70; text-underline-offset: 3px; }
+.auth-page :focus-visible { outline: 3px solid #246f8a; outline-offset: 3px; }
+.auth-links,.auth-footer,.auth-legal { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 18px; margin-top: 18px; font-size: 14px; }
+.auth-links a,.auth-links button,.auth-footer a,.auth-legal a { display: inline-flex; align-items: center; min-height: 44px; }
+.auth-links button { padding: 0; border: 0; background: transparent; color: #205d70; font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.auth-links button:disabled { opacity: .55; cursor: default; }
+.auth-divider { display: flex; align-items: center; gap: 14px; margin-top: 20px; color: #526c75; font-size: 13px; }
+.auth-divider::before,.auth-divider::after { content: ''; flex: 1; height: 1px; background: #c8dce2; }
+.auth-notice { margin: 0; font-size: 14px; line-height: 1.6; }
+.auth-sso .account-sso { display: grid; grid-template-columns:32px minmax(0,1fr) 32px; align-items:center; gap:8px; width:100%; min-width:0; min-height:48px; padding:0 12px; border:1px solid #747775; border-radius:24px; background:#fff; color:#000; font-family:inherit; font-size:16px; font-weight:500; line-height:24px; letter-spacing:0; text-align:center; overflow:hidden; cursor:pointer; }
+.auth-sso .account-sso:disabled { opacity:.55; cursor:default; }
+.auth-sso .account-sso:hover:enabled { border-color:#254a54; }
+.auth-legal { margin-top:20px; font-size:12px; }
+.profile-form { display:grid; gap:18px; margin-top:20px; }
+.profile-form label { display:grid; gap:8px; font-size:14px; }
+.profile-form input,.profile-form select { width:100%; box-sizing:border-box; min-height:48px; padding:10px 14px; border:1px solid #adc4ca; border-radius:12px; background:#fff; color:#254a54; font:inherit; }
+.account-adult { display:flex; align-items:center; gap:10px; min-height:44px; font-size:14px; }
+.account-adult input { width:20px; height:20px; accent-color:#076b88; }

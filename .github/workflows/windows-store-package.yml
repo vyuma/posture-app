@@ -1,5 +1,13 @@
 name: Windows Store package
 on:
+  workflow_call:
+    inputs:
+      release_tag:
+        type: string
+        required: true
+      submit:
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       test_package_run_id:
@@ -21,8 +29,14 @@ jobs:
   package:
     if: ${{ !inputs.test_package_run_id }}
     runs-on: windows-latest
+    environment: microsoft-store
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.release_tag || github.ref }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.22.1
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.13
@@ -30,6 +44,10 @@ jobs:
         with:
           targets: x86_64-pc-windows-msvc
       - run: bun install --frozen-lockfile
+      - if: inputs.release_tag != ''
+        run: node scripts/release-version.mjs
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
       - name: Download and verify the approved runtime
         shell: pwsh
         env:
@@ -54,6 +72,8 @@ jobs:
       - name: Build MSIX for the registered PiiiN Store identity
         shell: pwsh
         run: ./scripts/package-windows-store.ps1 -WebView2Directory $env:RUNTIME_DIRECTORY
+        env:
+          VITE_DISTRIBUTION_CHANNEL: microsoft-store
       - name: Verify X closes the app and its WebView2 processes
         shell: pwsh
         run: |
@@ -68,6 +88,18 @@ jobs:
             release-artifacts/windows-*/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 14
+      - if: inputs.submit
+        name: Submit for approval and automatic publication
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          MS_TENANT_ID: ${{ secrets.MS_TENANT_ID }}
+          MS_CLIENT_ID: ${{ secrets.MS_CLIENT_ID }}
+          MS_CLIENT_SECRET: ${{ secrets.MS_CLIENT_SECRET }}
+        run: |
+          $package = @(Get-ChildItem release-artifacts/windows-*/*.msix)
+          if ($package.Count -ne 1) { throw 'Expected exactly one release package.' }
+          ./scripts/submit-windows-store.ps1 -Package $package[0].FullName
   close:
     if: ${{ inputs.test_package_run_id != '' }}
     runs-on: windows-latest

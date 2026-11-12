@@ -1,7 +1,8 @@
+import { activeSpace, scopedDatabase } from '../accounts/localScope';
 import { convertFileSrc, invoke, isTauri } from '@tauri-apps/api/core';
 import { openBrowserTimelapse, type TimelapseStore } from './storage';
-function makeNativeStore(qa = false): TimelapseStore {
-const call = <T>(operation: string, payload?: unknown) => invoke<T>('timelapse_store', { operation, payload: payload ?? null, qa });
+function makeNativeStore(qa = false, space = activeSpace()): TimelapseStore {
+const call = <T>(operation: string, payload?: unknown) => invoke<T>('timelapse_store', { operation, payload: payload ?? null, qa, space });
 return {
   epoch: () => call('epoch'), get: id => call('get', { id }), put: clip => call('put', { clip }),
   async writer(name, epoch) {
@@ -25,9 +26,7 @@ return {
   },
 };
 }
-const nativeStore = makeNativeStore();
-const testStore = makeNativeStore(true);
-export const openTimelapseStore = async () => isTauri() ? nativeStore : openBrowserTimelapse();
-export const openTimelapseTestStore = async () => isTauri() ? testStore : openBrowserTimelapse('piiin-timelapse-qa');
+export const openTimelapseStore = async () => isTauri() ? makeNativeStore() : openBrowserTimelapse(scopedDatabase('piiin-timelapse'));
+export const openTimelapseTestStore = async () => isTauri() ? makeNativeStore(true) : openBrowserTimelapse('piiin-timelapse-qa');
 export const canResizeTimelapsePreview = isTauri();
 export const resizeTimelapsePreview = (width: number, height: number) => invoke('work_preview_window', { width, height });

@@ -1,3 +1,4 @@
+import { scopedKey } from '../accounts/localScope';
 import { widgetPose, WIDGET_STILL, WIDGET_TRANSITIONS, type WidgetPose } from '../work/widgetPresentation';
 import type { WidgetState } from '../work/Widget';
 import type { SpeechEvent } from '../posture/feedbackSpeech';
@@ -17,12 +18,12 @@ export function clampRect(rect: Rect): Rect {
   return { width, height, x: Math.max(0, Math.min(1 - width, Number.isFinite(rect.x) ? rect.x : 0)), y: Math.max(0, Math.min(1 - height, Number.isFinite(rect.y) ? rect.y : 0)) };
 }
 export function loadTimelapseSettings(): TimelapseSettings {
-  try { const value = JSON.parse(localStorage.getItem('piiin.timelapse.settings.v1') ?? 'null');
+  try { const value = JSON.parse(localStorage.getItem(scopedKey('piiin.timelapse.settings.v1')) ?? 'null');
     if (!value) return structuredClone(DEFAULT_TIMELAPSE);
     return { enabled: value.enabled === true, quality: value.quality === 1080 ? 1080 : 720, includePet: value.includePet === true, includeScene: value.includeScene === true, camera: clampRect(value.camera ?? DEFAULT_TIMELAPSE.camera), pet: clampRect(value.pet ?? DEFAULT_TIMELAPSE.pet) };
   } catch { return structuredClone(DEFAULT_TIMELAPSE); }
 }
-export function saveTimelapseSettings(value: TimelapseSettings) { localStorage.setItem('piiin.timelapse.settings.v1', JSON.stringify(value)); }
+export function saveTimelapseSettings(value: TimelapseSettings) { localStorage.setItem(scopedKey('piiin.timelapse.settings.v1'), JSON.stringify(value)); }
 export function petEvent(at: number, widget: WidgetState, previous?: PetEvent, visible = true, reduced = false, now = Date.now()): PetEvent {
   const pose = widgetPose(widget);
   const changed = previous?.pose !== pose;

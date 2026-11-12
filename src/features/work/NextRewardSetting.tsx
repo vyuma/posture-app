@@ -1,3 +1,4 @@
+import { useDeveloperAccess } from '../developer/DeveloperAccessContext';
 import { useState } from 'react';
 import { catalog, numberOf } from './CharacterCard';
 import type { Collection } from './model';
@@ -8,6 +9,7 @@ export function NextRewardSetting({ collection, onChange }: {
   collection: Collection;
   onChange: (id: string | null) => Promise<void>;
 }) {
+  const {status}=useDeveloperAccess();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const acquired = new Set(collection.cards.map(card => card.characterId));
@@ -25,6 +27,7 @@ export function NextRewardSetting({ collection, onChange }: {
     finally { setSaving(false); }
   }
 
+  if(status!=='authenticated')return null;
   return <section className="work-next-reward-setting" aria-label="次に獲得するピンアナゴ" aria-busy={saving}>
     <h2>次に獲得するピンアナゴ</h2>
     <fieldset disabled={remaining.length === 0}>
