@@ -28,7 +28,7 @@ export function AuthPage({mode='login',nativeId}:{mode?:Mode;nativeId?:string}) 
     event.preventDefault();await action(async()=>{
       if(mode==='login') {await accountRequest('/api/auth/sign-in/email','POST',{email,password});location.assign(callback);}
       if(mode==='signup') {await accountRequest('/api/auth/sign-up/email','POST',{email,password,name:'PiiiN',callbackURL:`${location.origin}/login${suffix}${suffix?'&':'?'}verified=1`});setPassword('');setNotice('登録できるアドレスには確認メールを送信します。登録済みの場合は、以前の方法でログインしてください。');}
-      if(mode==='forgot-password') {await accountRequest('/api/auth/request-password-reset','POST',{email,redirectTo:`${location.origin}/reset-password${suffix}`});setNotice('登録済みのメールアドレスには再設定リンクを送信します。');}
+      if(mode==='forgot-password') {await accountRequest('/api/auth/request-password-reset','POST',{email,redirectTo:`${location.origin}/reset-password${suffix}`});setNotice('メール・パスワードで登録済みの場合は再設定リンクを送信します。Google・Appleで登録した方は、その方法でログインしてください。');}
       if(mode==='reset-password') {await accountRequest('/api/auth/reset-password','POST',{token:query.get('token'),newPassword:password});location.assign(`/login${suffix}`);}
     });
   }

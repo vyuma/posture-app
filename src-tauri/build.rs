@@ -25,12 +25,15 @@ fn build_native_pet() {
     println!("cargo:rerun-if-env-changed=DEVELOPER_DIR");
     let developer = std::env::var("DEVELOPER_DIR").unwrap_or_else(|_| "/Applications/Xcode.app/Contents/Developer".into());
     let arch = if std::env::var("CARGO_CFG_TARGET_ARCH").unwrap() == "aarch64" { "arm64" } else { "x86_64" };
+    // Swift's Xcode build output can otherwise share Products/Release between
+    // architectures. A cached Cargo build must keep linking its own archive.
+    let scratch = format!("native-pet/.build/store-{arch}");
     let status = Command::new("/usr/bin/xcrun").env("DEVELOPER_DIR", &developer)
-        .args(["swift", "build", "--package-path", "native-pet", "-c", "release", "--product", "PiiiNPetNative", "--arch", arch, "--disable-automatic-resolution"])
+        .args(["swift", "build", "--package-path", "native-pet", "--scratch-path", &scratch, "-c", "release", "--product", "PiiiNPetNative", "--arch", arch, "--disable-automatic-resolution"])
         .status().expect("Xcode is required to build the Store pet");
     assert!(status.success(), "native Store pet build failed");
     let output = Command::new("/usr/bin/xcrun").env("DEVELOPER_DIR", &developer)
-        .args(["swift", "build", "--package-path", "native-pet", "-c", "release", "--arch", arch, "--show-bin-path"])
+        .args(["swift", "build", "--package-path", "native-pet", "--scratch-path", &scratch, "-c", "release", "--arch", arch, "--show-bin-path"])
         .output().expect("Swift output directory unavailable");
     assert!(output.status.success());
     let path = String::from_utf8(output.stdout).unwrap();

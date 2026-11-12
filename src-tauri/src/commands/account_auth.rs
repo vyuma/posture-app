@@ -50,7 +50,7 @@ pub async fn account_request(app:tauri::AppHandle,window:tauri::WebviewWindow,pa
 #[tauri::command]
 pub async fn account_login(app:tauri::AppHandle,window:tauri::WebviewWindow,provider:String)->Result<(),String> {
     main_only(&window)?;if !["google","apple","login","signup"].contains(&provider.as_str()) {return Err("Unknown provider".into());}
-    tauri::async_runtime::spawn_blocking(move||{
+    tauri::async_runtime::spawn_blocking(move|| -> Result<(),String> {
         let client=client()?;
         let verifier=format!("{}{}",uuid::Uuid::new_v4().simple(),uuid::Uuid::new_v4().simple());
         let challenge=format!("{:x}",Sha256::digest(verifier.as_bytes()));
@@ -73,7 +73,13 @@ pub async fn account_login(app:tauri::AppHandle,window:tauri::WebviewWindow,prov
             return Ok(());
         }
         Err("ログインの待機時間を過ぎました。もう一度お試しください。".into())
-    }).await.map_err(|_|"ログインを完了できませんでした。".to_string())?
+    }).await.map_err(|_|"ログインを完了できませんでした。".to_string())??;
+    // The browser approves the one-time handoff; bring this app back only after
+    // its session has been exchanged and stored successfully in the OS keychain.
+    let _ = window.unminimize();
+    let _ = window.show();
+    let _ = window.set_focus();
+    Ok(())
 }
 #[tauri::command]
 pub async fn account_forget(app:tauri::AppHandle,window:tauri::WebviewWindow)->Result<(),String> {
