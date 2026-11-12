@@ -1,5 +1,5 @@
 import {execFileSync} from 'node:child_process';
-import {writeFileSync,readFileSync} from 'node:fs';
+import {writeFileSync,readFileSync,chmodSync} from 'node:fs';
 import {join} from 'node:path';
 import {randomBytes} from 'node:crypto';
 const required=['APPLE_CERTIFICATE_BASE64','APPLE_CERTIFICATE_PASSWORD','APPLE_SIGNING_IDENTITY','ASC_KEY_ID','ASC_ISSUER_ID','ASC_PRIVATE_KEY'];
@@ -20,7 +20,8 @@ if(process.env.RELEASE_CHANNEL==='direct') {
   run('xcrun',['notarytool','store-credentials','piiin-ci','--key',apiKey,'--key-id',process.env.ASC_KEY_ID,'--issuer',process.env.ASC_ISSUER_ID]);
 }else {
   if(!process.env.APPLE_PROVISION_PROFILE_BASE64)throw new Error('Missing APPLE_PROVISION_PROFILE_BASE64');
-  const profile=join(dir,'distribution.provisionprofile');writeFileSync(profile,Buffer.from(process.env.APPLE_PROVISION_PROFILE_BASE64,'base64'),{mode:0o600});
+  // The profile is distributed in the signed app, unlike private signing keys.
+  const profile=join(dir,'distribution.provisionprofile');writeFileSync(profile,Buffer.from(process.env.APPLE_PROVISION_PROFILE_BASE64,'base64'),{mode:0o644});chmodSync(profile,0o644);
   const config=join(dir,'store-profile.json');writeFileSync(config,JSON.stringify({bundle:{macOS:{files:{'embedded.provisionprofile':profile}}}}));values.PIIIN_STORE_PROFILE_CONFIG=config;
 }
 for(const [key,value]of Object.entries(values))writeFileSync(process.env.GITHUB_ENV,`${key}=${value}\n`,{flag:'a'});

@@ -1,5 +1,14 @@
 # Mac App Store 配布準備
 
+### 2026-11-12 認証・設問の更新（1.0.0 / build 6）
+
+- メール認証、成人確認・任意プロフィール、開発者限定の次回報酬指定、SSO後の自動前面復帰を含む。独立したQAアプリで利用者がSSO接続と自動前面復帰を確認。分析同意は代行していない。
+- `1c95405` の[共通・macOS・Windows CI](https://github.com/vyuma/posture-app/actions/runs/43176913411)が成功。ローカルでuniversal Storeビルドを連続実行し、ARM/Intel別Swift成果物と署名を確認した。共有キャッシュが別アーキテクチャに上書きされる問題は、`native-pet/.build/store-{arch}`への分離で修正した。
+- 初回PKGはApple 90255（root以外が読めないファイル）で拒否された。展開したPKGで `Contents/embedded.provisionprofile` のみ0600であることを再現。配布用プロフィールの元ファイルを0644に変更して再ビルド・再署名した。秘密鍵・証明書バックアップ・APIキーは0600のまま扱う。
+- CIのプロフィール書き出しも0644へ修正し、`scripts/check-store-bundle-permissions.mjs`を署名検査/PKG作成前に追加した。同スクリプトは旧アプリで失敗、修正アプリと展開済みPKGでは全16ファイル/ディレクトリに成功。展開後の厳格codesign検査とPKG署名検査も成功。
+- 修正版: `release-artifacts/mac-app-store/PiiiN-1.0.0-6-fixed.pkg`、75,522,405 bytes、SHA256 `51627822aea8141b44d4146415baaed097bb0b1c351d135c13219c6828c4b088`。Transporterの失敗済み項目を修正PKGで置換。Appleへの再デリバリとTestFlight配信は確認待ち。
+- LPの直接配布DMG・公開Releaseは変更しない。Storeの実機カメラ/収集/更新後保存確認と本審査は別工程。
+
 ### 2026-11-08 TestFlight 更新（1.0.0 / build 5）
 
 - 統合ブランチ `feat/unified-cloudflare-analytics` の `db6ac70` を基に、Store の build 番号のみ 4 → 5 に更新。Google / Apple ログイン、初回分析同意、アカウント別ローカル保存・選択送信を含む。iOS と直接配布版のバージョンは変更しない。

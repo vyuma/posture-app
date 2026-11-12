@@ -89,6 +89,7 @@ jobs:
       - if: matrix.channel == 'mac-app-store' && (github.event_name == 'push' || inputs.channel == 'mac-app-store')
         run: |
           bun run tauri build --target universal-apple-darwin --features mac-app-store --config src-tauri/tauri.appstore.conf.json --config "$PIIIN_STORE_PROFILE_CONFIG" --bundles app -- --no-default-features
+          node scripts/check-store-bundle-permissions.mjs src-tauri/target/universal-apple-darwin/release/bundle/macos/PiiiN.app
           codesign --verify --deep --strict src-tauri/target/universal-apple-darwin/release/bundle/macos/PiiiN.app
           mkdir -p release-artifacts/store
           productbuild --sign "$APPLE_INSTALLER_IDENTITY" --component src-tauri/target/universal-apple-darwin/release/bundle/macos/PiiiN.app /Applications release-artifacts/store/PiiiN.pkg
