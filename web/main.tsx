@@ -21,6 +21,11 @@ const AnagoMotionPreview =
     ? React.lazy(() => import("../src/features/overlay/AnagoMotionPreview"))
     : null;
 
+const isModelLab = normalizedPath === "/dev/model";
+const ModelLab = isModelLab
+  ? React.lazy(() => import("../src/features/posture/ModelLab"))
+  : null;
+
 const WorkPreview = import.meta.env.DEV ? React.lazy(() => import("../src/features/work/WorkPreview")) : null;
 const TimelapsePreview = import.meta.env.DEV ? React.lazy(() => import("../src/features/timelapse/TimelapsePreview")) : null;
 
@@ -36,6 +41,22 @@ function RootRoute() {
 
   if (isDeveloperLogin) {
     return <DeveloperLoginPage />;
+  }
+
+  if (ModelLab) {
+    if (status === "checking") {
+      return null;
+    }
+    if (!enabled) {
+      window.location.replace("/dev/login");
+      return null;
+    }
+
+    return (
+      <React.Suspense fallback={null}>
+        <ModelLab />
+      </React.Suspense>
+    );
   }
 
   if (AnagoMotionPreview) {
