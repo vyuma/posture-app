@@ -1,3 +1,4 @@
+import { emptyEvidence } from '../posture/feedback';
 /** Development-only visual fixtures. Never reads or writes the user's collection. */
 import { useWorkScreenTransition } from './useWorkScreenTransition';
 import { useEffect, useRef, useState } from 'react';
@@ -27,9 +28,14 @@ import { FeedbackPreview } from './FeedbackPreview';
 const date = '2026-05-07T08:49:00+09:00';
 function result(id = 'oto-anago'): Session {
   const session = createSession(`preview-${id}`, DEFAULT_TIMER, 0, { stats: {}, headWidthRatio: null } as Baseline);
-  Object.assign(session, { startedAt: date, endedAt: date, status: 'completed', acquiredCharacterId: id, focusMs: 140 * 60_000, validMs: 100_000, goodMs: 78_000, rewardQualified: true });
-  session.samples = Array.from({ length: 141 }, (_, i) => ({ sequence: i, focusMs: i * 60_000, elapsedMs: i * 60_000, calibrationId: 'preview', segment: i < 60 ? 0 : 1, score: 70 + Math.sin(i / 12) * 17 - (i > 30 && i < 60 ? 50 : 0), deviation: 1, state: 'good' as const }));
-  session.events.push({ kind: 'calibrated', focusMs: 60 * 60_000, elapsedMs: 60 * 60_000, segment: 1 }); return session;
+  Object.assign(session, { startedAt: date, endedAt: date, status: 'completed', acquiredCharacterId: id, focusMs: 140 * 60_000, validMs: 140 * 60_000, goodMs: 109.2 * 60_000, rewardQualified: true });
+  session.samples = Array.from({ length: 8401 }, (_, second) => {
+    const i = second / 60, bad = i > 30 && i < 60;
+    return { sequence: second, focusMs: second * 1000, elapsedMs: second * 1000, calibrationId: 'preview', segment: 0,
+      score: 70 + Math.sin(i / 12) * 17 - (bad ? 50 : 0), deviation: bad ? 2 : .6, state: bad ? 'bad' as const : 'good' as const,
+      feedback: { version: 2 as const, observedAtMs: second * 1000, evidence: { ...emptyEvidence(), headForward: bad ? 2 : 0, headTilt: 0, shoulderTilt: bad ? 1.2 : 0 }, directions: { shoulderTilt: 'left' as const } } };
+  });
+  return session;
 }
 export default function WorkPreview() {
   const [diagnostic, setDiagnostic] = useState(`${innerWidth}×${innerHeight}`);
@@ -49,6 +55,7 @@ export default function WorkPreview() {
     const interval = window.setInterval(() => { const remaining = Math.max(0, 5000 - (performance.now() - started)); setCalibrationMs(remaining); if (!remaining) setScreen('ready'); }, 80);
     return () => clearInterval(interval);
   }, [screen]);
+  const [cameraPreview,setCameraPreview]=useState<'ready'|'loading'|'error'>('ready');
   const [collection, setCollection] = useState<Collection>({ ...EMPTY_COLLECTION, cards: catalog.map(item => ({ characterId: item.id, measurementId: `preview-${item.id}`, acquiredAt: date, generation: 0 })) });
   const [widget, setWidget] = useState<WidgetState | null>(null); const video = useRef<HTMLVideoElement>(null); const canvas = useRef<HTMLCanvasElement>(null);
   widgetRef.current = widget;
@@ -59,6 +66,7 @@ export default function WorkPreview() {
   function showWidget(bad: boolean, phase: 'focus' | 'rest' = 'focus', paused = false) { const value: WidgetState = { sessionId: 'preview', remainingMs: phase === 'rest' ? 240000 : 923000, durationMs: phase === 'rest' ? 300000 : 1500000, phase, paused, bad, badSince: bad ? Date.now() : null, cycle: 1, cycles: 4 }; publish(value); }
   const transitionRoot = useWorkScreenTransition(screen);
   return <div ref={transitionRoot} className="work-app"><nav aria-label="表示検証" style={{ position: 'fixed', zIndex: 20000, bottom: 0, left: 0, maxWidth: '100%', background: '#222', color: 'white', padding: 5, display: 'flex', gap: 5, flexWrap: 'wrap', fontSize: 11 }}><span>検証用サンプル {diagnostic}</span><select aria-label="検証キャラクター" value={previewCharacter} onChange={event => setPreviewCharacter(event.target.value)}>{catalog.map(item => <option key={item.id} value={item.id}>{String(item.number).padStart(3, '0')} {item.name}</option>)}</select>{isDesktop && [720,1200,1512].map(width => <button key={width} onClick={() => { void invoke('work_preview_window', { width, height: width === 720 ? 540 : width === 1512 ? 1010 : 780 }).catch(error => setDiagnostic(String(error))); }}>{width}px</button>)}{['home', 'rarity', 'story', 'widget-stage', 'picker', 'timer', 'prepare', 'calibrate', 'ready', 'active', 'rest', 'pause', 'result', 'no-reward', 'no-graph'].map(value => <button key={value} onClick={() => setScreen(value)}>{value}</button>)}<button onClick={() => setCollection(value => ({ ...value, selectedId: null, cards: [] }))}>0枚</button><button onClick={() => setCollection({ ...EMPTY_COLLECTION, cards: catalog.filter(item => ['normal-nago', 'oto-anago'].includes(item.id)).map(item => ({ characterId: item.id, measurementId: `preview-${item.id}`, acquiredAt: date, generation: 0 })) })}>2枚</button><button onClick={() => showWidget(false)}>Widget</button><button onClick={() => showWidget(true)}>Angry</button><button onClick={() => showWidget(false, 'rest')}>Widget rest</button><button onClick={() => showWidget(false, 'focus', true)}>Widget paused</button><button onClick={() => widget && publish({ ...widget, remainingMs: 120 * 60000, durationMs: 120 * 60000 })}>Widget 120</button><button onClick={() => { publish(null); }}>Hide widget</button></nav>
+  {screen === 'prepare' && <select aria-label="カメラ状態の表示検証" value={cameraPreview} onChange={e=>setCameraPreview(e.target.value as typeof cameraPreview)} style={{position:'fixed',right:12,top:12,zIndex:20000}}><option value="ready">Camera ready</option><option value="loading">Camera loading</option><option value="error">Camera error</option></select>}
   <div className="work-flow">
   {screen === 'widget-stage' && <><div aria-label="ウィジェットの検証背景" style={{position:'fixed',inset:0,background:'linear-gradient(155deg,#58b8de,#12377e)'}} /><FeedbackPreview publish={publish} /></>}
     {(screen === 'home' || screen === 'story') && <StoryHomeTransition view={screen}>
@@ -66,7 +74,7 @@ export default function WorkPreview() {
     </StoryHomeTransition>}
   {screen === 'picker' && <CharacterPicker collection={collection} onConfirm={id => { setCollection(value => ({ ...value, selectedId: id })); setScreen('home'); }} onClose={() => setScreen('home')} />}
   {screen === 'timer' && <TimerSettings saved={null} onSubmit={() => setScreen('prepare')} onClose={() => setScreen('home')} />}
-  {['prepare', 'calibrate', 'ready', 'active', 'rest', 'pause'].includes(screen) && <MeasureScreen stage={stage} session={session} videoRef={video} canvasRef={canvas} status="カメラを使わない表示検証です" ready remainingCalibrationMs={calibrationMs} tracking onRegister={() => setScreen('calibrate')} onCancel={() => setScreen('home')} onRecalibrate={() => setScreen('prepare')} onPause={() => setScreen(screen === 'pause' ? 'active' : 'pause')} onFinish={() => setFinishOpen(true)} sound={sound} onSoundChange={setSound} widgetEnabled={widgetEnabled} onWidgetChange={setWidgetEnabled} />}
+  {['prepare', 'calibrate', 'ready', 'active', 'rest', 'pause'].includes(screen) && <MeasureScreen stage={stage} session={session} videoRef={video} canvasRef={canvas} status={cameraPreview === 'error' ? '初期化に失敗しました: test' : 'カメラを使わない表示検証です'} ready={cameraPreview === 'ready'} remainingCalibrationMs={calibrationMs} tracking onRegister={() => setScreen('calibrate')} onCancel={() => setScreen('home')} onRecalibrate={() => setScreen('prepare')} onPause={() => setScreen(screen === 'pause' ? 'active' : 'pause')} onFinish={() => setFinishOpen(true)} sound={sound} onSoundChange={setSound} widgetEnabled={widgetEnabled} onWidgetChange={setWidgetEnabled} />}
   {screen === 'rarity' && <RarityPreview session={result(previewCharacter)} />}
   {['result', 'no-reward', 'no-graph'].includes(screen) && <ResultScreen key={screen} session={screen === 'no-reward' ? { ...result(previewCharacter), acquiredCharacterId: null, rewardQualified: false, goodMs: 49_000 } : screen === 'no-graph' ? { ...result(previewCharacter), samples: [] } : result(previewCharacter)} onHome={() => setScreen('home')} onTimelapse={() => {}} />}
   {finishOpen && <FinishDialog onContinue={() => setFinishOpen(false)} onFinish={() => { setFinishOpen(false); setScreen('result'); }} />}

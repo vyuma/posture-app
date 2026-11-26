@@ -61,7 +61,7 @@ test('real engine → UI → speech: brief loss retains, sustained loss warns on
   for(let i=0;i<5;i++) { seen=step([11]);expect(seen.event?.id).toBe(first.id); expect(petPosture(seen.s,c.now())).toBe('good'); }
   for(let i=0;i<6;i++) seen=step(); expect(seen.event?.id).toBe(first.id);
   for(let i=0;i<12;i++) seen=step([7]);
-  const warning=seen.event!; expect(warning.text).toBe('姿勢を戻して！');
+  const warning=seen.event!; expect(warning.text).toBe('姿勢を確認できないよ');
   expect(petPosture(seen.s,c.now())).toBe('bad'); expect(measurementReading(seen.s,c.now()).valid).toBe(false);
   for(let i=0;i<40;i++) expect(step([7]).event?.id).toBe(warning.id);
   const stale=step([7]).s;

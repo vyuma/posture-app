@@ -16,6 +16,9 @@ export function TimelapsePetPreview() {
       target.width = Math.round(width * dpr); target.height = Math.round(height * dpr);
       const context = target.getContext('2d')!;
       context.scale(dpr, dpr);
+      context.save(); context.globalAlpha = .22;
+      paintReplayWidget(context, art, { x: 0, y: 0, width, height }, { pose: 'bad', frame: 1, growth: 1, angle: 0, remainingMs: 1_500_000, durationMs: 1_500_000, reduced: true }, 0);
+      context.restore();
       paintReplayWidget(context, art, { x: 0, y: 0, width, height }, { pose: 'good', frame: 0, growth: 0, angle: 0, remainingMs: 1_500_000, durationMs: 1_500_000, reduced: true }, 0);
     }
     const observer = new ResizeObserver(paint); observer.observe(target);
@@ -25,5 +28,5 @@ export function TimelapsePetPreview() {
     }).catch(() => { if (!disposed) setStatus('ペットを読み込めませんでした。設定を開き直してください。'); });
     return () => { disposed = true; observer.disconnect(); art?.dispose(); };
   }, []);
-  return <><canvas ref={canvas} className="timelapse-pet-preview" role="img" aria-label="ペットの配置プレビュー、残り25分" />{status && <span className="timelapse-pet-preview-status" role="status">{status}</span>}</>;
+  return <><canvas ref={canvas} className="timelapse-pet-preview" role="img" aria-label="ペットの配置プレビュー。通常の姿と、薄く表示した最大成長時の姿。残り25分" />{status && <span className="timelapse-pet-preview-status" role="status">{status}</span>}</>;
 }

@@ -1,9 +1,11 @@
+import { t, useAppLanguage } from "../i18n";
 import { useEffect, useState } from 'react';
 import { Brand } from './Brand';
 import { Portrait } from './CharacterCard';
 import './acquisition-intro.css';
 
 export function AcquisitionIntro({ characterId, onComplete }: { characterId: string; onComplete: () => void }) {
+  useAppLanguage();
   const [step, setStep] = useState(0);
   useEffect(() => {
     // Give each message its full reading time, including after returning to the tab.
@@ -17,9 +19,9 @@ export function AcquisitionIntro({ characterId, onComplete }: { characterId: str
   }, [step, onComplete]);
   return <main className="acquisition-intro">
     <Brand />
-    <button className="acquisition-skip" onClick={onComplete}>▶︎ スキップする</button>
+    <button className="acquisition-skip" onClick={onComplete}>{t("▶︎ スキップする")}</button>
     <section key={step} className={`acquisition-scene scene-${step}`} aria-live="polite">
-      <div className="acquisition-copy">{step === 0 && <p>今日はすごく姿勢が良かったね。</p>}<h1>{step === 0 ? '新しい仲間を連れてきたよ！' : 'はじめまして、よろしくナ！'}</h1></div>
+      <div className="acquisition-copy">{step === 0 && <p>{t("今日はすごく姿勢が良かったね。")}</p>}<h1>{step === 0 ? t("新しい仲間を連れてきたよ！") : t("はじめまして、よろしくナ！")}</h1></div>
       <div className="acquisition-character"><Portrait id={step === 0 ? 'normal-nago' : characterId} /></div>
     </section>
   </main>;

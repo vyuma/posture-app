@@ -10,7 +10,7 @@
     "frontendDist": "../dist"
   },
   "app": {
-    "macOSPrivateApi": true,
+    "macOSPrivateApi": false,
     "windows": [
       {
         "title": "PiiiN",
@@ -24,7 +24,14 @@
     ],
     "security": {
       "csp": null,
-      "assetProtocol": { "enable": true, "scope": ["$APPDATA/timelapse/**", "$APPDATA/timelapse-qa/timelapse/**"] }
+      "assetProtocol": {
+        "enable": true,
+        "scope": [
+          "$APPDATA/timelapse/**",
+          "$APPDATA/timelapse-qa/timelapse/**",
+          "$APPDATA/profiles/*/timelapse/**"
+        ]
+      }
     }
   },
   "bundle": {

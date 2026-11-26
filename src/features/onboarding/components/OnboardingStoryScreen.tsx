@@ -1,3 +1,4 @@
+import { t, useAppLanguage } from "../../i18n";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 
 import { Brand } from "../../work/Brand";
@@ -13,14 +14,15 @@ const COPY: Record<Exclude<Scene, "splash">, readonly [string, string]> = {
   intro: ["はじめまして、ボクはピンアナゴ。", "キミの姿勢をチェックしにきたよ！"],
   happy: ["ボクは姿勢のいいニンゲンが", "大好きなんだ！"],
   angry: ["姿勢が悪いニンゲンには", "厳しくいかせてもらうよ！"],
-  friends: ["ピーン率（正しい姿勢を継続できた割合）が50％を超えると、", "新しい仲間をここに連れてくるよ！"],
-  collection: ["毎日コツコツ続けていけば、", "全部で111種類のピンアナゴが仲間になるよ！"],
+  friends: ["ピーン率（正しい姿勢を継続できた割合）が50％以上になると、", "新しい仲間をここに連れてくるよ！"],
+  collection: ["毎日コツコツ続けていけば、", "いろんなピンアナゴが仲間になるよ！"],
 };
 const portrait = (id: string) => `/characters/anago/${id}/portrait.png`;
 const FRIENDS = ["shin-anago", "oto-anago", "kuro-anyago", "normal-nago", "dot-nago", "moja-anago", "hat-anago"];
 
 
 export function OnboardingStoryScreen({ onComplete }: { onComplete: () => void }) {
+  const language = useAppLanguage();
   const [index, setIndex] = useState(0);
   const [destination, setDestination] = useState<Scene | null>(null);
   const leaving = destination !== null;
@@ -92,25 +94,28 @@ export function OnboardingStoryScreen({ onComplete }: { onComplete: () => void }
   }, [next, previous]);
 
   return (
-    <main ref={screen} className={`onboarding-screen onboarding--${scene}`} data-leaving={leaving || undefined} data-destination={destination ?? undefined} aria-label="PiiiN ストーリー" aria-busy={leaving}>
+    <main ref={screen} className={`onboarding-screen onboarding--${scene}`} data-leaving={leaving || undefined} data-destination={destination ?? undefined} aria-label={t("PiiiN ストーリー")} aria-busy={leaving}>
       <div className="onboarding-bubbles" aria-hidden="true">
         {Array.from({ length: 11 }, (_, i) => <span key={i} />)}
       </div>
       {scene !== "splash" && <header className="onboarding-header"><Brand /></header>}
       <div className="onboarding-canvas">
         {scene === "splash" ? (
-          <section className="onboarding-splash" aria-label="姿勢改善にワクワクを">
-            <img className="onboarding-main-logo" src="/logo/logo_main.png" alt="姿勢改善にワクワクを PiiiN" draggable={false} />
-            <button className="onboarding-start" type="button" onClick={next} aria-disabled={leaving}>はじめる</button>
+          <section className="onboarding-splash" aria-label={t("姿勢改善にワクワクを")}>
+            <div className="onboarding-main-logo" data-localized={language !== 'ja'} role="img" aria-label={t("姿勢改善にワクワクを PiiiN")}>
+              <img src="/logo/logo_main.png" alt="" draggable={false} />
+              {language !== 'ja' && <span>{t("姿勢改善にワクワクを")}</span>}
+            </div>
+            <button className="onboarding-start" type="button" onClick={next} aria-disabled={leaving}>{t("はじめる")}</button>
           </section>
         ) : (
           <>
             <div className="onboarding-header-space" aria-hidden="true" />
             <div className="onboarding-copy" key={scene} role="status" aria-live="polite" aria-atomic="true">
-              <span className="onboarding-sr-only">ストーリー {index} / 5。</span>
+              <span className="onboarding-sr-only">{t("ストーリー")}{index} / 5。</span>
               {COPY[scene].map((line, i) => (
                 <p key={line} style={{ "--line-delay": `${140 + i * 110}ms` } as CSSProperties}>
-                  {scene === "friends" && i === 0 ? <>ピーン率<small>（正しい姿勢を継続できた割合）</small><span className="onboarding-copy-phrase">が50％を超えると、</span></> : line}
+                  {scene === "friends" && i === 0 ? <>{t("ピーン率")}<small>{t("（正しい姿勢を継続できた割合）")}</small><span className="onboarding-copy-phrase">{t("が50％以上になると、")}</span></> : t(line)}
                 </p>
               ))}
             </div>
@@ -124,15 +129,16 @@ export function OnboardingStoryScreen({ onComplete }: { onComplete: () => void }
           </>
         )}
       </div>
-      <nav className="onboarding-navigation" aria-label="ストーリーの操作" hidden={scene === "splash"}>
-        {index > 1 && <button type="button" className="onboarding-arrow onboarding-arrow--back" onClick={previous} aria-disabled={leaving} aria-label="前のストーリーへ"><img src="/story/redesign/arrow-back.svg" alt="" /></button>}
-        <button type="button" className="onboarding-arrow onboarding-arrow--next" onClick={next} aria-disabled={leaving} aria-label={isLast ? "ストーリーを終了" : "次のストーリーへ"}><img src="/story/redesign/arrow-back.svg" alt="" /></button>
+      <nav className="onboarding-navigation" aria-label={t("ストーリーの操作")} hidden={scene === "splash"}>
+        {index > 1 && <button type="button" className="onboarding-arrow onboarding-arrow--back" onClick={previous} aria-disabled={leaving} aria-label={t("前のストーリーへ")}><img src="/story/redesign/arrow-back.svg" alt="" /></button>}
+        <button type="button" className="onboarding-arrow onboarding-arrow--next" onClick={next} aria-disabled={leaving} aria-label={isLast ? t("ストーリーを終了") : t("次のストーリーへ")}><img src="/story/redesign/arrow-back.svg" alt="" /></button>
       </nav>
     </main>
   );
 }
 
 function Hero({ scene }: { scene: Scene }) {
+  useAppLanguage();
   return (
     <div className={`onboarding-hero${scene === "intro" ? " is-entering" : ""}`} aria-hidden="true">
       <div className="onboarding-hero-motion">
@@ -145,19 +151,20 @@ function Hero({ scene }: { scene: Scene }) {
 }
 
 function Collection() {
+  useAppLanguage();
   const railRef = useStoryCardDrag();
   return (
-    <div ref={railRef} className="onboarding-gallery" data-story-gallery tabIndex={0} role="region" aria-label="ピンアナゴの仲間。左右にドラッグ、または左右の矢印キーで移動できます。フォーカス中やカードに触れている間は自動移動が止まります。">
+    <div ref={railRef} className="onboarding-gallery" data-story-gallery tabIndex={0} role="region" aria-label={t("ピンアナゴの仲間。左右にドラッグ、または左右の矢印キーで移動できます。フォーカス中やカードに触れている間は自動移動が止まります。")}>
       <div className="onboarding-card-track">
         {[0, 1, 2, 3].map((copy) => (
           <div className="onboarding-card-group" key={copy} aria-hidden={copy !== 1 || undefined}>
             {CARDS.map((card, i) => (
-              <article className="onboarding-card-slot" key={card.name} style={{ "--card-color": card.color, "--card-background": card.background } as CSSProperties}>
+              <article className="onboarding-card-slot" key={t(card.name)} style={{ "--card-color": card.color, "--card-background": card.background } as CSSProperties}>
                 <div className="onboarding-card">
                   <div className="onboarding-card-portrait"><img className={i === 0 || i === 7 ? "is-new-character" : undefined} src={card.src} alt="" draggable={false} /></div>
-                  <h2>{card.name}</h2>
+                  <h2>{t(card.name)}</h2>
                   <CharacterStars characterId={card.characterId} />
-                  <div className="onboarding-card-tags">{card.tags.map((tag) => <span key={tag}>{tag}</span>)}</div>
+                  <div className="onboarding-card-tags">{card.tags.map((tag) => <span key={tag}>{t(tag)}</span>)}</div>
                 </div>
               </article>
             ))}

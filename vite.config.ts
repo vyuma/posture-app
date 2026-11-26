@@ -3,7 +3,6 @@ import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import path from "node:path";
 
-// @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 const VIRTUAL_SOUND_OPTIONS_ID = "virtual:sound-options";
 const RESOLVED_VIRTUAL_SOUND_OPTIONS_ID = `\0${VIRTUAL_SOUND_OPTIONS_ID}`;
@@ -40,6 +39,7 @@ function soundOptionsPlugin() {
 // https://vite.dev/config/
 export default defineConfig(async () => ({
   plugins: [react(), soundOptionsPlugin()],
+  define: { __APP_VERSION__: JSON.stringify(JSON.parse(fs.readFileSync('package.json','utf8')).version) },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //

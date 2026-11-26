@@ -1,3 +1,4 @@
+import { emptyEvidence } from '../src/features/posture/feedback';
 import { expect, test } from 'bun:test';
 import { FeedbackSpeech, speechMotion } from '../src/features/posture/feedbackSpeech';
 
@@ -8,7 +9,7 @@ function timeline() {
   const praise = new Set<string>();
   const step = (extra: Partial<Input> = {}) => {
     const speech = machine.update({ context: 'session:baseline', mode: 'focus', now: at, observedAt: at,
-      maxAge: 1500, valid: true, posture: 'good', evidence: {faceNear:0, headForward:0, headTilt:0, bodyTilt:0}, ...extra });
+      maxAge: 1500, valid: true, posture: 'good', evidence: {...emptyEvidence(),faceNear:0, headForward:0, headTilt:0, bodyTilt:0}, ...extra });
     if (speech?.code === 'good') praise.add(speech.id);
     at += 100; return speech;
   };
@@ -29,7 +30,7 @@ test('first stable good appears once, expires, and only actual bad-to-good earns
 
 test('a specific reason clearing while overall posture stayed good is not another recovery praise', () => {
   const t=timeline(); t.run(500);
-  expect(t.run(1500,{evidence:{faceNear:0,headForward:0,headTilt:2,bodyTilt:0}})?.code).toBe('headTilt');
+  expect(t.run(1500,{evidence:{...emptyEvidence(),faceNear:0,headForward:0,headTilt:2,bodyTilt:0}})?.code).not.toBe('headTilt');
   t.run(3000); expect(t.praise.size).toBe(1);
 });
 

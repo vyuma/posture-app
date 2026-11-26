@@ -1,4 +1,4 @@
-import { copyShareImageNative, shouldPreferNativeClipboardShare } from "./shareNativeClipboard";
+import { copyShareImageNative, shouldPreferNativeClipboardShare, saveResultImageNative } from "./shareNativeClipboard";
 
 export type ShareResultOutcome =
   | "shared"
@@ -49,7 +49,9 @@ async function copyBlobToClipboard(pendingBlob: Promise<Blob>): Promise<boolean>
   }
 }
 
-function downloadBlob(blob: Blob, fileName: string): void {
+async function downloadBlob(blob: Blob, fileName: string): Promise<ShareResultOutcome> {
+  const nativeOutcome = await saveResultImageNative(blob);
+  if (nativeOutcome !== undefined) return nativeOutcome;
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   try {
@@ -63,6 +65,7 @@ function downloadBlob(blob: Blob, fileName: string): void {
     anchor.remove();
     URL.revokeObjectURL(url);
   }
+  return "downloaded";
 }
 
 /** Desktop copy uses one image representation; mobile keeps the native share sheet. */
@@ -84,8 +87,7 @@ export async function deliverResultImage(
   const blob = await pendingBlob;
   const file = new File([blob], `pinn-result-${Date.now()}.png`, { type: "image/png" });
   if (action === "download" || copyFirst) {
-    downloadBlob(blob, file.name);
-    return "downloaded";
+    return downloadBlob(blob, file.name);
   }
 
   if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
@@ -102,6 +104,5 @@ export async function deliverResultImage(
   }
 
   if (await copyBlobToClipboard(Promise.resolve(blob))) return "copied";
-  downloadBlob(blob, file.name);
-  return "downloaded";
+  return downloadBlob(blob, file.name);
 }

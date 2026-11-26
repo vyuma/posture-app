@@ -1,3 +1,4 @@
+import { t } from '../i18n';
 import { speechGeometry, widgetGeometry, widgetMessage, type WidgetPose } from './widgetPresentation';
 import { speechMotion, type SpeechEvent } from '../posture/feedbackSpeech';
 export type WidgetControlArt = Record<'pause' | 'play' | 'stop', HTMLImageElement>;
@@ -14,7 +15,7 @@ function clippedArtwork(context: CanvasRenderingContext2D, width: number, height
 
 /** Canvas counterpart used only when the user includes the pet in a timelapse. */
 export function paintWidget(context: CanvasRenderingContext2D, image: HTMLCanvasElement, controls: WidgetControlArt, pose: WidgetPose, growth: number, angle: number, remainingMs: number, durationMs: number, availableHeight: number, speech?: SpeechEvent | null, now = 0, reduced = false) {
-  const text = speech === undefined ? widgetMessage(pose, growth) : speech?.text ?? '';
+  const text = t(speech === undefined ? widgetMessage(pose, growth) : speech?.text ?? '');
   const base = widgetGeometry(pose, growth, availableHeight);
   const g = speech === undefined ? base : speechGeometry(base, text);
   const motion = speech === undefined ? { visible: true, opacity: 1, y: 0, angle: 0 } : speechMotion(speech, now, reduced, pose === 'bad');
@@ -48,15 +49,17 @@ export function paintWidget(context: CanvasRenderingContext2D, image: HTMLCanvas
 
 /** Same assets, positions and dimensions as widget.css; icons are part of the video. */
 export function paintWidgetTimer(context: CanvasRenderingContext2D, pose: WidgetPose, remainingMs: number, durationMs: number, controls: WidgetControlArt) {
-  context.save(); context.fillStyle = pose === 'rest' ? '#f6edd8' : '#ecf8fc'; context.shadowColor = '#00000040'; context.shadowOffsetX = 4; context.shadowOffsetY = 6; context.shadowBlur = 4;
+  const transform = context.getTransform();
+  const pixelScale = Math.max(.01, Math.hypot(transform.a, transform.b), Math.hypot(transform.c, transform.d));
+  context.save(); context.fillStyle = '#f6edd8'; context.shadowColor = '#00000040'; context.shadowOffsetX = 4 * pixelScale; context.shadowOffsetY = 6 * pixelScale; context.shadowBlur = 4 * pixelScale;
   context.beginPath(); context.roundRect(0, 0, 178, 65, 32.5); context.fill(); context.restore();
   const seconds = Math.ceil(Math.max(0, remainingMs) / 1000), time = `${String(Math.floor(seconds / 60)).padStart(2,'0')}:${String(seconds % 60).padStart(2,'0')}`;
-  context.fillStyle = pose === 'rest' ? '#6e4211' : '#111f6e'; context.font = `700 ${time.length > 5 ? 22 : 27.6279}px "SF Pro", -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif`; context.textAlign = 'left'; context.textBaseline = 'alphabetic'; context.letterSpacing = time.length > 5 ? '.2px' : '1.15116px';
+  context.fillStyle = '#6e4211'; context.font = `700 ${time.length > 5 ? 22 : 27.6279}px "SF Pro", -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif`; context.textAlign = 'left'; context.textBaseline = 'alphabetic'; context.letterSpacing = time.length > 5 ? '.2px' : '1.15116px';
   // Keep fallback-font text inside the live widget's 82px (rest: 85px) time slot.
   context.fillText(time, pose === 'rest' ? 18 : 21, 36, pose === 'rest' ? 85 : 82);
   context.drawImage(pose === 'paused' ? controls.play : controls.pause, 103, 11, 30, 30);
   context.drawImage(controls.stop, 133, 11, 30, 30);
   context.fillStyle = '#fff'; context.beginPath(); context.roundRect(15, 46, 148, 8, 4); context.fill();
   const progress = Math.max(0, Math.min(1, remainingMs / Math.max(1, durationMs)));
-  if (progress) { context.fillStyle = pose === 'rest' ? '#f78000' : '#13a2d7'; context.beginPath(); context.roundRect(15, 46, 148 * progress, 8, 4); context.fill(); }
+  if (progress) { context.fillStyle = '#f78000'; context.beginPath(); context.roundRect(15, 46, 148 * progress, 8, 4); context.fill(); }
 }

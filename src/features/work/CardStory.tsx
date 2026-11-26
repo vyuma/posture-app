@@ -1,7 +1,9 @@
+import { useAppLanguage } from "../i18n";
 import { useLayoutEffect, useRef } from 'react';
 
 /** Prefer one line without making long descriptions unreadably small. */
 export function CardStory({ children }: { children: string }) {
+  useAppLanguage();
   const paragraph = useRef<HTMLParagraphElement>(null);
   const text = useRef<HTMLSpanElement>(null);
   useLayoutEffect(() => {

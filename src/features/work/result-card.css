@@ -1,4 +1,4 @@
-/* Home detail 4057:5766 (911.39×517); acquisition comparison uses 721×409.
+/* Feedback cards 4011:3322 and 4006:1708 use a 721×445 composition.
    cqw keeps the original 721-unit composition proportional to the card itself. */
 .work-dialog.work-detail-dialog{width:min(1040px,calc(100vw - 24px));max-height:calc(100dvh - 24px);padding:64px 20px 20px;border-radius:0;background:transparent;box-shadow:none;overflow:auto}
 .work-detail-dialog::backdrop{background:rgba(16,38,46,.48)}
@@ -6,32 +6,33 @@
 .work-detail-dialog>.work-close:hover,.work-detail-dialog>.work-close:focus-visible{background:#fff;outline:2px solid #ffffffb8;outline-offset:2px}
 .work-result{display:grid;grid-template-columns:minmax(0,911.39px) 64px;column-gap:24px;row-gap:12px;width:999.39px;max-width:100%;margin:0 auto;text-align:left;font-family:'SF Pro',-apple-system,BlinkMacSystemFont,'Noto Sans JP',sans-serif;letter-spacing:0}
 .work-result-frame{min-width:0}
-.work-detail-card{position:relative;container-type:inline-size;display:grid;grid-template-columns:2.8724% 36.6963% 1.4854% 55.6172% 3.3287%;width:100%;min-height:0;padding:2.91262% 0 3.6061%;border-radius:4.40788% / 7.7704%;background:#fff;color:#000;box-shadow:0 0 8.52px #00000026;overflow:clip}
+.work-detail-card{position:relative;container-type:inline-size;display:grid;grid-template-columns:2.8724% 36.6963% 1.4854% 55.6172% 3.3287%;width:100%;min-height:0;align-items:start;padding:2.91262% 0 2.77393%;border-radius:4.40788% / 7.14176%;background:#fff;color:#000;box-shadow:0 0 8.52px #00000026;overflow:clip}
+.work-detail-card[data-variant]{aspect-ratio:721/445;min-height:min-content}
 .work-detail-character{grid-column:2;min-width:0}
 .work-detail-art{position:relative;width:100%;aspect-ratio:264.58/266.96;border-radius:3.52631cqw;background:var(--character-bg,#eee);overflow:hidden}
 .work-detail-art .work-portrait{position:absolute;left:50%;top:var(--art-top);width:var(--art-width);height:auto;max-width:none;transform:translateX(-50%)}
 /* This asset is the same 636×1021 PNG used in Figma, including its transparent bounds. */
 .work-detail-art .work-portrait[data-character="oto-anago"]{left:11.45%;top:13.86%;width:76.72%;transform:none}
-.work-unacquired{position:absolute;left:12.2042%;top:13.1106%;width:75.2135%;height:119.8681%;object-fit:fill}
+.work-unacquired{position:absolute;left:11.4476%;top:10.4885%;width:72.1912%;height:114.6244%;object-fit:fill}
 .work-detail-character>.work-card-number{display:block;margin:1.3925cqw 0 0 .3176cqw;font-size:1.83653cqw;font-weight:590;line-height:2.21914cqw;letter-spacing:0;color:#848484}
-.work-detail-name{display:flex;align-items:center;justify-content:space-between;gap:.6cqw;min-height:4.02219cqw;margin:.1387cqw 0 1.52566cqw}
+.work-detail-name{display:flex;align-items:center;justify-content:space-between;gap:.6cqw;min-height:4.02219cqw;margin:.1387cqw .8724cqw 1.24827cqw 0}
 .work-detail-card .work-detail-name h2{font-size:3.32871cqw;line-height:4.02219cqw;font-weight:700;white-space:nowrap;margin:0}
 .work-detail-name .character-stars{gap:.1387cqw;flex:none}
 .work-detail-name .character-stars svg{width:2.77393cqw;height:2.77393cqw}
 .work-detail-card .work-tags{gap:1.10957cqw;flex-wrap:wrap}
 .work-detail-card .work-tags>span{font-size:1.38696cqw;font-weight:700;line-height:1.66436cqw;padding:1.10957cqw;color:var(--character-color);white-space:normal;max-width:100%;overflow-wrap:anywhere}
 .work-detail-body{--metrics-left-inset:4.29958cqw;grid-column:4;position:relative;min-width:0;display:flex;flex-direction:column}
-.work-detail-body>time{display:block;margin-right:1.66436cqw;text-align:right;font-size:2.19849cqw;font-weight:590;line-height:2.63523cqw;color:#505050;white-space:nowrap;font-variant-numeric:normal}
-.work-result-metrics{display:flex;justify-content:space-between;gap:1cqw;margin:3.19001cqw 6.79612cqw 0 var(--metrics-left-inset)}
+.work-detail-body>time{display:block;margin-right:1.66436cqw;text-align:right;font-size:2.19849cqw;font-weight:590;line-height:2.63523cqw;color:#a8a8a8;white-space:nowrap;font-variant-numeric:normal}
+.work-result-metrics{display:flex;justify-content:space-between;gap:1cqw;margin:2.21914cqw 6.79612cqw 0 var(--metrics-left-inset)}
 .work-result-metrics>div{display:grid;grid-template-columns:max-content max-content;grid-template-rows:3.32871cqw 10.54092cqw;color:#13a2d7;font-weight:700;white-space:nowrap}
-.work-result-metrics>div+div{color:var(--character-color,#f78000)}
+.work-result-metrics>div+div{color:#f78000}
 .work-result-metrics>div>span{grid-column:1;grid-row:1;text-align:center;font-size:2.77393cqw;line-height:3.32871cqw}
 .work-result-metrics strong{grid-column:1;grid-row:2;text-align:center;font-size:8.87656cqw;line-height:10.54092cqw;font-weight:700;letter-spacing:0}
 .work-result-metrics small{grid-column:2;grid-row:2;align-self:start;margin-top:3.19001cqw;font-size:5.54785cqw;line-height:6.65742cqw;font-weight:700}
-.work-graph{position:relative;margin-top:1.66436cqw}
+.work-graph{position:relative;margin:1.10957cqw 0 0 3.32871cqw}
 .work-graph svg{display:block;width:100%;overflow:visible;touch-action:pan-y}
-.work-graph{--graph-color:var(--character-color,#f78000)}
-.work-graph svg text{font-family:inherit;font-size:10px;font-weight:510;fill:#939393}
+.work-graph{--graph-color:#f78000}
+.work-graph svg text{font-family:inherit;font-size:10px;font-weight:510;fill:#e4e4e4}
 .work-graph .work-graph-baseline-label{fill:var(--graph-color)}
 .work-graph-baseline{stroke:var(--graph-color);stroke-width:1}
 .work-graph-grid{stroke:#e4e4e4;stroke-width:1}
@@ -48,17 +49,11 @@
 .work-graph-tooltip strong{font-size:18px;line-height:1.2;color:var(--graph-color);white-space:nowrap}
 .work-graph-tooltip small{font-size:10px;margin-left:2px}
 .work-graph-tooltip span{display:block;margin-top:5px;font-size:11px;overflow-wrap:anywhere}
-.work-graph-keyboard{position:absolute;bottom:0;left:7%;width:89.5%;height:14px;opacity:0;accent-color:#f78000}
+.work-graph-keyboard{position:absolute;bottom:0;left:1.061%;width:95.225%;height:14px;opacity:0;accent-color:#f78000}
 .work-graph-keyboard:focus-visible{opacity:1;outline:2px solid #a94f00;outline-offset:2px}
-.no-reward .work-graph{--graph-color:#939393}
-.no-reward .work-result-metrics>div{color:#939393}
-.no-reward .work-detail-art{background:#f0f0f0}
-.no-reward .work-detail-character>.work-card-number{margin-left:1.8433cqw;margin-top:.8377cqw}
-.no-reward .work-detail-name{margin-left:1.8433cqw;margin-right:1.8433cqw}
-.no-reward .work-detail-name h2{letter-spacing:.97087cqw}
-.no-reward .work-tags{margin-left:1.8433cqw}
-.no-reward .work-tags>span{background:#50505033;color:#505050;letter-spacing:.5548cqw}
-.work-no-graph{display:grid;place-items:center;aspect-ratio:401/164;background:#fafafa;color:#777;font-size:14px;border-radius:12px}
+.no-reward .work-detail-art{background:#e2e2e2}
+.no-reward .work-tags>span{background:#f0f0f0;color:#505050}
+.work-no-graph{display:grid;place-items:center;aspect-ratio:377/173;background:#fafafa;color:#777;font-size:14px;border-radius:12px}
 .work-detail-card .work-detail-body>p{margin:2.91262cqw 0 0 3.8835cqw;font-size:1.98026cqw;font-weight:700;line-height:2.35742cqw;text-align:left;text-wrap:wrap;overflow-wrap:anywhere}
 .work-result-actions{display:flex;flex-direction:column;gap:24px;padding-top:7px}
 .work-result-actions>button{display:grid;place-items:center;flex:none;width:64px;height:64px;padding:0;border:0;border-radius:100px;background:transparent;color:#fff;cursor:pointer;transition:opacity .16s ease,transform .16s ease,background .16s ease}
@@ -74,7 +69,7 @@
 }
 /* Reflow the actual text instead of reducing the whole card to unreadable type. */
 @media(max-width:540px){
-  .work-detail-card{display:flex;flex-direction:column;padding:20px;border-radius:28px;gap:24px}
+  .work-detail-card{display:flex;flex-direction:column;align-items:stretch;padding:20px;border-radius:28px;gap:24px}.work-detail-card[data-variant]{aspect-ratio:auto}
   .work-detail-art{max-width:300px;margin-inline:auto;border-radius:24px}
   .work-detail-character>.work-card-number{font-size:13px;line-height:18px;margin:10px 0 0}
   .work-detail-name{min-height:29px;gap:8px;flex-wrap:wrap;margin:0 0 12px}
@@ -90,7 +85,7 @@
   .work-result-metrics>div>span{font-size:16px;line-height:20px}
   .work-result-metrics strong{font-size:44px;line-height:56px}
   .work-result-metrics small{font-size:24px;line-height:30px;margin-top:17px}
-  .work-graph{margin-top:12px}
+  .work-graph{margin:12px 0 0}
   .work-detail-card .work-detail-body>p{font-size:14px;line-height:1.6;margin:20px 0 0}
 }
 @media(max-width:360px){
@@ -100,9 +95,8 @@
   .work-result-metrics small{font-size:20px}
 }
 
-@media(max-width:540px){.no-reward .work-detail-character>.work-card-number,.no-reward .work-detail-name,.no-reward .work-tags{margin-left:0;margin-right:0}.no-reward .work-detail-name h2{letter-spacing:7px}.no-reward .work-tags>span{letter-spacing:4px}.work-detail-card .work-detail-body>p{margin-inline:6.9825% 3.4913%}.work-graph-tooltip{min-width:92px;padding:8px;max-width:55%}.work-graph-tooltip>div{gap:8px}}
+@media(max-width:540px){.work-detail-card .work-detail-body>p{margin-inline:6.9825% 3.4913%}.work-graph-tooltip{min-width:92px;padding:8px;max-width:55%}.work-graph-tooltip>div{gap:8px}}
 
-.no-reward .work-graph-tooltip strong{color:#505050}
 
 /* Metric anchors from the 911.39px collection card: digit count cannot move units. */
 @media(min-width:541px){
@@ -121,3 +115,14 @@
 
 @media(min-width:541px){.work-result-metrics>div:first-child>strong[data-long="true"]{font-size:6.5cqw}}
 @media(max-width:540px){.work-result-metrics>div:first-child>strong[data-long="true"]{font-size:36px}}
+
+.work-posture-comment{margin:2.21914cqw 1.24827cqw 0 4.02219cqw;text-align:left}
+.work-detail-card .work-posture-comment h3{margin:0 0 .97087cqw;color:#f78000;font-size:2.21914cqw;line-height:2.63523cqw;font-weight:700}
+.work-detail-card .work-posture-comment p{margin:0;color:#505050;font-size:1.80305cqw;line-height:2.77393cqw;font-weight:700;overflow-wrap:anywhere}
+.work-detail-card .work-character-story{min-height:4.71567cqw;margin:0 0 1.38696cqw .3176cqw;color:#575757;font-size:1.80305cqw;line-height:2.35784cqw;font-weight:590;overflow-wrap:anywhere}
+@media(max-width:540px){
+  .work-posture-comment{margin:20px 0 0}
+  .work-detail-card .work-posture-comment h3{font-size:16px;line-height:22px;margin-bottom:8px}
+  .work-detail-card .work-posture-comment p,.work-detail-card .work-character-story{font-size:14px;line-height:22px}
+  .work-detail-card .work-character-story{min-height:0;margin:0 0 12px}
+}

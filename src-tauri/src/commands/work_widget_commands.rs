@@ -33,10 +33,17 @@ pub fn work_widget_update(app: AppHandle, window: WebviewWindow, state: State<'_
     let was_visible = stored.is_some();
     let was_bad = is_active_bad(stored.as_ref());
     let bad = is_active_bad(value.as_ref());
+    *stored = value.clone();
+    drop(stored); // AppKit layout can synchronously issue a native callback.
     if was_visible != value.is_some() || (!was_bad && bad) {
         crate::overlay::window::set_work_widget(&app, value.is_some(), bad)?;
     }
-    *stored = value.clone();
+    #[cfg(all(target_os = "macos", feature = "mac-app-store"))]
+    {
+        crate::overlay::window::restore_position(&app, 0, 0)?;
+        crate::overlay::store_pet::update(&app, value)
+    }
+    #[cfg(not(all(target_os = "macos", feature = "mac-app-store")))]
     app.emit_to("cat_overlay", "work:widget", value).map_err(|e| e.to_string())
 }
 

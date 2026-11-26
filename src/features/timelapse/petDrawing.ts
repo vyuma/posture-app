@@ -3,6 +3,7 @@ import { paintWidget } from '../work/paintWidget';
 import { WIDGET_STILL, type WidgetPose } from '../work/widgetPresentation';
 import type { SpeechEvent } from '../posture/feedbackSpeech';
 import { bindCanvasMattes } from './canvasMattes';
+import { timelapsePetLayout } from './petLayout';
 
 /** Shared by the layout editor, playback and video export. */
 export async function loadPetArt(version: string) {
@@ -33,12 +34,12 @@ type ReplayWidget = {
   feedbackVersion?: 1; speech?: SpeechEvent | null; reduced: boolean;
 };
 export function paintReplayWidget(context: CanvasRenderingContext2D, art: Awaited<ReturnType<typeof loadPetArt>>, box: { x: number; y: number; width: number; height: number }, pet: ReplayWidget, time: number, suppressMotion = false) {
-  const scale = Math.min(box.width / 300, box.height / 300);
+  const { scale, x, y, availableHeight } = timelapsePetLayout(box);
   if (scale <= 0) return;
   context.save();
-  context.translate(box.x + box.width / 2 - 89 * scale, box.y + box.height - 77 * scale);
+  context.translate(x, y);
   context.scale(scale, scale);
   art.frame(suppressMotion ? WIDGET_STILL[pet.pose] : pet.frame);
-  paintWidget(context, art.canvas, art.controls, pet.pose, suppressMotion ? 0 : pet.growth, suppressMotion ? 0 : pet.angle, pet.remainingMs, pet.durationMs, box.height / scale, pet.feedbackVersion === 1 ? pet.speech ?? null : undefined, time * 1000, suppressMotion || pet.reduced);
+  paintWidget(context, art.canvas, art.controls, pet.pose, suppressMotion ? 0 : pet.growth, suppressMotion ? 0 : pet.angle, pet.remainingMs, pet.durationMs, availableHeight, pet.feedbackVersion === 1 ? pet.speech ?? null : undefined, time * 1000, suppressMotion || pet.reduced);
   context.restore();
 }

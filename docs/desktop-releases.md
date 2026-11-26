@@ -1,5 +1,7 @@
 # デスクトップの署名・配布・更新
 
+タグによる配布・ストアへの提出と承認後自動公開は、[統合・分析の運用](cloudflare-analytics.md#リリース)と `release.yml` を正とする。以下は既存の識別子、ローカル手順、過去の検証記録であり、今回のアカウント対応版が実機・ストア検証済みという意味ではない。
+
 ## 配布先
 
 - macOS: Developer ID Application 署名 + Apple 公証。GitHub Releases の署名付き Universal アーカイブで更新する。
@@ -37,7 +39,7 @@ GitHub Release のタグは `v<version>`。DMG、tar.gz、sig、latest.json、SH
 WebView2 は Microsoft 公式サイトから x64 Fixed Version を取得し、ライセンスへの同意後に展開する。展開時は `expand.exe <cab> -F:* <展開先>` を使う。ランタイム全体（第三者ライセンス通知を含む）を同梱する。新しい Store リリースごとにサポート中のランタイムへ更新する。
 
 Windows SDK、Rust MSVC、Bun のある Windows 環境で実行する。
-Windows PC がない場合は、main へ取り込んだ後に GitHub Actions の `Windows Store package` を手動実行する。既定値は所有者がライセンスへ同意して取得した x64 WebView2 `153.0.4234.32`。更新する場合は同意済みの Microsoft 公式 CAB URL と SHA256 の両方を指定する。チェックサム・Microsoft 署名・x64 アーキテクチャを検査し、MSIX を検証用 Artifact として出力する。Store への申請・公開は自動実行しない。
+Windows PC がない場合は、main へ取り込んだ後に GitHub Actions の `Windows Store package` を手動実行する。既定値は所有者がライセンスへ同意して取得した x64 WebView2 `153.0.4234.32`。更新する場合は同意済みの Microsoft 公式 CAB URL と SHA256 の両方を指定する。チェックサム・Microsoft 署名・x64 アーキテクチャを検査し、MSIX を検証用 Artifact として出力する。この手動実行では提出しない。`release.yml` からのタグ実行は `submit=true` で既存製品に提出し、承認後自動公開を指定する。
 
 ```powershell
 ./scripts/package-windows-store.ps1 `

@@ -1,0 +1,66 @@
+/* Animate paint only: LP-6 coordinates, artwork proportions and text metrics stay intact. */
+@keyframes lp-beach-peek {
+  0%, 8%, 100% { translate: 0 0; }
+  3%, 5% { translate: 0 -10px; }
+}
+.lp-character-bed .lp-beach-sand {
+  pointer-events: auto;
+}
+.lp-character-bed .lp-beach-character {
+  animation: lp-beach-peek 54s ease-in-out infinite paused;
+  transition: margin-bottom .5s ease;
+}
+.lp-beach-character:nth-child(2) { animation-delay: -6s; }
+.lp-beach-character:nth-child(3) { animation-delay: -12s; }
+.lp-beach-character:nth-child(4) { animation-delay: -18s; }
+.lp-beach-character:nth-child(5) { animation-delay: -24s; }
+.lp-beach-character:nth-child(6) { animation-delay: -30s; }
+.lp-beach-character:nth-child(7) { animation-delay: -36s; }
+.lp-beach-character:nth-child(8) { animation-delay: -42s; }
+.lp-beach-character:nth-child(9) { animation-delay: -48s; }
+.lp-character-bed.is-motion-visible .lp-beach-character {
+  animation-play-state: running;
+}
+@media (hover: hover) and (pointer: fine) {
+  .lp-character-bed .lp-beach-character:hover { margin-bottom: 6px; }
+}
+.lp-character-bed .lp-beach-character:active { margin-bottom: 6px; }
+@media (max-width: 1023px) {
+  .lp-character-bed .lp-beach-character:nth-child(odd) { animation: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-character-bed .lp-beach-character {
+    animation: none;
+    transition: none;
+  }
+  .lp-character-bed .lp-beach-character:is(:hover, :active) { margin-bottom: 0; }
+}
+
+/* Reveal a little more body while keeping the tail buried and rest geometry unchanged. */
+.lp-character-bed { overflow: visible; clip-path: inset(-180px 0 0); }
+.lp-character-bed .lp-beach-character {
+  padding: 0;
+  border: 0;
+  border-radius: 50% 50% 12% 12%;
+  background: transparent;
+  cursor: grab;
+  touch-action: pan-x pinch-zoom;
+  user-select: none;
+  -webkit-user-select: none;
+  transform-origin: center bottom;
+}
+.lp-beach-character > img { display: block; width: 100%; height: 100%; pointer-events: none; }
+.lp-character-bed .lp-beach-character.is-pulling { cursor: grabbing; }
+.lp-character-bed .lp-beach-character:is(.is-pulling, .is-returning) { animation-play-state: paused; }
+
+@keyframes lp-taut-shiver {
+  0%, 100% { translate: 0 0; }
+  25% { translate: .65px -.2px; }
+  75% { translate: -.65px .2px; }
+}
+.lp-beach-character.is-pulling.is-taut > img {
+  animation: lp-taut-shiver 160ms linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .lp-beach-character.is-pulling.is-taut > img { animation: none; }
+}

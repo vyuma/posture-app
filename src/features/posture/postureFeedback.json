@@ -6,5 +6,22 @@
   "general": "姿勢を戻して！",
   "good": "いい感じ！",
   "rest": "ストレッチした？",
-  "paused": "お疲れさま！"
+  "paused": "お疲れさま！",
+  "headShift": "頭が横にずれてるよ！",
+  "headPitch": "あごの位置を戻そう！",
+  "shoulderTilt": "肩の高さが変わってるよ！",
+  "headTurn": "顔が横を向いてるよ！",
+  "headTiltLeft": "頭が左に傾いてるよ！",
+  "headTiltRight": "頭が右に傾いてるよ！",
+  "bodyTiltLeft": "体が左に傾いてるよ！",
+  "bodyTiltRight": "体が右に傾いてるよ！",
+  "headShiftLeft": "頭が左にずれてるよ！",
+  "headShiftRight": "頭が右にずれてるよ！",
+  "headPitchDown": "あごが下がってるよ！",
+  "headPitchUp": "あごが上がってるよ！",
+  "shoulderTiltLeft": "左肩が高くなってるよ！",
+  "shoulderTiltRight": "右肩が高くなってるよ！",
+  "headTurnLeft": "顔が左を向いてるよ！",
+  "headTurnRight": "顔が右を向いてるよ！",
+  "unavailable": "姿勢を確認できないよ"
 }

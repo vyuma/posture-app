@@ -1,0 +1,18 @@
+.piiin-legal-page{min-height:100dvh;background:#f3f8fa;color:#243744;font-family:-apple-system,BlinkMacSystemFont,'Noto Sans JP',sans-serif;padding:24px clamp(20px,5.3vw,80px) 48px}
+.piiin-legal-page>header{max-width:1040px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;padding-block:12px 32px}
+.piiin-legal-page>header>a{font-size:32px;font-weight:800;letter-spacing:.02em;text-decoration:none;color:#087fa8}
+.piiin-legal-page nav{display:flex;flex-wrap:wrap;gap:24px}
+.piiin-legal-page>main{background:#fff;max-width:1040px;margin:auto;border-radius:24px;padding:clamp(24px,5vw,64px)}
+.piiin-legal-content{max-width:72ch;margin-inline:auto;text-align:left;color:#243744;font-family:-apple-system,BlinkMacSystemFont,'Noto Sans JP',sans-serif;font-size:16px;line-height:1.9;overflow-wrap:anywhere}
+.piiin-legal-content h1{font-size:clamp(26px,3.2vw,36px);line-height:1.4;margin:0 0 24px;font-weight:700;color:#087fa8}
+.piiin-legal-content h2{font-size:21px;line-height:1.5;margin:36px 0 12px;color:#243744;font-weight:700}
+.piiin-legal-content p{margin:12px 0}.piiin-legal-content ul{margin:12px 0;padding-left:1.5em;list-style:disc}.piiin-legal-content li+li{margin-top:8px}
+.piiin-legal-content .piiin-legal-date{font-size:14px;color:#526873}.piiin-legal-providers{font-size:14px}
+.piiin-legal-page a,.piiin-legal-content a{color:#076b91;text-underline-offset:4px}.piiin-legal-page a:hover,.piiin-legal-content a:hover{color:#04455f}
+.piiin-legal-page a:focus-visible,.piiin-legal-content a:focus-visible{outline:3px solid #087fa8;outline-offset:5px;border-radius:2px}
+.piiin-legal-page nav a[aria-current=page]{font-weight:700}.piiin-legal-page>footer{max-width:1040px;margin:28px auto 0}
+.work-dialog.piiin-legal-dialog{width:min(920px,calc(100vw - 32px));max-width:920px;padding:64px clamp(24px,5vw,64px) 40px}
+.work-recording-indicator{position:absolute;z-index:2;left:16px;top:16px;display:flex;align-items:center;gap:7px;border-radius:20px;background:#fff;color:#962b2b;padding:6px 12px;font-size:14px;line-height:1.5;font-weight:700;pointer-events:none;box-shadow:0 2px 8px #0002}
+.work-recording-indicator::before{content:'';width:8px;height:8px;border-radius:50%;background:#ba3030;flex:none}
+@media(max-width:480px){.piiin-legal-page nav{gap:16px}.piiin-legal-page>main{border-radius:20px}.piiin-legal-content h2{font-size:19px}}
+.piiin-legal-document{height:auto;min-height:100%;overflow:auto}

@@ -1,3 +1,4 @@
+import { DeveloperAccessProvider } from "./features/developer/DeveloperAccessContext";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./features/work/WorkApp";
@@ -8,6 +9,6 @@ const TimelapsePreview = import.meta.env.DEV && location.pathname === "/dev/time
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
-    {TimelapsePreview ? <React.Suspense fallback={null}><TimelapsePreview /></React.Suspense> : WorkPreview ? <React.Suspense fallback={null}><WorkPreview /></React.Suspense> : <App />}
+    <DeveloperAccessProvider>{TimelapsePreview ? <React.Suspense fallback={null}><TimelapsePreview /></React.Suspense> : WorkPreview ? <React.Suspense fallback={null}><WorkPreview /></React.Suspense> : <App />}</DeveloperAccessProvider>
   </React.StrictMode>,
 );

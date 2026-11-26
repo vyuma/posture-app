@@ -1,3 +1,4 @@
+import { t, useAppLanguage } from "../../i18n";
 import { useEffect, useMemo, useState } from "react";
 
 import {
@@ -30,6 +31,7 @@ export function SoundSettingsDialog({
   onClose,
   onPreview,
 }: SoundSettingsDialogProps) {
+  useAppLanguage();
   const [uploadError, setUploadError] = useState("");
 
   useEffect(() => {
@@ -58,7 +60,7 @@ export function SoundSettingsDialog({
     }
 
     if (!isSupportedAudioFile(file)) {
-      setUploadError("mp3 または wav ファイルのみアップロードできます。");
+      setUploadError(t("mp3 または wav ファイルのみアップロードできます。"));
       return;
     }
 
@@ -83,7 +85,7 @@ export function SoundSettingsDialog({
         selectedSound: dataUrl,
       });
     } catch {
-      setUploadError("オーディオファイルの読み込みに失敗しました。");
+      setUploadError(t("オーディオファイルの読み込みに失敗しました。"));
     }
   };
 
@@ -94,21 +96,20 @@ export function SoundSettingsDialog({
         onClick={(event) => event.stopPropagation()}
         aria-modal="true"
         role="dialog"
-        aria-label="サウンド設定"
+        aria-label={t("サウンド設定")}
       >
         <div className="sound-dialog-header">
           <div>
-            <p className="sound-eyebrow">通知サウンド</p>
-            <h2>サウンド設定</h2>
+            <p className="sound-eyebrow">{t("通知サウンド")}</p>
+            <h2>{t("サウンド設定")}</h2>
           </div>
           <button type="button" className="sound-close" onClick={onClose}>
-            閉じる
-          </button>
+            {t("閉じる")}</button>
         </div>
 
         <div className="sound-body">
           <label className="sound-field sound-toggle">
-            <span>効果音を有効化</span>
+            <span>{t("効果音を有効化")}</span>
             <input
               type="checkbox"
               checked={settings.enabled}
@@ -122,7 +123,7 @@ export function SoundSettingsDialog({
           </label>
 
           <label className="sound-field" htmlFor="sound-volume">
-            <span>音量 ({Math.round(settings.volume * 100)}%)</span>
+            <span>{t("音量 (")}{Math.round(settings.volume * 100)}%)</span>
             <input
               id="sound-volume"
               type="range"
@@ -139,7 +140,7 @@ export function SoundSettingsDialog({
           </label>
 
           <label className="sound-field" htmlFor="sound-select">
-            <span>効果音を選択</span>
+            <span>{t("効果音を選択")}</span>
             <select
               id="sound-select"
               value={settings.selectedSound}
@@ -159,7 +160,7 @@ export function SoundSettingsDialog({
           </label>
 
           <label className="sound-field" htmlFor="sound-upload">
-            <span>サウンドを追加 (mp3/wav)</span>
+            <span>{t("サウンドを追加 (mp3/wav)")}</span>
             <input id="sound-upload" type="file" accept=".mp3,.wav,audio/mpeg,audio/wav" onChange={handleUpload} />
           </label>
 
@@ -167,8 +168,7 @@ export function SoundSettingsDialog({
 
           <div className="sound-actions">
             <button type="button" onClick={onPreview}>
-              試聴
-            </button>
+              {t("試聴")}</button>
           </div>
         </div>
       </section>

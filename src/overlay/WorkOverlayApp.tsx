@@ -16,7 +16,8 @@ export function WorkOverlayApp() {
   const sessionId = state?.sessionId;
   useEffect(() => {
     if (!sessionId || pose === 'bad') return;
-    const timer = window.setTimeout(() => { void invoke('work_widget_compact', { sessionId }).catch(() => setError('表示サイズを調整できませんでした')); }, 1100);
+    // bad→good spans 75 frames (2.5s); leave room for the final render.
+    const timer = window.setTimeout(() => { void invoke('work_widget_compact', { sessionId }).catch(() => setError('表示サイズを調整できませんでした')); }, 3100);
     return () => clearTimeout(timer);
   }, [pose, sessionId]);
   async function action(value: WidgetAction) { if (!state) return; try { await invoke('work_widget_action', { sessionId: state.sessionId, action: value }); } catch { setError('メイン画面で操作してください'); } }

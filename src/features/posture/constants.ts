@@ -4,10 +4,12 @@ export const UI_UPDATE_INTERVAL_MS = 80;
 export const RUNTIME_ERROR_STATUS_INTERVAL_MS = 1200;
 export const BACKGROUND_ALERT_COOLDOWN_MS = 20_000;
 
-export const POSE_MODEL_URL =
-  "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task";
-export const VISION_WASM_URL =
-  "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm";
+export const POSE_MODEL_URL = import.meta.env.VITE_DISTRIBUTION_CHANNEL === "mac-app-store"
+  ? "/mediapipe/pose_landmarker_lite.task"
+  : "https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task";
+export const VISION_WASM_URL = import.meta.env.VITE_DISTRIBUTION_CHANNEL === "mac-app-store"
+  ? "/mediapipe/wasm"
+  : "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.34/wasm";
 
 export const POSE_LANDMARK_INDEX = {
   NOSE: 0,

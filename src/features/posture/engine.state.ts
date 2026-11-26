@@ -70,6 +70,7 @@ export function updatePostureState(
 /** Interruptions are not elapsed landmark-loss time. Keep the calibrated baseline. */
 export function resetLandmarkTracking(previous: PostureEngineState): PostureEngineState {
   return { ...previous, landmarksEstablished: false, landmarkDropActive: false,
+    headTiltCandidateBad: false,
     landmarkMissingSinceMs: null, landmarkRecoverySinceMs: null, landmarkDropLastTsMs: null,
     postureState: "hold", stableState: "good", badAccumMs: 0, goodAccumMs: 0, lastTsMs: null };
 }

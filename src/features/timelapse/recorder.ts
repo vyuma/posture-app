@@ -33,7 +33,12 @@ export class TimelapseRecorder {
   private visible = true;
   private excludedPose: PetEvent['pose'] | undefined;
   private excludedHidden = false;
-  constructor(private store: TimelapseStore, private notify: (message: string) => void, private changed: () => void) {}
+  private reportedRecording = false;
+  constructor(private store: TimelapseStore, private notify: (message: string) => void, private changed: () => void, private onRecordingChange: (recording: boolean) => void = () => {}) {}
+  private reportRecording() {
+    const active = !this.failed && !this.stopped && this.recorder?.state === "recording";
+    if (active !== this.reportedRecording) { this.reportedRecording = active; this.onRecordingChange(active); }
+  }
   get seconds() { return this.elapsed + (this.recording ? (performance.now() - this.clockStart) / 1000 : 0); }
   begin(session: Session, source: MediaStream, quality: number) {
     this.startTask = this.start(session, source, quality);
@@ -82,6 +87,7 @@ export class TimelapseRecorder {
       recorder.resume(); this.clockStart = performance.now(); this.recording = true;
       this.recordEvent(true);
     } else if (this.desired) this.recordEvent(false);
+    this.reportRecording();
   }
   private recordEvent(force: boolean) {
     if (!this.clip || !this.latest) return;
@@ -110,7 +116,7 @@ export class TimelapseRecorder {
   }
   private fail(message: string) {
     if (this.failed) return;
-    this.failed = true; if (this.clip) this.clip.error = message;
+    this.failed = true; this.reportRecording(); if (this.clip) this.clip.error = message;
     this.notify(message);
     // Queue stop after startTask resolves, avoiding a self-await during initialization failure.
     queueMicrotask(() => { void this.stop(); });
@@ -118,6 +124,7 @@ export class TimelapseRecorder {
   stop(): Promise<void> { return this.closing ??= this.finish(); }
   private async finish() {
     this.stopped = true;
+    this.reportRecording();
     await this.startTask;
     this.elapsed = this.seconds; this.recording = false;
     const recorder = this.recorder;

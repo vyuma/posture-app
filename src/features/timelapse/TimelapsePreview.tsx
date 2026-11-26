@@ -1,3 +1,4 @@
+import { emptyEvidence } from '../posture/feedback';
 /** Development-only, isolated media store. Never uses a real collection or its reset. */
 import { useEffect, useRef, useState } from 'react';
 import { createSession, DEFAULT_TIMER, type Baseline, type Session } from '../work/model';
@@ -61,7 +62,7 @@ export default function TimelapsePreview() {
         ctx.font = `${target.height * .04}px sans-serif`; ctx.fillText(`FOCUS only · ${bad ? 'BAD → grow / shake' : 'GOOD'} · cycle ${local < 6 ? 1 : 2}`, target.width * .08, target.height * .38);
         ctx.beginPath(); ctx.arc(target.width * (.15 + elapsed % 3 / 4), target.height * .65, target.height * .1, 0, Math.PI * 2); ctx.fill();
         const now = Date.now();
-        const speech = feedback.update({ context: next.id, mode: active ? 'focus' : stage === 'REST' ? 'rest' : 'paused', now, observedAt: now, maxAge: 1500, valid: true, posture: bad ? 'bad' : 'good', evidence: { faceNear: bad && local < 4 ? 2 : 0, headTilt: bad && local >= 8 ? 2 : 0, bodyTilt: 0, headForward: 0 } });
+        const speech = feedback.update({ context: next.id, mode: active ? 'focus' : stage === 'REST' ? 'rest' : 'paused', now, observedAt: now, maxAge: 1500, valid: true, posture: bad ? 'bad' : 'good', evidence: { ...emptyEvidence(), faceNear: bad && local < 4 ? 2 : 0, headTilt: bad && local >= 8 ? 2 : 0, bodyTilt: 0, headForward: 0 } });
         recorder!.update(active, { sessionId: next.id, phase: stage === 'REST' ? 'rest' : 'focus', paused: !active, bad, badSince, remainingMs: 60_000 - (local < 6 ? local : local - 6) * 1000, durationMs: 60_000, cycle: local < 6 ? 1 : 2, cycles: 2, feedbackVersion: 1, speech }, true);
         setReport(`${stage}: ${elapsed.toFixed(1)} / ${total}s; recording clock ${recorder!.seconds.toFixed(2)}s`);
       };
@@ -123,7 +124,7 @@ export default function TimelapsePreview() {
             }
           } finally { frames?.dispose(); }
           const audioTracks = (await input.getAudioTracks()).length;
-          if (audioTracks !== 0 || Math.abs(duration - clip.duration) > .05) throw new Error('Export changed the source duration or added audio');
+          if (audioTracks !== 0 || Math.abs(duration - Math.min(clip.duration, 60)) > .05) throw new Error('Export exceeded the one-minute timeline or added audio');
           rows.push({ includePet, includeScene, file: output.name, mime: output.mime, duration, audioTracks, width: track?.displayWidth, height: track?.displayHeight, seekFrames });
         } finally { input.dispose(); media.release(); }
       }

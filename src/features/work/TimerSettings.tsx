@@ -1,7 +1,9 @@
+import { normalizeJudgment } from '../posture/judgment';
+import './timer-settings.css';
+import { t, useAppLanguage } from "../i18n";
 import { useState, type CSSProperties } from 'react';
 import { clampTimerValue, DEFAULT_TIMER, normalizeTimer, TIMER_MAX, timerValid, type TimerSettings as Settings } from './model';
 import { Brand } from './Home';
-import { Icon } from './Dialog';
 
 const controls = [
   { key: 'focusMinutes', label: '集中', unit: '分' },
@@ -10,10 +12,13 @@ const controls = [
 ] as const;
 
 export function TimerSettings({ saved, onSubmit, onClose }: { saved: Settings | null; onSubmit: (settings: Settings, remember: boolean) => void; onClose: () => void }) {
+  useAppLanguage();
   const [timer, setTimer] = useState(() => normalizeTimer(saved ?? DEFAULT_TIMER));
   const [remember, setRemember] = useState(!!saved);
 
-  function change(key: keyof Settings, value: number) {
+  const judgment = normalizeJudgment(timer.posture);
+
+  function change(key: keyof typeof TIMER_MAX, value: number) {
     setTimer(current => {
       const next = { ...current, [key]: value };
       if (next.cycles === 1) next.restMinutes = 0;
@@ -24,14 +29,26 @@ export function TimerSettings({ saved, onSubmit, onClose }: { saved: Settings | 
 
   return <main className="work-screen work-timer-screen">
     <Brand />
-    <button className="work-close screen-close" onClick={onClose} aria-label="ホームへ戻る"><img src="/figma/timelapse-close.svg" alt="" /></button>
+    <button className="work-close screen-close" onClick={onClose} aria-label={t("ホームへ戻る")}><img src="/figma/timelapse-close.svg" alt="" /></button>
     <form className="work-glass work-timer-panel" noValidate onSubmit={event => {
       event.preventDefault();
-      const corrected = normalizeTimer(timer);
+      const corrected = normalizeTimer({...timer,posture:judgment});
       setTimer(corrected);
       onSubmit(corrected, remember);
     }}>
-      <h1>タイマーを設定</h1>
+      <div className="work-timer-heading"><h1>{t("設定")}</h1><p>{t("姿勢測定時の設定をしましょう。")}</p></div>
+      <div className="work-judgment-controls">
+        <fieldset className="work-judgment-level"><legend>{t("判定基準")}</legend>
+          <div>{([['easy','やさしい'],['normal','ふつう'],['hard','きびしい']] as const).map(([value,label]) =>
+            <label key={value}><input type="radio" name="judgment" value={value} checked={judgment.difficulty === value}
+              onChange={() => setTimer(current => ({...current,posture:{...judgment,difficulty:value}}))}/><span>{t(label)}</span></label>)}</div>
+        </fieldset>
+        <fieldset className="work-monitor-choice"><legend>{t("使用モニター")}</legend>
+          <div>{([[false,'1台'],[true,'2台以上']] as const).map(([value,label]) =>
+            <label key={label}><input type="radio" name="monitors" checked={judgment.dualMonitor === value}
+              onChange={() => setTimer(current => ({...current,posture:{...judgment,dualMonitor:value}}))}/><span>{t(label)}</span></label>)}</div>
+        </fieldset>
+      </div>
       <div className="work-timer-controls">
         {controls.map(({ key, label, unit }) => {
           const restLocked = key === 'restMinutes' && timer.cycles === 1;
@@ -40,32 +57,32 @@ export function TimerSettings({ saved, onSubmit, onClose }: { saved: Settings | 
           const progress = restLocked ? 0 : (sliderValue - 5) / (TIMER_MAX[key] - 5) * 100;
           const digits = Number.isNaN(value) ? 1 : Math.min(3, String(value).length);
           return <div className={`work-timer-control ${key}`} key={key} data-rest-locked={restLocked}>
-            <label htmlFor={`timer-${key}`}>{label}</label>
+            <label htmlFor={`timer-${key}`}>{t(label)}</label>
             <div className="work-number" style={{ '--timer-digits': digits } as CSSProperties}>
-              <input id={`timer-${key}`} aria-label={`${label}${unit === '分' ? '時間（分）' : '数'}`}
+              <input id={`timer-${key}`} aria-label={`${t(label)} ${unit === '分' ? t("時間（分）") : t("数")}`}
                 type="number" inputMode="numeric" min={restLocked ? 0 : 1} max={restLocked ? 0 : TIMER_MAX[key]} step="1"
                 readOnly={restLocked} aria-describedby={restLocked ? 'timer-no-rest' : undefined}
                 value={Number.isNaN(value) ? '' : value}
                 onChange={event => change(key, event.target.value === '' ? NaN : Number(event.target.value))}
                 onBlur={event => change(key, clampTimerValue(key, event.target.value === '' ? NaN : Number(event.target.value)))} />
-              <span>{unit}</span>
+              <span>{t(unit)}</span>
             </div>
             {key !== 'cycles' ? <input className="work-timer-range" style={{ '--timer-progress': `${progress}%` } as CSSProperties}
-              type="range" aria-label={`${label}時間をスライダーで調整`} min={restLocked ? 0 : 5} max={restLocked ? 0 : TIMER_MAX[key]}
+              type="range" aria-label={t("{0}時間をスライダーで調整", { 0: t(label) })} min={restLocked ? 0 : 5} max={restLocked ? 0 : TIMER_MAX[key]}
               step="5" disabled={restLocked} value={restLocked ? 0 : sliderValue}
               onChange={event => change(key, Number(event.target.value))}
               onPointerUp={event => change(key, Number(event.currentTarget.value))}
               onKeyUp={event => { if (['Home', 'End', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) change(key, Number(event.currentTarget.value)); }} />
               : <div className="work-steppers">
-                <button type="button" aria-label="サイクルを減らす" disabled={timer.cycles <= 1} onClick={() => change(key, clampTimerValue(key, timer.cycles - 1))}><Icon name="down" /></button>
-                <button type="button" aria-label="サイクルを増やす" disabled={timer.cycles >= TIMER_MAX.cycles} onClick={() => change(key, clampTimerValue(key, timer.cycles + 1))}><Icon name="up" /></button>
+                <button type="button" aria-label={t("サイクルを減らす")} disabled={timer.cycles <= 1} onClick={() => change(key, clampTimerValue(key, timer.cycles - 1))}><img src="/figma/timer-down.svg" alt="" /></button>
+                <button type="button" aria-label={t("サイクルを増やす")} disabled={timer.cycles >= TIMER_MAX.cycles} onClick={() => change(key, clampTimerValue(key, timer.cycles + 1))}><img src="/figma/timer-up.svg" alt="" /></button>
               </div>}
           </div>;
         })}
       </div>
-      <p id="timer-no-rest" className="work-timer-hint">1周のときは休憩なし（0分）です。</p>
-      <button className="work-button blue" type="submit" disabled={!timerValid(timer)}>設定完了</button>
-      <label className="work-remember"><input type="checkbox" checked={remember} onChange={event => setRemember(event.target.checked)} /><span>次回もこの設定にする</span></label>
+      <p id="timer-no-rest" className="work-timer-hint">{t("1周のときは休憩なし（0分）です。")}</p>
+      <button className="work-button blue" type="submit" disabled={!timerValid(timer)}>{t("設定完了")}</button>
+      <label className="work-remember"><input type="checkbox" checked={remember} onChange={event => setRemember(event.target.checked)} /><span>{t("次回もこの設定にする")}</span></label>
     </form>
   </main>;
 }

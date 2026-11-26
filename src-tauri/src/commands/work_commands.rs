@@ -2,7 +2,6 @@
 use rusqlite::{params, Connection, OptionalExtension, TransactionBehavior};
 use serde_json::{json, Value};
 use std::{path::PathBuf, time::Duration};
-use tauri::Manager;
 
 fn decode(value: Option<String>) -> Result<Value, String> {
     value.map(|text| serde_json::from_str(&text).map_err(|e| e.to_string())).unwrap_or(Ok(Value::Null))
@@ -17,6 +16,22 @@ fn execute(path: PathBuf, operation: &str, payload: Value) -> Result<Value, Stri
         CREATE INDEX IF NOT EXISTS work_status ON work_sessions(status);").map_err(|e| e.to_string())?;
     let result: Result<Value, rusqlite::Error> = (|| {
         match operation {
+            "list" => {
+                let mut statement = db.prepare("SELECT data FROM work_sessions ORDER BY id")?;
+                let rows = statement.query_map([], |row| row.get::<_, String>(0))?;
+                let mut values = Vec::new();
+                for row in rows { values.push(serde_json::from_str::<Value>(&row?).map_err(|_| rusqlite::Error::InvalidQuery)?); }
+                Ok(json!(values))
+            },
+            "analysis" => {
+                let tx = db.transaction_with_behavior(TransactionBehavior::Immediate)?;
+                let id = payload["id"].as_str().ok_or(rusqlite::Error::InvalidQuery)?;
+                let data: String = tx.query_row("SELECT data FROM work_sessions WHERE id=?1", [id], |row| row.get(0))?;
+                let mut session: Value = serde_json::from_str(&data).map_err(|_| rusqlite::Error::InvalidQuery)?;
+                session["analysis"] = payload["analysis"].clone();
+                tx.execute("UPDATE work_sessions SET data=?1 WHERE id=?2", params![session.to_string(),id])?;
+                tx.commit()?; Ok(Value::Null)
+            },
             "collection" => Ok(decode(db.query_row("SELECT data FROM work_meta WHERE id=1", [], |row| row.get(0)).optional()?).map_err(|_| rusqlite::Error::InvalidQuery)?),
             "session" => Ok(decode(db.query_row("SELECT data FROM work_sessions WHERE id=?1", [payload["id"].as_str().unwrap_or("")], |row| row.get(0)).optional()?).map_err(|_| rusqlite::Error::InvalidQuery)?),
             "interrupted" => {
@@ -57,9 +72,9 @@ fn execute(path: PathBuf, operation: &str, payload: Value) -> Result<Value, Stri
 }
 
 #[tauri::command]
-pub async fn work_database(app: tauri::AppHandle, window: tauri::WebviewWindow, operation: String, payload: Option<Value>) -> Result<Value, String> {
+pub async fn work_database(app: tauri::AppHandle, window: tauri::WebviewWindow, operation: String, payload: Option<Value>, space: Option<String>) -> Result<Value, String> {
     if window.label() != "main" { return Err("measurement storage is owned by the main window".into()); }
-    let path = app.path().app_data_dir().map_err(|e| e.to_string())?.join("measurements.sqlite3");
+    let path = super::account_commands::profile_root(&app, space.as_deref())?.join("measurements.sqlite3");
     tauri::async_runtime::spawn_blocking(move || execute(path, &operation, payload.unwrap_or(Value::Null))).await.map_err(|e| e.to_string())?
 }
 

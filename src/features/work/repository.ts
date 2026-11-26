@@ -1,3 +1,5 @@
+import { scopedDatabase } from '../accounts/localScope';
+import type { AnalysisTicket } from '../accounts/types';
 import { normalizeCharacterId } from '../characters/characterIds';
 import { chooseReward, DEFAULT_TIMER, EMPTY_COLLECTION, normalizeTimer, type Card, type Collection, type Session, type TimerSettings } from './model';
 
@@ -7,13 +9,15 @@ export interface WorkDriver {
   checkpoint(session: Session): Promise<void>;
   compareAndSet(revision: number | null, collection: Collection, session?: Session): Promise<boolean>;
   interrupted(): Promise<Session[]>;
+  list?(): Promise<Session[]>;
+  setAnalysis?(id: string, analysis: AnalysisTicket): Promise<void>;
 }
 const request = <T>(value: IDBRequest<T>) => new Promise<T>((resolve, reject) => { value.onsuccess = () => resolve(value.result); value.onerror = () => reject(value.error); });
 function transactionDone(tx: IDBTransaction) {
   return new Promise<void>((resolve, reject) => { tx.oncomplete = () => resolve(); tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error ?? new Error('保存が中断されました')); });
 }
-export async function openBrowserDriver(): Promise<WorkDriver> {
-  const opening = indexedDB.open('piiin-work-v1', 1);
+export async function openBrowserDriver(space = 'legacy'): Promise<WorkDriver> {
+  const opening = indexedDB.open(scopedDatabase('piiin-work-v1', space), 1);
   opening.onupgradeneeded = () => {
     const db = opening.result;
     db.createObjectStore('meta');
@@ -22,6 +26,13 @@ export async function openBrowserDriver(): Promise<WorkDriver> {
   const db = await request(opening);
   db.onversionchange = () => db.close();
   return {
+    async list() { return request<Session[]>(db.transaction('sessions').objectStore('sessions').getAll()); },
+    async setAnalysis(id, analysis) {
+      const tx = db.transaction('sessions', 'readwrite'); const done = transactionDone(tx); const store = tx.objectStore('sessions');
+      const value = await request<Session | undefined>(store.get(id));
+      if (!value) { tx.abort(); await done; return; }
+      store.put({ ...value, analysis }); await done;
+    },
     async collection() { return await request(db.transaction('meta').objectStore('meta').get('collection')) ?? null; },
     async session(id) { return await request(db.transaction('sessions').objectStore('sessions').get(id)) ?? null; },
     async checkpoint(session) {
@@ -66,9 +77,19 @@ function legacySession(value: Record<string, unknown>, id: string): Session {
     lastTickMs: null, wasPaused: false, lastSampleFocusMs: -1000, tracking: null };
 }
 export class WorkRepository {
-  constructor(private driver: WorkDriver) {}
+  constructor(private driver: WorkDriver, private migrateLegacy = true, private owner?: string) {}
+  private visible(session: Session) { return !this.owner || !session.analysis || session.analysis.ownerId === this.owner; }
+  private async visibleCollection(value: Collection) {
+    const cards=[];
+    for(const card of value.cards) { const session=await this.driver.session(card.measurementId);if(!session||this.visible(session))cards.push(card); }
+    return { ...value,cards,selectedId:cards.some(c=>c.characterId===value.selectedId)?value.selectedId:null };
+  }
   async initialize() {
     let collection = await this.driver.collection();
+    if (!collection && !this.migrateLegacy) {
+      await this.driver.compareAndSet(null, { ...EMPTY_COLLECTION, migrated: true });
+      collection = await this.driver.collection();
+    }
     if (!collection) {
       const rawCards = readLegacy('posture.characters.acquired.v1');
       const journal = readLegacy('posture.mobile.measurement-journal.v1');
@@ -93,15 +114,21 @@ export class WorkRepository {
       collection = await this.driver.collection();
     }
     if (!collection) throw new Error('保存先を準備できませんでした');
-    return collection;
+    return this.visibleCollection(collection);
   }
   async recover() {
     const interrupted = await this.driver.interrupted();
     for (const session of interrupted) await this.driver.checkpoint({ ...session, status: 'interrupted', endedAt: new Date().toISOString(), rewardQualified: false, lastTickMs: null });
     return interrupted.length;
   }
-  async collection() { const value = await this.driver.collection(); if (!value) throw new Error('コレクションを読み込めません'); return value; }
-  session(id: string) { return this.driver.session(id); }
+  async collection() { const value = await this.driver.collection(); if (!value) throw new Error('コレクションを読み込めません'); return this.visibleCollection(value); }
+  async list() { if (!this.driver.list) throw new Error('測定一覧を読み込めません'); return (await this.driver.list()).filter(s=>this.visible(s)); }
+  async setAnalysis(id: string, analysis: AnalysisTicket) {
+    if (!this.driver.setAnalysis) throw new Error('送信状態を保存できません');
+    const record=await this.session(id);if(!record || (this.owner && analysis.ownerId!==this.owner))throw new Error('他のアカウントの記録は変更できません。');
+    return this.driver.setAnalysis(id, analysis);
+  }
+  async session(id: string) { const value=await this.driver.session(id);return value&&this.visible(value)?value:null; }
   checkpoint(session: Session) { return this.driver.checkpoint(structuredClone(session)); }
   private async update(change: (value: Collection) => Collection) {
     for (let attempt = 0; attempt < 8; attempt++) {
@@ -112,7 +139,8 @@ export class WorkRepository {
   }
   select(id: string) { return this.update(value => ({ ...value, selectedId: value.cards.some(card => card.characterId === id) ? id : value.selectedId })); }
   timer(timer: TimerSettings | null) { return this.update(value => ({ ...value, timer: timer && normalizeTimer(timer) })); }
-  nextReward(id: string | null, catalogIds: string[]) {
+  nextReward(id: string | null, catalogIds: string[], developerAuthenticated=false) {
+    if(!developerAuthenticated)return Promise.reject(new Error('開発者ログインが必要です。'));
     return this.update(value => {
       if (id !== null && (!catalogIds.includes(id) || value.cards.some(card => card.characterId === id))) {
         throw new Error('未獲得のピンアナゴを選んでください。');
@@ -121,13 +149,13 @@ export class WorkRepository {
     });
   }
   reset() { return this.update(value => ({ ...value, generation: value.generation + 1, cards: [], selectedId: null, nextRewardId: null })); }
-  async finish(input: Session, catalogIds: string[]) {
+  async finish(input: Session, catalogIds: string[], developerAuthenticated=false) {
     for (let attempt = 0; attempt < 8; attempt++) {
       const current = await this.collection(); const existing = await this.driver.session(input.id);
       if (existing && ['completed', 'interrupted'].includes(existing.status) && !existing.legacy) return { session: existing, collection: current };
       const session = structuredClone(input); const next = structuredClone(current); next.revision += 1;
       if (session.rewardQualified && session.generation === current.generation) {
-        const requested = current.nextRewardId;
+        const requested = developerAuthenticated ? current.nextRewardId : null;
         const available = requested && catalogIds.includes(requested) && !current.cards.some(card => card.characterId === requested);
         session.acquiredCharacterId = available ? requested : chooseReward(current.cards, catalogIds);
         // Consume the choice in the same commit as the reward, never on a failed save.

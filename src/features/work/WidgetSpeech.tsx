@@ -1,7 +1,9 @@
+import { t, useAppLanguage } from "../i18n";
 import { useEffect, useState } from 'react';
 import { speechMotion, type SpeechEvent } from '../posture/feedbackSpeech';
 
 export function WidgetSpeech({ event, reduced, bad = false }: { event: SpeechEvent | null; reduced: boolean; bad?: boolean }) {
+  useAppLanguage();
   const [shown, setShown] = useState({ event, bad, enteredAt: Date.now() });
   const [leavingAt, setLeavingAt] = useState<number | null>(null);
   const [now, setNow] = useState(Date.now);
@@ -32,9 +34,9 @@ export function WidgetSpeech({ event, reduced, bad = false }: { event: SpeechEve
   const motion = speechMotion(shown.event ? { ...shown.event, startedAt: Math.max(shown.event.startedAt, shown.enteredAt) } : null, leavingAt ?? now, reduced, shown.bad);
   const leaving = leavingAt !== null;
   return <>
-    <span className="work-widget-announcement" role="status" aria-atomic="true">{motion.visible && !leaving ? shown.event?.text : ''}</span>
+    <span className="work-widget-announcement" role="status" aria-atomic="true">{motion.visible && !leaving ? t(shown.event?.text ?? '') : ''}</span>
     {motion.visible && shown.event && <div className="work-widget-speech-frame" data-speech-code={shown.event.code} aria-hidden="true">
-      <div className="work-widget-speech is-feedback" style={{ transition: leaving && !reduced ? "opacity 300ms cubic-bezier(.4,0,.2,1), transform 300ms cubic-bezier(.4,0,.2,1)" : undefined, opacity: leaving ? 0 : motion.opacity, transform: `translateY(${motion.y + (leaving ? 3 : 0)}px) rotate(${motion.angle}deg)` }}><span>{shown.event.text}</span></div>
+      <div className="work-widget-speech is-feedback" style={{ transition: leaving && !reduced ? "opacity 300ms cubic-bezier(.4,0,.2,1), transform 300ms cubic-bezier(.4,0,.2,1)" : undefined, opacity: leaving ? 0 : motion.opacity, transform: `translateY(${motion.y + (leaving ? 3 : 0)}px) rotate(${motion.angle}deg)` }}><span>{t(shown.event.text)}</span></div>
     </div>}
   </>;
 }

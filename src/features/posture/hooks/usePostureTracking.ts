@@ -1,3 +1,4 @@
+import { normalizeJudgment, type JudgmentSettings } from '../judgment';
 import { resetLandmarkTracking } from "../engine.state";
 import { VideoFrameGate } from "../videoFrameGate";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -18,8 +19,8 @@ import {
 } from "../constants";
 import {
   createPostureEngineState,
-  evaluatePostureFrame,
 } from "../engine";
+import { evaluatePostureObservation } from "../observation";
 import {
   EMPTY_POSTURE_EXPERIMENT,
   POSTURE_SPEC,
@@ -189,6 +190,7 @@ function stopMediaStream(stream: MediaStream | null) {
 }
 
 type UsePostureTrackingOptions = {
+  judgment?: JudgmentSettings;
   enabled?: boolean;
   overlayEnabled?: boolean;
   paused?: boolean;
@@ -197,6 +199,8 @@ type UsePostureTrackingOptions = {
 
 export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
   const { enabled = true, overlayEnabled = true, paused = false, captureHeight = 720 } = options;
+  const judgmentRef = useRef(normalizeJudgment(options.judgment));
+  judgmentRef.current = normalizeJudgment(options.judgment);
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const trackingTimerRef = useRef<number | null>(null);
@@ -541,16 +545,17 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
             ? poseResult.worldLandmarks[0]
             : null;
 
-        const { state, result } = evaluatePostureFrame(
+        const { state, result, feedback } = evaluatePostureObservation(
           engineStateRef.current,
+          feedbackRef.current,
           now,
           imageLandmarks,
           worldLandmarks,
+          { width: video.videoWidth, height: video.videoHeight,
+            id: track.getSettings().deviceId ?? 'camera' },
+          judgmentRef.current,
         );
         engineStateRef.current = state;
-        const feedback = feedbackRef.current.observe(imageLandmarks, worldLandmarks,
-          video.videoWidth, video.videoHeight, streamRef.current?.getVideoTracks()[0]?.getSettings().deviceId ?? 'camera',
-          result.baselineReady, result.features !== null && (!result.baselineReady || result.eval.qualityOk), now);
         experimentSmoothingRef.current = appendLimited(
           experimentSmoothingRef.current,
           result.experiment,

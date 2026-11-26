@@ -1,3 +1,4 @@
+import { scopedKey } from '../../accounts/localScope';
 import {
   BUILTIN_SOUND_OPTIONS,
   DEFAULT_SOUND_SETTINGS,
@@ -21,7 +22,7 @@ function resolvePreferredSelectedSound(availableSounds: Set<string>): string {
 
 export function loadSoundSettings(): SoundSettings {
   try {
-    const raw = window.localStorage.getItem(SOUND_SETTINGS_STORAGE_KEY);
+    const raw = window.localStorage.getItem(scopedKey(SOUND_SETTINGS_STORAGE_KEY));
     if (!raw) {
       return DEFAULT_SOUND_SETTINGS;
     }
@@ -68,8 +69,8 @@ export function loadSoundSettings(): SoundSettings {
 
 export function saveSoundSettings(settings: SoundSettings) {
   try {
-    window.localStorage.setItem(
-      SOUND_SETTINGS_STORAGE_KEY,
+    window.localStorage.setItem(scopedKey(
+      SOUND_SETTINGS_STORAGE_KEY),
       JSON.stringify({
         ...settings,
         customSounds: Array.from(new Set(settings.customSounds)).slice(0, 10),

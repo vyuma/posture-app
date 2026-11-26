@@ -1,13 +1,12 @@
 /* Figma widget coordinates are relative to the unchanged 178×65 timer bar. */
-.work-widget{position:fixed;right:60px;bottom:24px;width:178px;height:65px;z-index:50;pointer-events:none;isolation:isolate;font-family:"SF Pro",-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;color:#111f6e;--widget-bar:#ecf8fc;--widget-progress:#13a2d7}
+.work-widget{position:fixed;right:60px;bottom:24px;width:178px;height:65px;z-index:50;pointer-events:none;isolation:isolate;font-family:"SF Pro",-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;color:#6e4211;--widget-bar:#f6edd8;--widget-progress:#f78000}
 .work-widget.is-native{right:calc((100vw - 178px)/2);bottom:36px}
-.work-widget.is-rest{--widget-bar:#f6edd8;--widget-progress:#f78000;color:#6e4211}
 .work-widget-character{position:absolute;inset:0;pointer-events:none}
-/* Clip the artwork first, then cast its shadow outside the mask. */
-.work-widget-character-shadow{position:absolute;inset:0;pointer-events:none;filter:drop-shadow(calc(3.4049px + var(--widget-growth)*9.4946px) calc(3.4049px + var(--widget-growth)*9.4946px) calc(6.8098px + var(--widget-growth)*18.9891px) #00000059)}
-.work-widget-mask{position:absolute;left:var(--widget-maskLeft);top:var(--widget-maskTop);width:var(--widget-maskWidth);height:var(--widget-maskHeight);overflow:hidden;pointer-events:auto;cursor:grab;touch-action:none}
+/* Give WebKit the full character bounds before filtering the clipped artwork. */
+.work-widget-character-shadow{position:absolute;left:var(--widget-maskLeft);top:var(--widget-maskTop);width:var(--widget-maskWidth);height:var(--widget-maskHeight);pointer-events:none;filter:drop-shadow(calc(3.4049px + var(--widget-growth)*9.4946px) calc(3.4049px + var(--widget-growth)*9.4946px) calc(6.8098px + var(--widget-growth)*18.9891px) #00000059)}
+.work-widget-mask{position:absolute;inset:0;overflow:hidden;pointer-events:auto;cursor:grab;touch-action:none}
 .work-widget-mask:active{cursor:grabbing}
-.work-widget.is-rest .work-widget-mask{left:-60px;width:238px}
+.work-widget.is-rest .work-widget-character-shadow{left:-60px;width:238px}
 .work-widget-shake{position:absolute;inset:0;transform-origin:calc(88px - var(--widget-maskLeft)) 100%}
 .work-widget-rig{position:absolute;left:calc(var(--widget-rigLeft) - var(--widget-maskLeft));top:calc(var(--widget-rigTop) - var(--widget-maskTop));width:var(--widget-rigWidth);height:var(--widget-rigHeight)}
 .work-widget.is-rest .work-widget-rig{left:calc(var(--widget-rigLeft) + 60px)}
@@ -35,8 +34,8 @@
 @keyframes widget-angry-shake{0%,100%{transform:translateX(0) rotate(0deg)}12%{transform:translateX(-2px) rotate(-1.2deg)}26%{transform:translateX(2px) rotate(1.6deg)}40%{transform:translateX(-2px) rotate(-1.6deg)}55%{transform:translateX(2px) rotate(1.3deg)}70%{transform:translateX(-1px) rotate(-.9deg)}84%{transform:translateX(1px) rotate(.6deg)}}
 @media(prefers-reduced-motion:reduce){.work-widget *{animation:none!important;transition:none!important}}
 
-.work-widget-mask,.work-widget-rig,.work-widget-speech,.work-widget-speech-frame{transition:width .6s cubic-bezier(.2,.75,.34,.94),height .6s cubic-bezier(.2,.75,.34,.94),left .6s cubic-bezier(.2,.75,.34,.94),top .6s cubic-bezier(.2,.75,.34,.94)}
-.work-widget.is-bad .work-widget-mask,.work-widget.is-bad .work-widget-rig,.work-widget.is-bad .work-widget-speech,.work-widget.is-bad .work-widget-speech-frame{transition-duration:60ms;transition-timing-function:linear}
+.work-widget-character-shadow,.work-widget-rig,.work-widget-speech,.work-widget-speech-frame{transition:width .6s cubic-bezier(.2,.75,.34,.94),height .6s cubic-bezier(.2,.75,.34,.94),left .6s cubic-bezier(.2,.75,.34,.94),top .6s cubic-bezier(.2,.75,.34,.94)}
+.work-widget.is-bad .work-widget-character-shadow,.work-widget.is-bad .work-widget-rig,.work-widget.is-bad .work-widget-speech,.work-widget.is-bad .work-widget-speech-frame{transition-duration:60ms;transition-timing-function:linear}
 
 .work-widget.is-rest .work-widget-time{left:18px;width:85px}
 
@@ -45,3 +44,9 @@
 .work-widget-speech-frame .work-widget-speech{inset:0;transform-origin:50% 85%;transition:none}
 .work-widget-speech.is-feedback span{animation:none}
 .work-widget-announcement{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+
+/* The character/speech is the drag handle; timer controls remain ordinary buttons. */
+.work-widget:not(.is-native) .work-widget-character{touch-action:none;user-select:none;-webkit-user-select:none}
+.work-widget:not(.is-native) .work-widget-character:focus-visible{outline:none}
+.work-widget:not(.is-native) .work-widget-character:focus-visible .work-widget-mask{outline:2px solid #6e4211;outline-offset:3px;border-radius:12px}
+.work-widget.is-dragging .work-widget-mask,.work-widget.is-dragging .work-widget-speech-frame,.work-widget.is-dragging .work-widget-speech{cursor:grabbing}
