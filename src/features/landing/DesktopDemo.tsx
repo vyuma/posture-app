@@ -1,8 +1,10 @@
+import { t, useAppLanguage } from "../i18n";
 import { useEffect, useRef, useState } from "react";
 import { LandingPetDemo } from "./LandingPetDemo";
 
 /** Figma's desktop assets with the same pose transitions used by the product. */
 export function DesktopDemo({ className = "" }: { className?: string }) {
+  useAppLanguage();
   const screenRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(false);
 
@@ -34,7 +36,7 @@ export function DesktopDemo({ className = "" }: { className?: string }) {
   }, []);
 
   return (
-    <div className={`lp-desktop-demo ${className}`} role="group" aria-label="ポモドーロタイマー付きのピンアナゴをデスクトップに表示した例。">
+    <div className={`lp-desktop-demo ${className}`} role="group" aria-label={t("ポモドーロタイマー付きのピンアナゴをデスクトップに表示した例。")}>
       <img className="lp-desktop-shell" src="/lp/hero-macbook.png" alt="" draggable={false} />
       <div className="lp-desktop-screen" ref={screenRef}>
         <div className="lp-desktop-surface">

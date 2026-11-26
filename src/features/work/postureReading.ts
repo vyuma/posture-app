@@ -1,4 +1,5 @@
 import type { RuntimeSnapshot } from '../posture/types';
+import { REASONS, type Evidence } from '../posture/feedback';
 import type { Reading } from './model';
 
 export type PostureSample = Pick<RuntimeSnapshot, 'observedAtMs' | 'trackingIntervalMs' | 'qualityOk' | 'baselineReady' | 'postureState' | 'trackingStatus' | 'presentationPosture'>;
@@ -6,8 +7,16 @@ export const observationMaxAge = (s: PostureSample) => Math.max(1500, s.tracking
 export function observationFresh(s: PostureSample, now: number) {
   return s.baselineReady && s.observedAtMs !== undefined && now >= s.observedAtMs && now - s.observedAtMs <= observationMaxAge(s);
 }
-export function measurementReading(s: PostureSample & Pick<RuntimeSnapshot, 'score'>, now: number): Reading {
-  return { valid: observationFresh(s, now) && s.qualityOk, good: s.postureState === 'good', deviation: s.score };
+export function measurementReading(s: PostureSample & Pick<RuntimeSnapshot, 'score' | 'feedback'>, now: number): Reading {
+  const valid = observationFresh(s, now) && s.qualityOk;
+  const feedback = valid && s.feedback?.baselineReady && s.feedback.available ? {
+    version: 2 as const, observedAtMs: s.observedAtMs!, directions: { ...s.feedback.directions },
+    evidence: Object.fromEntries(REASONS.map(reason => {
+      const value = s.feedback!.evidence[reason];
+      return [reason, value !== null && Number.isFinite(value) ? Math.round(Math.min(100, Math.max(0, value)) * 100) / 100 : null];
+    })) as Evidence,
+  } : undefined;
+  return { valid, good: s.postureState === 'good', deviation: s.score, ...(feedback ? { feedback } : {}) };
 }
 export function petPosture(s: PostureSample, now: number) {
   if (!observationFresh(s, now)) return 'hold';

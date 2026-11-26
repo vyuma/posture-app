@@ -1,3 +1,4 @@
+import { t, useAppLanguage } from "../i18n";
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useAccounts } from './AccountBoundary';
 import { accountRequest } from './api';
@@ -6,6 +7,7 @@ import type { SexAtBirth } from '../../../shared/account';
 import { getAppLanguage } from './language';
 import './auth-page.css';
 export function ProfileSurvey({editing=false,onComplete}:{editing?:boolean;onComplete:()=>void}) {
+  useAppLanguage();
   const account=useAccounts(),initial=account.info?.profile,owner=account.state.ownerId;
   const [age,setAge]=useState(initial?.ageYears?.toString()??''),[sex,setSex]=useState<SexAtBirth|''>(initial?.sexAtBirth??'');
   const [ageGoogle,setAgeGoogle]=useState(false),[sexGoogle,setSexGoogle]=useState(false),[busy,setBusy]=useState(false),[error,setError]=useState('');
@@ -30,12 +32,12 @@ export function ProfileSurvey({editing=false,onComplete}:{editing?:boolean;onCom
       await account.refresh();onComplete();
     }catch(e){setError(e instanceof Error?e.message:String(e));}finally{setBusy(false);}
   }
-  return <Dialog title="プロフィール" className="account-consent-dialog" dismissible={editing&&!busy} onClose={onComplete}>
-    <h2>プロフィール</h2><form className="profile-form" onSubmit={(e:FormEvent)=>{e.preventDefault();void save(false);}}>
-      <label><span>年齢（満年齢）</span><input type="number" inputMode="numeric" min={0} max={120} step={1} value={age} onChange={e=>{dirty.current.age=true;setAgeGoogle(false);setAge(e.target.value);}} /></label>
-      <label><span>出生時の性別</span><select value={sex} onChange={e=>{dirty.current.sex=true;setSexGoogle(false);setSex(e.target.value as SexAtBirth|'');}}><option value="">回答しない</option><option value="female">女性</option><option value="male">男性</option><option value="other">その他</option></select></label>
-      {error&&<p role="alert">{error}</p>}
-      <div className="work-dialog-actions"><button className="work-button blue" disabled={busy} type="submit">{busy?'保存中…':'保存して続ける'}</button><button className="work-button white" disabled={busy} type="button" onClick={()=>void save(true)}>{editing?'回答を削除':'スキップ'}</button></div>
+  return <Dialog title={t("プロフィール")} className="account-consent-dialog" dismissible={editing&&!busy} onClose={onComplete}>
+    <h2>{t("プロフィール")}</h2><form className="profile-form" onSubmit={(e:FormEvent)=>{e.preventDefault();void save(false);}}>
+      <label><span>{t("年齢（満年齢）")}</span><input type="number" inputMode="numeric" min={0} max={120} step={1} value={age} onChange={e=>{dirty.current.age=true;setAgeGoogle(false);setAge(e.target.value);}} /></label>
+      <label><span>{t("出生時の性別")}</span><select value={sex} onChange={e=>{dirty.current.sex=true;setSexGoogle(false);setSex(e.target.value as SexAtBirth|'');}}><option value="">{t("回答しない")}</option><option value="female">{t("女性")}</option><option value="male">{t("男性")}</option><option value="other">{t("その他")}</option></select></label>
+      {error&&<p role="alert">{t(error)}</p>}
+      <div className="work-dialog-actions"><button className="work-button blue" disabled={busy} type="submit">{busy?t("保存中…"):t("保存して続ける")}</button><button className="work-button white" disabled={busy} type="button" onClick={()=>void save(true)}>{editing?t("回答を削除"):t("スキップ")}</button></div>
     </form>
   </Dialog>;
 }

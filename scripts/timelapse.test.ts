@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { IDBFactory } from 'fake-indexeddb';
-import { clampRect, eventAt, petEvent, replayPet, SPEEDS, type Clip } from '../src/features/timelapse/model';
+import { clampRect, eventAt, petEvent, replayPet, type Clip } from '../src/features/timelapse/model';
 import { recordingAllowed } from '../src/features/timelapse/recorder';
 import { openBrowserTimelapse } from '../src/features/timelapse/storage';
 import type { WidgetState } from '../src/features/work/Widget';
@@ -25,7 +25,6 @@ describe('timelapse time and historical pet', () => {
     expect(replayPet(events, 5)?.cycle).toBe(2);
     expect(replayPet(events, 2.5)?.frame).toBe(198); // Seeking backward doesn't accumulate state.
     expect(eventAt(events, -1)).toBeUndefined();
-    expect(SPEEDS).toEqual([1, 2, 4, 6, 8, 16]);
   });
   test('same-time boundary uses resumed interval; reduced motion preserves the recorded timer', () => {
     const first = petEvent(0, widget);

@@ -36,6 +36,6 @@ export function widgetMessage(pose: WidgetPose, growth: number) {
 
 export function speechGeometry(g: ReturnType<typeof widgetGeometry>, text: string) {
   const count = Array.from(text).length;
-  const width = Math.max(g.bubbleWidth, count * g.fontSize + Math.max(0, count - 1) * g.tracking + 24);
+  const width = Math.max(g.bubbleWidth, Array.from(text).reduce((width, char) => width + (/\s/.test(char) ? .3 : /[\x00-\x7f]/.test(char) ? .65 : 1), 0) * g.fontSize + Math.max(0, count - 1) * g.tracking + 24);
   return { ...g, bubbleLeft: g.bubbleLeft - (width - g.bubbleWidth) / 2, bubbleWidth: width };
 }

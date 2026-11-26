@@ -7,7 +7,6 @@ export type Rect = { x: number; y: number; width: number; height: number };
 export type TimelapseSettings = { enabled: boolean; quality: 720 | 1080; includePet: boolean; includeScene: boolean; camera: Rect; pet: Rect };
 export const DEFAULT_TIMELAPSE: TimelapseSettings = { enabled: false, quality: 720, includePet: false, includeScene: false,
   camera: { x: 0, y: 0, width: 1, height: 1 }, pet: { x: .72, y: .25, width: .24, height: .6 } };
-export const SPEEDS = [1, 2, 4, 6, 8, 16] as const;
 export const ASSET_VERSION = 'widget-states-v2';
 export type Pose = WidgetPose;
 export type PetEvent = { widgetVersion?: 2; feedbackVersion?: 1; speech?: SpeechEvent | null; at: number; pose: Pose; from: Pose; transitionAt: number; badAt: number | null; remainingMs: number; cycle: number; cycles: number; durationMs: number; visible: boolean; reduced: boolean };

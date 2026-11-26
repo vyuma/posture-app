@@ -1,0 +1,62 @@
+/* Figma 4006:1866; native radios preserve keyboard navigation and selection. */
+.work-app main.work-screen.work-timer-screen{padding-top:171px}
+.work-app .work-screen.work-timer-screen .work-timer-panel{padding:59px 111px 34px;min-height:694px}
+.work-app .work-screen.work-timer-screen .work-timer-heading{display:flex;align-items:center;gap:31px;margin-bottom:39px;text-align:left}
+.work-app .work-screen.work-timer-screen .work-timer-heading h1{font-size:35.1222px;line-height:42px;margin:0;font-weight:700}
+.work-timer-heading p{margin:0;font-size:20px;line-height:24px;font-weight:510;color:white}
+.work-judgment-controls{display:grid;grid-template-columns:528fr 531fr;gap:23px;margin:0 4px 33px 0}
+.work-judgment-controls fieldset{position:relative;display:flex;align-items:center;gap:18px;min-width:0;height:60px;margin:0;padding:10px 11px 10px 36px;border:0;border-radius:49px;background:#fff;box-shadow:0 0 5.2px #00000040}
+.work-judgment-controls legend{float:left;padding:0;white-space:nowrap;color:#34add5;font-size:22px;line-height:26px;font-weight:700}
+.work-judgment-controls fieldset>div{display:flex;flex:1;min-width:0;gap:2px}
+.work-judgment-controls label{position:relative;display:flex;flex:1;align-items:center;justify-content:center;min-width:0;min-height:39px;cursor:pointer}
+.work-judgment-controls input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer}
+.work-judgment-controls span{display:flex;align-items:center;justify-content:center;width:100%;min-height:39px;padding:4px 10px;border-radius:55px;color:#767676;font-size:20px;line-height:24px;font-weight:700;text-align:center;overflow-wrap:anywhere}
+.work-judgment-controls input:checked+span{background:#34add5;color:#fff}
+.work-judgment-controls input:focus-visible+span{outline:3px solid #6e4211;outline-offset:3px}
+.work-monitor-choice span{font-size:16px;background:#e6e6e6;color:#111}
+.work-app .work-screen.work-timer-screen .work-timer-controls{gap:28px;margin-inline:5px 4px}
+.work-app .work-screen.work-timer-screen .work-timer-control{height:257px;padding:32px 46.5px 23px}
+.work-app .work-screen.work-timer-screen .work-timer-control .work-timer-range{margin-top:17px}
+.work-app .work-screen.work-timer-screen .work-timer-panel>.work-button{margin:44px auto 17.5px}
+.work-app .work-screen.work-timer-screen .work-steppers button{padding:0;background:transparent}
+.work-timer-screen .work-steppers img{display:block;width:100%;height:100%}
+@media(min-width:1051px) and (min-aspect-ratio:1/1){
+ .work-app main.work-screen.work-timer-screen{padding-top:calc(171 * var(--scene-px))}
+ .work-app .work-screen.work-timer-screen .work-timer-panel{padding:calc(59 * var(--scene-px)) calc(111 * var(--scene-px)) calc(34 * var(--scene-px));min-height:calc(694 * var(--scene-px))}
+ .work-app .work-screen.work-timer-screen .work-timer-heading{gap:calc(31 * var(--scene-px));margin-bottom:calc(39 * var(--scene-px))}
+ .work-app .work-screen.work-timer-screen .work-timer-heading h1{font-size:max(24px,calc(35.1222 * var(--scene-px)));line-height:calc(42 * var(--scene-px))}
+ .work-timer-heading p{font-size:max(16px,calc(20 * var(--scene-px)));line-height:1.2}
+ .work-app .work-screen.work-timer-screen>.work-brand{left:calc(80 * var(--scene-px))}
+ .work-app .work-screen.work-timer-screen .work-number{margin-top:calc(7.25 * var(--scene-px))}
+ .work-app .work-screen.work-timer-screen .work-steppers{margin-top:calc(1.33 * var(--scene-px))}
+ .work-judgment-controls{gap:calc(23 * var(--scene-px));margin-bottom:calc(33 * var(--scene-px))}
+ .work-judgment-controls fieldset{height:max(60px,calc(60 * var(--scene-px)));gap:calc(18 * var(--scene-px));padding-left:calc(36 * var(--scene-px))}
+ .work-judgment-controls legend{font-size:max(16px,calc(22 * var(--scene-px)))}
+ .work-judgment-controls span{font-size:max(16px,calc(20 * var(--scene-px)))}
+ .work-monitor-choice span{font-size:16px}
+ .work-app .work-screen.work-timer-screen .work-timer-controls{gap:calc(28 * var(--scene-px));margin-inline:calc(5 * var(--scene-px)) calc(4 * var(--scene-px))}
+ .work-app .work-screen.work-timer-screen .work-timer-control{height:calc(257 * var(--scene-px));padding:calc(32 * var(--scene-px)) calc(46.5 * var(--scene-px)) calc(23 * var(--scene-px))}
+ .work-app .work-screen.work-timer-screen .work-timer-control .work-timer-range{margin-top:calc(20.33 * var(--scene-px))}
+ .work-app .work-screen.work-timer-screen .work-timer-panel>.work-button{margin-top:calc(44 * var(--scene-px))}
+}
+@media(max-width:1050px),(max-aspect-ratio:1/1){
+ .work-app main.work-screen.work-timer-screen{padding:120px 20px 40px}
+ .work-app .work-screen.work-timer-screen .work-timer-panel{padding:28px 24px;min-height:0}
+ .work-app .work-screen.work-timer-screen .work-timer-heading{flex-wrap:wrap;gap:10px 24px;margin-bottom:24px}
+ .work-app .work-screen.work-timer-screen .work-timer-heading h1{font-size:28px}
+ .work-timer-heading p{font-size:16px}
+ .work-judgment-controls{grid-template-columns:1fr;gap:14px;margin:0 0 24px}
+ .work-judgment-controls fieldset{padding-left:24px}
+ .work-judgment-controls legend{font-size:18px}
+ .work-judgment-controls span{font-size:16px;min-height:44px}
+ .work-app .work-screen.work-timer-screen .work-timer-control{height:auto;padding:24px 20px}
+ .work-app .work-screen.work-timer-screen .work-timer-panel>.work-button{margin-top:28px}
+}
+@media(max-width:600px){
+ .work-app main.work-screen.work-timer-screen{padding:110px 16px 32px}
+ .work-app .work-screen.work-timer-screen .work-timer-panel{padding:24px 16px}
+ .work-judgment-controls fieldset{padding:10px;gap:6px;flex-wrap:wrap;height:auto;border-radius:24px}
+ .work-judgment-controls legend{float:left;width:100%;padding:6px 8px}
+ .work-judgment-controls fieldset>div{flex-basis:100%}
+ .work-judgment-controls span{padding:6px}
+}

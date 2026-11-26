@@ -2,13 +2,15 @@ import AppKit
 import QuartzCore
 
 struct PetSpeech: Decodable {
-    let id: String, code: String, text: String
+    let id: String, code: String
+    var text: String
     var startedAt: Double
     let endsAt: Double
     let whileBad: Bool?
 }
 struct PetState: Decodable {
     let sessionId: String
+    let language: String?
     let remainingMs: Double, durationMs: Double
     let phase: String
     let paused: Bool, bad: Bool
@@ -43,7 +45,10 @@ struct PetGeometry {
         let tracking = pose == "rest" ? -0.308514 : 0.691486 + 0.360794*g
         if state.feedbackVersion == 1 {
             let count = Double(state.speech?.text.unicodeScalars.count ?? 0)
-            let next = max(width, count*font + max(0,count-1)*tracking + 24)
+            let textWidth = (state.speech?.text ?? "").unicodeScalars.reduce(0.0) { total, char in
+                total + (CharacterSet.whitespaces.contains(char) ? 0.3 : char.isASCII ? 0.65 : 1)
+            }
+            let next = max(width, textWidth*font + max(0,count-1)*tracking + 24)
             left -= (next - width)/2; width = next
         }
         return Self(values: [g, 860*scale, 1280*scale, 88-650*scale, (pose == "paused" ? -149 : -145)-496.4*g,
@@ -142,9 +147,23 @@ public final class PetWidget: NSView {
             rig.setPose(next.pose, reducedMotion: fresh || reduced)
         }
         speechView.update(next.speech, bad: next.pose == "bad", now: now, reduced: reduced)
-        toggleButton.setAccessibilityLabel(next.paused ? "再開" : "一時停止")
-        let context = next.paused ? "一時停止中" : next.phase == "rest" ? "休憩中" : "集中中"
-        timeButton.setAccessibilityLabel("\(context)、残り\(timeLabel(next))、\(next.cycle) / \(next.cycles) サイクル。メイン画面を開く")
+        switch next.language {
+        case "ko":
+            toggleButton.setAccessibilityLabel(next.paused ? "재개" : "일시 정지")
+            stopButton.setAccessibilityLabel("측정 종료")
+            let context = next.paused ? "일시 정지 중" : next.phase == "rest" ? "휴식 중" : "집중 중"
+            timeButton.setAccessibilityLabel("\(context), 남은 시간 \(timeLabel(next)), \(next.cycle) / \(next.cycles) 사이클. 메인 화면 열기")
+        case "en":
+            toggleButton.setAccessibilityLabel(next.paused ? "Resume" : "Pause")
+            stopButton.setAccessibilityLabel("Finish session")
+            let context = next.paused ? "Paused" : next.phase == "rest" ? "Resting" : "Focusing"
+            timeButton.setAccessibilityLabel("\(context), \(timeLabel(next)) remaining, cycle \(next.cycle) of \(next.cycles). Open main window")
+        default:
+            toggleButton.setAccessibilityLabel(next.paused ? "再開" : "一時停止")
+            stopButton.setAccessibilityLabel("測定終了")
+            let context = next.paused ? "一時停止中" : next.phase == "rest" ? "休憩中" : "集中中"
+            timeButton.setAccessibilityLabel("\(context)、残り\(timeLabel(next))、\(next.cycle) / \(next.cycles) サイクル。メイン画面を開く")
+        }
         if timer == nil { let t = Timer(timeInterval: 1/60, repeats: true) { [weak self] _ in self?.tick() }; RunLoop.main.add(t,forMode: .common); timer = t }
         bar.state = next; bar.needsDisplay = true
         for button in [timeButton,toggleButton,stopButton] { button.needsDisplay = true }
@@ -208,7 +227,7 @@ public final class PetWidget: NSView {
         guard let state else { return }
         let text = timeLabel(state), long = text.count > 5
         let font = NSFont.systemFont(ofSize:long ? 22 : 27.6279,weight:.bold)
-        let line = NSAttributedString(string:text, attributes:[.font:font,.foregroundColor:color(state.pose == "rest" ? 0x6e4211 : 0x111f6e),.kern:long ? 0.2 : 1.15116])
+        let line = NSAttributedString(string:text, attributes:[.font:font,.foregroundColor:color(0x6e4211),.kern:long ? 0.2 : 1.15116])
         let size = line.size(); ctx.saveGState(); ctx.scaleBy(x:min(1,rect.width/max(1,size.width)),y:1)
         line.draw(at:CGPoint(x:0,y:(rect.height-size.height)/2)); ctx.restoreGState()
     }
@@ -240,11 +259,10 @@ final class BarView: FlippedView {
     var state: PetState?
     override func draw(_ dirtyRect: NSRect) {
         guard let state, let ctx=NSGraphicsContext.current?.cgContext else { return }
-        let rest=state.pose == "rest"
         ctx.saveGState()
-        color(rest ? 0xf6edd8 : 0xecf8fc).setFill();NSBezierPath(roundedRect:bounds,xRadius:32.5,yRadius:32.5).fill();ctx.restoreGState()
+        color(0xf6edd8).setFill();NSBezierPath(roundedRect:bounds,xRadius:32.5,yRadius:32.5).fill();ctx.restoreGState()
         color(0xffffff).setFill();NSBezierPath(roundedRect:NSRect(x:15,y:46,width:148,height:8),xRadius:4,yRadius:4).fill()
-        color(rest ? 0xf78000 : 0x13a2d7).setFill();NSBezierPath(roundedRect:NSRect(x:15,y:46,width:148*clamp(state.remainingMs/max(1,state.durationMs)),height:8),xRadius:4,yRadius:4).fill()
+        color(0xf78000).setFill();NSBezierPath(roundedRect:NSRect(x:15,y:46,width:148*clamp(state.remainingMs/max(1,state.durationMs)),height:8),xRadius:4,yRadius:4).fill()
     }
 }
 final class SpeechView: FlippedView {
@@ -255,8 +273,11 @@ final class SpeechView: FlippedView {
     func isAnimating(_ at:Double) -> Bool { leaving != nil || shown.map { ($0.whileBad == true && bad) || at < $0.endsAt } == true }
     func update(_ speech: PetSpeech?, bad: Bool, now: Double, reduced: Bool) {
         let incoming = speech?.whileBad == true && !bad && now >= (speech?.endsAt ?? 0) ? nil : speech
-        if leaving != nil, pending?.id == incoming?.id { pendingBad=bad; return }
-        if shown?.id == incoming?.id { self.bad=bad;leaving=nil;return }
+        if leaving != nil, pending?.id == incoming?.id { pending=incoming;pendingBad=bad;return }
+        if shown?.id == incoming?.id {
+            if let text=incoming?.text { shown?.text=text;setAccessibilityLabel(text) }
+            self.bad=bad;leaving=nil;return
+        }
         if reduced || shown == nil || (!(shown!.whileBad == true && self.bad) && now >= shown!.endsAt) { replace(incoming,bad:bad,now:now);return }
         pending=incoming;pendingBad=bad;leaving=now
     }

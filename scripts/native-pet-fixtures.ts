@@ -11,6 +11,12 @@ for (const pose of ['good','bad','rest','paused']) for (const height of [324,540
   if(actualPose==='rest'){geometry.maskLeft=-60;geometry.maskWidth=238;}
   cases.push({name:`${pose}/${height}/${reduced}/${now}`,state,height,reduced,now,expected:keys.map(k=>geometry[k])});
 }
+for (const [language,text] of [['ko','오른쪽 어깨가 올라갔어!'],['en','Right shoulder higher!']]) {
+  const base=cases.find(item=>item.name==='bad/870/false/7000')!;
+  const state={...base.state,language,speech:{...base.state.speech!,text}};
+  const geometry=speechGeometry(widgetGeometry('bad',1,base.height-40),text);
+  cases.push({...base,name:`localized/${language}`,state,expected:keys.map(k=>geometry[k])});
+}
 const path='src-tauri/native-pet/Tests/PiiiNPetNativeTests/Fixtures/presentation.json';
 const json=JSON.stringify(cases,null,2)+'\n';
 if(process.argv.includes('--check')) {if(readFileSync(path,'utf8')!==json)throw new Error('Native pet fixtures differ from the current web presentation contract. Regenerate and run Swift tests.');console.log(`${cases.length} native parity fixtures match the shipping web widget.`);}

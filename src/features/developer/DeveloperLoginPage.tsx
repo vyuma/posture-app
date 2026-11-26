@@ -1,3 +1,4 @@
+import { t, useAppLanguage } from "../i18n";
 import { type FormEvent, useEffect, useState } from "react";
 
 import { WEB_APP_PATH } from "../../routes";
@@ -10,6 +11,7 @@ type LoginResponse = {
 };
 
 export function DeveloperLoginPage() {
+  useAppLanguage();
   const { enabled, status, refresh } = useDeveloperAccess();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -39,18 +41,18 @@ export function DeveloperLoginPage() {
       if (!response.ok || result.authenticated !== true) {
         setErrorMessage(
           response.status === 503
-            ? "開発者ログインが設定されていません。"
-            : "ユーザーIDまたはパスワードが違います。",
+            ? t("開発者ログインが設定されていません。")
+            : t("ユーザーIDまたはパスワードが違います。"),
         );
         return;
       }
 
       const authenticated = await refresh();
       if (!authenticated) {
-        setErrorMessage("ログイン状態を確認できませんでした。");
+        setErrorMessage(t("ログイン状態を確認できませんでした。"));
       }
     } catch {
-      setErrorMessage("ログインに失敗しました。しばらくしてから再度お試しください。");
+      setErrorMessage(t("ログインに失敗しました。しばらくしてから再度お試しください。"));
     } finally {
       setIsSubmitting(false);
     }
@@ -59,23 +61,22 @@ export function DeveloperLoginPage() {
   return (
     <main className="developer-login-page">
       <section className="developer-login-card" aria-labelledby="developer-login-heading">
-        <a className="developer-login-brand" href={WEB_APP_PATH} aria-label="PiiiN ホームへ">
+        <a className="developer-login-brand" href={WEB_APP_PATH} aria-label={t("PiiiN ホームへ")}>
           PiiiN
         </a>
         <div className="developer-login-heading-group">
           <p className="developer-login-eyebrow">DEVELOPER</p>
-          <h1 id="developer-login-heading">開発者ログイン</h1>
-          <p>開発・検証用の機能を利用するにはログインしてください。</p>
+          <h1 id="developer-login-heading">{t("開発者ログイン")}</h1>
+          <p>{t("開発・検証用の機能を利用するにはログインしてください。")}</p>
         </div>
 
         {status === "checking" ? (
           <p className="developer-login-checking" role="status">
-            ログイン状態を確認しています…
-          </p>
+            {t("ログイン状態を確認しています…")}</p>
         ) : (
           <form className="developer-login-form" onSubmit={handleSubmit}>
             <label>
-              <span>ユーザーID</span>
+              <span>{t("ユーザーID")}</span>
               <input
                 name="username"
                 type="text"
@@ -87,7 +88,7 @@ export function DeveloperLoginPage() {
               />
             </label>
             <label>
-              <span>パスワード</span>
+              <span>{t("パスワード")}</span>
               <input
                 name="password"
                 type="password"
@@ -99,11 +100,11 @@ export function DeveloperLoginPage() {
             </label>
             {errorMessage ? (
               <p className="developer-login-error" role="alert">
-                {errorMessage}
+                {t(errorMessage)}
               </p>
             ) : null}
             <button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "ログイン中…" : "ログイン"}
+              {isSubmitting ? t("ログイン中…") : t("ログイン")}
             </button>
           </form>
         )}

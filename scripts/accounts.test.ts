@@ -50,3 +50,16 @@ test('People information is optional, invalid or partial values remain null, DOB
 test('24 calendar month retention clamps leap day without extending first receipt',()=>{
   expect(new Date(expiresAfter24Months(Date.parse('2024-02-29T12:00:00Z'))).toISOString()).toBe('2026-02-28T12:00:00.000Z');
 });
+
+test('judgment settings survive owner-scoped reopen and export their calibration rule only',async()=>{
+  const a=new WorkRepository(await openBrowserDriver('space-a'),false,'alice');await a.initialize();
+  const settings={focusMinutes:35,restMinutes:5,cycles:4,posture:{difficulty:'hard' as const,dualMonitor:true}};
+  await a.timer(settings);
+  expect((await new WorkRepository(await openBrowserDriver('space-a'),false,'alice').collection()).timer).toEqual(settings);
+  const b=new WorkRepository(await openBrowserDriver('space-b'),false,'bob');await b.initialize();
+  expect((await b.collection()).timer).toBeNull();
+  const s=createSession(crypto.randomUUID(),settings,0,baseline);finishSession(s);
+  const data=measurementUpload(s,ticket);
+  expect(data.summary.calibrations[0].scoreVersion).toContain('hard-dual60');
+  expect(data.summary.settings).toEqual({focusMinutes:35,restMinutes:5,cycles:4});
+});

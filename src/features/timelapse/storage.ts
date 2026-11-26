@@ -43,6 +43,7 @@ export function openBrowserTimelapse(namespace = 'piiin-timelapse'): Promise<Tim
       return (await navigator.storage.getDirectory()).getDirectoryHandle(namespace, { create: true });
     }
     const epoch = async () => (await req(db.transaction('meta').objectStore('meta').get('epoch')) as number | undefined) ?? 0;
+    const downloads = new Set<string>();
     const store: TimelapseStore = {
       epoch,
       async get(id) { return (await req(db.transaction('clips').objectStore('clips').get(id))) ?? null; },
@@ -113,13 +114,12 @@ export function openBrowserTimelapse(namespace = 'piiin-timelapse'): Promise<Tim
             // A long composition may outlive the browser's transient share gesture.
             // Deliver the same single file as a download when the sheet cannot open.
           }
-          const a = document.createElement('a'); a.href = media.url; a.download = file.name; a.click();
+          const a = document.createElement('a'); a.href = media.url; a.download = file.name; a.click(); downloads.add(name);
           return share ? '動画を保存しました。共有先にファイルを添付してください。' : '動画を保存しました';
         } finally { setTimeout(media.release, 60_000); }
       },
-      // Download completion is not observable from an anchor. Keep its backing
-      // file until startup recovery/reset, rather than invalidating an active download.
-      async releaseExport() {},
+      // Download completion is not observable; only downloaded exports survive until recovery.
+      async releaseExport(name) { if (!downloads.has(name)) await store.remove(name); },
     }; return store;
   })().catch(error => { browserStores.delete(namespace); throw error; });
   browserStores.set(namespace, opening); return opening;

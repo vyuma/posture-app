@@ -1,3 +1,4 @@
+import { t, useAppLanguage } from "../i18n";
 import { isTauri } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { check, type Update } from '@tauri-apps/plugin-updater';
@@ -7,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 type Phase = 'checking' | 'available' | 'current' | 'installing' | 'installed' | 'error';
 
 function DirectDesktopUpdater({ canInstall }: { canInstall: boolean }) {
+  useAppLanguage();
   const dialog = useRef<HTMLDialogElement>(null);
   const candidate = useRef<Update | null>(null);
   const running = useRef(false);
@@ -84,21 +86,21 @@ function DirectDesktopUpdater({ canInstall }: { canInstall: boolean }) {
         if (phase === 'installing') event.preventDefault();
         else setVisible(false);
       }}>
-      <h2 id="update-heading">PiiiN アップデート</h2>
+      <h2 id="update-heading">{t("PiiiN アップデート")}</h2>
       <p role="status" aria-live="polite">
-        {phase === 'checking' && 'アップデートを確認しています…'}
-        {phase === 'available' && `バージョン ${version} を利用できます。更新後にアプリを再起動します。`}
-        {phase === 'current' && '最新バージョンを使用しています。'}
-        {phase === 'installing' && '更新をインストールしています。アプリを終了しないでください。'}
-        {phase === 'installed' && '更新が完了しました。アプリを再起動してください。'}
-        {phase === 'error' && '更新を完了できませんでした。通信環境を確認して、もう一度お試しください。'}
+        {phase === 'checking' && t("アップデートを確認しています…")}
+        {phase === 'available' && t("バージョン {0} を利用できます。更新後にアプリを再起動します。", { 0: version })}
+        {phase === 'current' && t("最新バージョンを使用しています。")}
+        {phase === 'installing' && t("更新をインストールしています。アプリを終了しないでください。")}
+        {phase === 'installed' && t("更新が完了しました。アプリを再起動してください。")}
+        {phase === 'error' && t("更新を完了できませんでした。通信環境を確認して、もう一度お試しください。")}
       </p>
-      {phase === 'installing' && <progress aria-label="ダウンロード" max={100} value={progress ?? undefined} />}
+      {phase === 'installing' && <progress aria-label={t("ダウンロード")} max={100} value={progress ?? undefined} />}
       <div className="desktop-update-actions">
-        {phase !== 'installing' && <button onClick={() => setVisible(false)}>{phase === 'available' ? 'あとで' : '閉じる'}</button>}
-        {phase === 'available' && <button className="primary" onClick={() => void install()}>更新して再起動</button>}
-        {phase === 'installed' && <button className="primary" onClick={() => void relaunch().catch(() => {})}>再起動</button>}
-        {phase === 'error' && <button className="primary" onClick={() => void checkUpdate(true)}>再確認</button>}
+        {phase !== 'installing' && <button onClick={() => setVisible(false)}>{phase === 'available' ? t("あとで") : t("閉じる")}</button>}
+        {phase === 'available' && <button className="primary" onClick={() => void install()}>{t("更新して再起動")}</button>}
+        {phase === 'installed' && <button className="primary" onClick={() => void relaunch().catch(() => {})}>{t("再起動")}</button>}
+        {phase === 'error' && <button className="primary" onClick={() => void checkUpdate(true)}>{t("再確認")}</button>}
       </div>
     </dialog>
   );
@@ -106,6 +108,7 @@ function DirectDesktopUpdater({ canInstall }: { canInstall: boolean }) {
 
 // Compile-time channel boundary: Store bundles do not mount the direct updater.
 export function DesktopUpdater(props: { canInstall: boolean }) {
+  useAppLanguage();
   return import.meta.env.VITE_DISTRIBUTION_CHANNEL === 'mac-app-store'
     ? null : <DirectDesktopUpdater {...props} />;
 }

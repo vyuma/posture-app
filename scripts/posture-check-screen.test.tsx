@@ -1,0 +1,35 @@
+import { afterEach, expect, test, mock } from 'bun:test';
+import { Window } from 'happy-dom';
+import { act, createRef } from 'react';
+import { createRoot } from 'react-dom/client';
+const browser=new Window({url:'https://example.test/app'});
+Object.assign(globalThis,{window:browser,document:browser.document,navigator:browser.navigator,location:browser.location,localStorage:browser.localStorage,IS_REACT_ACT_ENVIRONMENT:true,matchMedia:browser.matchMedia.bind(browser),requestAnimationFrame:browser.requestAnimationFrame.bind(browser),cancelAnimationFrame:browser.cancelAnimationFrame.bind(browser)});
+mock.module('virtual:sound-options',()=>({SOUND_OPTIONS:[]}));
+const {MeasureScreen}=await import('../src/features/work/MeasureScreen');
+const {setAppLanguage}=await import('../src/features/i18n');
+const host=document.createElement('div');document.body.append(host);let root=createRoot(host);
+const video=createRef<HTMLVideoElement>(), canvas=createRef<HTMLCanvasElement>();let registered=0,cancelled=0;
+const props={stage:'prepare' as const,session:null,videoRef:video,canvasRef:canvas,status:'',ready:true,remainingCalibrationMs:5000,tracking:false,onRegister:()=>registered++,onCancel:()=>cancelled++,onRecalibrate:()=>{},onPause:()=>{},onFinish:()=>{}};
+afterEach(async()=>{await act(()=>root.unmount());root=createRoot(host);setAppLanguage('ja');registered=cancelled=0;});
+test('preparation exposes one live video and reference guides without requiring a pose match',async()=>{
+ await act(()=>root.render(<MeasureScreen {...props}/>));
+ expect(host.querySelectorAll('video')).toHaveLength(1);expect(video.current).toBe(host.querySelector('video'));
+ expect(video.current!.closest('[aria-hidden=true]')).toBeNull();expect(host.querySelector('.work-camera-preload')).toBeNull();
+ expect(host.querySelectorAll('.work-camera-framing image')).toHaveLength(2);
+ expect(host.querySelector('.work-posture-illustration img')!.getAttribute('src')).toBe('/figma/posture-check-guide.png');
+ const submit=host.querySelector<HTMLButtonElement>('.work-registration-panel>.work-button')!;
+ expect(submit.disabled).toBe(false);await act(()=>submit.click());expect(registered).toBe(1);
+ await act(()=>root.render(<MeasureScreen {...props} stage="calibrate"/>));
+ expect(host.querySelector('.work-camera-framing')).toBeNull();expect(host.querySelector('.work-posture-check')).toBeNull();
+ expect(host.querySelectorAll('video')).toHaveLength(1);expect(video.current).toBe(host.querySelector('video'));
+ expect(host.querySelector('[role=timer]')!.textContent).toBe('5');
+});
+test('loading and permission failure disable registration and provide localized recovery',async()=>{
+ setAppLanguage('en');await act(()=>root.render(<MeasureScreen {...props} ready={false}/>));
+ expect(host.querySelector('[role=status]')!.textContent).toBe('Preparing camera…');
+ expect(host.querySelector<HTMLButtonElement>('.work-registration-panel>.work-button')!.disabled).toBe(true);
+ await act(()=>root.render(<MeasureScreen {...props} ready={false} status="初期化に失敗しました: NotAllowedError: private details"/>));
+ expect(host.querySelector('[role=status]')!.textContent).toContain('Check permission');expect(host.textContent).not.toContain('private details');
+ await act(()=>host.querySelector<HTMLButtonElement>('.work-camera-preparation-status button')!.click());expect(cancelled).toBe(1);
+ await act(()=>root.render(<MeasureScreen {...props}/>));expect(host.querySelector('.work-camera-preparation-status')).toBeNull();
+});

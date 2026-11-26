@@ -1,3 +1,4 @@
+import { t, useAppLanguage } from "../i18n";
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 import { WEB_APP_PATH } from "../../routes";
@@ -53,6 +54,7 @@ function getCharacter(id: string): CharacterDefinition {
 }
 
 function BrandMark({ light = false }: { light?: boolean }) {
+  useAppLanguage();
   return (
     <span className={`lp-brand-mark${light ? " lp-brand-mark--light" : ""}`}>
       <img src={`/lp/lp6/logo-${light ? "white" : "gray"}.png`} alt="PiiiN" draggable={false} />
@@ -61,6 +63,7 @@ function BrandMark({ light = false }: { light?: boolean }) {
 }
 
 function DownloadDialog({ onClose }: { onClose: () => void }) {
+  useAppLanguage();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
@@ -98,36 +101,34 @@ function DownloadDialog({ onClose }: { onClose: () => void }) {
           className="lp-dialog-close"
           type="button"
           onClick={onClose}
-          aria-label="閉じる"
+          aria-label={t("閉じる")}
         >
           ×
         </button>
         <p className="lp-dialog-eyebrow">DESKTOP APP</p>
-        <h2 id="lp-download-title">PiiiNをダウンロード</h2>
+        <h2 id="lp-download-title">{t("PiiiNをダウンロード")}</h2>
         <p className="lp-dialog-copy">
-          お使いのPCに合わせてお選びください。ブラウザー版はインストールせずに体験できます。
-        </p>
+          {t("お使いのPCに合わせてお選びください。ブラウザー版はインストールせずに体験できます。")}</p>
         <div className="lp-download-options">
           <a
             className="lp-download-option lp-download-option--mac"
             href={MAC_DOWNLOAD_URL}
           >
             <span className="lp-download-platform">macOS</span>
-            <strong>Mac版をダウンロード</strong>
-            <span>Apple Silicon・Intel対応</span>
+            <strong>{t("Mac版をダウンロード")}</strong>
+            <span>{t("Apple Silicon・Intel対応")}</span>
           </a>
           <div
             className="lp-download-option lp-download-option--pending"
             aria-disabled="true"
           >
             <span className="lp-download-platform">Windows</span>
-            <strong>Microsoft Storeでの公開準備中</strong>
-            <span>公開後、このページからご案内します</span>
+            <strong>{t("Microsoft Storeでの公開準備中")}</strong>
+            <span>{t("公開後、このページからご案内します")}</span>
           </div>
         </div>
         <a className="lp-dialog-web-link" href={WEB_APP_PATH}>
-          WEB版を体験する
-        </a>
+          {t("WEB版を体験する")}</a>
       </section>
     </div>
   );
@@ -138,6 +139,7 @@ function CharacterBed({
 }: {
   className?: string;
 }) {
+  useAppLanguage();
   const characters = HERO_CHARACTERS;
   const sceneHeight = 229;
   return (
@@ -147,7 +149,7 @@ function CharacterBed({
           <BeachCharacter
             key={character.image}
             image={character.image}
-            name={character.name}
+            name={t(character.name)}
             flip={character.flip}
             style={{
               left: `${(character.x / 1512) * 100}%`,
@@ -166,21 +168,21 @@ function CharacterBed({
 }
 
 function LandingHeader({ onDownload }: { onDownload: () => void }) {
+  useAppLanguage();
   return (
     <header className="lp-header">
-      <a href="#top" className="lp-header-logo" aria-label="PiiiN ページ上部へ">
+      <a href="#top" className="lp-header-logo" aria-label={t("PiiiN ページ上部へ")}>
         <BrandMark light />
       </a>
-      <nav aria-label="メインナビゲーション">
+      <nav aria-label={t("メインナビゲーション")}>
         <a className="lp-header-web" href={WEB_APP_PATH}>
-          WEBで体験する
-        </a>
+          {t("WEBで体験する")}</a>
         <button
           className="lp-header-download"
           type="button"
           onClick={onDownload}
         >
-          <span>アプリをダウンロード</span>
+          <span>{t("アプリをダウンロード")}</span>
         </button>
       </nav>
     </header>
@@ -188,6 +190,7 @@ function LandingHeader({ onDownload }: { onDownload: () => void }) {
 }
 
 function Hero({ onDownload }: { onDownload: () => void }) {
+  useAppLanguage();
   return (
     <section className="lp-hero" id="top">
       <LandingHeader onDownload={onDownload} />
@@ -197,7 +200,7 @@ function Hero({ onDownload }: { onDownload: () => void }) {
             <img
               className="lp-hero-logo"
               src="/lp/lp6/logo-white.png"
-              alt="姿勢改善にワクワクを PiiiN（ピーン）"
+              alt={t("姿勢改善にワクワクを PiiiN（ピーン）")}
               draggable={false}
             />
           </h1>
@@ -207,11 +210,9 @@ function Hero({ onDownload }: { onDownload: () => void }) {
               className="lp-hero-download"
               onClick={onDownload}
             >
-              アプリをダウンロード
-            </button>
+              {t("アプリをダウンロード")}</button>
             <a className="lp-hero-web" href={WEB_APP_PATH}>
-              WEBで体験する
-            </a>
+              {t("WEBで体験する")}</a>
           </div>
         </div>
         <DesktopDemo className="lp-hero-laptop" />
@@ -222,23 +223,24 @@ function Hero({ onDownload }: { onDownload: () => void }) {
 }
 
 function ConceptStory() {
+  useAppLanguage();
   return (
     <section className="lp6-concept" id="about" aria-labelledby="lp6-concern-heading">
       <div className="lp6-concept-inner">
         <div className="lp6-concerns">
-          <h2 id="lp6-concern-heading">こんなお悩みありませんか？</h2>
+          <h2 id="lp6-concern-heading">{t("こんなお悩みありませんか？")}</h2>
           <div className="lp6-concern-scene">
             {CONCERN_QUOTES.map((quote, index) => (
-              <p className={`lp6-concern lp6-concern--${index + 1}`} key={quote}>{quote}</p>
+              <p className={`lp6-concern lp6-concern--${index + 1}`} key={quote}>{t(quote)}</p>
             ))}
             <div className="lp6-thought-dots" aria-hidden>{Array.from({ length: 6 }, (_, i) => <i key={i} />)}</div>
-            <img className="lp6-worried-people" src="/lp/lp6/worried-people.png" alt="姿勢に悩むデスクワーカー" />
+            <img className="lp6-worried-people" src="/lp/lp6/worried-people.png" alt={t("姿勢に悩むデスクワーカー")} />
           </div>
         </div>
         <div className="lp6-concept-copy">
-          <p>姿勢が悪いとわかっていても、<br />正しい姿勢を続けるのって、けっこう難しい。</p>
-          <p className="lp6-concept-lead"><BrandMark />は、そんなデスクワーカーにピッタリの</p>
-          <h2><em>続けたくなる</em> 姿勢改善アプリです。</h2>
+          <p>{t("姿勢が悪いとわかっていても、")}<br />{t("正しい姿勢を続けるのって、けっこう難しい。")}</p>
+          <p className="lp6-concept-lead"><BrandMark />{t("は、そんなデスクワーカーにピッタリの")}</p>
+          <h2><em>{t("続けたくなる")}</em> {t("姿勢改善アプリです。")}</h2>
         </div>
         <img className="lp6-concept-arrow" src="/lp/lp6/concept-arrow.svg" alt="" />
       </div>
@@ -253,18 +255,20 @@ const MECHANISM_STEPS = [
 ] as const;
 
 function MechanismCard({ step }: { step: (typeof MECHANISM_STEPS)[number] }) {
+  useAppLanguage();
   return (
     <article className={`lp6-mechanism lp6-mechanism--${step.id}`}>
-      <h3>{step.title}</h3>
+      <h3>{t(step.title)}</h3>
       {step.posture && <img className="lp6-posture-person" src={`/lp/posture-${step.posture}.png`} alt="" />}
-      {step.id === "straight" ? <GrowingPet /> : <img className="lp-example-pet-art" src={`/lp/new/posture-${step.id}.svg`} alt={step.speech} loading="lazy" draggable={false} />}
-      <strong>{step.caption}</strong>
+      {step.id === "straight" ? <GrowingPet /> : <img className="lp-example-pet-art" src={`/lp/new/posture-${step.id}.svg`} alt={t(step.speech)} loading="lazy" draggable={false} />}
+      <strong>{t(step.caption)}</strong>
       {step.id !== "normal" && <div className="lp6-mechanism-arrows" aria-hidden><img src="/lp/lp6/mechanism-arrow.svg" alt="" /><img src="/lp/lp6/mechanism-arrow.svg" alt="" /></div>}
     </article>
   );
 }
 
 function CollectionRail() {
+  useAppLanguage();
   const railRef = useCollectionDrag();
   return (
     <div className="lp-collection-gallery">
@@ -272,7 +276,7 @@ function CollectionRail() {
         ref={railRef}
         className="lp-collection-rail"
         role="region"
-        aria-label="ピンアナゴの一例。左右にドラッグ・スワイプ、または左右の矢印キーでカードを送れます。"
+        aria-label={t("ピンアナゴの一例。左右にドラッグ・スワイプ、または左右の矢印キーでカードを送れます。")}
         tabIndex={0}
       >
         <div className="lp-collection-track">
@@ -303,11 +307,11 @@ function CollectionRail() {
                       draggable={false}
                     />
                   </div>
-                  <h3>{card.displayName}</h3>
+                  <h3>{t(card.displayName)}</h3>
                   <CharacterStars characterId={card.characterId} />
                   <ul>
                     {card.personalityTags.map((tag) => (
-                      <li key={tag}>{tag}</li>
+                      <li key={tag}>{t(tag)}</li>
                     ))}
                   </ul>
                 </article>
@@ -327,50 +331,52 @@ const HOW_TO_STEPS = [
 ] as const;
 
 function PointHeading({ number, title, children }: { number: number; title: string; children: ReactNode }) {
-  return <header className="lp6-point-heading"><p className="lp6-point-label">ポイント {number}</p><h2>{title}</h2><p className="lp6-point-description">{children}</p></header>;
+  useAppLanguage();
+  return <header className="lp6-point-heading"><p className="lp6-point-label">{t("ポイント")}{number}</p><h2>{title}</h2><p className="lp6-point-description">{children}</p></header>;
 }
 
 function AboutSection() {
+  useAppLanguage();
   return (
     <>
       <ConceptStory />
-      <section className="lp6-about" aria-label="続けたくなるヒミツ">
+      <section className="lp6-about" aria-label={t("続けたくなるヒミツ")}>
         <div className="lp6-secret-intro">
-          <p className="lp6-secret-label">続けたくなるヒミツ</p>
+          <p className="lp6-secret-label">{t("続けたくなるヒミツ")}</p>
           <div className="lp6-seven-anago" aria-hidden>
             {["shin", "oto", "kuro", "shima", "kuma", "moja", "hat"].map(name => <img key={name} src={name === "kuma" ? "/lp/lp6/kuma.png" : `/lp/bed-${name}.png`} alt="" draggable={false} />)}
           </div>
-          <p className="lp6-secret-eyebrow">姿勢改善を見守ってくれるキャラクター</p>
-          <h2>ピンアナゴ</h2>
+          <p className="lp6-secret-eyebrow">{t("姿勢改善を見守ってくれるキャラクター")}</p>
+          <h2>{t("ピンアナゴ")}</h2>
         </div>
         <section className="lp6-point lp6-point--desktop">
           <div className="lp6-point-inner">
-            <PointHeading number={1} title="いつでも見守ってくれる">ポモドーロタイマー付きのウィジェットをご用意。<br />ピンアナゴがあなたの姿勢を常時チェックしてくれます。</PointHeading>
+            <PointHeading number={1} title={t("いつでも見守ってくれる")}>{t("ポモドーロタイマー付きのウィジェットをご用意。")}<br />{t("ピンアナゴがあなたの姿勢を常時チェックしてくれます。")}</PointHeading>
             <div className="lp6-point-laptop">
               <DesktopDemo />
-              <p className="lp6-position-bubble">表示位置は<br />自由に設定可能</p>
+              <p className="lp6-position-bubble">{t("表示位置は")}<br />{t("自由に設定可能")}</p>
             </div>
           </div>
         </section>
         <section className="lp6-point lp6-point--posture">
           <div className="lp6-point-inner">
-            <PointHeading number={2} title="姿勢が悪くなると怒ってくれる">ピンアナゴは姿勢がいい人間が大好き。<br />姿勢を正すと褒めてくれますが、<br />姿勢が悪いと真っ赤になってカンカンに怒ります。</PointHeading>
+            <PointHeading number={2} title={t("姿勢が悪くなると怒ってくれる")}>{t("ピンアナゴは姿勢がいい人間が大好き。")}<br />{t("姿勢を正すと褒めてくれますが、")}<br />{t("姿勢が悪いと真っ赤になってカンカンに怒ります。")}</PointHeading>
             <div className="lp6-mechanism-grid">{MECHANISM_STEPS.map(step => <MechanismCard key={step.id} step={step} />)}</div>
           </div>
         </section>
         <section className="lp6-point lp6-point--acquisition">
           <div className="lp6-point-inner">
-            <PointHeading number={3} title="姿勢がいいと新しい仲間を連れてくる">ピーン率（判定できた時間のうち良い姿勢だった割合）が50％以上になると、<br />まだ出会っていないピンアナゴを獲得できます。</PointHeading>
+            <PointHeading number={3} title={t("姿勢がいいと新しい仲間を連れてくる")}>{t("ピーン率（判定できた時間のうち良い姿勢だった割合）が50％以上になると、")}<br />{t("まだ出会っていないピンアナゴを獲得できます。")}</PointHeading>
             <LandingResultCard />
           </div>
         </section>
         <div className="lp6-collection">
           <div className="lp-collection-copy">
-            <h2>出会えるピンアナゴは <span className="lp-collection-count">{CHARACTER_CATALOG.length}種類 </span>！</h2>
-            <p>仲間を集めながら、毎日の姿勢を意識してみよう。</p>
+            <h2>{t("出会えるピンアナゴは")}<span className="lp-collection-count">{CHARACTER_CATALOG.length}{t("種類")}</span>！</h2>
+            <p>{t("仲間を集めながら、毎日の姿勢を意識してみよう。")}</p>
           </div>
           <CollectionRail />
-          <p className="lp-collection-rare">次はどんな仲間に出会えるかな？</p>
+          <p className="lp-collection-rare">{t("次はどんな仲間に出会えるかな？")}</p>
         </div>
       </section>
     </>
@@ -378,12 +384,13 @@ function AboutSection() {
 }
 
 function HowToSection() {
+  useAppLanguage();
   return (
     <section className="lp-how" id="how-to">
       <div className="lp-how-inner">
         <h2>
           <BrandMark light />
-          <span>の使い方</span>
+          <span>{t("の使い方")}</span>
         </h2>
         <div className="lp-how-list">
           {HOW_TO_STEPS.map((step) => (
@@ -391,11 +398,11 @@ function HowToSection() {
               <header>
                 <span aria-hidden="true">{step.number}</span>
                 <div>
-                  <h3>{step.title}</h3>
-                  <p>{step.description}</p>
+                  <h3>{t(step.title)}</h3>
+                  <p>{t(step.description)}</p>
                 </div>
               </header>
-              <div className={`lp-how-devices lp-how-devices--${step.number}`} role="img" aria-label={`${step.title}の画面例`}>
+              <div className={`lp-how-devices lp-how-devices--${step.number}`} role="img" aria-label={t("{0}の画面例", { 0: t(step.title) })}>
                 {step.number === "2" && <img className="lp-how-laptop-shell" src="/lp/new/how-laptop.png" alt="" loading="lazy" draggable={false} />}
                 <img className="lp-how-screen-art" src="/lp/new/how-screens.png" alt="" loading="lazy" draggable={false} />
               </div>
@@ -408,22 +415,21 @@ function HowToSection() {
           target="_blank"
           rel="noreferrer"
         >
-          <img src="/lp/video-icon.svg" alt="" aria-hidden />使い方の動画を見る
-        </a>
+          <img src="/lp/video-icon.svg" alt="" aria-hidden />{t("使い方の動画を見る")}</a>
       </div>
     </section>
   );
 }
 
 function FinalCta({ onDownload }: { onDownload: () => void }) {
+  useAppLanguage();
   return (
     <section className="lp-final-cta">
-      <h2>ピンアナゴたちと一緒に、<br />姿勢改善を習慣化しましょう！</h2>
+      <h2>{t("ピンアナゴたちと一緒に、")}<br />{t("姿勢改善を習慣化しましょう！")}</h2>
       <div className="lp-final-cta-buttons">
-        <a href={WEB_APP_PATH}>WEBで体験する</a>
+        <a href={WEB_APP_PATH}>{t("WEBで体験する")}</a>
         <button type="button" onClick={onDownload}>
-          アプリをダウンロード
-        </button>
+          {t("アプリをダウンロード")}</button>
       </div>
       <CharacterBed className="lp-character-bed--footer" />
     </section>
@@ -431,24 +437,25 @@ function FinalCta({ onDownload }: { onDownload: () => void }) {
 }
 
 function LandingFooter({ onDownload }: { onDownload: () => void }) {
+  useAppLanguage();
   return (
     <footer className="lp-footer">
       <BrandMark />
-      <nav aria-label="フッターナビゲーション">
-        <a href="#about">PiiiNとは</a>
-        <a href="#how-to">使い方</a>
-        <a href="/privacy">プライバシーポリシー</a>
-        <a href="/support">サポート</a>
-        <a href={WEB_APP_PATH}>WEBで体験する</a>
+      <nav aria-label={t("フッターナビゲーション")}>
+        <a href="#about">{t("PiiiNとは")}</a>
+        <a href="#how-to">{t("使い方")}</a>
+        <a href="/privacy">{t("プライバシーポリシー")}</a>
+        <a href="/support">{t("サポート")}</a>
+        <a href={WEB_APP_PATH}>{t("WEBで体験する")}</a>
         <button type="button" onClick={onDownload}>
-          アプリをダウンロード
-        </button>
+          {t("アプリをダウンロード")}</button>
       </nav>
     </footer>
   );
 }
 
 export function LandingPage() {
+  useAppLanguage();
   const [downloadOpen, setDownloadOpen] = useState(false);
   const pageRef = useRef<HTMLDivElement>(null);
   useLandingMotion(pageRef);

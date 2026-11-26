@@ -1,11 +1,13 @@
+import { t, useAppLanguage } from "../i18n";
 import { OptionMenu } from './OptionMenu';
 import { BUILTIN_SOUND_OPTIONS, type SoundSettings } from '../sound/types/soundSettings';
 import './sound-select.css';
 export function SoundSelect({ settings, onChange }: { settings: SoundSettings; onChange?: (value: SoundSettings) => void }) {
+  useAppLanguage();
   const options = [...new Set([...BUILTIN_SOUND_OPTIONS, ...settings.customSounds])].map((path, index) => ({
-    value: path, label: path.startsWith('data:') ? `カスタム ${index + 1}` : path.split('/').pop()?.replace(/\.(mp3|wav)$/i, '') || path,
+    value: path, label: path.startsWith('data:') ? t("カスタム {0}", { 0: index + 1 }) : path.split('/').pop()?.replace(/\.(mp3|wav)$/i, '') || path,
   }));
-  return <div className="work-sound-row"><span>効果音</span><OptionMenu value={settings.selectedSound}
-    onChange={selectedSound => onChange?.({ ...settings, selectedSound })} options={options} label="効果音" className="work-sound-select"
+  return <div className="work-sound-row"><span>{t("効果音")}</span><OptionMenu value={settings.selectedSound}
+    onChange={selectedSound => onChange?.({ ...settings, selectedSound })} options={options} label={t("効果音")} className="work-sound-select"
     arrow={<svg viewBox="0 0 11.4 6.23" aria-hidden="true"><path d="M0 0h11.4L5.7 6.23Z" fill="currentColor" /></svg>} /></div>;
 }

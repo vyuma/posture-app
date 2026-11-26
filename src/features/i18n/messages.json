@@ -1,0 +1,2902 @@
+{
+  "完了": {
+    "ko": "완료",
+    "en": "Done"
+  },
+  "PiiiN アップデート": {
+    "ko": "PiiiN 업데이트",
+    "en": "PiiiN update"
+  },
+  "アップデートを確認しています…": {
+    "ko": "업데이트 확인 중…",
+    "en": "Checking for updates…"
+  },
+  "バージョン {0} を利用できます。更新後にアプリを再起動します。": {
+    "ko": "버전 {0}을 사용할 수 있습니다. 업데이트 후 앱을 다시 시작합니다.",
+    "en": "Version {0} is available. The app will restart after updating."
+  },
+  "最新バージョンを使用しています。": {
+    "ko": "최신 버전입니다.",
+    "en": "You're up to date."
+  },
+  "更新をインストールしています。アプリを終了しないでください。": {
+    "ko": "업데이트 설치 중입니다. 앱을 종료하지 마세요.",
+    "en": "Installing the update. Please keep the app open."
+  },
+  "更新が完了しました。アプリを再起動してください。": {
+    "ko": "업데이트가 완료됐어요. 앱을 다시 시작해 주세요.",
+    "en": "Update complete. Please restart the app."
+  },
+  "更新を完了できませんでした。通信環境を確認して、もう一度お試しください。": {
+    "ko": "업데이트를 완료하지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.",
+    "en": "Couldn't complete the update. Check your connection and try again."
+  },
+  "ダウンロード": {
+    "ko": "다운로드",
+    "en": "Download"
+  },
+  "あとで": {
+    "ko": "나중에",
+    "en": "Later"
+  },
+  "更新して再起動": {
+    "ko": "업데이트 후 다시 시작",
+    "en": "Update and restart"
+  },
+  "再起動": {
+    "ko": "다시 시작",
+    "en": "Restart"
+  },
+  "再確認": {
+    "ko": "다시 확인",
+    "en": "Check again"
+  },
+  "{0}を上に引っぱる": {
+    "ko": "{0}를 위로 당기기",
+    "en": "Pull {0} up"
+  },
+  "ポモドーロタイマー付きのピンアナゴをデスクトップに表示した例。": {
+    "ko": "포모도로 타이머가 있는 핀아나고를 데스크톱에 표시한 예시입니다.",
+    "en": "Example of a desktop Pin-anago with a Pomodoro timer."
+  },
+  "オトアナゴ": {
+    "ko": "오토아나고",
+    "en": "Oto-anago"
+  },
+  "ツインナゴ": {
+    "ko": "트윈나고",
+    "en": "Twin-nago"
+  },
+  "パインナゴ": {
+    "ko": "파인나고",
+    "en": "Pine-nago"
+  },
+  "ナスビナゴ": {
+    "ko": "나스비나고",
+    "en": "Nasubi-nago"
+  },
+  "クロアニャゴ": {
+    "ko": "쿠로아냐고",
+    "en": "Kuro-anyago"
+  },
+  "シン・アナゴ": {
+    "ko": "신 아나고",
+    "en": "Shin-anago"
+  },
+  "ハットナゴ": {
+    "ko": "햇나고",
+    "en": "Hat-nago"
+  },
+  "モジャアナゴ": {
+    "ko": "모자아나고",
+    "en": "Moja-anago"
+  },
+  "体に良くないとは思いつつ、何もしていない...": {
+    "ko": "몸에 좋지 않은 건 알지만, 아무것도 하지 않고 있어요…",
+    "en": "I know it's not good for me, but I haven't done anything…"
+  },
+  "気をつけていても、気づけば猫背に...": {
+    "ko": "신경 쓰다가도 어느새 등이 굽어 있어요…",
+    "en": "Even when I try, I end up slouching again…"
+  },
+  "アプリを試したけど、結局続かず...": {
+    "ko": "앱을 써 봤지만, 결국 꾸준히 쓰지 못했어요…",
+    "en": "I tried an app, but couldn't stick with it…"
+  },
+  "PiiiNをダウンロード": {
+    "ko": "PiiiN 다운로드",
+    "en": "Download PiiiN"
+  },
+  "お使いのPCに合わせてお選びください。ブラウザー版はインストールせずに体験できます。": {
+    "ko": "사용하는 PC에 맞게 선택해 주세요. 웹 버전은 설치 없이 체험할 수 있습니다.",
+    "en": "Choose the version for your computer. Try the web version without installing anything."
+  },
+  "Mac版をダウンロード": {
+    "ko": "Mac 버전 다운로드",
+    "en": "Download for Mac"
+  },
+  "Apple Silicon・Intel対応": {
+    "ko": "Apple Silicon·Intel 지원",
+    "en": "Supports Apple Silicon and Intel"
+  },
+  "Microsoft Storeでの公開準備中": {
+    "ko": "Microsoft Store 출시 준비 중",
+    "en": "Coming to the Microsoft Store"
+  },
+  "公開後、このページからご案内します": {
+    "ko": "출시 후 이 페이지에서 안내합니다",
+    "en": "We'll add the link here when it's available"
+  },
+  "WEB版を体験する": {
+    "ko": "웹 버전 체험하기",
+    "en": "Try the web app"
+  },
+  "PiiiN ページ上部へ": {
+    "ko": "PiiiN 페이지 맨 위로",
+    "en": "Back to top"
+  },
+  "メインナビゲーション": {
+    "ko": "주 메뉴",
+    "en": "Main navigation"
+  },
+  "WEBで体験する": {
+    "ko": "웹에서 체험하기",
+    "en": "Try on the web"
+  },
+  "アプリをダウンロード": {
+    "ko": "앱 다운로드",
+    "en": "Download app"
+  },
+  "姿勢改善にワクワクを PiiiN（ピーン）": {
+    "ko": "자세 습관에 즐거움을, PiiiN (핀)",
+    "en": "Make posture practice fun with PiiiN"
+  },
+  "こんなお悩みありませんか？": {
+    "ko": "이런 고민이 있나요?",
+    "en": "Does this sound familiar?"
+  },
+  "姿勢に悩むデスクワーカー": {
+    "ko": "자세가 고민인 데스크 워커",
+    "en": "Desk worker concerned about posture"
+  },
+  "姿勢が悪いとわかっていても、": {
+    "ko": "자세가 좋지 않다는 걸 알아도,",
+    "en": "Even when you know you're slouching,"
+  },
+  "正しい姿勢を続けるのって、けっこう難しい。": {
+    "ko": "바른 자세를 계속 유지하기는 꽤 어려워요.",
+    "en": "maintaining your posture can be hard."
+  },
+  "は、そんなデスクワーカーにピッタリの": {
+    "ko": "은 그런 데스크 워커를 위한",
+    "en": "is made for desk workers:"
+  },
+  "続けたくなる": {
+    "ko": "계속 쓰고 싶은",
+    "en": "an app you'll want to keep using"
+  },
+  "姿勢改善アプリです。": {
+    "ko": "자세 습관 앱입니다.",
+    "en": "to practice your posture."
+  },
+  "姿勢が崩れると…": {
+    "ko": "자세가 흐트러지면…",
+    "en": "When your posture slips…"
+  },
+  "怒る": {
+    "ko": "화내요",
+    "en": "Gets upset"
+  },
+  "姿勢を戻して！": {
+    "ko": "자세를 되돌려 줘!",
+    "en": "Reset your posture!"
+  },
+  "悪い姿勢が続くと…": {
+    "ko": "나쁜 자세가 계속되면…",
+    "en": "If it continues…"
+  },
+  "どんどん大きくなる！": {
+    "ko": "점점 커져요!",
+    "en": "Grows bigger and bigger!"
+  },
+  "姿勢を正すと…": {
+    "ko": "자세를 되돌리면…",
+    "en": "When you reset your posture…"
+  },
+  "褒める": {
+    "ko": "칭찬해요",
+    "en": "Cheers you on"
+  },
+  "いい感じ！": {
+    "ko": "좋은데!",
+    "en": "Looking good!"
+  },
+  "ピンアナゴの一例。左右にドラッグ・スワイプ、または左右の矢印キーでカードを送れます。": {
+    "ko": "핀아나고 예시입니다. 좌우 드래그·스와이프 또는 방향키로 카드를 넘길 수 있습니다.",
+    "en": "Some of the Pin-anago. Drag, swipe, or use left and right arrow keys to browse cards."
+  },
+  "タイマーをセット": {
+    "ko": "타이머 설정",
+    "en": "Set your timer"
+  },
+  "ポモドーロタイマーで\n作業の集中もサポートします。": {
+    "ko": "포모도로 타이머로\n집중도 도와드려요.",
+    "en": "A Pomodoro timer\nhelps you focus."
+  },
+  "正しい姿勢を登録": {
+    "ko": "바른 자세 등록",
+    "en": "Set your baseline posture"
+  },
+  "姿勢のガイドラインを見ながら\n基準となる姿勢を登録します。": {
+    "ko": "자세 가이드를 보며\n기준 자세를 등록해요.",
+    "en": "Follow the posture guide\nto set your baseline."
+  },
+  "作業スタート！": {
+    "ko": "집중 시작!",
+    "en": "Start focusing!"
+  },
+  "リアルタイムで姿勢を測定。\nボタンでいつでも中断できます。": {
+    "ko": "실시간으로 자세를 측정해요.\n버튼으로 언제든 멈출 수 있어요.",
+    "en": "Track your posture in real time.\nPause whenever you need to."
+  },
+  "ポイント": {
+    "ko": "포인트",
+    "en": "Highlights"
+  },
+  "続けたくなるヒミツ": {
+    "ko": "계속 쓰고 싶은 비밀",
+    "en": "What keeps you going"
+  },
+  "姿勢改善を見守ってくれるキャラクター": {
+    "ko": "자세 습관을 지켜봐 주는 캐릭터",
+    "en": "A little friend watching over your posture"
+  },
+  "ピンアナゴ": {
+    "ko": "핀아나고",
+    "en": "Pin-anago"
+  },
+  "いつでも見守ってくれる": {
+    "ko": "언제나 곁에서 지켜봐요",
+    "en": "Always by your side"
+  },
+  "ポモドーロタイマー付きのウィジェットをご用意。": {
+    "ko": "포모도로 타이머가 있는 위젯을 제공합니다.",
+    "en": "A desktop widget with a Pomodoro timer."
+  },
+  "ピンアナゴがあなたの姿勢を常時チェックしてくれます。": {
+    "ko": "핀아나고가 여러분의 자세를 계속 살펴봅니다.",
+    "en": "Your Pin-anago keeps an eye on your posture."
+  },
+  "表示位置は": {
+    "ko": "표시 위치는",
+    "en": "Place it"
+  },
+  "自由に設定可能": {
+    "ko": "자유롭게 설정할 수 있어요",
+    "en": "wherever you like"
+  },
+  "姿勢が悪くなると怒ってくれる": {
+    "ko": "자세가 흐트러지면 알려줘요",
+    "en": "A reminder when your posture slips"
+  },
+  "ピンアナゴは姿勢がいい人間が大好き。": {
+    "ko": "핀아나고는 자세가 좋은 사람을 정말 좋아해요.",
+    "en": "Pin-anago love people who sit up straight."
+  },
+  "姿勢を正すと褒めてくれますが、": {
+    "ko": "자세를 되돌리면 칭찬해 주지만,",
+    "en": "They praise you when you reset your posture,"
+  },
+  "姿勢が悪いと真っ赤になってカンカンに怒ります。": {
+    "ko": "나쁜 자세가 계속되면 새빨개져서 화를 내요.",
+    "en": "but turn bright red and get upset when you slouch."
+  },
+  "姿勢がいいと新しい仲間を連れてくる": {
+    "ko": "좋은 자세를 유지하면 새 친구를 데려와요",
+    "en": "Good posture brings new friends"
+  },
+  "ピーン率（判定できた時間のうち良い姿勢だった割合）が50％以上になると、": {
+    "ko": "바른 자세 비율(판정 가능한 시간 중 좋은 자세였던 비율)이 50% 이상이면,",
+    "en": "When your posture rate (good posture as a share of tracked time) is at least 50%,"
+  },
+  "まだ出会っていないピンアナゴを獲得できます。": {
+    "ko": "아직 만나지 못한 핀아나고를 획득할 수 있어요.",
+    "en": "you can collect a Pin-anago you haven't met yet."
+  },
+  "出会えるピンアナゴは": {
+    "ko": "만날 수 있는 핀아나고는",
+    "en": "Discover"
+  },
+  "種類": {
+    "ko": "종",
+    "en": "kinds"
+  },
+  "仲間を集めながら、毎日の姿勢を意識してみよう。": {
+    "ko": "친구를 모으며 매일 자세를 의식해 보세요.",
+    "en": "Collect friends while paying attention to your posture each day."
+  },
+  "次はどんな仲間に出会えるかな？": {
+    "ko": "다음에는 어떤 친구를 만날까요?",
+    "en": "Who will you meet next?"
+  },
+  "の使い方": {
+    "ko": " 사용 방법",
+    "en": ": how it works"
+  },
+  "{0}の画面例": {
+    "ko": "{0} 화면 예시",
+    "en": "Example of {0}"
+  },
+  "使い方の動画を見る": {
+    "ko": "사용 방법 영상 보기",
+    "en": "Watch the tutorial"
+  },
+  "ピンアナゴたちと一緒に、": {
+    "ko": "핀아나고 친구들과 함께,",
+    "en": "Together with your Pin-anago,"
+  },
+  "姿勢改善を習慣化しましょう！": {
+    "ko": "좋은 자세를 습관으로 만들어 보세요!",
+    "en": "make posture practice a habit!"
+  },
+  "フッターナビゲーション": {
+    "ko": "하단 메뉴",
+    "en": "Footer navigation"
+  },
+  "PiiiNとは": {
+    "ko": "PiiiN 소개",
+    "en": "About PiiiN"
+  },
+  "使い方": {
+    "ko": "사용 방법",
+    "en": "How it works"
+  },
+  "ピンアナゴを移動。ドラッグまたは矢印キー、Shiftで大きく移動": {
+    "ko": "핀아나고 이동. 드래그 또는 방향키로 이동하고 Shift로 더 크게 이동합니다",
+    "en": "Move Pin-anago. Drag or use arrow keys; hold Shift for larger steps"
+  },
+  "獲得カードの表示例：オトアナゴ、集中した時間140分、ピーン率78％。クリックまたはEnterで獲得演出": {
+    "ko": "획득 카드 예시: 오토아나고, 집중 시간 140분, 바른 자세 비율 78%. 클릭 또는 Enter로 획득 연출",
+    "en": "Example reward card: Oto-anago, 140 minutes focused, 78% posture rate. Click or press Enter to play the reward animation"
+  },
+  "開発者ログインが設定されていません。": {
+    "ko": "개발자 로그인이 설정되지 않았어요.",
+    "en": "Developer sign-in is not configured."
+  },
+  "ユーザーIDまたはパスワードが違います。": {
+    "ko": "사용자 ID 또는 비밀번호가 올바르지 않아요.",
+    "en": "Incorrect user ID or password."
+  },
+  "ログイン状態を確認できませんでした。": {
+    "ko": "로그인 상태를 확인하지 못했어요.",
+    "en": "Couldn't check sign-in status."
+  },
+  "ログインに失敗しました。しばらくしてから再度お試しください。": {
+    "ko": "로그인하지 못했어요. 잠시 후 다시 시도해 주세요.",
+    "en": "Couldn't sign in. Please try again in a moment."
+  },
+  "PiiiN ホームへ": {
+    "ko": "PiiiN 홈으로",
+    "en": "Go to PiiiN home"
+  },
+  "開発者ログイン": {
+    "ko": "개발자 로그인",
+    "en": "Developer sign-in"
+  },
+  "開発・検証用の機能を利用するにはログインしてください。": {
+    "ko": "개발·검증 기능을 사용하려면 로그인해 주세요.",
+    "en": "Sign in to access development and testing features."
+  },
+  "ログイン状態を確認しています…": {
+    "ko": "로그인 상태 확인 중…",
+    "en": "Checking sign-in status…"
+  },
+  "ユーザーID": {
+    "ko": "사용자 ID",
+    "en": "User ID"
+  },
+  "ログイン中…": {
+    "ko": "로그인 중…",
+    "en": "Signing in…"
+  },
+  "アプリからログインを開始してください": {
+    "ko": "앱에서 로그인을 시작해 주세요",
+    "en": "Start sign-in from the app"
+  },
+  "アプリに戻る": {
+    "ko": "앱으로 돌아가기",
+    "en": "Return to app"
+  },
+  "連携しました。アプリに戻ってください。": {
+    "ko": "연결됐어요. 앱으로 돌아가 주세요.",
+    "en": "Connected. Please return to the app."
+  },
+  "としてログイン": {
+    "ko": " 계정으로 로그인",
+    "en": " signed in"
+  },
+  "このアカウントで続ける": {
+    "ko": "이 계정으로 계속하기",
+    "en": "Continue with this account"
+  },
+  "別のアカウントでログイン": {
+    "ko": "다른 계정으로 로그인",
+    "en": "Sign in with another account"
+  },
+  "確認中…": {
+    "ko": "확인 중…",
+    "en": "Checking…"
+  },
+  "顔が近い！": {
+    "ko": "얼굴이 가까워!",
+    "en": "Your face is too close!"
+  },
+  "頭が前に出てるよ！": {
+    "ko": "머리가 앞으로 나왔어!",
+    "en": "Head leaning forward!"
+  },
+  "頭が傾いてるよ！": {
+    "ko": "머리가 기울어졌어!",
+    "en": "Head tilted!"
+  },
+  "体が傾いてるよ！": {
+    "ko": "몸이 기울어졌어!",
+    "en": "Body leaning!"
+  },
+  "ストレッチした？": {
+    "ko": "스트레칭했어?",
+    "en": "Have you stretched?"
+  },
+  "お疲れさま！": {
+    "ko": "수고했어!",
+    "en": "Nice work!"
+  },
+  "頭が横にずれてるよ！": {
+    "ko": "머리가 옆으로 치우쳤어!",
+    "en": "Head shifted sideways!"
+  },
+  "あごの位置を戻そう！": {
+    "ko": "턱 위치를 되돌려 보자!",
+    "en": "Reset your chin position!"
+  },
+  "肩の高さが変わってるよ！": {
+    "ko": "어깨 높이가 달라졌어!",
+    "en": "Uneven shoulders!"
+  },
+  "顔が横を向いてるよ！": {
+    "ko": "얼굴이 옆을 향하고 있어!",
+    "en": "Face turned sideways!"
+  },
+  "頭が左に傾いてるよ！": {
+    "ko": "머리가 왼쪽으로 기울어졌어!",
+    "en": "Head tilted left!"
+  },
+  "頭が右に傾いてるよ！": {
+    "ko": "머리가 오른쪽으로 기울어졌어!",
+    "en": "Head tilted right!"
+  },
+  "体が左に傾いてるよ！": {
+    "ko": "몸이 왼쪽으로 기울어졌어!",
+    "en": "Body leaning left!"
+  },
+  "体が右に傾いてるよ！": {
+    "ko": "몸이 오른쪽으로 기울어졌어!",
+    "en": "Body leaning right!"
+  },
+  "頭が左にずれてるよ！": {
+    "ko": "머리가 왼쪽으로 치우쳤어!",
+    "en": "Head shifted left!"
+  },
+  "頭が右にずれてるよ！": {
+    "ko": "머리가 오른쪽으로 치우쳤어!",
+    "en": "Head shifted right!"
+  },
+  "あごが下がってるよ！": {
+    "ko": "턱이 내려갔어!",
+    "en": "Chin dropped!"
+  },
+  "あごが上がってるよ！": {
+    "ko": "턱이 올라갔어!",
+    "en": "Chin lifted!"
+  },
+  "左肩が高くなってるよ！": {
+    "ko": "왼쪽 어깨가 높아졌어!",
+    "en": "Left shoulder higher!"
+  },
+  "右肩が高くなってるよ！": {
+    "ko": "오른쪽 어깨가 높아졌어!",
+    "en": "Right shoulder higher!"
+  },
+  "顔が左を向いてるよ！": {
+    "ko": "얼굴이 왼쪽을 향하고 있어!",
+    "en": "Face turned left!"
+  },
+  "顔が右を向いてるよ！": {
+    "ko": "얼굴이 오른쪽을 향하고 있어!",
+    "en": "Face turned right!"
+  },
+  "姿勢を確認できないよ": {
+    "ko": "자세를 확인할 수 없어",
+    "en": "I can't see your posture"
+  },
+  "落ち着きがある": {
+    "ko": "차분함",
+    "en": "Calm"
+  },
+  "お兄ちゃんキャラ": {
+    "ko": "듬직한 형",
+    "en": "Big-brother type"
+  },
+  "頑張り屋さん": {
+    "ko": "노력파",
+    "en": "Hard worker"
+  },
+  "負けず嫌い": {
+    "ko": "승부욕",
+    "en": "Competitive"
+  },
+  "音楽好き": {
+    "ko": "음악 애호가",
+    "en": "Music lover"
+  },
+  "クリエイティブ": {
+    "ko": "창의적",
+    "en": "Creative"
+  },
+  "クール": {
+    "ko": "쿨함",
+    "en": "Cool"
+  },
+  "ツンデレ": {
+    "ko": "츤데레",
+    "en": "Secretly caring"
+  },
+  "クマアナゴ": {
+    "ko": "쿠마아나고",
+    "en": "Kuma-anago"
+  },
+  "おっとり": {
+    "ko": "느긋함",
+    "en": "Easygoing"
+  },
+  "天然": {
+    "ko": "엉뚱함",
+    "en": "Quirky"
+  },
+  "くせもの": {
+    "ko": "개성파",
+    "en": "Unconventional"
+  },
+  "こだわり強い": {
+    "ko": "확고한 취향",
+    "en": "Particular"
+  },
+  "しっかり者": {
+    "ko": "야무짐",
+    "en": "Dependable"
+  },
+  "リーダー気質": {
+    "ko": "리더 기질",
+    "en": "Natural leader"
+  },
+  "アイドル気質": {
+    "ko": "아이돌 기질",
+    "en": "Star quality"
+  },
+  "妹キャラ": {
+    "ko": "귀여운 동생",
+    "en": "Little-sister type"
+  },
+  "頑張ろう！": {
+    "ko": "힘내자!",
+    "en": "Let's do this!"
+  },
+  "昨日の自分に\n負けないぞ！": {
+    "ko": "어제의 나에게\n지지 않을 거야!",
+    "en": "Let's do better\nthan yesterday!"
+  },
+  "…ちゃんと\n見てるからね。": {
+    "ko": "…제대로\n보고 있으니까.",
+    "en": "…I'm keeping\nan eye on you."
+  },
+  "のんびり、\nいこうねぇ。": {
+    "ko": "느긋하게,\n함께 가자.",
+    "en": "Take it easy,\none step at a time."
+  },
+  "姿勢には\nこだわるよ。": {
+    "ko": "자세에는\n깐깐하거든.",
+    "en": "I'm particular\nabout posture."
+  },
+  "眠い・・・": {
+    "ko": "졸려…",
+    "en": "So sleepy…"
+  },
+  "さあ、\n始めようか。": {
+    "ko": "자,\n시작해 볼까.",
+    "en": "Well then,\nshall we begin?"
+  },
+  "焦らず、\n一歩ずつね。": {
+    "ko": "서두르지 말고,\n한 걸음씩.",
+    "en": "No rush,\none step at a time."
+  },
+  "キミのこと、\n応援してるよ！": {
+    "ko": "너를\n응원하고 있어!",
+    "en": "I'm cheering\nfor you!"
+  },
+  "今日は\nノッてるね！": {
+    "ko": "오늘\n리듬이 좋은데!",
+    "en": "You're in\nthe groove today!"
+  },
+  "こつこつ、\n育てていこう。": {
+    "ko": "차근차근,\n함께 자라자.",
+    "en": "Let's grow,\nlittle by little."
+  },
+  "Let's go!\n一緒に出発！": {
+    "ko": "Let's go!\n함께 출발!",
+    "en": "Let's go!\nOff we go together!"
+  },
+  "静かに、\nそばにいるよ。": {
+    "ko": "조용히,\n곁에 있을게.",
+    "en": "I'll be quietly\nby your side."
+  },
+  "自分のペースで\n上を目指そう。": {
+    "ko": "네 속도로\n더 높이 가자.",
+    "en": "Aim higher\nat your own pace."
+  },
+  "よしっ、\nパッといこう！": {
+    "ko": "좋아,\n산뜻하게 가자!",
+    "en": "All right,\nlet's get going!"
+  },
+  "いっしょが\nうれしいワン！": {
+    "ko": "함께라서\n기쁘다멍!",
+    "en": "Happy to be\nwith you, woof!"
+  },
+  "その集中、\n見届けよう。": {
+    "ko": "그 집중력,\n지켜볼게.",
+    "en": "I'll watch over\nyour focus."
+  },
+  "サクラナゴ": {
+    "ko": "사쿠라나고",
+    "en": "Sakura-nago"
+  },
+  "桜とだんごが大好きな、春の気分を届けるピンアナゴ。": {
+    "ko": "벚꽃과 경단을 좋아하며 봄기운을 전하는 핀아나고.",
+    "en": "A Pin-anago who loves cherry blossoms and sweet dumplings, bringing a touch of spring."
+  },
+  "お花見好き": {
+    "ko": "꽃구경 애호가",
+    "en": "Blossom lover"
+  },
+  "甘党": {
+    "ko": "단것 좋아함",
+    "en": "Sweet tooth"
+  },
+  "ひと息ついたら、\nおだんごにしよう。": {
+    "ko": "한숨 돌리면,\n경단 먹자.",
+    "en": "After a break,\nlet's have dumplings."
+  },
+  "ミイラナゴ": {
+    "ko": "미라나고",
+    "en": "Mummy-nago"
+  },
+  "包帯にくるまって目を覚ます、不思議なピンアナゴ。": {
+    "ko": "붕대에 둘둘 감긴 채 눈을 뜨는 신비한 핀아나고.",
+    "en": "A mysterious Pin-anago waking up wrapped in bandages."
+  },
+  "ねぼすけ": {
+    "ko": "잠꾸러기",
+    "en": "Sleepyhead"
+  },
+  "不思議ちゃん": {
+    "ko": "신비로움",
+    "en": "Enigmatic"
+  },
+  "ゆっくりでも、\n続けるのだ…。": {
+    "ko": "천천히라도,\n계속하는 거다…",
+    "en": "Slowly or not,\nkeep going…"
+  },
+  "キングナゴ": {
+    "ko": "킹나고",
+    "en": "King-nago"
+  },
+  "マントと宝石をまとい、堂々と見守る王様のピンアナゴ。": {
+    "ko": "망토와 보석을 두르고 당당하게 지켜보는 왕 핀아나고.",
+    "en": "A regal Pin-anago in a cape and jewels, watching over you with confidence."
+  },
+  "王様気質": {
+    "ko": "왕의 품격",
+    "en": "Regal"
+  },
+  "ほめ上手": {
+    "ko": "칭찬 달인",
+    "en": "Great encourager"
+  },
+  "よい姿勢だ。\nその調子じゃ！": {
+    "ko": "좋은 자세로군.\n계속하거라!",
+    "en": "Fine posture.\nKeep it up!"
+  },
+  "顔が近づく場面があったね。": {
+    "ko": "얼굴이 가까워지는 순간이 있었어.",
+    "en": "Your face moved closer at times."
+  },
+  "頭が前に出る場面があったね。": {
+    "ko": "머리가 앞으로 나오는 순간이 있었어.",
+    "en": "Your head moved forward at times."
+  },
+  "頭が傾く場面があったね。": {
+    "ko": "머리가 기울어지는 순간이 있었어.",
+    "en": "Your head tilted at times."
+  },
+  "体が傾く場面があったね。": {
+    "ko": "몸이 기울어지는 순간이 있었어.",
+    "en": "Your body leaned at times."
+  },
+  "頭が横にずれる場面があったね。": {
+    "ko": "머리가 옆으로 치우치는 순간이 있었어.",
+    "en": "Your head shifted sideways at times."
+  },
+  "あごの位置が変わる場面があったね。": {
+    "ko": "턱 위치가 달라지는 순간이 있었어.",
+    "en": "Your chin position changed at times."
+  },
+  "左右の肩の高さが変わる場面があったね。": {
+    "ko": "양쪽 어깨 높이가 달라지는 순간이 있었어.",
+    "en": "Your shoulder heights changed at times."
+  },
+  "顔が横を向く場面があったね。": {
+    "ko": "얼굴이 옆을 향하는 순간이 있었어.",
+    "en": "Your face turned sideways at times."
+  },
+  "頭が左に傾く場面があったね。": {
+    "ko": "머리가 왼쪽으로 기울어지는 순간이 있었어.",
+    "en": "Your head tilted left at times."
+  },
+  "頭が右に傾く場面があったね。": {
+    "ko": "머리가 오른쪽으로 기울어지는 순간이 있었어.",
+    "en": "Your head tilted right at times."
+  },
+  "体が左に傾く場面があったね。": {
+    "ko": "몸이 왼쪽으로 기울어지는 순간이 있었어.",
+    "en": "Your body leaned left at times."
+  },
+  "体が右に傾く場面があったね。": {
+    "ko": "몸이 오른쪽으로 기울어지는 순간이 있었어.",
+    "en": "Your body leaned right at times."
+  },
+  "頭が左にずれる場面があったね。": {
+    "ko": "머리가 왼쪽으로 치우치는 순간이 있었어.",
+    "en": "Your head shifted left at times."
+  },
+  "頭が右にずれる場面があったね。": {
+    "ko": "머리가 오른쪽으로 치우치는 순간이 있었어.",
+    "en": "Your head shifted right at times."
+  },
+  "あごが下がる場面があったね。": {
+    "ko": "턱이 내려가는 순간이 있었어.",
+    "en": "Your chin dropped at times."
+  },
+  "あごが上がる場面があったね。": {
+    "ko": "턱이 올라가는 순간이 있었어.",
+    "en": "Your chin lifted at times."
+  },
+  "左肩が高くなる場面があったね。": {
+    "ko": "왼쪽 어깨가 높아지는 순간이 있었어.",
+    "en": "Your left shoulder rose at times."
+  },
+  "右肩が高くなる場面があったね。": {
+    "ko": "오른쪽 어깨가 높아지는 순간이 있었어.",
+    "en": "Your right shoulder rose at times."
+  },
+  "顔が左を向く場面があったね。": {
+    "ko": "얼굴이 왼쪽을 향하는 순간이 있었어.",
+    "en": "Your face turned left at times."
+  },
+  "顔が右を向く場面があったね。": {
+    "ko": "얼굴이 오른쪽을 향하는 순간이 있었어.",
+    "en": "Your face turned right at times."
+  },
+  "次は画面との距離も意識してみよう。": {
+    "ko": "다음에는 화면과의 거리도 신경 써 보자.",
+    "en": "Next time, keep an eye on your distance from the screen."
+  },
+  "次は肩に対する頭の位置を意識してみよう。": {
+    "ko": "다음에는 어깨에 대한 머리 위치를 신경 써 보자.",
+    "en": "Next time, notice where your head sits above your shoulders."
+  },
+  "次は頭の傾きを意識してみよう。": {
+    "ko": "다음에는 머리 기울기를 신경 써 보자.",
+    "en": "Next time, keep an eye on your head tilt."
+  },
+  "次は体の傾きを意識してみよう。": {
+    "ko": "다음에는 몸의 기울기를 신경 써 보자.",
+    "en": "Next time, keep an eye on your body's lean."
+  },
+  "次は肩の中央に頭を戻すことを意識してみよう。": {
+    "ko": "다음에는 머리를 어깨 중앙으로 되돌려 보자.",
+    "en": "Next time, try centering your head over your shoulders."
+  },
+  "次は登録したときのあごの位置を意識してみよう。": {
+    "ko": "다음에는 등록했을 때의 턱 위치를 떠올려 보자.",
+    "en": "Next time, return your chin to its calibrated position."
+  },
+  "次は左右の肩の高さを意識してみよう。": {
+    "ko": "다음에는 양쪽 어깨 높이를 신경 써 보자.",
+    "en": "Next time, notice the height of both shoulders."
+  },
+  "次は登録したときの顔の向きを意識してみよう。": {
+    "ko": "다음에는 등록했을 때의 얼굴 방향을 떠올려 보자.",
+    "en": "Next time, return to your calibrated face direction."
+  },
+  "今回は姿勢を確認できた時間が短かったね。": {
+    "ko": "이번에는 자세를 확인할 수 있었던 시간이 짧았어.",
+    "en": "I could only track your posture for a short time today."
+  },
+  "顔と肩が映る位置で、また測ってみよう。": {
+    "ko": "얼굴과 어깨가 보이는 위치에서 다시 측정해 보자.",
+    "en": "Try again with your face and shoulders in view."
+  },
+  "登録した姿勢に戻せた場面もあったよ。": {
+    "ko": "등록한 자세로 되돌아온 순간도 있었어.",
+    "en": "You returned to your calibrated posture at times, too."
+  },
+  "登録した姿勢をよく保てていたね。": {
+    "ko": "등록한 자세를 잘 유지했어.",
+    "en": "You maintained your calibrated posture well."
+  },
+  "次もこの調子で、無理なく続けよう。": {
+    "ko": "다음에도 무리하지 말고 꾸준히 해 보자.",
+    "en": "Keep going at a comfortable pace next time."
+  },
+  "今回の測定、お疲れさま。": {
+    "ko": "이번 측정도 수고했어.",
+    "en": "Nice work on this session."
+  },
+  "次もときどき姿勢を意識してみよう。": {
+    "ko": "다음에도 가끔 자세를 의식해 보자.",
+    "en": "Check in on your posture now and then next time."
+  },
+  "登録した姿勢から変わる場面があったね。": {
+    "ko": "등록한 자세에서 달라지는 순간이 있었어.",
+    "en": "Your posture changed from the baseline at times."
+  },
+  "いつもそばで姿勢を見守ってくれる、基本のピンアナゴ。": {
+    "ko": "항상 곁에서 자세를 지켜보는 기본 핀아나고.",
+    "en": "The original Pin-anago, always by your side to watch over your posture."
+  },
+  "ムードメーカー": {
+    "ko": "분위기 메이커",
+    "en": "Mood maker"
+  },
+  "フレンドリー": {
+    "ko": "친근함",
+    "en": "Friendly"
+  },
+  "姿勢のいい時間にひょっこり現れる、まっすぐなピンアナゴ。": {
+    "ko": "좋은 자세를 유지할 때 살며시 나타나는 곧은 핀아나고.",
+    "en": "An upright Pin-anago who pops up when you maintain good posture."
+  },
+  "集中している人のそばが好きな、落ち着いた黒いピンアナゴ。": {
+    "ko": "집중하는 사람 곁을 좋아하는 차분한 검은 핀아나고.",
+    "en": "A calm, black Pin-anago who likes being near focused people."
+  },
+  "ドット模様と一緒に、集中のリズムを刻むピンアナゴ。": {
+    "ko": "점박이 무늬와 함께 집중의 리듬을 타는 핀아나고.",
+    "en": "A spotted Pin-anago who keeps the rhythm of your focus."
+  },
+  "良い姿勢を続ける人にだけ姿を見せる、もじゃもじゃ不思議なピンアナゴ。": {
+    "ko": "좋은 자세를 유지하는 사람에게만 모습을 보이는 복슬복슬 신비한 핀아나고.",
+    "en": "A shaggy, mysterious Pin-anago who appears only for those keeping good posture."
+  },
+  "良い姿勢のリズムに合わせてゆらゆらする白いピンアナゴ。": {
+    "ko": "좋은 자세의 리듬에 맞춰 살랑이는 하얀 핀아나고.",
+    "en": "A white Pin-anago who sways to the rhythm of good posture."
+  },
+  "休憩と集中の切り替えが上手な、おしゃれ好きのピンアナゴ。": {
+    "ko": "휴식과 집중을 능숙하게 오가는 멋쟁이 핀아나고.",
+    "en": "A stylish Pin-anago who knows how to balance breaks and focus."
+  },
+  "なすびの冠を戴き、落ち着いた集中のそばにひょっこり顔を出すピンアナゴ。": {
+    "ko": "가지 왕관을 쓰고 차분히 집중하는 곁에 살며시 나타나는 핀아나고.",
+    "en": "A Pin-anago with an eggplant crown who pops up beside quiet concentration."
+  },
+  "ハート模様とツインテールで、華やかな姿勢タイムを盛り上げるピンアナゴ。": {
+    "ko": "하트 무늬와 트윈테일로 자세 시간을 화사하게 만드는 핀아나고.",
+    "en": "A Pin-anago with heart patterns and twin tails who brightens up posture time."
+  },
+  "ナミアナゴ": {
+    "ko": "나미아나고",
+    "en": "Nami-anago"
+  },
+  "波線がゆらゆら流れ、リズムのいい姿勢を一緒に刻むピンアナゴ。": {
+    "ko": "물결 무늬가 흐르며 함께 좋은 자세의 리듬을 타는 핀아나고.",
+    "en": "A Pin-anago with flowing wave patterns who shares your posture rhythm."
+  },
+  "ノリがいい": {
+    "ko": "흥이 많음",
+    "en": "Lively"
+  },
+  "気分屋": {
+    "ko": "변덕쟁이",
+    "en": "Changeable"
+  },
+  "フタバナゴ": {
+    "ko": "후타바나고",
+    "en": "Futaba-nago"
+  },
+  "双葉を乗せてすくすく伸びる、まっすぐな背筋が似合うピンアナゴ。": {
+    "ko": "떡잎을 얹고 쑥쑥 자라며 곧은 자세가 어울리는 핀아나고.",
+    "en": "A Pin-anago sprouting twin leaves, growing tall and looking good upright."
+  },
+  "面倒見が良い": {
+    "ko": "잘 챙겨줌",
+    "en": "Caring"
+  },
+  "真面目": {
+    "ko": "성실함",
+    "en": "Earnest"
+  },
+  "パンアナゴ": {
+    "ko": "판아나고",
+    "en": "Pan-anago"
+  },
+  "パンみたいな温かい質感で、長い集中もそっと支えるピンアナゴ。": {
+    "ko": "빵처럼 포근한 모습으로 긴 집중도 살며시 돕는 핀아나고.",
+    "en": "A warm, bread-like Pin-anago who quietly supports long stretches of focus."
+  },
+  "旅行好き": {
+    "ko": "여행 애호가",
+    "en": "Travel lover"
+  },
+  "英語が得意": {
+    "ko": "영어를 잘함",
+    "en": "Good at English"
+  },
+  "ヨゾラナゴ": {
+    "ko": "요조라나고",
+    "en": "Yozora-nago"
+  },
+  "星屑をまとった夜の色で、静かな集中のそばにいるピンアナゴ。": {
+    "ko": "별가루를 두른 밤빛으로 조용한 집중 곁에 머무는 핀아나고.",
+    "en": "A night-colored Pin-anago dusted with stars, staying beside quiet focus."
+  },
+  "夜行性": {
+    "ko": "야행성",
+    "en": "Night owl"
+  },
+  "物静か": {
+    "ko": "조용함",
+    "en": "Quiet"
+  },
+  "コイアナゴ": {
+    "ko": "코이아나고",
+    "en": "Koi-anago"
+  },
+  "うろこ模様をきらめかせながら、自分のペースで良い姿勢を目指すピンアナゴ。": {
+    "ko": "비늘 무늬를 반짝이며 자기 속도로 좋은 자세를 향해 가는 핀아나고.",
+    "en": "A Pin-anago with shimmering scales who practices good posture at their own pace."
+  },
+  "マイペース": {
+    "ko": "마이페이스",
+    "en": "Own pace"
+  },
+  "野心家": {
+    "ko": "야심가",
+    "en": "Ambitious"
+  },
+  "パイナップル柄のリズムで、楽しい姿勢の時間を運んでくるピンアナゴ。": {
+    "ko": "파인애플 무늬의 리듬으로 즐거운 자세 시간을 전하는 핀아나고.",
+    "en": "A pineapple-patterned Pin-anago who brings fun to posture time."
+  },
+  "陽気": {
+    "ko": "명랑함",
+    "en": "Cheerful"
+  },
+  "サバサバ系": {
+    "ko": "시원시원함",
+    "en": "Straightforward"
+  },
+  "ワンアナゴ": {
+    "ko": "완아나고",
+    "en": "Wan-anago"
+  },
+  "耳をぴんと立てて、あなたのそばで甘えん坊なピンアナゴ。": {
+    "ko": "귀를 쫑긋 세우고 곁에서 어리광 부리는 핀아나고.",
+    "en": "An affectionate Pin-anago with perked-up ears who loves being beside you."
+  },
+  "甘えん坊": {
+    "ko": "애교쟁이",
+    "en": "Affectionate"
+  },
+  "アウトドア": {
+    "ko": "아웃도어",
+    "en": "Outdoorsy"
+  },
+  "リュウアナゴ": {
+    "ko": "류아나고",
+    "en": "Ryu-anago"
+  },
+  "水滴の模様が揺れるたび、集中の深さを静かに見守るピンアナゴ。": {
+    "ko": "물방울 무늬가 흔들릴 때마다 깊은 집중을 조용히 지켜보는 핀아나고.",
+    "en": "A Pin-anago whose swaying droplet patterns quietly watch over deep focus."
+  },
+  "ミステリアス": {
+    "ko": "신비함",
+    "en": "Mysterious"
+  },
+  "プライドが高い": {
+    "ko": "자존심 강함",
+    "en": "Proud"
+  },
+  "▶︎ スキップする": {
+    "ko": "▶︎ 건너뛰기",
+    "en": "▶︎ Skip"
+  },
+  "今日はすごく姿勢が良かったね。": {
+    "ko": "오늘은 자세가 정말 좋았어.",
+    "en": "Your posture looked great today."
+  },
+  "新しい仲間を連れてきたよ！": {
+    "ko": "새로운 친구를 데려왔어!",
+    "en": "I brought a new friend!"
+  },
+  "はじめまして、よろしくナ！": {
+    "ko": "처음 뵙겠습니다. 잘 부탁해!",
+    "en": "Hi there! Nice to meet you!"
+  },
+  "{0}の{1}カード": {
+    "ko": "{0}의 {1}카드",
+    "en": "{1}{0} card"
+  },
+  "選択中の": {
+    "ko": "선택된 ",
+    "en": "Selected "
+  },
+  "{0}番 未獲得": {
+    "ko": "{0}번 미획득",
+    "en": "No. {0}, not collected"
+  },
+  "番号順": {
+    "ko": "번호순",
+    "en": "Number"
+  },
+  "獲得順": {
+    "ko": "획득순",
+    "en": "Collected"
+  },
+  "コレクションの並び順": {
+    "ko": "컬렉션 정렬",
+    "en": "Sort collection"
+  },
+  "閉じる": {
+    "ko": "닫기",
+    "en": "Close"
+  },
+  "本当に終了しますか？": {
+    "ko": "정말 종료할까요?",
+    "en": "End this session?"
+  },
+  "ここまでの集中時間と姿勢を記録します。": {
+    "ko": "지금까지의 집중 시간과 자세를 기록합니다.",
+    "en": "Your focus time and posture so far will be saved."
+  },
+  "続ける": {
+    "ko": "계속하기",
+    "en": "Continue"
+  },
+  "終了する": {
+    "ko": "종료하기",
+    "en": "End session"
+  },
+  "ピンアナゴとは": {
+    "ko": "핀아나고 소개",
+    "en": "About Pin-anago"
+  },
+  "プロフィールメニュー": {
+    "ko": "프로필 메뉴",
+    "en": "Profile menu"
+  },
+  "プロフィール": {
+    "ko": "프로필",
+    "en": "Profile"
+  },
+  "設定": {
+    "ko": "설정",
+    "en": "Settings"
+  },
+  "サウンド設定": {
+    "ko": "사운드 설정",
+    "en": "Sound settings"
+  },
+  "ストーリーを見る": {
+    "ko": "스토리 보기",
+    "en": "View story"
+  },
+  "コレクションを初期化": {
+    "ko": "컬렉션 초기화",
+    "en": "Reset collection"
+  },
+  "プライバシー・データ管理": {
+    "ko": "개인정보·데이터 관리",
+    "en": "Privacy & data"
+  },
+  "サポート": {
+    "ko": "지원",
+    "en": "Support"
+  },
+  "正しい姿勢を継続して": {
+    "ko": "바른 자세를 유지하고",
+    "en": "Keep up your posture"
+  },
+  "ピンアナゴをゲットしよう！": {
+    "ko": "핀아나고를 만나 보세요!",
+    "en": "and meet a Pin-anago!"
+  },
+  "作業スタート": {
+    "ko": "집중 시작",
+    "en": "Start focusing"
+  },
+  "ピンアナゴを変更": {
+    "ko": "핀아나고 변경",
+    "en": "Change Pin-anago"
+  },
+  "コレクション": {
+    "ko": "컬렉션",
+    "en": "Collection"
+  },
+  "変更をキャンセル": {
+    "ko": "변경 취소",
+    "en": "Cancel changes"
+  },
+  "今日のピンアナゴ": {
+    "ko": "오늘의 핀아나고",
+    "en": "Today's Pin-anago"
+  },
+  "ピンアナゴを選択": {
+    "ko": "핀아나고 선택",
+    "en": "Choose a Pin-anago"
+  },
+  "獲得済みのピンアナゴ": {
+    "ko": "획득한 핀아나고",
+    "en": "Your Pin-anago"
+  },
+  "まだ仲間がいません": {
+    "ko": "아직 친구가 없어요",
+    "en": "No friends yet"
+  },
+  "姿勢チェックで、仲間を増やそう！": {
+    "ko": "자세를 체크하며 친구를 모아 보세요!",
+    "en": "Check your posture to meet new friends!"
+  },
+  "決定": {
+    "ko": "선택",
+    "en": "Confirm"
+  },
+  "姿勢チェック": {
+    "ko": "자세 체크",
+    "en": "Posture check"
+  },
+  "姿勢を登録": {
+    "ko": "자세 등록",
+    "en": "Set your posture"
+  },
+  "一時停止中": {
+    "ko": "일시정지 중",
+    "en": "Paused"
+  },
+  "休憩中": {
+    "ko": "휴식 중",
+    "en": "On a break"
+  },
+  "姿勢測定中": {
+    "ko": "자세 측정 중",
+    "en": "Tracking posture"
+  },
+  "姿勢登録の準備をしましょう。": {
+    "ko": "자세를 등록할 준비를 해 주세요.",
+    "en": "Get ready to set your posture."
+  },
+  "正しい姿勢のまま５秒間キープ！": {
+    "ko": "바른 자세로 5초간 유지해 주세요!",
+    "en": "Hold your posture for 5 seconds!"
+  },
+  "一度立ち上がって、ストレッチをしましょう。": {
+    "ko": "잠시 일어나서 스트레칭해 보세요.",
+    "en": "Stand up and stretch for a moment."
+  },
+  "良い姿勢を続けて、新しいピンアナゴに出会おう。": {
+    "ko": "좋은 자세를 유지하며 새로운 핀아나고를 만나세요.",
+    "en": "Keep up your posture and meet a new Pin-anago."
+  },
+  "録画中": {
+    "ko": "녹화 중",
+    "en": "Recording"
+  },
+  "登録完了！": {
+    "ko": "등록 완료!",
+    "en": "Posture set!"
+  },
+  "姿勢を登録中": {
+    "ko": "자세 등록 중",
+    "en": "Setting your posture"
+  },
+  "※この姿勢が測定時の基準となります。": {
+    "ko": "※ 이 자세가 측정 기준이 됩니다.",
+    "en": "This posture will be your baseline."
+  },
+  "登録をキャンセル": {
+    "ko": "등록 취소",
+    "en": "Cancel calibration"
+  },
+  "姿勢を再登録": {
+    "ko": "자세 다시 등록",
+    "en": "Recalibrate posture"
+  },
+  "正しい姿勢：画面から40cm以上離れ、顎を引き、背筋を伸ばす。膝と肘は約90度、足を床につける。猫背、反り腰、仙骨座りに気をつけよう。": {
+    "ko": "바른 자세: 화면에서 40cm 이상 떨어져 턱을 당기고 등을 펴세요. 무릎과 팔꿈치는 약 90도로, 발은 바닥에 두세요. 등을 굽히거나 허리를 과하게 젖히거나 의자에 미끄러져 앉지 않도록 해 주세요.",
+    "en": "Sit at least 40 cm from the screen, tuck your chin, and sit upright. Keep your knees and elbows at about 90 degrees and your feet on the floor. Avoid hunching, overarching your lower back, or slouching down in your chair."
+  },
+  "準備できた！": {
+    "ko": "준비됐어요!",
+    "en": "I'm ready!"
+  },
+  "休憩タイム": {
+    "ko": "휴식 시간",
+    "en": "Break time"
+  },
+  "集中タイム": {
+    "ko": "집중 시간",
+    "en": "Focus time"
+  },
+  "ピーン率": {
+    "ko": "바른 자세 비율",
+    "en": "Posture rate"
+  },
+  "ウィジェット表示": {
+    "ko": "위젯 표시",
+    "en": "Show widget"
+  },
+  "サウンド": {
+    "ko": "사운드",
+    "en": "Sound"
+  },
+  "音量": {
+    "ko": "음량",
+    "en": "Volume"
+  },
+  "再開": {
+    "ko": "재개",
+    "en": "Resume"
+  },
+  "一時停止": {
+    "ko": "일시정지",
+    "en": "Pause"
+  },
+  "終了": {
+    "ko": "종료",
+    "en": "End"
+  },
+  "指定しない（通常の抽選）": {
+    "ko": "지정하지 않음 (일반 추첨)",
+    "en": "No preference (random selection)"
+  },
+  "保存できませんでした。もう一度選んでください。": {
+    "ko": "저장하지 못했어요. 다시 선택해 주세요.",
+    "en": "Couldn't save. Please choose again."
+  },
+  "次に獲得するピンアナゴ": {
+    "ko": "다음에 획득할 핀아나고",
+    "en": "Next Pin-anago reward"
+  },
+  "未獲得のアナゴから選べます。獲得条件を満たした次の1回に適用し、獲得後は通常の抽選に戻ります。": {
+    "ko": "아직 획득하지 않은 아나고를 선택할 수 있습니다. 획득 조건을 만족하는 다음 한 번에만 적용하며, 획득 후에는 일반 추첨으로 돌아갑니다.",
+    "en": "Choose a Pin-anago you haven't collected. This applies to the next eligible reward only, then returns to random selection."
+  },
+  "現在登場しているピンアナゴは、すべて獲得済みです。": {
+    "ko": "현재 등장하는 핀아나고를 모두 획득했어요.",
+    "en": "You've collected every Pin-anago currently available."
+  },
+  "保存中…": {
+    "ko": "저장 중…",
+    "en": "Saving…"
+  },
+  "なし": {
+    "ko": "없음",
+    "en": "None"
+  },
+  "姿勢を戻そう！": {
+    "ko": "자세를 되돌려 보자!",
+    "en": "Let's reset your posture!"
+  },
+  "休憩中のシマアナゴ": {
+    "ko": "쉬고 있는 시마아나고",
+    "en": "Shima-anago resting"
+  },
+  "シマアナゴ": {
+    "ko": "시마아나고",
+    "en": "Shima-anago"
+  },
+  "取得日時の記録なし": {
+    "ko": "획득 시각 기록 없음",
+    "en": "Collection time unavailable"
+  },
+  "画像をクリップボードにコピーしました": {
+    "ko": "이미지를 클립보드에 복사했어요",
+    "en": "Image copied to clipboard"
+  },
+  "画像を保存しました": {
+    "ko": "이미지를 저장했어요",
+    "en": "Image saved"
+  },
+  "画像を保存できませんでした。もう一度お試しください。": {
+    "ko": "이미지를 저장하지 못했어요. 다시 시도해 주세요.",
+    "en": "Couldn't save the image. Please try again."
+  },
+  "今回はピンアナゴ未獲得": {
+    "ko": "이번에는 핀아나고를 획득하지 못했어요",
+    "en": "No Pin-anago this time"
+  },
+  "？？アナゴ": {
+    "ko": "??아나고",
+    "en": "??-anago"
+  },
+  "取得できませんでした。": {
+    "ko": "획득하지 못했어요.",
+    "en": "Not collected."
+  },
+  "集中した時間": {
+    "ko": "집중한 시간",
+    "en": "Time focused"
+  },
+  "分": {
+    "ko": "분",
+    "en": "min"
+  },
+  "ピンアナゴからのコメント": {
+    "ko": "핀아나고의 한마디",
+    "en": "A note from your Pin-anago"
+  },
+  "カードの共有と保存": {
+    "ko": "카드 공유·저장",
+    "en": "Share or save card"
+  },
+  "結果を画像で共有": {
+    "ko": "결과 이미지 공유",
+    "en": "Share result image"
+  },
+  "結果画像を保存": {
+    "ko": "결과 이미지 저장",
+    "en": "Save result image"
+  },
+  "ジャジャーン！": {
+    "ko": "짜잔!",
+    "en": "Ta-da!"
+  },
+  "残念！": {
+    "ko": "아쉬워요!",
+    "en": "Almost!"
+  },
+  "ピンアナゴをゲット！": {
+    "ko": "핀아나고를 획득했어요!",
+    "en": "You got a Pin-anago!"
+  },
+  "ゲットならず…": {
+    "ko": "획득하지 못했어요…",
+    "en": "Not this time…"
+  },
+  "ホームに戻る": {
+    "ko": "홈으로 돌아가기",
+    "en": "Back to home"
+  },
+  "休憩開始": {
+    "ko": "휴식 시작",
+    "en": "Break started"
+  },
+  "集中を再開": {
+    "ko": "집중 재개",
+    "en": "Focus resumed"
+  },
+  "新しい基準で再開": {
+    "ko": "새 기준으로 재개",
+    "en": "Resumed with new baseline"
+  },
+  "以前の基準で再開": {
+    "ko": "이전 기준으로 재개",
+    "en": "Resumed with previous baseline"
+  },
+  "検出できない時間": {
+    "ko": "인식할 수 없었던 시간",
+    "en": "Time without tracking"
+  },
+  "検出を再開": {
+    "ko": "인식 재개",
+    "en": "Tracking resumed"
+  },
+  "姿勢の記録": {
+    "ko": "자세 기록",
+    "en": "Posture history"
+  },
+  "グラフデータなし": {
+    "ko": "그래프 데이터 없음",
+    "en": "No chart data"
+  },
+  "集中時間に沿った姿勢の記録。上端の基準線は登録した姿勢の基準、100点です。": {
+    "ko": "집중 시간에 따른 자세 기록입니다. 위쪽 기준선은 등록한 자세의 기준인 100점입니다.",
+    "en": "Posture throughout your focus time. The top baseline is your calibrated posture at 100 points."
+  },
+  "基準": {
+    "ko": "기준",
+    "en": "Baseline"
+  },
+  "{0}分": {
+    "ko": "{0}분",
+    "en": "{0} min"
+  },
+  "グラフの詳細を確認": {
+    "ko": "그래프 상세 보기",
+    "en": "View chart details"
+  },
+  "検出なし": {
+    "ko": "인식 안 됨",
+    "en": "Not tracked"
+  },
+  "{0}点": {
+    "ko": "{0}점",
+    "en": "{0} points"
+  },
+  "点": {
+    "ko": "점",
+    "en": "points"
+  },
+  "切替前／後：": {
+    "ko": "전환 전/후:",
+    "en": "Before/after:"
+  },
+  "カスタム {0}": {
+    "ko": "사용자 지정 {0}",
+    "en": "Custom {0}"
+  },
+  "効果音": {
+    "ko": "효과음",
+    "en": "Sound effect"
+  },
+  "集中": {
+    "ko": "집중",
+    "en": "Focus"
+  },
+  "休憩": {
+    "ko": "휴식",
+    "en": "Break"
+  },
+  "サイクル": {
+    "ko": "사이클",
+    "en": "Cycles"
+  },
+  "周": {
+    "ko": "회",
+    "en": "cycles"
+  },
+  "ホームへ戻る": {
+    "ko": "홈으로",
+    "en": "Back to home"
+  },
+  "タイマーを設定": {
+    "ko": "타이머 설정",
+    "en": "Set timer"
+  },
+  "時間（分）": {
+    "ko": "시간 (분)",
+    "en": "Time (minutes)"
+  },
+  "数": {
+    "ko": "횟수",
+    "en": "Count"
+  },
+  "{0}時間をスライダーで調整": {
+    "ko": "{0} 시간을 슬라이더로 조절",
+    "en": "Adjust {0} time with the slider"
+  },
+  "サイクルを減らす": {
+    "ko": "사이클 줄이기",
+    "en": "Fewer cycles"
+  },
+  "サイクルを増やす": {
+    "ko": "사이클 늘리기",
+    "en": "More cycles"
+  },
+  "1周のときは休憩なし（0分）です。": {
+    "ko": "1회일 때는 휴식이 없습니다 (0분).",
+    "en": "A single cycle has no break (0 minutes)."
+  },
+  "設定完了": {
+    "ko": "설정 완료",
+    "en": "Done"
+  },
+  "次回もこの設定にする": {
+    "ko": "다음에도 이 설정 사용",
+    "en": "Remember these settings"
+  },
+  "姿勢ウィジェット": {
+    "ko": "자세 위젯",
+    "en": "Posture widget"
+  },
+  "ウィジェットを移動。ドラッグまたは矢印キー、Shiftで大きく移動": {
+    "ko": "위젯 이동. 드래그 또는 방향키로 이동하고 Shift로 더 크게 이동합니다",
+    "en": "Move widget. Drag or use arrow keys; hold Shift for larger steps"
+  },
+  "{0}、残り{1}、{2} / {3} サイクル。メイン画面を開く": {
+    "ko": "{0}, 남은 시간 {1}, {2}/{3}회. 메인 화면 열기",
+    "en": "{0}, {1} remaining, cycle {2} of {3}. Open main window"
+  },
+  "集中中": {
+    "ko": "집중 중",
+    "en": "Focusing"
+  },
+  "測定終了": {
+    "ko": "측정 종료",
+    "en": "End tracking"
+  },
+  "残り時間": {
+    "ko": "남은 시간",
+    "en": "Time remaining"
+  },
+  "怒っているシマアナゴ": {
+    "ko": "화난 시마아나고",
+    "en": "Angry Shima-anago"
+  },
+  "目を閉じたシマアナゴ": {
+    "ko": "눈을 감은 시마아나고",
+    "en": "Shima-anago with eyes closed"
+  },
+  "保存に失敗しました。再試行してください。": {
+    "ko": "저장하지 못했어요. 다시 시도해 주세요.",
+    "en": "Couldn't save. Please try again."
+  },
+  "タイムラプスの保存状態を確認できませんでした。姿勢測定は利用できます。": {
+    "ko": "타임랩스 저장 상태를 확인하지 못했어요. 자세 측정은 사용할 수 있습니다.",
+    "en": "Couldn't check the timelapse files. Posture tracking is still available."
+  },
+  "前回の中断した測定記録を保存しました。新しく測定を始められます。": {
+    "ko": "이전에 중단된 측정 기록을 저장했어요. 새 측정을 시작할 수 있습니다.",
+    "en": "Your interrupted session was saved. You can start a new one."
+  },
+  "カメラ映像を記録できません。姿勢測定は続けられます。": {
+    "ko": "카메라 영상을 녹화할 수 없어요. 자세 측정은 계속할 수 있어요.",
+    "en": "The camera could not be recorded. Posture tracking can continue."
+  },
+  "録画を開始できませんでした": {
+    "ko": "녹화를 시작하지 못했어요",
+    "en": "Couldn't start recording"
+  },
+  "設定を保存できませんでした。この画面を閉じるまでは適用されます。": {
+    "ko": "설정을 저장하지 못했어요. 이 화면을 닫기 전까지는 적용됩니다.",
+    "en": "Couldn't save settings. They will apply until you close this screen."
+  },
+  "姿勢を登録できませんでした。カメラの位置を確認して、もう一度お試しください。": {
+    "ko": "자세를 등록하지 못했어요. 카메라 위치를 확인하고 다시 시도해 주세요.",
+    "en": "Couldn't set your posture. Check the camera position and try again."
+  },
+  "別のタブで測定中です。その測定を終了してから、もう一度お試しください。": {
+    "ko": "다른 탭에서 측정 중입니다. 해당 측정을 종료한 뒤 다시 시도해 주세요.",
+    "en": "Tracking is active in another tab. End that session and try again."
+  },
+  "このカードの測定記録が見つかりません": {
+    "ko": "이 카드의 측정 기록을 찾을 수 없어요",
+    "en": "Couldn't find this card's session"
+  },
+  "記録を読み込んでいます…": {
+    "ko": "기록을 불러오는 중…",
+    "en": "Loading records…"
+  },
+  "再読み込み": {
+    "ko": "새로고침",
+    "en": "Reload"
+  },
+  "獲得カードの詳細": {
+    "ko": "획득 카드 상세",
+    "en": "Collected card details"
+  },
+  "コレクションを初期化しますか？": {
+    "ko": "컬렉션을 초기화할까요?",
+    "en": "Reset your collection?"
+  },
+  "獲得したカード、選択中のピンアナゴ、アプリ内のすべてのタイムラプスを削除します。測定記録・タイマー設定と、保存して外に書き出したファイルは残ります。": {
+    "ko": "획득한 카드, 선택한 핀아나고, 앱 안의 모든 타임랩스를 삭제합니다. 측정 기록·타이머 설정과 외부로 저장한 파일은 유지됩니다.",
+    "en": "This deletes collected cards, your selected Pin-anago, and all timelapses in the app. Session records, timer settings, and files exported outside the app will remain."
+  },
+  "キャンセル": {
+    "ko": "취소",
+    "en": "Cancel"
+  },
+  "初期化する": {
+    "ko": "초기화",
+    "en": "Reset"
+  },
+  "保存を再試行": {
+    "ko": "저장 다시 시도",
+    "en": "Retry saving"
+  },
+  "測定を終了してからアカウントを変更してください。": {
+    "ko": "측정을 종료한 뒤 계정을 변경해 주세요.",
+    "en": "End your session before switching accounts."
+  },
+  "ログインを完了できませんでした。記録は端末に残っています。再試行してください。": {
+    "ko": "로그인을 완료하지 못했어요. 기록은 기기에 남아 있습니다. 다시 시도해 주세요.",
+    "en": "Couldn't complete sign-in. Your records remain on this device. Please try again."
+  },
+  "別の画面でアカウントが変更されました。再試行してください。": {
+    "ko": "다른 화면에서 계정이 변경됐어요. 다시 시도해 주세요.",
+    "en": "The account changed in another window. Please try again."
+  },
+  "オフラインです。記録は端末に保存します。": {
+    "ko": "오프라인입니다. 기록은 기기에 저장합니다.",
+    "en": "You're offline. Records will be saved on this device."
+  },
+  "アカウントが変更されました。": {
+    "ko": "계정이 변경됐어요.",
+    "en": "The account has changed."
+  },
+  "再試行": {
+    "ko": "다시 시도",
+    "en": "Retry"
+  },
+  "分析への参加": {
+    "ko": "분석 참여",
+    "en": "Participate in analysis"
+  },
+  "ログイン済み": {
+    "ko": "로그인됨",
+    "en": "Signed in"
+  },
+  "満18歳以上です": {
+    "ko": "만 18세 이상입니다",
+    "en": "I am 18 or older"
+  },
+  "処理しています…": {
+    "ko": "처리 중…",
+    "en": "Processing…"
+  },
+  "同意して続ける": {
+    "ko": "동의하고 계속하기",
+    "en": "Agree and continue"
+  },
+  "ログアウト": {
+    "ko": "로그아웃",
+    "en": "Sign out"
+  },
+  "アカウントの削除": {
+    "ko": "계정 삭제",
+    "en": "Account deletion"
+  },
+  "分析への参加をやめる": {
+    "ko": "분석 참여 중단",
+    "en": "Stop participating"
+  },
+  "個人データの管理": {
+    "ko": "개인정보 관리",
+    "en": "Manage personal data"
+  },
+  "アカウントを削除しますか？": {
+    "ko": "계정을 삭제할까요?",
+    "en": "Delete your account?"
+  },
+  "分析への参加をやめますか？": {
+    "ko": "분석 참여를 중단할까요?",
+    "en": "Stop participating in analysis?"
+  },
+  "アカウントを削除": {
+    "ko": "계정 삭제",
+    "en": "Delete account"
+  },
+  "個人データの変更確認": {
+    "ko": "개인정보 변경 확인",
+    "en": "Confirm personal data changes"
+  },
+  "同意を撤回して自動送信を停止し、ログアウトします。保存済みの分析データは削除されません。次回ログイン時は再度同意を確認します。": {
+    "ko": "동의를 철회하고 자동 전송을 중단한 뒤 로그아웃합니다. 이미 저장된 분석 데이터는 삭제되지 않습니다. 다음 로그인 시 동의를 다시 확인합니다.",
+    "en": "This withdraws consent, stops automatic uploads, and signs you out. Analysis data already stored will remain. You'll be asked for consent when you next sign in."
+  },
+  "ログイン方法・セッション・サーバーの分析データを削除します。取り消せません。削除には直前の再ログインが必要です。": {
+    "ko": "로그인 수단·세션·서버의 분석 데이터를 삭제합니다. 되돌릴 수 없습니다. 삭제하려면 직전에 다시 로그인해야 합니다.",
+    "en": "This deletes sign-in methods, sessions, and server-side analysis data. It cannot be undone. A recent sign-in is required to delete your account."
+  },
+  "この端末のローカル記録は残ります。": {
+    "ko": "이 기기의 로컬 기록은 유지됩니다.",
+    "en": "Local records on this device will remain."
+  },
+  "参加をやめてログアウト": {
+    "ko": "참여 중단 후 로그아웃",
+    "en": "Stop participating and sign out"
+  },
+  "削除を実行する": {
+    "ko": "삭제하기",
+    "en": "Confirm deletion"
+  },
+  "再ログイン": {
+    "ko": "다시 로그인",
+    "en": "Sign in again"
+  },
+  "アカウントを削除するには、設定からログインしてください。": {
+    "ko": "계정을 삭제하려면 설정에서 로그인해 주세요.",
+    "en": "Sign in through Settings to delete your account."
+  },
+  "送信する記録と確認欄を選んでください。": {
+    "ko": "전송할 기록을 선택하고 확인란에 체크해 주세요.",
+    "en": "Select records to upload and check the confirmation box."
+  },
+  "測定を終了してから送信記録を選んでください。": {
+    "ko": "측정을 종료한 뒤 전송할 기록을 선택해 주세요.",
+    "en": "End your session before selecting records to upload."
+  },
+  "先に分析への参加を選んでください。": {
+    "ko": "먼저 분석 참여에 동의해 주세요.",
+    "en": "Agree to participate in analysis first."
+  },
+  "選択した記録の所有者が変更されました。": {
+    "ko": "선택한 기록의 소유자가 변경됐어요.",
+    "en": "The owner of the selected records has changed."
+  },
+  "アカウント": {
+    "ko": "계정",
+    "en": "Account"
+  },
+  "開発者ログアウト": {
+    "ko": "개발자 로그아웃",
+    "en": "Sign out of developer account"
+  },
+  "ログイン": {
+    "ko": "로그인",
+    "en": "Sign in"
+  },
+  "新規登録": {
+    "ko": "회원가입",
+    "en": "Sign up"
+  },
+  "プロフィールを編集": {
+    "ko": "프로필 수정",
+    "en": "Edit profile"
+  },
+  "ローカル記録を選んで送信": {
+    "ko": "로컬 기록을 선택해 전송",
+    "en": "Choose local records to upload"
+  },
+  "送信を再試行": {
+    "ko": "전송 다시 시도",
+    "en": "Retry uploads"
+  },
+  "送信待ち：": {
+    "ko": "전송 대기: ",
+    "en": "Pending: "
+  },
+  "件": {
+    "ko": "건",
+    "en": "records"
+  },
+  "／ 最後の送信：": {
+    "ko": "/ 마지막 전송: ",
+    "en": "/ Last upload: "
+  },
+  "送信する記録": {
+    "ko": "전송할 기록",
+    "en": "Records to upload"
+  },
+  "現在のアカウントと未帰属の記録だけを表示します。選んだゲスト記録はこのアカウントに所属します。": {
+    "ko": "현재 계정과 미귀속 기록만 표시합니다. 선택한 게스트 기록은 이 계정에 귀속됩니다.",
+    "en": "Only records belonging to this account or to no account are shown. Selected guest records will belong to this account."
+  },
+  "送信できる未送信の記録はありません。": {
+    "ko": "전송할 수 있는 미전송 기록이 없습니다.",
+    "en": "No pending records are available to upload."
+  },
+  "（旧形式）": {
+    "ko": "(이전 형식)",
+    "en": "(Older format)"
+  },
+  "選択した記録は自分のもので、説明した項目の送信に同意します。": {
+    "ko": "선택한 기록은 본인의 것이며, 안내한 항목의 전송에 동의합니다.",
+    "en": "These are my records, and I agree to upload the information described."
+  },
+  "件を送信": {
+    "ko": "건 전송",
+    "en": "records: upload"
+  },
+  "リンクが無効か、ログインを完了できませんでした。もう一度お試しください。": {
+    "ko": "링크가 유효하지 않거나 로그인을 완료하지 못했어요. 다시 시도해 주세요.",
+    "en": "The link is invalid or sign-in couldn't be completed. Please try again."
+  },
+  "メールアドレスを確認しました。": {
+    "ko": "이메일 주소가 인증됐어요.",
+    "en": "Your email address has been verified."
+  },
+  "パスワードを忘れた方": {
+    "ko": "비밀번호를 잊으셨나요?",
+    "en": "Forgot password?"
+  },
+  "パスワードを再設定": {
+    "ko": "비밀번호 재설정",
+    "en": "Reset password"
+  },
+  "接続できませんでした。ページを再読み込みしてください。": {
+    "ko": "연결하지 못했어요. 페이지를 새로고침해 주세요.",
+    "en": "Couldn't connect. Please reload the page."
+  },
+  "処理を完了できませんでした。": {
+    "ko": "처리하지 못했어요.",
+    "en": "Couldn't complete the request."
+  },
+  "登録できるアドレスには確認メールを送信します。登録済みの場合は、以前の方法でログインしてください。": {
+    "ko": "가입 가능한 주소로 인증 메일을 보냅니다. 이미 가입했다면 기존 방법으로 로그인해 주세요.",
+    "en": "A verification email will be sent if the address can be registered. If you already have an account, use your existing sign-in method."
+  },
+  "メール・パスワードで登録済みの場合は再設定リンクを送信します。Google・Appleで登録した方は、その方法でログインしてください。": {
+    "ko": "이메일·비밀번호로 가입했다면 재설정 링크를 보냅니다. Google·Apple로 가입했다면 해당 방법으로 로그인해 주세요.",
+    "en": "A reset link will be sent if you registered with email and password. If you registered with Google or Apple, use that sign-in method."
+  },
+  "メールアドレス": {
+    "ko": "이메일 주소",
+    "en": "Email address"
+  },
+  "新しいパスワード": {
+    "ko": "새 비밀번호",
+    "en": "New password"
+  },
+  "パスワード": {
+    "ko": "비밀번호",
+    "en": "Password"
+  },
+  "12文字以上": {
+    "ko": "12자 이상",
+    "en": "At least 12 characters"
+  },
+  "メール認証は準備中です。": {
+    "ko": "이메일 인증은 준비 중입니다.",
+    "en": "Email verification is not available yet."
+  },
+  "処理中…": {
+    "ko": "처리 중…",
+    "en": "Processing…"
+  },
+  "再設定メールを送信": {
+    "ko": "재설정 메일 보내기",
+    "en": "Send reset email"
+  },
+  "パスワードを変更": {
+    "ko": "비밀번호 변경",
+    "en": "Change password"
+  },
+  "未確認のアドレスには確認メールを送信します。登録済みの場合はログインしてください。": {
+    "ko": "미인증 주소로 인증 메일을 보냅니다. 이미 인증했다면 로그인해 주세요.",
+    "en": "A verification email will be sent to unverified addresses. If already verified, please sign in."
+  },
+  "確認メールを再送": {
+    "ko": "인증 메일 다시 보내기",
+    "en": "Resend verification email"
+  },
+  "または": {
+    "ko": "또는",
+    "en": "or"
+  },
+  "プライバシー": {
+    "ko": "개인정보 처리방침",
+    "en": "Privacy"
+  },
+  "お問い合わせ": {
+    "ko": "문의",
+    "en": "Contact"
+  },
+  "利用の継続と姿勢維持習慣の分析のため、測定日時・時間・姿勢スコア・端末情報を送信します。出生時の性別・年齢は任意、表示言語は設定から取得します。": {
+    "ko": "지속적인 사용과 자세 유지 습관을 분석하기 위해 측정 일시·시간·자세 점수·기기 정보를 전송합니다. 출생 시 성별과 나이는 선택 항목이며, 표시 언어는 설정에서 가져옵니다.",
+    "en": "We upload session dates, durations, posture scores, and device information to analyze continued use and posture habits. Sex at birth and age are optional; the display language comes from your settings."
+  },
+  "保存は最大24か月。映像・関節座標は送りません。過去の記録は選択した場合だけ送信します。": {
+    "ko": "최대 24개월 보관합니다. 영상·관절 좌표는 전송하지 않습니다. 과거 기록은 선택한 경우에만 전송합니다.",
+    "en": "Data is kept for up to 24 months. Video and joint coordinates are not uploaded. Past records are uploaded only when you select them."
+  },
+  "同意は次回も有効です。設定から参加の取りやめ・アカウント削除ができます。ログアウト後も測定できます。": {
+    "ko": "동의는 다음 로그인에도 유지됩니다. 설정에서 참여를 중단하거나 계정을 삭제할 수 있습니다. 로그아웃 후에도 측정할 수 있습니다.",
+    "en": "Your consent remains valid for future sign-ins. You can stop participating or delete your account in Settings. You can keep tracking while signed out."
+  },
+  "年齢（満年齢）": {
+    "ko": "나이 (만 나이)",
+    "en": "Age (years)"
+  },
+  "出生時の性別": {
+    "ko": "출생 시 성별",
+    "en": "Sex at birth"
+  },
+  "回答しない": {
+    "ko": "응답하지 않음",
+    "en": "Prefer not to answer"
+  },
+  "女性": {
+    "ko": "여성",
+    "en": "Female"
+  },
+  "男性": {
+    "ko": "남성",
+    "en": "Male"
+  },
+  "その他": {
+    "ko": "기타",
+    "en": "Other"
+  },
+  "保存して続ける": {
+    "ko": "저장하고 계속하기",
+    "en": "Save and continue"
+  },
+  "回答を削除": {
+    "ko": "응답 삭제",
+    "en": "Delete answers"
+  },
+  "スキップ": {
+    "ko": "건너뛰기",
+    "en": "Skip"
+  },
+  "Google でログイン": {
+    "ko": "Google로 로그인",
+    "en": "Sign in with Google"
+  },
+  "Apple でサインイン": {
+    "ko": "Apple로 로그인",
+    "en": "Sign in with Apple"
+  },
+  "mp3 または wav ファイルのみアップロードできます。": {
+    "ko": "mp3 또는 wav 파일만 업로드할 수 있습니다.",
+    "en": "Only MP3 or WAV files are supported."
+  },
+  "オーディオファイルの読み込みに失敗しました。": {
+    "ko": "오디오 파일을 불러오지 못했어요.",
+    "en": "Couldn't load the audio file."
+  },
+  "通知サウンド": {
+    "ko": "알림 사운드",
+    "en": "Notification sound"
+  },
+  "効果音を有効化": {
+    "ko": "효과음 켜기",
+    "en": "Enable sound effects"
+  },
+  "音量 (": {
+    "ko": "음량 (",
+    "en": "Volume ("
+  },
+  "効果音を選択": {
+    "ko": "효과음 선택",
+    "en": "Choose a sound"
+  },
+  "サウンドを追加 (mp3/wav)": {
+    "ko": "사운드 추가 (mp3/wav)",
+    "en": "Add sound (MP3/WAV)"
+  },
+  "試聴": {
+    "ko": "미리 듣기",
+    "en": "Preview"
+  },
+  "はじめまして、ボクはピンアナゴ。": {
+    "ko": "안녕, 나는 핀아나고야.",
+    "en": "Hi, I'm Pin-anago."
+  },
+  "キミの姿勢をチェックしにきたよ！": {
+    "ko": "네 자세를 보러 왔어!",
+    "en": "I'm here to check your posture!"
+  },
+  "ボクは姿勢のいいニンゲンが": {
+    "ko": "나는 자세가 좋은 사람을",
+    "en": "I really like people"
+  },
+  "大好きなんだ！": {
+    "ko": "정말 좋아해!",
+    "en": "who sit up straight!"
+  },
+  "姿勢が悪いニンゲンには": {
+    "ko": "자세가 흐트러지면",
+    "en": "If your posture slips,"
+  },
+  "厳しくいかせてもらうよ！": {
+    "ko": "엄하게 알려줄 거야!",
+    "en": "I'll give you a firm reminder!"
+  },
+  "ピーン率（正しい姿勢を継続できた割合）が50％以上になると、": {
+    "ko": "바른 자세 비율이 50% 이상이면,",
+    "en": "Keep your posture rate at 50% or above,"
+  },
+  "新しい仲間をここに連れてくるよ！": {
+    "ko": "새로운 친구를 데려올게!",
+    "en": "and I'll bring a new friend!"
+  },
+  "毎日コツコツ続けていけば、": {
+    "ko": "매일 조금씩 꾸준히 하면,",
+    "en": "Keep at it a little every day,"
+  },
+  "いろんなピンアナゴが仲間になるよ！": {
+    "ko": "다양한 핀아나고가 친구가 될 거야!",
+    "en": "and meet all kinds of Pin-anago!"
+  },
+  "PiiiN ストーリー": {
+    "ko": "PiiiN 스토리",
+    "en": "PiiiN story"
+  },
+  "姿勢改善にワクワクを": {
+    "ko": "자세 습관에 즐거움을",
+    "en": "Make posture practice fun"
+  },
+  "姿勢改善にワクワクを PiiiN": {
+    "ko": "자세 습관에 즐거움을, PiiiN",
+    "en": "Make posture practice fun with PiiiN"
+  },
+  "はじめる": {
+    "ko": "시작하기",
+    "en": "Get started"
+  },
+  "ストーリー": {
+    "ko": "스토리",
+    "en": "Story"
+  },
+  "（正しい姿勢を継続できた割合）": {
+    "ko": "(바른 자세를 유지한 시간의 비율)",
+    "en": "(time spent maintaining your posture)"
+  },
+  "が50％以上になると、": {
+    "ko": "이 50% 이상이면,",
+    "en": "at 50% or above,"
+  },
+  "ストーリーの操作": {
+    "ko": "스토리 조작",
+    "en": "Story controls"
+  },
+  "前のストーリーへ": {
+    "ko": "이전 스토리",
+    "en": "Previous story"
+  },
+  "ストーリーを終了": {
+    "ko": "스토리 닫기",
+    "en": "Close story"
+  },
+  "次のストーリーへ": {
+    "ko": "다음 스토리",
+    "en": "Next story"
+  },
+  "ピンアナゴの仲間。左右にドラッグ、または左右の矢印キーで移動できます。フォーカス中やカードに触れている間は自動移動が止まります。": {
+    "ko": "핀아나고 친구들. 좌우로 드래그하거나 방향키로 이동할 수 있습니다. 포커스하거나 카드를 만지는 동안 자동 이동이 멈춥니다.",
+    "en": "Pin-anago friends. Drag left or right, or use the arrow keys. Automatic movement pauses while focused or touching a card."
+  },
+  "プライバシーポリシー": {
+    "ko": "개인정보 처리방침",
+    "en": "Privacy policy"
+  },
+  "更新日：2026年11月8日": {
+    "ko": "업데이트: 2026년 11월 8일",
+    "en": "Updated: November 8, 2026"
+  },
+  "PiiiNの運営者 Kyoung は、ウェブ版およびデスクトップ版で扱う情報について、以下のとおり説明します。お問い合わせは piiin.contact@gmail.com で受け付けます。": {
+    "ko": "PiiiN 운영자 Kyoung은 웹·데스크톱 버전에서 처리하는 정보를 아래와 같이 안내합니다. 문의는 piiin.contact@gmail.com으로 접수합니다.",
+    "en": "PiiiN's operator, Kyoung, explains below how information is handled in the web and desktop versions. Contact us at piiin.contact@gmail.com."
+  },
+  "カメラと姿勢の推定": {
+    "ko": "카메라와 자세 추정",
+    "en": "Camera and posture estimation"
+  },
+  "カメラ映像から顔や肩などの位置を端末内で推定し、登録した基準姿勢との変化をお知らせします。姿勢の推定のために、カメラ映像をPiiiNの運営者のサーバーへ送信することはありません。マイクは使用しません。": {
+    "ko": "카메라 영상에서 얼굴·어깨 등의 위치를 기기 안에서 추정하고, 등록한 기준 자세와의 변화를 알려드립니다. 자세 추정을 위해 카메라 영상을 PiiiN 운영자의 서버로 전송하지 않습니다. 마이크는 사용하지 않습니다.",
+    "en": "The app estimates the positions of your face, shoulders, and other features on your device, and notifies you of changes from your calibrated posture. Camera footage is not sent to PiiiN's servers for posture estimation. The microphone is not used."
+  },
+  "端末に保存する情報と目的": {
+    "ko": "기기에 저장하는 정보와 목적",
+    "en": "Information stored on your device and why"
+  },
+  "基準姿勢の数値、姿勢スコア、測定日時、集中・休憩時間、良い姿勢の割合、再登録などの履歴：測定の継続と結果の表示に使用します。": {
+    "ko": "기준 자세 수치, 자세 점수, 측정 일시, 집중·휴식 시간, 좋은 자세 비율, 재등록 등의 이력: 측정 지속과 결과 표시에 사용합니다.",
+    "en": "Baseline posture values, posture scores, session dates, focus and break times, good posture ratios, and recalibration history are used to continue tracking and display results."
+  },
+  "獲得カード、選択したキャラクター、タイマー・サウンド・動画の設定、初回案内の完了状態：コレクションの表示と次回の設定の復元に使用します。": {
+    "ko": "획득 카드, 선택한 캐릭터, 타이머·사운드·영상 설정, 최초 안내 완료 상태: 컬렉션 표시와 다음 사용 시 설정 복원에 사용합니다.",
+    "en": "Collected cards, the selected character, timer, sound and video settings, and onboarding completion are used to display your collection and restore settings next time."
+  },
+  "タイムラプスを有効にした場合のカメラ動画と、その時点のペットの反応・残り時間など：動画の再生、保存、共有に使用します。": {
+    "ko": "타임랩스를 켰을 때의 카메라 영상과 당시 펫의 반응·남은 시간 등: 영상 재생·저장·공유에 사용합니다.",
+    "en": "When timelapse is enabled, camera footage and the pet's reactions, time remaining, and other state are used for playback, saving, and sharing."
+  },
+  "ウェブ版では利用中のブラウザーの保存領域、デスクトップ版ではアプリの保存領域に記録します。端末やブラウザー、配布版の間で自動同期はしません。": {
+    "ko": "웹에서는 사용 중인 브라우저의 저장 공간에, 데스크톱에서는 앱 저장 공간에 기록합니다. 기기·브라우저·배포판 사이에 자동 동기화하지 않습니다.",
+    "en": "The web version stores records in your browser; the desktop version uses app storage. Data is not automatically synced between devices, browsers, or distributions."
+  },
+  "任意のログインと分析への参加": {
+    "ko": "선택적 로그인과 분석 참여",
+    "en": "Optional sign-in and analysis participation"
+  },
+  "メールアドレスとパスワード、GoogleまたはAppleでログインできます。ログインせずに全機能を利用できます。ログインには提供者のアカウント識別子、提供された名前・メールアドレスなどを使用します。同じメールアドレスだけで別のログイン方法を統合しません。": {
+    "ko": "이메일·비밀번호, Google 또는 Apple로 로그인할 수 있습니다. 로그인 없이도 모든 기능을 사용할 수 있습니다. 로그인에는 제공자의 계정 식별자와 제공된 이름·이메일 등을 사용합니다. 이메일 주소가 같다는 이유만으로 다른 로그인 수단을 통합하지 않습니다.",
+    "en": "You can sign in with email and password, Google, or Apple. All features are available without signing in. Sign-in uses the provider's account identifier and any supplied name and email address. Different sign-in methods are not merged solely because their email addresses match."
+  },
+  "分析への参加は満18歳以上の方が対象です。ログイン後の画面で成人であることと収集項目・目的・保存期間に同意した場合だけ、今後の測定を分析用に送信します。同意は次回のログインにも引き継ぎます。参加しない場合はログアウトして、既存の機能をそのまま利用できます。利用の継続と、よい姿勢を維持する習慣の変化を調べるため、測定ID・日時・時間帯、端末・配布版・アプリ版・無作為なインストールID、集中・有効測定・よい姿勢の時間、タイマー設定・完了状態、約1秒ごとのスコア・偏差・認識状態、休止・再登録・追跡失敗などのイベント、判定・同意の版を保存します。映像・タイムラプス・関節座標は送信しません。医学的な改善や原因の診断には使用しません。": {
+    "ko": "분석 참여는 만 18세 이상을 대상으로 합니다. 로그인 후 성인 여부와 수집 항목·목적·보관 기간에 동의한 경우에만 이후 측정 기록을 분석용으로 전송합니다. 동의는 다음 로그인에도 유지됩니다. 참여하지 않으려면 로그아웃하여 기존 기능을 그대로 이용할 수 있습니다. 지속적인 사용과 좋은 자세를 유지하는 습관의 변화를 살펴보기 위해 측정 ID·일시·시간대, 기기·배포판·앱 버전·무작위 설치 ID, 집중·유효 측정·좋은 자세 시간, 타이머 설정·완료 상태, 약 1초 간격 점수·편차·인식 상태, 일시정지·재등록·추적 실패 등의 이벤트, 판정·동의 버전을 저장합니다. 영상·타임랩스·관절 좌표는 전송하지 않습니다. 의학적 개선이나 원인 진단에 사용하지 않습니다.",
+    "en": "Analysis participation is limited to adults aged 18 or older. Future sessions are uploaded for analysis only after you confirm adulthood and consent to the data, purpose, and retention period shown after sign-in. Consent carries over to later sign-ins. If you do not wish to participate, sign out and continue using the existing features. To study continued use and changes in posture habits, we store session IDs, dates, time zones, device, distribution and app versions, random installation IDs, focus, valid tracking and good posture durations, timer settings and completion status, scores, deviations and recognition states at roughly one-second intervals, events such as pauses, recalibration and tracking failures, and assessment and consent versions. Video, timelapses, and joint coordinates are not uploaded. The data is not used to diagnose medical improvement or causes."
+  },
+  "過去の記録は自動送信しません。現在のアカウントか未帰属の記録を利用者が選び、自分の記録であることと送信への同意を確認した場合に送信します。認証切れ・オフライン中は元のアカウントに属する記録として端末で待機し、同じアカウントでの再接続後に再開します。明示的なログアウト後はゲスト記録になります。": {
+    "ko": "과거 기록은 자동 전송하지 않습니다. 사용자가 현재 계정 또는 미귀속 기록을 선택하고 본인의 기록임과 전송 동의를 확인한 경우에 전송합니다. 인증 만료·오프라인 중에는 원래 계정 소유 기록으로 기기에서 대기하며, 같은 계정으로 다시 연결하면 전송을 재개합니다. 명시적으로 로그아웃한 뒤에는 게스트 기록이 됩니다.",
+    "en": "Past records are not uploaded automatically. You select records belonging to the current account or to no account and confirm that they are yours and that you consent to uploading them. During an expired session or while offline, records wait on the device under their original account and resume uploading when that same account reconnects. New records after an explicit sign-out belong to the guest."
+  },
+  "初回アンケートで出生時の性別と満年齢を任意で回答できます。Googleの追加権限を許可した場合は登録された性別と生年月日から計算した年齢を初期値に使い、編集できます。Googleの性別は出生時の性別を保証するものではありません。回答は取得日時・出所とともに保存します。スキップ・未回答は空欄とし、生年月日・住所・国籍は保存しません。表示言語はアプリの設定から保存します。": {
+    "ko": "최초 설문에서 출생 시 성별과 만 나이에 선택적으로 응답할 수 있습니다. Google 추가 권한을 허용하면 등록된 성별과 생년월일에서 계산한 나이를 수정 가능한 초깃값으로 사용합니다. Google의 성별 정보가 출생 시 성별을 보장하지는 않습니다. 응답은 조회 시점·출처와 함께 저장합니다. 건너뛰거나 응답하지 않으면 비워 두며, 생년월일·주소·국적은 저장하지 않습니다. 표시 언어는 앱 설정에서 저장합니다.",
+    "en": "You may optionally provide sex at birth and age in the initial survey. If you grant additional Google permissions, the registered gender and age calculated from the birthday are used as editable starting values. Google's gender information does not establish sex at birth. Answers are stored with their retrieval time and source. Skipped or unanswered fields remain empty. Birthdays, addresses, and nationality are not stored. The display language is saved from app settings."
+  },
+  "メール認証・パスワード再設定の送信にはResendを利用し、宛先メールアドレスと認証リンクを渡します。メールの開封・クリック追跡は使用しません。パスワードはハッシュとして保存します。お問い合わせはpiiin.contact@gmail.comで受け付けます。": {
+    "ko": "이메일 인증·비밀번호 재설정 메일 발송에 Resend를 사용하며, 수신 이메일 주소와 인증 링크를 전달합니다. 메일 열람·클릭 추적은 사용하지 않습니다. 비밀번호는 해시로 저장합니다. 문의는 piiin.contact@gmail.com으로 접수합니다.",
+    "en": "Resend sends verification and password reset emails, receiving the recipient's email address and verification link. Email open and click tracking are not used. Passwords are stored as hashes. Contact us at piiin.contact@gmail.com."
+  },
+  "分析データの保存期間と削除": {
+    "ko": "분석 데이터 보관 기간과 삭제",
+    "en": "Analysis data retention and deletion"
+  },
+  "測定データは最初のサーバー受信から最大24か月、追加プロフィール履歴は取得から最大24か月保存します。再送信で期限を延長しません。運営者の通常の分析出力では、名前・メールの代わりに分析用IDを使用します。": {
+    "ko": "측정 데이터는 최초 서버 수신일부터 최대 24개월, 추가 프로필 이력은 조회일부터 최대 24개월 보관합니다. 재전송으로 기한을 연장하지 않습니다. 일반적인 운영자 분석 출력에는 이름·이메일 대신 분석용 ID를 사용합니다.",
+    "en": "Session data is retained for up to 24 months from its first receipt by the server; additional profile history for up to 24 months from retrieval. Reuploads do not extend these periods. Standard operator analysis exports use an analysis ID instead of names and email addresses."
+  },
+  "設定のアカウント欄にある「分析への参加をやめる」から同意を撤回し、ログアウトできます。撤回後の再ログインでは改めて同意を確認します。通常のログアウトは同意を保持します。「アカウントを削除」はログイン方法と全セッションを無効にし、サーバーの分析データも削除します。分析対象からは直ちに除外し、詳細ファイルは24時間以内に削除します。端末内の記録はこれらの操作では消えません。削除済みの記録が送信待ちから自動復元されないよう、必要最小限の削除識別子を保持します。": {
+    "ko": "설정의 계정 항목에서 '분석 참여 중단'을 선택하여 동의를 철회하고 로그아웃할 수 있습니다. 철회 후 다시 로그인하면 동의를 다시 확인합니다. 일반 로그아웃은 동의를 유지합니다. '계정 삭제'는 로그인 수단과 모든 세션을 무효화하고 서버의 분석 데이터도 삭제합니다. 분석 대상에서 즉시 제외하며 상세 파일은 24시간 이내에 삭제합니다. 이 작업으로 기기 내 기록은 지워지지 않습니다. 삭제한 기록이 전송 대기열에서 자동 복원되지 않도록 필요한 최소한의 삭제 식별자를 보관합니다.",
+    "en": "Choose 'Stop participating' under Account in Settings to withdraw consent and sign out. You will be asked for consent again on your next sign-in after withdrawal. Ordinary sign-out preserves consent. 'Delete account' revokes sign-in methods and all sessions and deletes server-side analysis data. Data is immediately excluded from analysis; detailed files are deleted within 24 hours. These actions do not erase records on your device. We retain the minimum deletion identifiers needed to prevent deleted records from being restored automatically from upload queues."
+  },
+  "運用データとバックアップの削除時期は異なります。管理されたバックアップは最大30日で失効し、復旧時にも別保管の削除記録を適用します。任意の分析はキャラクターや設定の端末間復元を提供しません。": {
+    "ko": "운영 데이터와 백업의 삭제 시점은 다릅니다. 관리되는 백업은 최대 30일 후 만료되며, 복구 시에도 별도로 보관한 삭제 기록을 적용합니다. 선택적 분석 참여는 캐릭터나 설정의 기기 간 복원을 제공하지 않습니다.",
+    "en": "Deletion timing differs for live data and backups. Managed backups expire within 30 days, and separately retained deletion records are applied during recovery. Optional analysis participation does not provide cross-device restoration of characters or settings."
+  },
+  "タイムラプスの記録": {
+    "ko": "타임랩스 녹화",
+    "en": "Timelapse recording"
+  },
+  "録画は初期状態では無効です。プロフィールの「設定」で有効にすると、その選択を記憶し、以後の集中時間を無音で記録します。休憩・一時停止・姿勢の再登録中は記録しません。顔や室内の様子が動画に含まれるため、周囲の人が映り込まない環境でご利用ください。設定を無効にすると次の測定から録画しません。": {
+    "ko": "녹화는 기본적으로 꺼져 있습니다. 프로필의 '설정'에서 켜면 선택을 기억하고 이후 집중 시간을 무음으로 녹화합니다. 휴식·일시정지·자세 재등록 중에는 녹화하지 않습니다. 얼굴과 실내 모습이 포함되므로 주변 사람이 찍히지 않는 환경에서 사용해 주세요. 설정을 끄면 다음 측정부터 녹화하지 않습니다.",
+    "en": "Recording is off by default. Enabling it in profile Settings saves your choice and records future focus periods without audio. Breaks, pauses, and recalibration are not recorded. Footage may include your face and surroundings, so use it where others will not appear. Turning it off stops recording from the next session."
+  },
+  "保存期間と削除": {
+    "ko": "보관 기간과 삭제",
+    "en": "Retention and deletion"
+  },
+  "動画は利用者が削除するまで端末に保管します。プロフィールの「コレクションを初期化」では、獲得カード・選択したキャラクター・アプリ内のタイムラプス（共有用の一時コピーを含む）を削除します。測定記録とタイマーなどの設定は残ります。ブラウザーやOSによる保存領域の整理でもデータが失われる場合があるため、大切な動画はファイルとして保存してください。": {
+    "ko": "영상은 사용자가 삭제할 때까지 기기에 보관됩니다. 프로필의 '컬렉션 초기화'는 획득 카드·선택한 캐릭터·앱 내 타임랩스(공유용 임시 사본 포함)를 삭제합니다. 측정 기록과 타이머 등의 설정은 유지됩니다. 브라우저나 OS의 저장 공간 정리로 데이터가 손실될 수 있으므로 중요한 영상은 파일로 저장해 주세요.",
+    "en": "Videos remain on your device until you delete them. 'Reset collection' in the profile deletes collected cards, the selected character, and in-app timelapses, including temporary sharing copies. Session records and settings such as the timer remain. Browser or OS storage cleanup may also remove data, so save important videos as files."
+  },
+  "ウェブ版の記録をすべて削除するには、ブラウザーの設定でPiiiNのサイトデータを削除してください。デスクトップ版の保存領域を含む全データの削除方法はサポートでご案内します。アプリの削除だけでは保存領域が残る場合があります。運営者は利用者の端末内の記録を遠隔で閲覧・削除できません。": {
+    "ko": "웹 버전의 모든 기록을 삭제하려면 브라우저 설정에서 PiiiN 사이트 데이터를 삭제해 주세요. 데스크톱 앱 저장 공간을 포함한 전체 데이터 삭제 방법은 지원 창구에서 안내합니다. 앱을 삭제해도 저장 공간이 남을 수 있습니다. 운영자는 사용자 기기의 기록을 원격으로 조회하거나 삭제할 수 없습니다.",
+    "en": "To delete all web records, remove PiiiN's site data in browser settings. Contact support for instructions on deleting all desktop data, including app storage. Uninstalling the app may leave stored data behind. The operator cannot remotely view or delete records on your device."
+  },
+  "利用者がアプリの外へ保存・共有したファイルは、コレクションの初期化では削除されません。保存先や共有先で管理・削除してください。": {
+    "ko": "앱 밖으로 저장·공유한 파일은 컬렉션 초기화로 삭제되지 않습니다. 저장·공유한 위치에서 직접 관리하거나 삭제해 주세요.",
+    "en": "Files saved or shared outside the app are not deleted by resetting the collection. Manage or delete them at their saved or shared destination."
+  },
+  "通信先と外部サービス": {
+    "ko": "통신 대상과 외부 서비스",
+    "en": "Connections and external services"
+  },
+  "ウェブサイトと分析APIの配信・保存にはCloudflare（Workers、D1、非公開R2）を利用します。移行期間中の復旧用ウェブ配信にはVercelも利用します。Mac App Store版は姿勢推定用モデルと推定プログラムをアプリに同梱し、姿勢推定のための外部ダウンロードを行いません。その他の配布版では、モデルの取得にGoogleの配信基盤、推定プログラムの取得にjsDelivrを利用します。Macの直接配布版ではGitHubから更新情報や更新ファイルを取得します。Microsoft Store版・Mac App Store版の配布と更新には各ストアを利用します。Windows版はMicrosoft WebView2上で動作します。": {
+    "ko": "웹사이트와 분석 API의 제공·저장에는 Cloudflare(Workers, D1, 비공개 R2)를 사용합니다. 이전 기간의 복구용 웹 배포에는 Vercel도 사용합니다. Mac App Store판은 자세 추정 모델과 프로그램을 앱에 포함하여 자세 추정을 위한 외부 다운로드를 하지 않습니다. 다른 배포판은 모델을 Google 배포 인프라에서, 추정 프로그램을 jsDelivr에서 받습니다. Mac 직접 배포판은 GitHub에서 업데이트 정보와 파일을 받습니다. Microsoft Store판과 Mac App Store판의 배포·업데이트에는 각 스토어를 사용합니다. Windows판은 Microsoft WebView2에서 동작합니다.",
+    "en": "Cloudflare (Workers, D1, and private R2) hosts the website and analysis API and stores data. Vercel also provides a fallback web deployment during migration. The Mac App Store version bundles the posture model and inference code, without external downloads for posture estimation. Other distributions download the model from Google's infrastructure and inference code from jsDelivr. The direct-download Mac version retrieves update information and files from GitHub. The Microsoft Store and Mac App Store handle distribution and updates for their respective versions. The Windows version runs on Microsoft WebView2."
+  },
+  "これらの通信では、接続元IPアドレス、ブラウザー・端末に関する情報、アクセス日時、要求したURLなどが通信先に伝わる場合があります。これはカメラ映像のアップロードとは別の処理です。各サービスの処理には各提供者のプライバシーポリシーが適用され、日本国外で処理される場合があります。": {
+    "ko": "이 통신 과정에서 접속 IP 주소, 브라우저·기기 정보, 접속 일시, 요청 URL 등이 통신 대상에게 전달될 수 있습니다. 이는 카메라 영상 업로드와 별개입니다. 각 서비스에는 해당 제공자의 개인정보 처리방침이 적용되며, 일본 외 국가에서 처리될 수 있습니다.",
+    "en": "These connections may disclose your IP address, browser and device information, access time, and requested URLs to the destination. This is separate from uploading camera footage. Each provider's privacy policy applies, and processing may occur outside Japan."
+  },
+  "Resend（認証メール送信）：resend.com/legal/privacy-policy": {
+    "ko": "Resend (인증 메일 발송): resend.com/legal/privacy-policy",
+    "en": "Resend (verification emails): resend.com/legal/privacy-policy"
+  },
+  "Google（任意のログイン・追加情報、モデル配信・Gmail）：policies.google.com/privacy": {
+    "ko": "Google (선택적 로그인·추가 정보, 모델 배포·Gmail): policies.google.com/privacy",
+    "en": "Google (optional sign-in and additional information, model delivery and Gmail): policies.google.com/privacy"
+  },
+  "Cookieとブラウザーの保存領域": {
+    "ko": "쿠키와 브라우저 저장 공간",
+    "en": "Cookies and browser storage"
+  },
+  "設定や測定記録の保持にブラウザーの保存領域を使用します。任意のアカウントログインと開発者向けページでは、ログイン状態を維持するCookieを使用します。デスクトップのログイン情報はOSの安全な保存先に保管します。PiiiNには広告配信や広告目的の行動追跡機能を組み込んでいません。": {
+    "ko": "설정과 측정 기록을 유지하기 위해 브라우저 저장 공간을 사용합니다. 선택적 계정 로그인과 개발자 페이지에서는 로그인 상태 유지용 쿠키를 사용합니다. 데스크톱 로그인 정보는 OS 보안 저장소에 보관합니다. PiiiN에는 광고나 광고 목적의 행동 추적 기능이 없습니다.",
+    "en": "Browser storage retains settings and session records. Optional account sign-in and developer pages use cookies to maintain sign-in state. Desktop credentials are stored in secure OS storage. PiiiN does not include advertising or behavioral tracking for advertising."
+  },
+  "保存・共有を選んだ場合": {
+    "ko": "저장·공유를 선택한 경우",
+    "en": "When you choose to save or share"
+  },
+  "保存・共有は利用者の操作により行われます。選択した共有先には動画やカード画像に含まれる情報が渡ります。共有先での取り扱いをご確認ください。端末やブラウザーによっては、共有の代わりにファイルを保存してから添付する方式になります。": {
+    "ko": "저장·공유는 사용자의 조작으로 이루어집니다. 선택한 공유 대상에게 영상이나 카드 이미지에 포함된 정보가 전달됩니다. 공유 대상의 정보 처리 방식을 확인해 주세요. 기기·브라우저에 따라 직접 공유 대신 파일을 저장한 뒤 첨부하는 방식이 사용될 수 있습니다.",
+    "en": "Saving and sharing happen at your request. Your chosen destination receives the information in the video or card image. Check how that destination handles it. Depending on your device or browser, you may need to save the file and attach it instead of sharing directly."
+  },
+  "お問い合わせのメールアドレス、本文、任意の添付ファイルは、Gmailで受け取り、回答・不具合の調査・対応記録のために扱います。個人を識別できる原文や画像を共同開発者にそのまま共有せず、名前、メールアドレス、顔、その他の識別情報を取り除いた必要最小限の不具合情報のみをDiscordなどで共有します。調査に不要な個人情報や動画は送らないでください。": {
+    "ko": "문의 이메일 주소, 본문, 선택적 첨부파일은 Gmail로 수신하여 답변·문제 조사·처리 기록에 사용합니다. 개인을 식별할 수 있는 원문이나 이미지를 공동 개발자에게 그대로 공유하지 않고, 이름·이메일·얼굴 등 식별 정보를 제거한 최소한의 문제 정보만 Discord 등으로 공유합니다. 조사에 불필요한 개인정보나 영상은 보내지 마세요.",
+    "en": "Contact emails, message bodies, and optional attachments are received through Gmail and used to respond, investigate issues, and keep support records. Identifiable originals or images are not shared directly with co-developers. Only the minimum issue information, with names, email addresses, faces, and other identifying details removed, is shared through services such as Discord. Do not send personal information or videos that are not needed for the investigation."
+  },
+  "お問い合わせの情報は対応と必要な記録管理のために保管し、不要になった情報は削除します。運営者が保有する情報についての確認・訂正・削除などのご相談は、上記窓口へご連絡ください。本人確認に必要な範囲で追加確認をお願いする場合があります。": {
+    "ko": "문의 정보는 대응과 필요한 기록 관리를 위해 보관하고, 필요 없어진 정보는 삭제합니다. 운영자가 보유한 정보의 확인·수정·삭제 등에 관한 문의는 위 창구로 연락해 주세요. 본인 확인에 필요한 범위에서 추가 확인을 요청할 수 있습니다.",
+    "en": "Inquiry information is retained to handle requests and maintain necessary records, and deleted when no longer needed. Contact the address above to ask about access, correction, or deletion of information held by the operator. Additional information may be requested as needed to verify your identity."
+  },
+  "安全管理・変更": {
+    "ko": "보안 관리·변경",
+    "en": "Security and changes"
+  },
+  "運営者が取り扱う情報へのアクセスを必要な範囲に限定します。端末内の記録については、端末のロックやOSの暗号化などもご利用ください。第三者への個人情報の提供が別途必要になる場合は、法令に基づく場合を除き、必要な説明と同意の確認を行います。取り扱いを変更する場合は本ページを更新し、重要な変更は適切な方法でお知らせします。": {
+    "ko": "운영자가 처리하는 정보에 대한 접근은 필요한 범위로 제한합니다. 기기 내 기록을 보호하려면 기기 잠금과 OS 암호화도 사용해 주세요. 개인정보를 제3자에게 추가로 제공해야 할 때는 법령에 따른 경우를 제외하고 필요한 설명과 동의를 받습니다. 처리 방침이 변경되면 이 페이지를 갱신하고 중요한 변경은 적절한 방법으로 알립니다.",
+    "en": "Access to information handled by the operator is limited to what is necessary. Use device locks and OS encryption to protect local records. If additional disclosure of personal information to a third party becomes necessary, we will explain it and obtain consent unless required by law. We will update this page when practices change and communicate material changes appropriately."
+  },
+  "PiiiNは、カメラで登録した基準姿勢からの変化をお知らせする無料アプリです。アカウント登録は任意です。課金、サブスクリプションはありません。": {
+    "ko": "PiiiN은 카메라로 등록한 기준 자세와의 변화를 알려주는 무료 앱입니다. 계정 등록은 선택 사항이며, 결제나 구독이 없습니다.",
+    "en": "PiiiN is a free app that notifies you of changes from your camera-calibrated posture. Account registration is optional. There are no charges or subscriptions."
+  },
+  "アプリのバージョン、OS・ブラウザー、問題が起きた操作をお知らせください。パスワードやAPIキーは送らないでください。画像を添付する場合は、顔、名前、通知、メールアドレスなどの個人情報を隠してください。": {
+    "ko": "앱 버전, OS·브라우저, 문제가 발생한 조작을 알려 주세요. 비밀번호나 API 키는 보내지 마세요. 이미지를 첨부한다면 얼굴·이름·알림·이메일 등 개인정보를 가려 주세요.",
+    "en": "Tell us the app version, OS and browser, and what you were doing when the issue occurred. Do not send passwords or API keys. Hide faces, names, notifications, email addresses, and other personal information in attached images."
+  },
+  "姿勢が正しく判定されないとき": {
+    "ko": "자세가 제대로 판정되지 않을 때",
+    "en": "When posture tracking seems inaccurate"
+  },
+  "顔と肩がカメラに映り、十分に明るい場所で基準姿勢を登録し直してください。カメラの位置、距離、服装、照明、遮蔽物などで推定が変わる場合があります。顔や肩を認識できない状態が続いた場合にも、姿勢を戻す案内が表示されます。": {
+    "ko": "얼굴과 어깨가 카메라에 보이고 충분히 밝은 곳에서 기준 자세를 다시 등록해 주세요. 카메라 위치·거리·옷·조명·가림 등에 따라 추정이 달라질 수 있습니다. 얼굴이나 어깨를 인식하지 못하는 상태가 지속될 때도 자세를 되돌리라는 안내가 표시됩니다.",
+    "en": "Recalibrate in a well-lit place with your face and shoulders visible. Camera position, distance, clothing, lighting, and obstructions can affect estimation. A posture reminder may also appear when the face or shoulders remain undetected."
+  },
+  "スコアは登録した姿勢との差をもとにした目安です。医学的な診断や治療、姿勢改善の効果を保証するものではありません。": {
+    "ko": "점수는 등록한 자세와의 차이를 나타내는 참고값입니다. 의학적 진단·치료나 자세 개선 효과를 보장하지 않습니다.",
+    "en": "Scores are an indication of differences from your calibrated posture. They are not a medical diagnosis or treatment and do not guarantee posture improvement."
+  },
+  "カメラを使えないとき": {
+    "ko": "카메라를 사용할 수 없을 때",
+    "en": "When the camera is unavailable"
+  },
+  "OSとブラウザーの設定でPiiiNのカメラ許可を確認し、カメラを使用する他のアプリを閉じて再度お試しください。Mac App Store版の姿勢推定はインターネット接続なしで利用できます。その他の配布版は推定プログラムとモデルの取得にインターネット接続が必要です。": {
+    "ko": "OS와 브라우저 설정에서 PiiiN의 카메라 권한을 확인하고, 카메라를 사용하는 다른 앱을 닫은 뒤 다시 시도해 주세요. Mac App Store판의 자세 추정은 인터넷 없이 사용할 수 있습니다. 다른 배포판은 추정 프로그램과 모델을 받기 위해 인터넷 연결이 필요합니다.",
+    "en": "Check PiiiN's camera permissions in OS and browser settings, close other apps using the camera, and try again. The Mac App Store version can estimate posture offline. Other distributions require an internet connection to download the inference code and model."
+  },
+  "動画の保存と削除": {
+    "ko": "영상 저장과 삭제",
+    "en": "Saving and deleting videos"
+  },
+  "プロフィールの「設定」でタイムラプスを有効にすると、集中時間のみを無音で記録します。動画は利用者が削除するまでこの端末に残ります。プロフィールの「コレクションを初期化」でアプリ内のカードと動画を削除できます。測定記録・設定と、アプリ外に書き出したファイルは残ります。": {
+    "ko": "프로필의 '설정'에서 타임랩스를 켜면 집중 시간만 무음으로 녹화합니다. 영상은 삭제할 때까지 이 기기에 남습니다. '컬렉션 초기화'로 앱 내 카드와 영상을 삭제할 수 있습니다. 측정 기록·설정과 앱 밖에 저장한 파일은 유지됩니다.",
+    "en": "Enable timelapse in profile Settings to record focus time without audio. Videos remain on this device until deleted. 'Reset collection' deletes in-app cards and videos. Session records, settings, and externally saved files remain."
+  },
+  "ウェブ版の全記録はブラウザーのサイトデータ削除で消せます。デスクトップ版の全記録の削除は、利用しているOSと配布版を添えてお問い合わせください。動画や測定記録をメールで送る必要はありません。": {
+    "ko": "웹 버전의 전체 기록은 브라우저의 사이트 데이터 삭제로 지울 수 있습니다. 데스크톱 전체 기록 삭제는 OS와 배포판을 알려 문의해 주세요. 영상이나 측정 기록을 메일로 보낼 필요는 없습니다.",
+    "en": "Delete browser site data to remove all web records. For deleting all desktop records, contact us with your OS and distribution. You do not need to email videos or session records."
+  },
+  "配布版の切り替え": {
+    "ko": "배포판 변경",
+    "en": "Switching distributions"
+  },
+  "Macの直接ダウンロード版とMac App Store版は保存領域が異なります。カード・測定記録・動画は自動移行されません。大切な動画やカード画像は元のアプリで保存し、確認が終わるまで元のアプリとデータを残してください。ウェブ版とWindows版の間にも自動同期はありません。": {
+    "ko": "Mac 직접 다운로드판과 Mac App Store판은 저장 공간이 다릅니다. 카드·측정 기록·영상은 자동 이전되지 않습니다. 중요한 영상과 카드 이미지는 기존 앱에서 저장하고, 확인이 끝날 때까지 기존 앱과 데이터를 유지해 주세요. 웹과 Windows 사이에도 자동 동기화가 없습니다.",
+    "en": "The direct-download Mac and Mac App Store versions use different storage. Cards, session records, and videos are not migrated automatically. Save important videos and card images from the original app, and keep that app and its data until you have checked them. There is also no automatic sync between the web and Windows versions."
+  },
+  "PiiiN ホーム": {
+    "ko": "PiiiN 홈",
+    "en": "PiiiN home"
+  },
+  "サポートナビゲーション": {
+    "ko": "지원 메뉴",
+    "en": "Support navigation"
+  },
+  "PiiiNのサイトに戻る": {
+    "ko": "PiiiN 사이트로 돌아가기",
+    "en": "Back to PiiiN's website"
+  },
+  "読み込み中…": {
+    "ko": "불러오는 중…",
+    "en": "Loading…"
+  },
+  "動画を保存中…": {
+    "ko": "영상 저장 중…",
+    "en": "Saving video…"
+  },
+  "タイムラプスを見る": {
+    "ko": "타임랩스 보기",
+    "en": "View timelapse"
+  },
+  "タイムラプス未記録": {
+    "ko": "타임랩스 기록 없음",
+    "en": "No timelapse recorded"
+  },
+  "タイムラプス記録をオンにした測定で利用できます": {
+    "ko": "타임랩스를 켜고 측정한 기록에서 사용할 수 있습니다",
+    "en": "Available for sessions recorded with timelapse enabled"
+  },
+  "タイムラプス": {
+    "ko": "타임랩스",
+    "en": "Timelapse"
+  },
+  "動画の準備をキャンセルしました。": {
+    "ko": "영상 준비를 취소했어요.",
+    "en": "Video preparation canceled."
+  },
+  "動画を作成できませんでした。": {
+    "ko": "영상을 만들지 못했어요.",
+    "en": "Couldn't create the video."
+  },
+  "再生を開始できませんでした。もう一度、映像を押してください。": {
+    "ko": "재생하지 못했어요. 영상을 다시 눌러 주세요.",
+    "en": "Couldn't start playback. Tap the video again."
+  },
+  "共有をキャンセルしました。もう一度、共有先を選べます。": {
+    "ko": "공유를 취소했어요. 공유 대상을 다시 선택할 수 있습니다.",
+    "en": "Sharing canceled. You can choose a destination again."
+  },
+  "共有メニューを開けませんでした。再試行するか、保存ボタンで動画を保存してください。": {
+    "ko": "공유 메뉴를 열지 못했어요. 다시 시도하거나 저장 버튼으로 영상을 저장해 주세요.",
+    "en": "Couldn't open the share menu. Try again or save the video using the save button."
+  },
+  "共有先を選んでください。": {
+    "ko": "공유 대상을 선택해 주세요.",
+    "en": "Choose where to share."
+  },
+  "前の画面へ戻る": {
+    "ko": "이전 화면으로",
+    "en": "Back to previous screen"
+  },
+  "今日の姿勢を振り返ってみましょう。": {
+    "ko": "오늘의 자세를 돌아보세요.",
+    "en": "Look back at your posture today."
+  },
+  "この動画を再生できません。保存した原本は保持されています。": {
+    "ko": "이 영상을 재생할 수 없어요. 저장된 원본은 유지됩니다.",
+    "en": "This video can't be played. The original recording is still saved."
+  },
+  "動画を一時停止": {
+    "ko": "영상 일시정지",
+    "en": "Pause video"
+  },
+  "動画を最初から再生": {
+    "ko": "영상 처음부터 재생",
+    "en": "Replay video"
+  },
+  "動画を再生": {
+    "ko": "영상 재생",
+    "en": "Play video"
+  },
+  "動画を準備しています… {0}%": {
+    "ko": "영상 준비 중… {0}%",
+    "en": "Preparing video… {0}%"
+  },
+  "動画を保存しています…": {
+    "ko": "영상 저장 중…",
+    "en": "Saving video…"
+  },
+  "この測定のタイムラプスはありません": {
+    "ko": "이 측정에는 타임랩스가 없어요",
+    "en": "No timelapse for this session"
+  },
+  "動画を読み込んでいます…": {
+    "ko": "영상 불러오는 중…",
+    "en": "Loading video…"
+  },
+  "動画の再生位置": {
+    "ko": "영상 재생 위치",
+    "en": "Video playback position"
+  },
+  "獲得画面に戻る": {
+    "ko": "획득 화면으로",
+    "en": "Back to results"
+  },
+  "ホーム画面へ": {
+    "ko": "홈 화면으로",
+    "en": "Go to home"
+  },
+  "保存できた範囲の映像です。": {
+    "ko": "저장할 수 있었던 구간의 영상입니다.",
+    "en": "This video contains the portion that was saved."
+  },
+  "共有先を選ぶ": {
+    "ko": "공유 대상 선택",
+    "en": "Choose destination"
+  },
+  "動画を準備しています…": {
+    "ko": "영상 준비 중…",
+    "en": "Preparing video…"
+  },
+  "タイムラプスの共有と保存": {
+    "ko": "타임랩스 공유·저장",
+    "en": "Share or save timelapse"
+  },
+  "動画を共有": {
+    "ko": "영상 공유",
+    "en": "Share video"
+  },
+  "動画を保存": {
+    "ko": "영상 저장",
+    "en": "Save video"
+  },
+  "タイムラプスを記録する": {
+    "ko": "타임랩스 녹화",
+    "en": "Record timelapse"
+  },
+  "録画の画質": {
+    "ko": "녹화 화질",
+    "en": "Recording quality"
+  },
+  "（標準）": {
+    "ko": "(표준)",
+    "en": "(Standard)"
+  },
+  "（高画質）": {
+    "ko": "(고화질)",
+    "en": "(High quality)"
+  },
+  "次の録画から反映します。カメラが対応する実際の解像度で記録します。": {
+    "ko": "다음 녹화부터 적용됩니다. 카메라가 지원하는 실제 해상도로 녹화합니다.",
+    "en": "Applies from the next recording, at the actual resolution supported by your camera."
+  },
+  "再生・保存する映像": {
+    "ko": "재생·저장할 영상",
+    "en": "Playback and saved video"
+  },
+  "映像の中にペットと残り時間を表示": {
+    "ko": "영상에 펫과 남은 시간 표시",
+    "en": "Show pet and time remaining in the video"
+  },
+  "保存・共有に背景と左右のアナゴも含める": {
+    "ko": "저장·공유에 배경과 양옆 아나고 포함",
+    "en": "Include the background and side characters when saving or sharing"
+  },
+  "映像内の配置": {
+    "ko": "영상 안 배치",
+    "en": "Video layout"
+  },
+  "配置を戻す": {
+    "ko": "배치 초기화",
+    "en": "Reset layout"
+  },
+  "ドラッグで移動、右下のつまみで大きさを調整できます。矢印キーでも操作できます。": {
+    "ko": "드래그해서 이동하고 오른쪽 아래 손잡이로 크기를 조절할 수 있습니다. 방향키도 사용할 수 있습니다.",
+    "en": "Drag to move and use the bottom-right handle to resize. Arrow keys also work."
+  },
+  "ペットの枠は、最大まで成長した姿と吹き出しが収まる範囲です。薄い姿が最大サイズです。枠を大きくすると、通常の姿も最大の姿も一緒に大きくなります。": {
+    "ko": "펫 프레임은 최대로 성장한 모습과 말풍선이 들어갈 영역입니다. 흐리게 보이는 모습이 최대 크기입니다. 프레임을 키우면 일반 모습과 최대 모습이 함께 커집니다.",
+    "en": "The pet frame fits the fully grown pet and speech bubble. The faint silhouette shows its maximum size. Enlarging the frame scales both normal and full-grown appearances."
+  },
+  "{0}の位置を矢印キーで調整": {
+    "ko": "{0} 위치를 방향키로 조절",
+    "en": "Adjust {0} position with arrow keys"
+  },
+  "カメラ": {
+    "ko": "카메라",
+    "en": "Camera"
+  },
+  "ペット": {
+    "ko": "펫",
+    "en": "Pet"
+  },
+  "{0}のサイズを矢印キーで調整": {
+    "ko": "{0} 크기를 방향키로 조절",
+    "en": "Adjust {0} size with arrow keys"
+  },
+  "配置は過去の動画にも共通で適用します。左右のアナゴの位置は固定です。保存済みのファイルは変わりません。": {
+    "ko": "배치는 과거 영상에도 동일하게 적용됩니다. 양옆 아나고 위치는 고정이며, 이미 저장한 파일은 바뀌지 않습니다.",
+    "en": "This layout also applies to past recordings. Side characters stay fixed, and previously saved files do not change."
+  },
+  "集中時間だけを無音で記録します。動画はコレクションを初期化するまで、この端末に保存されます。再生・保存・共有する動画は最大1分です。": {
+    "ko": "집중 시간만 무음으로 녹화합니다. 영상은 컬렉션을 초기화할 때까지 이 기기에 보관됩니다. 재생·저장·공유 영상은 최대 1분입니다.",
+    "en": "Only focus time is recorded, without audio. Videos stay on this device until you reset the collection. Playback, saved, and shared videos are at most one minute long."
+  },
+  "言語": {
+    "ko": "언어",
+    "en": "Language"
+  },
+  "ピンアナゴ変更": {
+    "ko": "핀아나고 변경",
+    "en": "Change Pin-anago"
+  },
+  "言語を保存できませんでした。もう一度お試しください。": {
+    "ko": "언어를 저장하지 못했어요. 다시 시도해 주세요.",
+    "en": "Could not save the language. Please try again."
+  },
+  "{name}としてログイン": {
+    "ko": "{name} 계정으로 로그인됨",
+    "en": "Signed in as {name}"
+  },
+  "メールアドレスまたはパスワードが正しくありません。": {
+    "ko": "이메일 또는 비밀번호가 올바르지 않아요.",
+    "en": "The email or password is incorrect."
+  },
+  "確認メールのリンクからメールアドレスを確認してください。": {
+    "ko": "인증 메일의 링크에서 이메일을 확인해 주세요.",
+    "en": "Please verify your email using the link we sent."
+  },
+  "リンクの有効期限が切れたか、使用済みです。再送してください。": {
+    "ko": "링크가 만료되었거나 이미 사용되었어요. 다시 요청해 주세요.",
+    "en": "This link has expired or was already used. Request a new one."
+  },
+  "リンクの有効期限が切れました。再送してください。": {
+    "ko": "링크가 만료되었어요. 다시 요청해 주세요.",
+    "en": "This link has expired. Request a new one."
+  },
+  "パスワードは12文字以上で入力してください。": {
+    "ko": "비밀번호는 12자 이상 입력해 주세요.",
+    "en": "Use a password with at least 12 characters."
+  },
+  "パスワードは128文字以内で入力してください。": {
+    "ko": "비밀번호는 128자 이내로 입력해 주세요.",
+    "en": "Use a password with no more than 128 characters."
+  },
+  "処理を完了できませんでした。時間をおいて再試行してください。": {
+    "ko": "처리하지 못했어요. 잠시 후 다시 시도해 주세요.",
+    "en": "Could not complete the request. Please try again later."
+  },
+  "通信を完了できませんでした。": {
+    "ko": "연결하지 못했어요. 다시 시도해 주세요.",
+    "en": "Could not connect. Please try again."
+  },
+  "ログインを開始できませんでした。": {
+    "ko": "로그인을 시작하지 못했어요.",
+    "en": "Could not start sign-in."
+  },
+  "ブラウザを開けませんでした。": {
+    "ko": "브라우저를 열지 못했어요.",
+    "en": "Could not open the browser."
+  },
+  "ログインをもう一度開始してください。": {
+    "ko": "로그인을 다시 시작해 주세요.",
+    "en": "Please start sign-in again."
+  },
+  "OSの安全な保存先にログイン情報を保存できませんでした。": {
+    "ko": "OS의 보안 저장소에 로그인 정보를 저장하지 못했어요.",
+    "en": "Could not save your sign-in to the OS secure storage."
+  },
+  "ログインの待機時間を過ぎました。もう一度お試しください。": {
+    "ko": "로그인 대기 시간이 지났어요. 다시 시도해 주세요.",
+    "en": "Sign-in timed out. Please try again."
+  },
+  "ログインを完了できませんでした。": {
+    "ko": "로그인을 완료하지 못했어요.",
+    "en": "Could not complete sign-in."
+  },
+  "{grade}、{stars} / 5つ星": {
+    "ko": "{grade}, 별 {stars} / 5개",
+    "en": "{grade}, {stars} out of 5 stars"
+  },
+  "レア度不明": {
+    "ko": "희귀도 미상",
+    "en": "Unknown rarity"
+  },
+  "ノーマル": {
+    "ko": "일반",
+    "en": "Common"
+  },
+  "レア": {
+    "ko": "레어",
+    "en": "Rare"
+  },
+  "スーパーレア": {
+    "ko": "슈퍼 레어",
+    "en": "Super rare"
+  },
+  "ウルトラレア": {
+    "ko": "울트라 레어",
+    "en": "Ultra rare"
+  },
+  "ウルトラスーパーレア": {
+    "ko": "울트라 슈퍼 레어",
+    "en": "Ultra super rare"
+  },
+  "選択した{count}件を送信": {
+    "ko": "선택한 기록 {count}개 전송",
+    "en": "Upload selected records ({count})"
+  },
+  "正しい姿勢": {
+    "ko": "바른 자세",
+    "en": "Good posture"
+  },
+  "40cm以上": {
+    "ko": "40cm 이상",
+    "en": "40cm+"
+  },
+  "顎をひく": {
+    "ko": "턱 당기기",
+    "en": "Tuck chin"
+  },
+  "背筋は伸ばす": {
+    "ko": "허리 펴기",
+    "en": "Sit tall"
+  },
+  "約90°": {
+    "ko": "약 90°",
+    "en": "~90°"
+  },
+  "仙骨は座面に": {
+    "ko": "엉덩이를 좌면에",
+    "en": "Hips on the seat"
+  },
+  "地面につける": {
+    "ko": "발은 바닥에",
+    "en": "Feet flat"
+  },
+  "こんな姿勢になっていませんか？": {
+    "ko": "이런 자세가 되지 않았나요?",
+    "en": "Watch out for these postures"
+  },
+  "猫背": {
+    "ko": "구부정한 등",
+    "en": "Slouching"
+  },
+  "反り腰": {
+    "ko": "과하게 젖힌 허리",
+    "en": "Arched back"
+  },
+  "仙骨座り": {
+    "ko": "걸터앉기",
+    "en": "Sliding forward"
+  },
+  "別の画面でアカウントが更新されました。再試行してください。": {
+    "ko": "다른 화면에서 계정이 변경되었어요. 다시 시도해 주세요.",
+    "en": "Your account changed in another window. Please try again."
+  },
+  "同意が変更されたため、再選択が必要です。": {
+    "ko": "동의 상태가 변경되어 기록을 다시 선택해야 해요.",
+    "en": "Consent has changed. Select the records again."
+  },
+  "終了した測定だけを送信できます。": {
+    "ko": "종료한 측정만 전송할 수 있어요.",
+    "en": "Only finished sessions can be uploaded."
+  },
+  "動画の映像が見つかりませんでした。": {
+    "ko": "동영상에서 영상을 찾지 못했어요.",
+    "en": "No video track was found."
+  },
+  "この環境では動画を作成できません。録画原本は保持されています。": {
+    "ko": "이 환경에서는 영상을 만들 수 없어요. 녹화 원본은 보관되어 있어요.",
+    "en": "Video export is unavailable here. Your original recording is safe."
+  },
+  "動画のフレームを読み込めませんでした。": {
+    "ko": "영상 프레임을 불러오지 못했어요.",
+    "en": "Could not read a video frame."
+  },
+  "動画の読み込みが途中で終了しました。": {
+    "ko": "영상을 불러오다가 중단되었어요.",
+    "en": "The video stopped loading before it finished."
+  },
+  "動画を書き込めませんでした": {
+    "ko": "영상을 저장하지 못했어요.",
+    "en": "Could not write the video."
+  },
+  "動画ファイルは閉じられています": {
+    "ko": "영상 파일이 닫혀 있어요.",
+    "en": "The video file is closed."
+  },
+  "録画ファイルを読み込めませんでした": {
+    "ko": "녹화 파일을 불러오지 못했어요.",
+    "en": "Could not read the recording."
+  },
+  "カメラの記録時間に差があります。保存できた範囲の映像です。": {
+    "ko": "카메라 기록 시간에 차이가 있어요. 저장된 구간의 영상이에요.",
+    "en": "The camera duration differs. This video contains the portion that was saved."
+  },
+  "この動画のペット表現を読み込めません。カメラのみの保存は利用できます。": {
+    "ko": "이 영상의 캐릭터를 불러올 수 없어요. 카메라 영상만 저장할 수 있어요.",
+    "en": "The character overlay could not be loaded. You can still save the camera video."
+  },
+  "ペットのアニメーションを読み込めませんでした": {
+    "ko": "캐릭터 애니메이션을 불러오지 못했어요.",
+    "en": "Could not load the character animation."
+  },
+  "この環境ではタイムラプスを記録できません。姿勢測定は続けられます。": {
+    "ko": "이 환경에서는 타임랩스를 녹화할 수 없어요. 자세 측정은 계속할 수 있어요.",
+    "en": "Timelapse recording is unavailable here. Posture tracking can continue."
+  },
+  "対応する録画形式がありません。姿勢測定は続けられます。": {
+    "ko": "지원되는 녹화 형식이 없어요. 자세 측정은 계속할 수 있어요.",
+    "en": "No supported recording format is available. Posture tracking can continue."
+  },
+  "この環境では動画を保存できません。対応ブラウザでお試しください。": {
+    "ko": "이 환경에서는 영상을 저장할 수 없어요. 지원되는 브라우저에서 시도해 주세요.",
+    "en": "Video storage is unavailable here. Try a supported browser."
+  },
+  "コレクション初期化後の動画は保存できません": {
+    "ko": "컬렉션 초기화 후에는 이 영상을 저장할 수 없어요.",
+    "en": "This recording cannot be saved after the collection was reset."
+  },
+  "動画の保存は取り消されました": {
+    "ko": "영상 저장이 취소되었어요.",
+    "en": "Saving the video was cancelled."
+  },
+  "動画の削除を完了できませんでした。他のウィンドウを閉じて、初期化を再試行してください。": {
+    "ko": "영상 삭제를 완료하지 못했어요. 다른 창을 닫고 초기화를 다시 시도해 주세요.",
+    "en": "Could not finish deleting the videos. Close other windows and try resetting again."
+  },
+  "録画が途中で終了しました。保存できた範囲の映像です。": {
+    "ko": "녹화가 도중에 종료되었어요. 저장된 구간의 영상이에요.",
+    "en": "Recording ended early. This video contains the portion that was saved."
+  },
+  "以前の保存データを読み込めません。データを消さずに再試行してください。": {
+    "ko": "이전 저장 데이터를 불러올 수 없어요. 데이터를 지우지 말고 다시 시도해 주세요.",
+    "en": "Could not read your saved data. Try again without deleting it."
+  },
+  "保存先を準備できませんでした": {
+    "ko": "저장 공간을 준비하지 못했어요.",
+    "en": "Could not prepare storage."
+  },
+  "コレクションを読み込めません": {
+    "ko": "컬렉션을 불러올 수 없어요.",
+    "en": "Could not load the collection."
+  },
+  "測定一覧を読み込めません": {
+    "ko": "측정 목록을 불러올 수 없어요.",
+    "en": "Could not load the session list."
+  },
+  "送信状態を保存できません": {
+    "ko": "전송 상태를 저장할 수 없어요.",
+    "en": "Could not save the upload status."
+  },
+  "他のアカウントの記録は変更できません。": {
+    "ko": "다른 계정의 기록은 변경할 수 없어요.",
+    "en": "Records from another account cannot be changed."
+  },
+  "別の画面で更新されています。もう一度お試しください。": {
+    "ko": "다른 화면에서 변경되었어요. 다시 시도해 주세요.",
+    "en": "This was updated in another window. Please try again."
+  },
+  "未獲得のピンアナゴを選んでください。": {
+    "ko": "아직 얻지 못한 핀아나고를 선택해 주세요.",
+    "en": "Choose a Pin-anago you have not collected yet."
+  },
+  "結果の保存に失敗しました。再試行してください。": {
+    "ko": "결과를 저장하지 못했어요. 다시 시도해 주세요.",
+    "en": "Could not save the result. Please try again."
+  },
+  "ログインの準備中です。ログインせずに利用できます。": {
+    "ko": "로그인을 준비 중이에요. 로그인 없이 이용할 수 있어요.",
+    "en": "Sign-in is not ready yet. You can use the app without signing in."
+  },
+  "ログインし直すと、同じアカウントの送信を再開できます。": {
+    "ko": "다시 로그인하면 같은 계정의 전송을 재개할 수 있어요.",
+    "en": "Sign in again to resume uploads for the same account."
+  },
+  "アカウントが変わりました。記録は送信していません。": {
+    "ko": "계정이 변경되었어요. 기록은 전송하지 않았어요.",
+    "en": "Your account changed. No records were uploaded."
+  },
+  "この操作の前に再ログインしてください。": {
+    "ko": "이 작업을 진행하기 전에 다시 로그인해 주세요.",
+    "en": "Please sign in again before this action."
+  },
+  "Apple連携の解除を準備できませんでした。": {
+    "ko": "Apple 계정 연결 해제를 준비하지 못했어요.",
+    "en": "Could not prepare to disconnect Apple."
+  },
+  "Apple連携を解除できませんでした。再試行してください。": {
+    "ko": "Apple 계정 연결을 해제하지 못했어요. 다시 시도해 주세요.",
+    "en": "Could not disconnect Apple. Please try again."
+  },
+  "しばらく待ってから再試行してください。": {
+    "ko": "잠시 기다린 후 다시 시도해 주세요.",
+    "en": "Please wait a moment and try again."
+  },
+  "メール認証は準備中です。GoogleまたはAppleをご利用ください。": {
+    "ko": "이메일 인증을 준비 중이에요. Google 또는 Apple로 로그인해 주세요.",
+    "en": "Email sign-in is not ready yet. Please use Google or Apple."
+  },
+  "メール送信の上限に達しました。時間をおいて再試行してください。": {
+    "ko": "메일 발송 한도에 도달했어요. 나중에 다시 시도해 주세요.",
+    "en": "The email limit has been reached. Please try again later."
+  },
+  "メールを送信できませんでした。時間をおいて再試行してください。": {
+    "ko": "메일을 보내지 못했어요. 잠시 후 다시 시도해 주세요.",
+    "en": "Could not send the email. Please try again later."
+  },
+  "分析への同意が変更されました。自動送信を停止しました。": {
+    "ko": "분석 동의 상태가 변경되어 자동 전송을 중단했어요.",
+    "en": "Analysis consent changed. Automatic uploads have stopped."
+  },
+  "測定日時または同意の版が正しくありません。": {
+    "ko": "측정 시각 또는 동의 버전이 올바르지 않아요.",
+    "en": "The session date or consent version is invalid."
+  },
+  "削除・期限切れの測定は再送信できません。": {
+    "ko": "삭제되었거나 보관 기간이 지난 측정은 재전송할 수 없어요.",
+    "en": "Deleted or expired sessions cannot be uploaded again."
+  },
+  "同じ測定IDに異なる内容があります。": {
+    "ko": "같은 측정 ID에 다른 내용이 있어요.",
+    "en": "Different data exists for the same session ID."
+  },
+  "保存期限を過ぎました。": {
+    "ko": "보관 기간이 지났어요.",
+    "en": "The retention period has ended."
+  },
+  "未送信のデータがあります。": {
+    "ko": "아직 전송되지 않은 데이터가 있어요.",
+    "en": "Some data has not been uploaded yet."
+  },
+  "測定の範囲に一致しないデータです。": {
+    "ko": "측정 범위와 일치하지 않는 데이터예요.",
+    "en": "The data does not match the session range."
+  },
+  "メールアドレスを確認してください。": {
+    "ko": "이메일 인증을 완료해 주세요.",
+    "en": "Please verify your email address."
+  },
+  "ログインの有効期限が切れました。アプリからやり直してください。": {
+    "ko": "로그인이 만료되었어요. 앱에서 다시 시작해 주세요.",
+    "en": "Sign-in has expired. Start again from the app."
+  },
+  "分析への同意を確認してください。": {
+    "ko": "분석 참여 동의를 확인해 주세요.",
+    "en": "Please confirm your consent to analysis."
+  },
+  "再試行してください。": {
+    "ko": "다시 시도해 주세요.",
+    "en": "Please try again."
+  },
+  "同意が変更されました。": {
+    "ko": "동의 상태가 변경되었어요.",
+    "en": "Your consent changed."
+  },
+  "復旧確認中です。記録は端末に保存されます。": {
+    "ko": "복구 상태를 확인 중이에요. 기록은 기기에 저장돼요.",
+    "en": "Recovery checks are in progress. Records are saved on this device."
+  },
+  "アカウントが変わりました。": {
+    "ko": "계정이 변경되었어요.",
+    "en": "Your account changed."
+  },
+  "分析への同意が必要です。": {
+    "ko": "분석 참여 동의가 필요해요.",
+    "en": "Consent to analysis is required."
+  },
+  "送信データの形式が正しくありません。": {
+    "ko": "전송 데이터 형식이 올바르지 않아요.",
+    "en": "The upload format is invalid."
+  },
+  "処理を完了できませんでした。記録は端末に残っています。": {
+    "ko": "처리를 완료하지 못했어요. 기록은 기기에 남아 있어요.",
+    "en": "The request could not be completed. Your records remain on this device."
+  },
+  "姿勢測定時の設定をしましょう。": {
+    "ko": "자세 측정 설정을 해 주세요.",
+    "en": "Set up your posture session."
+  },
+  "判定基準": {
+    "ko": "판정 단계",
+    "en": "Sensitivity"
+  },
+  "やさしい": {
+    "ko": "쉬움",
+    "en": "Easy"
+  },
+  "ふつう": {
+    "ko": "보통",
+    "en": "Normal"
+  },
+  "きびしい": {
+    "ko": "어려움",
+    "en": "Hard"
+  },
+  "使用モニター": {
+    "ko": "사용 모니터",
+    "en": "Monitors"
+  },
+  "1台": {
+    "ko": "1대",
+    "en": "Single"
+  },
+  "2台以上": {
+    "ko": "2대 이상",
+    "en": "Multiple"
+  },
+  "姿勢を正して、肩を画面内に収めてください。": {
+    "ko": "자세를 바로 하고 어깨가 화면 안에 들어오게 해 주세요.",
+    "en": "Sit upright and keep your shoulders in view."
+  },
+  "姿勢の正し方": {
+    "ko": "바른 자세",
+    "en": "Good posture"
+  },
+  "画面から40cm以上離れ、顎を引き、背筋を伸ばす。膝と肘は約90度、足を床につける。": {
+    "ko": "화면에서 40cm 이상 떨어져 턱을 당기고 허리를 펴세요. 무릎과 팔꿈치는 약 90도, 발은 바닥에 붙이세요.",
+    "en": "Stay at least 40 cm from the screen, tuck your chin in and sit upright. Keep knees and elbows near 90 degrees and feet flat on the floor."
+  },
+  "カメラプレビュー": {
+    "ko": "카메라 미리보기",
+    "en": "Camera preview"
+  },
+  "カメラを準備中…": {
+    "ko": "카메라 준비 중…",
+    "en": "Preparing camera…"
+  },
+  "カメラを開けません。権限を確認して、ホームからやり直してください。": {
+    "ko": "카메라를 열 수 없습니다. 권한을 확인한 뒤 홈에서 다시 시작해 주세요.",
+    "en": "Unable to open the camera. Check permission and try again from Home."
+  }
+}

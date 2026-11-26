@@ -1,0 +1,66 @@
+/* Figma 4006:1943. Framing is a visual guide, not a tracking gate. */
+.work-app main.work-screen.work-measure-screen.stage-prepare{--prepare-px:1px;padding:176px max(16px,calc((100% - 1333px)/2 - 9.5px)) 60px max(16px,calc((100% - 1333px)/2 + 9.5px));background:linear-gradient(180deg,#13a2d7,#f1edcc)}
+.work-app .work-screen.stage-prepare .work-registration-panel{max-width:1333px;min-height:694px;padding:55px 109px 43px;border-radius:32px;box-shadow:0 0 8.52px #00000026}
+.work-app .work-screen.stage-prepare .work-measure-heading{display:flex;align-items:center;gap:31px;min-height:38px;margin:0 0 31px;text-align:left}
+.work-app .work-screen.stage-prepare .work-measure-heading h1{font-size:32px;line-height:38px;font-weight:700}
+.work-app .work-screen.stage-prepare .work-measure-heading p{margin:0;font-size:20px;line-height:24px;font-weight:510}
+.work-app .work-screen.stage-prepare .work-registration-panel>.work-button{display:flex;justify-content:center;align-items:center;width:407px;min-height:77px;margin:31px auto 0;padding:24px 32px;font-size:24px;line-height:29px;transform:translateX(-13px)}
+.work-posture-check{display:grid;grid-template-columns:588fr 527fr;height:calc(419 * var(--prepare-px));background:#fff;border-radius:calc(26.4191 * var(--prepare-px));box-shadow:0 0 calc(7.03409 * var(--prepare-px)) #00000026;overflow:hidden;text-align:left}
+.work-posture-camera-column{position:relative;min-width:0;padding:calc(84 * var(--prepare-px)) calc(33 * var(--prepare-px)) calc(31 * var(--prepare-px)) calc(37 * var(--prepare-px))}
+.work-posture-framing-instruction{position:absolute;display:flex;align-items:center;gap:calc(7.53 * var(--prepare-px));inset:calc(30 * var(--prepare-px)) calc(24 * var(--prepare-px)) auto calc(61 * var(--prepare-px));margin:0;color:#f78000;font-size:max(14px,calc(20 * var(--prepare-px)));font-weight:590;line-height:1.2}
+.work-posture-framing-instruction>svg{flex:none;width:calc(37.47 * var(--prepare-px));height:calc(39 * var(--prepare-px));overflow:visible}
+.work-posture-framing-instruction text{font-size:15.2941px;font-weight:860;fill:#f78000}
+.work-app .work-screen.stage-prepare .work-camera{aspect-ratio:518/304;border-radius:calc(32 * var(--prepare-px));background:#a1a1a1;box-shadow:0 0 calc(8.52 * var(--prepare-px)) #00000026}
+.work-camera-framing{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.work-camera-preparation-status{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;background:#183d4de6;color:white;text-align:center;font-size:16px;line-height:1.5}
+.work-camera-preparation-status p{margin:0}
+.work-camera-preparation-status>.work-button{min-height:44px;padding:10px 20px;font-size:14px}
+.work-posture-help{position:relative;min-width:0;padding:calc(21 * var(--prepare-px)) 0 0 calc(51 * var(--prepare-px))}
+.work-posture-help::before{content:'';position:absolute;left:calc(-1.5 * var(--prepare-px));top:calc(30 * var(--prepare-px));bottom:calc(25 * var(--prepare-px));width:calc(3 * var(--prepare-px));background:#e6e6e6}
+.work-posture-help h2{position:absolute;z-index:1;left:calc(22 * var(--prepare-px));top:calc(27 * var(--prepare-px));display:flex;align-items:center;justify-content:center;width:calc(136 * var(--prepare-px));min-height:calc(36 * var(--prepare-px));padding:4px 10px;margin:0;border-radius:200px;background:#f78000;color:white;font-size:max(12px,calc(16 * var(--prepare-px)));font-weight:700;line-height:1.2;text-align:center}
+.work-posture-illustration{position:relative;width:100%;aspect-ratio:475.83/398;container-type:inline-size}
+.work-posture-illustration>img{display:block;width:100%;height:100%;object-fit:contain}
+.work-posture-guide-labels{position:absolute;inset:0;pointer-events:none}
+.work-posture-guide-labels span{position:absolute;min-height:5.84%;background:white;color:#000;font-size:max(12px,3.78cqw);line-height:1.18;font-weight:700;overflow-wrap:normal}
+.work-posture-illustration[data-language=en] .work-posture-guide-labels span{font-size:max(12px,2.94cqw)}
+.work-posture-guide-labels .angle,.work-posture-guide-labels .distance{min-height:4%;white-space:nowrap;color:#f78000;font-size:max(11px,2.73cqw)}
+.work-posture-guide-labels .distance{transform:rotate(-8.15deg);transform-origin:left center}
+@media(min-width:1051px) and (min-aspect-ratio:1/1){
+ .work-app main.work-screen.work-measure-screen.stage-prepare{--prepare-px:var(--scene-px);padding:calc(176 * var(--prepare-px)) max(16px,calc((100% - 1333 * var(--prepare-px))/2 - 9.5 * var(--prepare-px))) calc(60 * var(--prepare-px)) max(16px,calc((100% - 1333 * var(--prepare-px))/2 + 9.5 * var(--prepare-px)))}
+ .work-app .work-screen.stage-prepare>.work-brand{left:calc(80 * var(--prepare-px))}
+ .work-app .work-screen.stage-prepare .work-registration-panel{max-width:calc(1333 * var(--prepare-px));min-height:calc(694 * var(--prepare-px));padding:calc(55 * var(--prepare-px)) calc(109 * var(--prepare-px)) calc(43 * var(--prepare-px));border-radius:calc(32 * var(--prepare-px))}
+ .work-app .work-screen.stage-prepare .work-measure-heading{min-height:calc(38 * var(--prepare-px));gap:calc(31 * var(--prepare-px));margin-bottom:calc(31 * var(--prepare-px))}
+ .work-app .work-screen.stage-prepare .work-measure-heading h1{font-size:max(24px,calc(32 * var(--prepare-px)));line-height:1.1875}
+ .work-app .work-screen.stage-prepare .work-measure-heading p{font-size:max(16px,calc(20 * var(--prepare-px)));line-height:1.2}
+ .work-app .work-screen.stage-prepare .work-registration-panel>.work-button{width:calc(407 * var(--prepare-px));min-height:max(44px,calc(77 * var(--prepare-px)));margin-top:calc(31 * var(--prepare-px));padding:calc(24 * var(--prepare-px)) calc(32 * var(--prepare-px));font-size:max(18px,calc(24 * var(--prepare-px)));line-height:1.20833;transform:translateX(calc(-13 * var(--prepare-px)))}
+}
+@media(max-width:1050px),(max-aspect-ratio:1/1){
+ .work-app main.work-screen.work-measure-screen.stage-prepare{padding:112px 24px 40px}
+ .work-app .work-screen.stage-prepare .work-registration-panel{padding:28px 24px;min-height:0;border-radius:28px}
+ .work-app .work-screen.stage-prepare .work-measure-heading{flex-wrap:wrap;gap:8px 24px;margin-bottom:24px}
+ .work-app .work-screen.stage-prepare .work-measure-heading h1{font-size:28px;line-height:34px}
+ .work-app .work-screen.stage-prepare .work-measure-heading p{font-size:16px;line-height:24px}
+ .work-posture-check{height:auto;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
+ .work-posture-camera-column{padding:88px 20px 28px}
+ .work-posture-framing-instruction{inset:22px 20px auto;font-size:16px;line-height:22px;gap:8px}
+ .work-posture-help{padding:50px 0 0 0;align-self:center}
+ .work-posture-help h2{top:10px;left:20px;font-size:14px;min-height:32px}
+ .work-posture-help::before{top:20px;bottom:20px}
+ .work-app .work-screen.stage-prepare .work-registration-panel>.work-button{width:407px;min-height:60px;font-size:20px;line-height:26px;padding:16px 24px;transform:none}
+}
+@media(max-width:699px){
+ .work-app main.work-screen.work-measure-screen.stage-prepare{padding:108px 16px 32px}
+ .work-app .work-screen.stage-prepare .work-registration-panel{padding:24px 16px;border-radius:26px}
+ .work-app .work-screen.stage-prepare .work-measure-heading{display:block}
+ .work-app .work-screen.stage-prepare .work-measure-heading h1{font-size:26px;line-height:34px}
+ .work-app .work-screen.stage-prepare .work-measure-heading p{margin-top:8px;font-size:14px;line-height:22px}
+ .work-posture-check{grid-template-columns:minmax(0,1fr);border-radius:22px}
+ .work-posture-camera-column{padding:16px}
+ .work-app .work-posture-framing-instruction{position:static;margin-bottom:14px;font-size:14px;line-height:20px;align-items:center}
+ .work-posture-framing-instruction>svg{width:31px;height:33px}
+ .work-posture-help{padding-top:54px}
+ .work-posture-help h2{left:16px;top:12px}
+ .work-posture-help::before{top:0;left:16px;right:16px;bottom:auto;width:auto;height:2px}
+ .work-camera-preparation-status{font-size:13px;line-height:19px;padding:12px;gap:8px}
+ .work-app .work-screen.stage-prepare .work-registration-panel>.work-button{width:100%;margin-top:24px;font-size:20px}
+}

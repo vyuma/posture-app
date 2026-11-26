@@ -1,10 +1,12 @@
+import { t, useAppLanguage } from "../i18n";
 import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 
 type Option<T extends string> = { value: T; label: string };
-export function OptionMenu<T extends string>({ value, onChange, options, label, className, arrow, disabled = false }: {
+export function OptionMenu<T extends string>({ value, onChange, options, label, className, arrow, triggerLabel, disabled = false }: {
   value: T; onChange: (value: T) => void; options: readonly Option<T>[];
-  label: string; className: string; arrow: ReactNode; disabled?: boolean;
+  label: string; className: string; arrow: ReactNode; triggerLabel?: string; disabled?: boolean;
 }) {
+  useAppLanguage();
   const [open, setOpen] = useState(false);
   const [above, setAbove] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -68,7 +70,7 @@ export function OptionMenu<T extends string>({ value, onChange, options, label, 
     if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
   }}>
     <button ref={trigger} className={`${className}-trigger`} disabled={!options.length} aria-disabled={disabled || undefined} type="button"
-      aria-label={`${label}: ${options[selected]?.label ?? "なし"}`}
+      aria-label={`${label}: ${t(options[selected]?.label ?? "なし")}`}
       aria-haspopup="menu" aria-expanded={open} aria-controls={open ? menuId : undefined}
       onClick={() => { if (!disabled) setOpen(!open); }} onKeyDown={event => {
         if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
@@ -77,14 +79,14 @@ export function OptionMenu<T extends string>({ value, onChange, options, label, 
         }
       }}>
       {arrow}
-      <span>{options[selected]?.label ?? "なし"}</span>
+      <span>{triggerLabel ?? t(options[selected]?.label ?? "なし")}</span>
     </button>
     {open && <div ref={menu} id={menuId} role="menu" aria-label={label} className={`${className}-menu`} data-above={above} onKeyDown={navigate}>
       {options.map((option, index) => <button key={option.value} ref={element => { items.current[index] = element; }}
         type="button" role="menuitemradio" aria-checked={value === option.value} tabIndex={-1}
         className={`${className}-option`} onClick={() => { if (!disabled) { onChange(option.value); close(); } }}>
         <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m4 10 4 4 8-8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-        <span>{option.label}</span>
+        <span>{t(option.label)}</span>
       </button>)}
     </div>}
   </div>;

@@ -48,8 +48,9 @@ pub async fn account_request(app:tauri::AppHandle,window:tauri::WebviewWindow,pa
     }).await.map_err(|_|"通信を完了できませんでした。".to_string())?
 }
 #[tauri::command]
-pub async fn account_login(app:tauri::AppHandle,window:tauri::WebviewWindow,provider:String)->Result<(),String> {
+pub async fn account_login(app:tauri::AppHandle,window:tauri::WebviewWindow,provider:String,language:Option<String>)->Result<(),String> {
     main_only(&window)?;if !["google","apple","login","signup"].contains(&provider.as_str()) {return Err("Unknown provider".into());}
+    let language = match language.as_deref() { Some("ko") => "ko", Some("en") => "en", _ => "ja" };
     tauri::async_runtime::spawn_blocking(move|| -> Result<(),String> {
         let client=client()?;
         let verifier=format!("{}{}",uuid::Uuid::new_v4().simple(),uuid::Uuid::new_v4().simple());
@@ -59,7 +60,7 @@ pub async fn account_login(app:tauri::AppHandle,window:tauri::WebviewWindow,prov
         let value:Value=serde_json::from_str(&created.body).map_err(|_|"Invalid login response")?;
         let id=value["id"].as_str().ok_or("Missing login id")?;
         uuid::Uuid::parse_str(id).map_err(|_|"Invalid login id")?;
-        let url=if provider=="login"||provider=="signup" {format!("{ORIGIN}/{provider}?handoff={id}")} else {format!("{ORIGIN}/account/native?handoff={id}&provider={provider}")};
+        let url=if provider=="login"||provider=="signup" {format!("{ORIGIN}/{provider}?handoff={id}&lang={language}")} else {format!("{ORIGIN}/account/native?handoff={id}&provider={provider}&lang={language}")};
         open::that(url).map_err(|_|"ブラウザを開けませんでした。")?;
         let started=Instant::now();
         while started.elapsed()<Duration::from_secs(300) {

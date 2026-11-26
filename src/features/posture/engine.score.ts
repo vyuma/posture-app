@@ -179,6 +179,7 @@ export function resolveCandidateBadState(
   previous: boolean,
   scoreEma: number,
   confidence: number,
+  scale = 1,
 ) {
   const badThreshold =
     confidence < POSTURE_SPEC.lowConfidenceThreshold
@@ -187,10 +188,10 @@ export function resolveCandidateBadState(
       : POSTURE_SPEC.scoreThresholdBad;
 
   if (previous) {
-    return scoreEma >= POSTURE_SPEC.scoreThresholdGood;
+    return scoreEma >= POSTURE_SPEC.scoreThresholdGood * scale;
   }
 
-  return scoreEma >= badThreshold;
+  return scoreEma >= badThreshold * scale;
 }
 
 function normalizeFeatures(

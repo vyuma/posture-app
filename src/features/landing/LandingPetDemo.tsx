@@ -1,3 +1,4 @@
+import { t, useAppLanguage } from "../i18n";
 import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent } from 'react';
 import { speechDuration, type SpeechEvent } from '../posture/feedbackSpeech';
 import { widgetBounds, type Point } from '../work/widgetPosition';
@@ -6,6 +7,7 @@ import { clampDesktopPet, DESKTOP_PET_SCALE, DESKTOP_SURFACE } from './desktopPe
 
 /** A scripted illustration only: shares the live pet's rig, geometry and speech. */
 export function LandingPetDemo({ active }: { active: boolean }) {
+  useAppLanguage();
   const [frame, setFrame] = useState({ bad: false, growth: 0, speech: null as SpeechEvent | null });
   const [requested, setRequested] = useState<Point>({ x: 375, y: 238.58 });
   const [dragging, setDragging] = useState(false);
@@ -22,7 +24,7 @@ export function LandingPetDemo({ active }: { active: boolean }) {
       const phase = `${Math.floor(elapsed / 17500)}:${bad}`;
       if (phase !== previousPhase) {
         previousPhase = phase;
-        speech = { id: phase, code: bad ? 'general' : 'good', text: bad ? '姿勢を戻して！' : 'いい感じ！', ...(bad ? { whileBad: true as const } : {}), startedAt: now, endsAt: now + speechDuration(bad ? 'general' : 'good') };
+        speech = { id: phase, code: bad ? 'general' : 'good', text: bad ? t("姿勢を戻して！") : t("いい感じ！"), ...(bad ? { whileBad: true as const } : {}), startedAt: now, endsAt: now + speechDuration(bad ? 'general' : 'good') };
       }
       const growth = bad ? Math.min(1, (time - 10500) / 5000) : 0;
       setFrame(previous => previous.bad === bad && previous.growth === growth && previous.speech === speech ? previous : { bad, growth, speech });
@@ -59,7 +61,7 @@ export function LandingPetDemo({ active }: { active: boolean }) {
   }
   return <div className={`lp-desktop-motion${dragging ? ' is-dragging' : ''}`} style={{ left: position.x, top: position.y }}>
     <LandingPet pose={pose} geometry={geometry} speech={active ? frame.speech : null} playing={active} />
-    <button className="lp-desktop-drag-handle" type="button" data-pointer-focus={pointerFocus} onBlur={() => setPointerFocus(false)} aria-label="ピンアナゴを移動。ドラッグまたは矢印キー、Shiftで大きく移動"
+    <button className="lp-desktop-drag-handle" type="button" data-pointer-focus={pointerFocus} onBlur={() => setPointerFocus(false)} aria-label={t("ピンアナゴを移動。ドラッグまたは矢印キー、Shiftで大きく移動")}
       style={{ left: bounds.left * DESKTOP_PET_SCALE, top: bounds.top * DESKTOP_PET_SCALE, width: (bounds.right - bounds.left) * DESKTOP_PET_SCALE, height: (bounds.bottom - bounds.top) * DESKTOP_PET_SCALE }}
       onPointerDown={start} onPointerMove={event => { const d = drag.current; if (d?.id === event.pointerId) move({ x: d.origin.x + (event.clientX - d.pointer.x) / d.scale, y: d.origin.y + (event.clientY - d.pointer.y) / d.scale }); }}
       onPointerUp={finish} onPointerCancel={() => { if (drag.current) move(drag.current.origin); finish(); }} onLostPointerCapture={finish}

@@ -1,3 +1,4 @@
+import { t, useAppLanguage } from "../i18n";
 import type { ButtonHTMLAttributes } from 'react';
 
 type Props = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> & {
@@ -6,11 +7,12 @@ type Props = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> & {
 
 /** Keep provider artwork intact; PiiiN colors belong to the surrounding surface. */
 export function SsoButton({ provider, className = '', ...props }: Props) {
+  useAppLanguage();
   const google = provider === 'google';
   return <button {...props} type="button" className={`account-sso account-sso--${provider} ${className}`}>
     <span className="account-sso-icon" aria-hidden="true">
       <img className="account-sso-logo" src={google ? '/identity/google-g.png' : '/identity/apple-sign-in-transparent.svg'} alt="" />
     </span>
-    <span className="account-sso-label">{google ? 'Google でログイン' : 'Apple でサインイン'}</span>
+    <span className="account-sso-label">{google ? t("Google でログイン") : t("Apple でサインイン")}</span>
   </button>;
 }

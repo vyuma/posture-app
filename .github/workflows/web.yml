@@ -32,6 +32,15 @@ jobs:
       - run: bun run test:accounts
       - run: npm run test:server
       - run: bun test scripts/head-tilt-posture.test.ts scripts/landmark-loss.test.ts scripts/work-session.test.ts scripts/timelapse-pet-layout.test.ts scripts/widget-drag.test.ts
+      - name: Verify posture, language, and timelapse regressions
+        run: |
+          for suite in i18n posture-check-screen timer-settings; do
+            bun test "scripts/$suite.test.tsx"
+          done
+          for suite in posture-feedback posture-judgment posture-comment posture-praise-policy posture-speech-stability timelapse timelapse-export timelapse-timeline; do
+            bun test "scripts/$suite.test.ts"
+          done
+          bun test scripts/timelapse-motion.test.tsx
       - run: node --test scripts/download-mac.test.mjs
       - run: node --test scripts/cloudflare-preflight.test.mjs
       - run: bun run build:web

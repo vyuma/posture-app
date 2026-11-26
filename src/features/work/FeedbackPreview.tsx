@@ -6,7 +6,7 @@ import { type WidgetState } from './Widget';
 import { createPostureEngineState, evaluatePostureFrame } from '../posture/engine';
 import { postureSpeechSample } from './usePostureSpeech';
 import { petPosture } from './postureReading';
-import { emptyEvidence } from '../posture/feedback';
+import { emptyEvidence, REASONS } from '../posture/feedback';
 
 const policyDuration = (name: string) => name === 'Praise rules' || name === 'Landmark loss' ? 22000 : 14500;
 function landmarks(hidden = false) {
@@ -42,15 +42,15 @@ export function FeedbackPreview({ publish }: { publish: (value: WidgetState | nu
         return;
       }
       const both = run.name === 'Both resolve', handoff = run.name === 'A to B', missing = run.name === 'Unavailable';
-      const evidence = { faceNear: 0, headForward: 0, headTilt: 0, bodyTilt: 0 };
+      const evidence = { ...emptyEvidence(), faceNear: 0, headForward: 0, headTilt: 0, bodyTilt: 0 };
       if (both || handoff) { evidence.faceNear = age < 6000 ? 2 : 0; evidence.headTilt = age < 6000 || handoff && age < 10000 ? 1.5 : 0; }
       else if (run.name === 'Maximum') evidence.headForward = 2;
       else if (run.name in evidence) evidence[run.name as keyof typeof evidence] = 2;
       const jitter = run.name === 'Good jitter' && age >= 800 && Math.floor(age / 100) % 8 === 0;
       const policy = run.name === 'Praise rules';
       const mode = policy && age >= 4500 && age < 5500 ? 'paused' : policy && age >= 8500 && age < 9500 ? 'rest' : 'focus';
-      const bad = policy && age >= 12500 && age < 14500 || run.name === 'Bad / no reason' || Object.values(evidence).some(v => v >= 1);
-      const speech = machine.update({ context: `preview-${run.id}`, now, observedAt: now, maxAge: 1500, mode, valid: !jitter && (!missing || age < 2500 || age > 9000), reasonAvailable: run.name !== 'Bad / no reason', posture: bad ? 'bad' : 'good', evidence });
+      const bad = policy && age >= 12500 && age < 14500 || run.name === 'Bad / no reason' || Object.values(evidence).some(v => v !== null && v >= 1);
+      const speech = machine.update({ context: `preview-${run.id}`, now, observedAt: now, maxAge: 1500, mode, valid: !jitter && (!missing || age < 2500 || age > 9000), reasonAvailable: run.name !== 'Bad / no reason', directions: { headTilt: 'left', bodyTilt: 'right', headShift: 'left', headPitch: 'down', shoulderTilt: 'left', headTurn: 'right' }, posture: bad ? 'bad' : 'good', evidence });
       if (speech?.id !== previous?.id) { if (speech) setLog(v => [...v, `${((now - start)/1000).toFixed(1)}s ${speech.text}`]); previous = speech; }
       publishRef.current({ sessionId: 'preview', remainingMs: 923000, durationMs: 1500000, phase: mode === 'rest' ? 'rest' : 'focus', paused: mode === 'paused', bad, badSince: bad ? start - (run.name === 'Maximum' ? 5000 : 0) : null, cycle: 1, cycles: 4, feedbackVersion: 1, speech });
     };
@@ -60,7 +60,7 @@ export function FeedbackPreview({ publish }: { publish: (value: WidgetState | nu
   }, [run]);
   return <section aria-label="案内の動作検証" style={{ position: 'fixed', zIndex: 20001, left: 16, top: 150, maxWidth: 'min(340px, calc(100vw - 32px))', padding: 16, borderRadius: 16, background: '#fff', color: '#111f6e' }}>
     <p>合成した観測による表示検証（カメラ判定ではありません）</p>
-    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{['A to B', 'Both resolve', 'Unavailable', 'Good jitter', 'Praise rules', 'Landmark loss', 'Bad / no reason', 'Maximum', 'faceNear', 'headForward', 'headTilt', 'bodyTilt'].map(name => <button key={name} onClick={() => setRun(v => ({ name, id: v.id + 1 }))}>{name in messages ? messages[name as keyof typeof messages] : name}</button>)}</div>
+    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{['A to B', 'Both resolve', 'Unavailable', 'Good jitter', 'Praise rules', 'Landmark loss', 'Bad / no reason', 'Maximum', ...REASONS].map(name => <button key={name} onClick={() => setRun(v => ({ name, id: v.id + 1 }))}>{name in messages ? messages[name as keyof typeof messages] : name}</button>)}</div>
     <output aria-label="検出状態">{diagnostic}</output>
     <output aria-label="案内の履歴" style={{ display: 'block', whiteSpace: 'pre-line', marginTop: 12 }}>{log.join('\n')}</output>
   </section>;

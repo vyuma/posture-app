@@ -1,3 +1,4 @@
+import { t, useAppLanguage } from "../i18n";
 import { useRef, useState, type PointerEvent, type KeyboardEvent, type CSSProperties, type ReactNode } from 'react';
 import { Dialog } from '../work/Dialog';
 import { clampRect, DEFAULT_TIMELAPSE, type Rect, type TimelapseSettings as Settings } from './model';
@@ -5,6 +6,7 @@ import { TimelapsePetPreview } from './TimelapsePetPreview';
 import './timelapse.css';
 
 export function TimelapseSettings({ value, onChange, onClose, children, footer }: { value: Settings; onChange: (value: Settings) => void; onClose: () => void; children?: ReactNode; footer?: ReactNode }) {
+  useAppLanguage();
   const editor = useRef<HTMLDivElement>(null);
   const drag = useRef<{ kind: 'camera' | 'pet'; pointerId: number; resize: boolean; x: number; y: number; rect: Rect } | null>(null);
   const [selected, select] = useState<'camera' | 'pet'>('camera');
@@ -32,27 +34,27 @@ export function TimelapseSettings({ value, onChange, onClose, children, footer }
     const dx = event.key === 'ArrowRight' ? step : event.key === 'ArrowLeft' ? -step : 0, dy = event.key === 'ArrowDown' ? step : event.key === 'ArrowUp' ? -step : 0;
     update(kind, resize ? { ...value[kind], width: Math.min(1 - value[kind].x, value[kind].width + dx), height: Math.min(1 - value[kind].y, value[kind].height + dy) } : { ...value[kind], x: value[kind].x + dx, y: value[kind].y + dy });
   }
-  return <Dialog title="設定" className="timelapse-settings" onClose={onClose}>
-    <h1>設定</h1>{children}<h2>タイムラプス</h2>
-    <label className="work-remember timelapse-recording-setting"><input type="checkbox" checked={value.enabled} onChange={event => onChange({ ...value, enabled: event.target.checked })} /><span>タイムラプスを記録する</span></label>
-    <fieldset className="timelapse-quality"><legend>録画の画質</legend>{([720, 1080] as const).map(quality => <label key={quality}><input type="radio" name="timelapse-quality" value={quality} checked={value.quality === quality} onChange={() => onChange({ ...value, quality })} /><span>{quality}p{quality === 720 ? '（標準）' : '（高画質）'}</span></label>)}</fieldset>
-    <p className="timelapse-help">次の録画から反映します。カメラが対応する実際の解像度で記録します。</p>
-    <fieldset className="timelapse-export-options"><legend>再生・保存する映像</legend>
-      <label className="work-remember"><input type="checkbox" checked={value.includePet} onChange={event => onChange({ ...value, includePet: event.target.checked })} /><span>映像の中にペットと残り時間を表示</span></label>
-      <label className="work-remember"><input type="checkbox" checked={value.includeScene} onChange={event => onChange({ ...value, includeScene: event.target.checked })} /><span>保存・共有に背景と左右のアナゴも含める</span></label>
+  return <Dialog title={t("設定")} className="timelapse-settings" onClose={onClose}>
+    <h1>{t("設定")}</h1>{children}<h2>{t("タイムラプス")}</h2>
+    <label className="work-remember timelapse-recording-setting"><input type="checkbox" checked={value.enabled} onChange={event => onChange({ ...value, enabled: event.target.checked })} /><span>{t("タイムラプスを記録する")}</span></label>
+    <fieldset className="timelapse-quality"><legend>{t("録画の画質")}</legend>{([720, 1080] as const).map(quality => <label key={quality}><input type="radio" name="timelapse-quality" value={quality} checked={value.quality === quality} onChange={() => onChange({ ...value, quality })} /><span>{quality}p{quality === 720 ? t("（標準）") : t("（高画質）")}</span></label>)}</fieldset>
+    <p className="timelapse-help">{t("次の録画から反映します。カメラが対応する実際の解像度で記録します。")}</p>
+    <fieldset className="timelapse-export-options"><legend>{t("再生・保存する映像")}</legend>
+      <label className="work-remember"><input type="checkbox" checked={value.includePet} onChange={event => onChange({ ...value, includePet: event.target.checked })} /><span>{t("映像の中にペットと残り時間を表示")}</span></label>
+      <label className="work-remember"><input type="checkbox" checked={value.includeScene} onChange={event => onChange({ ...value, includeScene: event.target.checked })} /><span>{t("保存・共有に背景と左右のアナゴも含める")}</span></label>
     </fieldset>
-    <div className="timelapse-layout-heading"><h3>映像内の配置</h3><button type="button" onClick={() => onChange({ ...value, camera: { ...DEFAULT_TIMELAPSE.camera }, pet: { ...DEFAULT_TIMELAPSE.pet } })}>配置を戻す</button></div>
-    <p id="timelapse-layout-help" className="timelapse-help">ドラッグで移動、右下のつまみで大きさを調整できます。矢印キーでも操作できます。</p>
-    {value.includePet && <p className="timelapse-help">ペットの枠は、最大まで成長した姿と吹き出しが収まる範囲です。薄い姿が最大サイズです。枠を大きくすると、通常の姿も最大の姿も一緒に大きくなります。</p>}
+    <div className="timelapse-layout-heading"><h3>{t("映像内の配置")}</h3><button type="button" onClick={() => onChange({ ...value, camera: { ...DEFAULT_TIMELAPSE.camera }, pet: { ...DEFAULT_TIMELAPSE.pet } })}>{t("配置を戻す")}</button></div>
+    <p id="timelapse-layout-help" className="timelapse-help">{t("ドラッグで移動、右下のつまみで大きさを調整できます。矢印キーでも操作できます。")}</p>
+    {value.includePet && <p className="timelapse-help">{t("ペットの枠は、最大まで成長した姿と吹き出しが収まる範囲です。薄い姿が最大サイズです。枠を大きくすると、通常の姿も最大の姿も一緒に大きくなります。")}</p>}
     <div className="timelapse-editor" ref={editor} aria-describedby="timelapse-layout-help" onDragStart={event => event.preventDefault()} onLostPointerCapture={() => { drag.current = null; }}>
-      {(['camera', 'pet'] as const).filter(kind => kind === 'camera' || value.includePet).map(kind => <div key={kind} role="group" aria-label={`${kind === 'camera' ? 'カメラ' : 'ペット'}の位置を矢印キーで調整`} tabIndex={0} className={`timelapse-edit-item ${kind}`} data-selected={selected === kind} style={{ left: `${value[kind].x * 100}%`, top: `${value[kind].y * 100}%`, width: `${value[kind].width * 100}%`, height: `${value[kind].height * 100}%` } as CSSProperties} onFocus={() => select(kind)} onPointerDown={event => start(event, kind)} onPointerMove={move} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onKeyDown={event => key(event, kind)}>
-        {kind === 'camera' ? <span>カメラ</span> : <TimelapsePetPreview />}
-        <button type="button" className="timelapse-resize" aria-label={`${kind === 'camera' ? 'カメラ' : 'ペット'}のサイズを矢印キーで調整`} onPointerDown={event => start(event, kind, true)} onPointerMove={move} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onKeyDown={event => key(event, kind, true)} />
+      {(['camera', 'pet'] as const).filter(kind => kind === 'camera' || value.includePet).map(kind => <div key={kind} role="group" aria-label={t("{0}の位置を矢印キーで調整", { 0: kind === 'camera' ? t("カメラ") : t("ペット") })} tabIndex={0} className={`timelapse-edit-item ${kind}`} data-selected={selected === kind} style={{ left: `${value[kind].x * 100}%`, top: `${value[kind].y * 100}%`, width: `${value[kind].width * 100}%`, height: `${value[kind].height * 100}%` } as CSSProperties} onFocus={() => select(kind)} onPointerDown={event => start(event, kind)} onPointerMove={move} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onKeyDown={event => key(event, kind)}>
+        {kind === 'camera' ? <span>{t("カメラ")}</span> : <TimelapsePetPreview />}
+        <button type="button" className="timelapse-resize" aria-label={t("{0}のサイズを矢印キーで調整", { 0: kind === 'camera' ? t("カメラ") : t("ペット") })} onPointerDown={event => start(event, kind, true)} onPointerMove={move} onPointerUp={() => { drag.current = null; }} onPointerCancel={() => { drag.current = null; }} onKeyDown={event => key(event, kind, true)} />
       </div>)}
     </div>
-    <p className="timelapse-help">配置は過去の動画にも共通で適用します。左右のアナゴの位置は固定です。保存済みのファイルは変わりません。</p>
-    <p className="timelapse-storage-note">集中時間だけを無音で記録します。動画はコレクションを初期化するまで、この端末に保存されます。保存・共有はいつも1倍速です。</p>
+    <p className="timelapse-help">{t("配置は過去の動画にも共通で適用します。左右のアナゴの位置は固定です。保存済みのファイルは変わりません。")}</p>
+    <p className="timelapse-storage-note">{t("集中時間だけを無音で記録します。動画はコレクションを初期化するまで、この端末に保存されます。再生・保存・共有する動画は最大1分です。")}</p>
     {footer}
-    <button className="work-button blue" onClick={onClose}>完了</button>
+    <button className="work-button blue" onClick={onClose}>{t("完了")}</button>
   </Dialog>;
 }

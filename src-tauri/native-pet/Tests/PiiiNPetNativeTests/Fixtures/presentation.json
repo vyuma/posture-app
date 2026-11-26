@@ -3166,5 +3166,95 @@
       16,
       0.691486
     ]
+  },
+  {
+    "name": "localized/ko",
+    "state": {
+      "sessionId": "parity",
+      "remainingMs": 923000,
+      "durationMs": 1500000,
+      "phase": "focus",
+      "bad": true,
+      "paused": false,
+      "badSince": 1000,
+      "cycle": 1,
+      "cycles": 2,
+      "feedbackVersion": 1,
+      "speech": {
+        "id": "p",
+        "code": "general",
+        "text": "오른쪽 어깨가 올라갔어!",
+        "startedAt": 1000,
+        "endsAt": 7500
+      },
+      "language": "ko"
+    },
+    "height": 870,
+    "reduced": false,
+    "now": 7000,
+    "expected": [
+      1,
+      497.55946902654864,
+      740.5536283185841,
+      -288.06238938053093,
+      -641.4,
+      -73,
+      -629,
+      291,
+      639,
+      -78.44611750000001,
+      -709,
+      263.462235,
+      53.260000000000005,
+      15.030000000000001,
+      20.1631,
+      24,
+      1.05228
+    ]
+  },
+  {
+    "name": "localized/en",
+    "state": {
+      "sessionId": "parity",
+      "remainingMs": 923000,
+      "durationMs": 1500000,
+      "phase": "focus",
+      "bad": true,
+      "paused": false,
+      "badSince": 1000,
+      "cycle": 1,
+      "cycles": 2,
+      "feedbackVersion": 1,
+      "speech": {
+        "id": "p",
+        "code": "general",
+        "text": "Right shoulder higher!",
+        "startedAt": 1000,
+        "endsAt": 7500
+      },
+      "language": "en"
+    },
+    "height": 870,
+    "reduced": false,
+    "now": 7000,
+    "expected": [
+      1,
+      497.55946902654864,
+      740.5536283185841,
+      -288.06238938053093,
+      -641.4,
+      -73,
+      -629,
+      291,
+      639,
+      -106.87302000000008,
+      -709,
+      320.31604000000016,
+      53.260000000000005,
+      15.030000000000001,
+      20.1631,
+      24,
+      1.05228
+    ]
   }
 ]

@@ -1,8 +1,10 @@
+import { useAppLanguage } from "../i18n";
 import type { CSSProperties } from 'react';
 import { character, characterSpeech } from './CharacterCard';
 import './character-speech.css';
 
 export function CharacterSpeech({ id }: { id: string }) {
+  useAppLanguage();
   const message = characterSpeech(id);
   let delay = 100;
   const lines = message.split('\n').map(line => Array.from(line).map(letter => {

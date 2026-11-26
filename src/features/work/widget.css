@@ -1,7 +1,6 @@
 /* Figma widget coordinates are relative to the unchanged 178×65 timer bar. */
-.work-widget{position:fixed;right:60px;bottom:24px;width:178px;height:65px;z-index:50;pointer-events:none;isolation:isolate;font-family:"SF Pro",-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;color:#111f6e;--widget-bar:#ecf8fc;--widget-progress:#13a2d7}
+.work-widget{position:fixed;right:60px;bottom:24px;width:178px;height:65px;z-index:50;pointer-events:none;isolation:isolate;font-family:"SF Pro",-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;color:#6e4211;--widget-bar:#f6edd8;--widget-progress:#f78000}
 .work-widget.is-native{right:calc((100vw - 178px)/2);bottom:36px}
-.work-widget.is-rest{--widget-bar:#f6edd8;--widget-progress:#f78000;color:#6e4211}
 .work-widget-character{position:absolute;inset:0;pointer-events:none}
 /* Give WebKit the full character bounds before filtering the clipped artwork. */
 .work-widget-character-shadow{position:absolute;left:var(--widget-maskLeft);top:var(--widget-maskTop);width:var(--widget-maskWidth);height:var(--widget-maskHeight);pointer-events:none;filter:drop-shadow(calc(3.4049px + var(--widget-growth)*9.4946px) calc(3.4049px + var(--widget-growth)*9.4946px) calc(6.8098px + var(--widget-growth)*18.9891px) #00000059)}
@@ -49,5 +48,5 @@
 /* The character/speech is the drag handle; timer controls remain ordinary buttons. */
 .work-widget:not(.is-native) .work-widget-character{touch-action:none;user-select:none;-webkit-user-select:none}
 .work-widget:not(.is-native) .work-widget-character:focus-visible{outline:none}
-.work-widget:not(.is-native) .work-widget-character:focus-visible .work-widget-mask{outline:2px solid #111f6e;outline-offset:3px;border-radius:12px}
+.work-widget:not(.is-native) .work-widget-character:focus-visible .work-widget-mask{outline:2px solid #6e4211;outline-offset:3px;border-radius:12px}
 .work-widget.is-dragging .work-widget-mask,.work-widget.is-dragging .work-widget-speech-frame,.work-widget.is-dragging .work-widget-speech{cursor:grabbing}

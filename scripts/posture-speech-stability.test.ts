@@ -7,7 +7,7 @@ function goodRun(disturbance: 'none' | 'missing' | 'candidate' | 'hold') {
     const interrupt = at >= 800 && at % 800 === 0;
     const event = machine.update({ context: 'same-session', mode: 'focus', now: at, observedAt: at, maxAge: 1500,
       valid: !(interrupt && disturbance === 'missing'), posture: interrupt && disturbance === 'hold' ? 'hold' : 'good',
-      evidence: { faceNear: 0, headForward: 0, headTilt: interrupt && disturbance === 'candidate' ? 1.1 : 0, bodyTilt: 0 } });
+      evidence: { ...emptyEvidence(), faceNear: 0, headForward: 0, headTilt: interrupt && disturbance === 'candidate' ? 1.1 : 0, bodyTilt: 0 } });
     if (event?.code === 'good') ids.add(event.id);
   }
   return [...ids];

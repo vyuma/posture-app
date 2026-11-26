@@ -83,3 +83,20 @@ test('policy-blocked browser sharing offers a single download without calling na
     expect(shares).toBe(0); expect(downloads).toBe(1);
   } finally { restore.reverse().forEach(fn => fn()); }
 });
+
+
+test('closing a preview removes its temporary file while an active download keeps its backing file', async () => {
+  const restore = [replace('indexedDB', new IDBFactory()), replace('navigator', {}),
+    replace('setTimeout', (fn: () => void) => { fn(); return 0; }),
+    replace('document', { createElement: () => ({ click() {} }) })];
+  try {
+    const store = await openBrowserTimelapse(`export-release-${crypto.randomUUID()}`);
+    const removed: string[] = [];
+    store.remove = async name => { removed.push(name); };
+    store.media = async () => ({ blob: new Blob(['video']), url: 'blob:test', release() {} });
+    await store.releaseExport('export-preview.mp4');
+    await store.deliver('export-download.mp4', 'video/mp4', false);
+    await store.releaseExport('export-download.mp4');
+    expect(removed).toEqual(['export-preview.mp4']);
+  } finally { restore.reverse().forEach(fn => fn()); }
+});

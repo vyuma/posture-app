@@ -1,3 +1,4 @@
+import { DEFAULT_JUDGMENT, DUAL_MONITOR_YAW_DEG, judgmentScale, type JudgmentSettings } from './judgment';
 import type { Landmark, NormalizedLandmark } from "@mediapipe/tasks-vision";
 import {
   buildCorePoints,
@@ -85,6 +86,7 @@ export function createPostureEngineState(): PostureEngineState {
 function extractFeaturesFromSelection(
   selected2d: LandmarkSelection,
   selected3d: LandmarkSelection,
+  dualMonitor = false,
 ): ExtractFeatureResult {
   const points2d = buildCorePoints(selected2d);
   const points3d = buildCorePoints(selected3d);
@@ -119,7 +121,7 @@ function extractFeaturesFromSelection(
   const horizontalAxis = { x: -torsoAxis.y, y: torsoAxis.x };
 
   const headLateralOffsetRatio =
-    dot2D(subtract2D(N, SM), horizontalAxis) / shoulderSpan;
+    dot2D(subtract2D(dualMonitor ? EM : N, SM), horizontalAxis) / shoulderSpan;
   const earShoulderDistanceRatio = distance2D(EM, SM) / shoulderSpan;
   const torsoTiltDeg = angleDegBetween2D(torsoAxis, { x: 0, y: -1 });
   const neckAngle3d = points3d
@@ -132,7 +134,11 @@ function extractFeaturesFromSelection(
     : null;
   const neckAngle2dFallback =
     neckAngle3d === null ? computeNeckAngle2D(N, EM, torsoAxis) : null;
-  const neckAngleDeg = neckAngle3d ?? neckAngle2dFallback;
+  const headDirection = points3d ? { x: points3d.N.x-(points3d.EL.x+points3d.ER.x)/2, y: points3d.N.y-(points3d.EL.y+points3d.ER.y)/2, z: points3d.N.z-(points3d.EL.z+points3d.ER.z)/2 } : null;
+  // In dual-monitor mode yaw must not become neck pitch or lateral head drift.
+  const neckAngleDeg = dualMonitor && headDirection
+    ? angleDegBetween2D({ x:Math.hypot(headDirection.x,headDirection.z),y:headDirection.y },{x:0,y:-1})
+    : neckAngle3d ?? neckAngle2dFallback;
   const leftEarShoulder = distance2D(EL, SL);
   const rightEarShoulder = distance2D(ER, SR);
   const earShoulderAsymmetryRatio =
@@ -251,6 +257,8 @@ export function evaluatePostureFrame(
   landmarks: NormalizedLandmark[] | null,
   worldLandmarks: Landmark[] | null,
   headTiltEvidence: number | null = null,
+  judgment: JudgmentSettings = DEFAULT_JUDGMENT,
+  headYawDeg: number | null = null,
 ): { state: PostureEngineState; result: PostureFrameResult } {
 
   const selected = pickLandmarkSet(landmarks, worldLandmarks);
@@ -265,10 +273,11 @@ export function evaluatePostureFrame(
     "world",
   );
   const landmarksVisible = buildCorePoints(selected2d) !== null;
-  const extracted = extractFeaturesFromSelection(selected2d, selected3d);
+  const extracted = extractFeaturesFromSelection(selected2d, selected3d, judgment.dualMonitor);
   const experiment = computePostureExperiment(selected, extracted);
+  const qualityOk = extracted.qualityOk && (!judgment.dualMonitor || (extracted.points3d !== null && (!previous.baseline || headYawDeg !== null)));
   // Only observed, valid intervals count toward the five-second calibration.
-  const warmupDelta = extracted.qualityOk && previous.warmupLastValidMs !== null ? nowMs - previous.warmupLastValidMs : 0;
+  const warmupDelta = qualityOk && previous.warmupLastValidMs !== null ? nowMs - previous.warmupLastValidMs : 0;
   const warmupValidMs = previous.warmupValidMs + (warmupDelta <= 1500 ? Math.max(0, warmupDelta) : 0);
   const initializedStartMs = previous.baseline ? previous.warmupStartMs ?? nowMs : nowMs - warmupValidMs;
 
@@ -276,12 +285,12 @@ export function evaluatePostureFrame(
     ...previous,
     warmupStartMs: initializedStartMs,
     warmupValidMs,
-    warmupLastValidMs: extracted.qualityOk ? nowMs : null,
+    warmupLastValidMs: qualityOk ? nowMs : null,
   };
   // Only a calibrated, previously observed body can become a sustained-loss warning.
   next = next.baseline ? updateLandmarkDropMonitor(next, landmarksVisible, nowMs) : resetLandmarkTracking(next);
 
-  if (!extracted.qualityOk) {
+  if (!qualityOk) {
     next = { ...next, headTiltCandidateBad: false };
     next = updatePostureState(next, false, false, nowMs);
     if (next.landmarkDropActive) {
@@ -311,9 +320,10 @@ export function evaluatePostureFrame(
   const isHeadTurned =
     headYawRatio !== null &&
     headYawRatio < POSTURE_SPEC.turnThresholds.headYawRatio;
-  const isHeadTurnedSevere =
-    headYawRatio !== null &&
-    headYawRatio < POSTURE_SPEC.turnThresholds.headYawRatioSevere;
+  const scale = judgmentScale(judgment);
+  const isHeadTurnedSevere = judgment.dualMonitor
+    ? headYawDeg !== null && Math.abs(headYawDeg) > DUAL_MONITOR_YAW_DEG + 1e-6
+    : headYawRatio !== null && headYawRatio < POSTURE_SPEC.turnThresholds.headYawRatioSevere / scale;
   const headWidthRatio = getEarToShoulderRatio(extracted.points2d);
 
   if (!next.baseline) {
@@ -359,13 +369,14 @@ export function evaluatePostureFrame(
     next.emaScore,
     headWidthRatio,
     next.baselineHeadWidthRatio,
-    isHeadTurned,
+    judgment.dualMonitor ? false : isHeadTurned,
     computeFeatureReliability(selected2d, selected3d, extracted.features),
   );
   const nextCandidateBad = resolveCandidateBadState(
     next.candidateBadState,
     scoreResult.scoreEma,
     scoreResult.confidence,
+    scale,
   );
   // The calibrated ear/eye roll evidence is symmetric in direction and camera
   // mirroring. Keep its hysteresis separate from the weighted deviation score.

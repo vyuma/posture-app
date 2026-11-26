@@ -3,10 +3,14 @@
 .work-app .work-home{--home-gutter:5.4894179894%;--home-height:454px;background-size:100% calc(var(--home-height)*531/454);font-family:'SF Pro',-apple-system,BlinkMacSystemFont,'Noto Sans JP',sans-serif}
 .work-home .work-home-hero{height:var(--home-height)}
 .work-home .work-home-hero h1{left:var(--home-gutter)}
-.work-home .work-profile-wrap{right:var(--home-gutter);gap:35px}
-.work-home .work-hero-actions{top:181px;left:49.2063492063%;width:24.2380952381%;gap:23.47px}
-.work-home .work-hero-actions .work-button{min-height:69.98px;font-size:21.9888px;line-height:26px}
-.work-home .work-hero-actions .work-button.white{color:#13a2d7}
+.work-home .work-profile-wrap{right:5.291005291%;gap:29px}
+.work-home .work-hero-actions{top:179.495px;left:49.2063492063%;width:24.2380952381%;gap:21.228px}
+.work-home .work-hero-actions .work-button{min-height:72.9888px;font-size:21.9888px;line-height:26px;gap:7.33px}
+.work-home .work-hero-actions .work-button.white{color:#13a2d7;min-height:71.4577px}
+.work-home .work-hero-actions img{flex:none}
+.work-home .work-hero-actions span{min-width:0}
+:lang(en) .work-home .work-hero-actions .work-button{padding-inline:12px}
+@media(max-width:600px){.work-home .work-hero-actions img{width:24px;height:24px}.work-home .work-hero-actions .work-button.white{min-height:62px}}
 /* Keep the collection edge cropped, with headroom for the upward float. */
 .work-home .work-home-pet{left:77.45%;width:13.36%;overflow:visible;clip-path:inset(-25% 0 0)}
 .work-home .work-collection{padding:43px var(--home-gutter) 64px;box-shadow:0 0 8.52px #00000026}
@@ -107,3 +111,5 @@
   .work-app .work-home .work-sort-trigger{font-size:calc(17.8534 * var(--collection-px));line-height:calc(21 * var(--collection-px));letter-spacing:calc(.950795 * var(--collection-px));padding-left:calc(61.8 * var(--collection-px));padding-right:calc(20 * var(--collection-px));border-width:calc(1.05579 * var(--collection-px));border-radius:calc(60.3081 * var(--collection-px));box-shadow:0 calc(2.11158 * var(--collection-px)) calc(2.63948 * var(--collection-px)) #00000040}
   .work-app .work-home .work-sort-arrow{left:calc(38.03 * var(--collection-px));top:calc(50% - 9.985 * var(--collection-px));width:calc(17.11 * var(--collection-px));height:calc(17.11 * var(--collection-px))}
 }
+
+:lang(ja) .work-home .work-hero-actions .white span{width:7.231em;flex:none}

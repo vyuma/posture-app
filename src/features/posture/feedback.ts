@@ -1,14 +1,20 @@
+import { relativeHeadYaw } from './judgment';
 /** Calibrated observations for dialogue. Head tilt also informs the bad/good decision; weighted score stays separate. */
-export type Reason = 'faceNear' | 'headForward' | 'headTilt' | 'bodyTilt';
-export const REASONS: Reason[] = ['faceNear', 'headForward', 'headTilt', 'bodyTilt'];
+export type Reason = 'faceNear' | 'headForward' | 'headTilt' | 'bodyTilt' | 'headShift' | 'headPitch' | 'shoulderTilt' | 'headTurn';
+export type Direction = 'left' | 'right' | 'up' | 'down';
+export type Directions = Partial<Record<Reason, Direction>>;
+export const REASONS: Reason[] = ['faceNear', 'headForward', 'headTilt', 'bodyTilt', 'headShift', 'headPitch', 'shoulderTilt', 'headTurn'];
 export type Evidence = Record<Reason, number | null>;
-export const emptyEvidence = (): Evidence => ({ faceNear: null, headForward: null, headTilt: null, bodyTilt: null });
+export const emptyEvidence = (): Evidence => ({ faceNear: null, headForward: null, headTilt: null, bodyTilt: null, headShift: null, headPitch: null, shoulderTilt: null, headTurn: null });
 type Landmark = { x: number; y: number; z: number; visibility?: number };
-type Metrics = { ear: number; eye: number; shoulder: number; yaw: number; earRoll: number; eyeRoll: number; bodyRoll: number | null; forward: number | null; facingX: number | null; facingZ: number | null };
+type Metrics = { ear: number; eye: number; shoulder: number; yaw: number; earRoll: number; eyeRoll: number; bodyRoll: number | null; forward: number | null; facingX: number | null; facingZ: number | null } & Record<ExtraKey, number | null>;
+type ExtraKey = 'forwardAligned' | 'forwardUpper' | 'headSide' | 'bodySide' | 'shift' | 'pitch' | 'shoulderSide' | 'turn';
 type Key = keyof Metrics;
-export type FeedbackBaseline = { version: 1; camera: string; values: Record<Key, { median: number; mad: number } | null> };
-export type FeedbackObservation = { epoch: number; evidence: Evidence; baselineReady: boolean; available: boolean };
-const keys: Key[] = ['ear', 'eye', 'shoulder', 'yaw', 'earRoll', 'eyeRoll', 'bodyRoll', 'forward', 'facingX', 'facingZ'];
+// Existing floors remain unchanged; new cues start conservatively and need camera calibration.
+export const FEEDBACK_SPEC = { headTiltDeg: 12, bodyTiltDeg: 10, forwardRatio: .18, headShiftRatio: .12, headPitchDeg: 12, shoulderTiltDeg: 8, turnRatio: .22, turnChange: .12, release: .65, releaseMs: 350 } as const;
+export type FeedbackBaseline = { version: 1 | 2; camera: string; values: Partial<Record<Key, { median: number; mad: number } | null>> };
+export type FeedbackObservation = { headYawDeg?: number | null; epoch: number; evidence: Evidence; directions?: Directions; baselineReady: boolean; available: boolean };
+const keys: Key[] = ['ear', 'eye', 'shoulder', 'yaw', 'earRoll', 'eyeRoll', 'bodyRoll', 'forward', 'facingX', 'facingZ', 'forwardAligned', 'forwardUpper', 'headSide', 'bodySide', 'shift', 'pitch', 'shoulderSide', 'turn'];
 const median = (values: number[]) => { const v = [...values].sort((a, b) => a - b); return (v[Math.floor((v.length - 1) / 2)] + v[Math.floor(v.length / 2)]) / 2; };
 const point = (points: Landmark[] | null, index: number) => {
   const p = points?.[index];
@@ -33,25 +39,42 @@ export function feedbackMetrics(image: Landmark[] | null, world: Landmark[] | nu
   const bodyRoll = hm && hm.y - sm.y > shoulder * .4 ? Math.atan2(sm.x - hm.x, hm.y - sm.y) * 180 / Math.PI : null;
   const wn = point(world, 0), wel = point(world, 7), wer = point(world, 8), wsl = point(world, 11), wsr = point(world, 12), whl = point(world, 23), whr = point(world, 24);
   let forward: number | null = null, facingX: number | null = null, facingZ: number | null = null;
-  if (wn && wel && wer && wsl && wsr && whl && whr && hm) {
-    const we = mid(wel, wer), ws = mid(wsl, wsr), wh = mid(whl, whr), span = distance(wsl, wsr);
-    const dx = wn.x - we.x, dz = wn.z - we.z, length = Math.hypot(dx, dz), torsoY = ws.y - wh.y;
-    if (span > .1 && length > .025 && Math.abs(torsoY) > .1) {
+  let forwardAligned: number | null = null, forwardUpper: number | null = null, pitch: number | null = null;
+  if (wn && wel && wer && wsl && wsr) {
+    const we = mid(wel, wer), ws = mid(wsl, wsr), span = distance(wsl, wsr);
+    const dx = wn.x - we.x, dz = wn.z - we.z, length = Math.hypot(dx, dz);
+    if (span > .1 && length > .025) {
       facingX = dx / length; facingZ = dz / length;
-      const along = (we.y - ws.y) / torsoY;
-      forward = ((we.x - ws.x - along * (ws.x - wh.x)) * facingX + (we.z - ws.z - along * (ws.z - wh.z)) * facingZ) / span;
+      forwardUpper = ((we.x - ws.x) * facingX + (we.z - ws.z) * facingZ) / span;
+      const pitchRadians = Math.atan2(wn.y - we.y, length);
+      pitch = pitchRadians * 180 / Math.PI;
+      // A rigid upper-body pitch changes raw depth, but not this head-aligned offset.
+      forwardAligned = forwardUpper * Math.cos(pitchRadians) - (ws.y - we.y) / span * Math.sin(pitchRadians);
+      if (whl && whr && hm) {
+        const wh = mid(whl, whr), torsoY = ws.y - wh.y;
+        if (Math.abs(torsoY) > .1) {
+          const along = (we.y - ws.y) / torsoY;
+          forward = ((we.x - ws.x - along * (ws.x - wh.x)) * facingX + (we.z - ws.z - along * (ws.z - wh.z)) * facingZ) / span;
+        }
+      }
     }
   }
-  return { ear: ear / width, eye: eye / width, shoulder: shoulder / width, yaw, earRoll: roll(el, er), eyeRoll: roll(il, ir), bodyRoll, forward, facingX, facingZ };
+  // Landmark indices name the person's sides, independent of display mirroring.
+  const side = Math.sign(sl.x - sr.x);
+  const headSide = Math.atan2(el.y - er.y, Math.abs(el.x - er.x)) * 180 / Math.PI;
+  const shoulderSide = Math.atan2(sr.y - sl.y, Math.abs(sl.x - sr.x)) * 180 / Math.PI;
+  const shift = (em.x - sm.x) * side / shoulder;
+  return { forwardAligned, forwardUpper, headSide, bodySide: bodyRoll === null ? null : bodyRoll * side, shift, pitch, shoulderSide, turn: (n.x - em.x) / ear * side, ear: ear / width, eye: eye / width, shoulder: shoulder / width, yaw, earRoll: roll(el, er), eyeRoll: roll(il, ir), bodyRoll, forward, facingX, facingZ };
 }
 
 /** Conservative initial thresholds, not probabilities or validated medical cutoffs. */
 export function classifyEvidence(m: Metrics | null, baseline: FeedbackBaseline | null, camera: string): Evidence {
   const out = emptyEvidence();
-  if (!m || !baseline || baseline.version !== 1 || camera !== baseline.camera) return out;
+  if (!m || !baseline || ![1, 2].includes(baseline.version) || camera !== baseline.camera) return out;
   const b = baseline.values;
+  if (m.turn !== null && b.turn) out.headTurn = Math.min(Math.abs(m.turn) / FEEDBACK_SPEC.turnRatio, Math.abs(m.turn - b.turn.median) / Math.max(FEEDBACK_SPEC.turnChange, 5 * b.turn.mad));
   // Face turning invalidates frontal scale/roll comparisons; shoulders alone cannot resolve it.
-  if (!b.yaw || m.yaw > .22 || Math.abs(m.yaw - b.yaw.median) > .12) return out;
+  if (!b.yaw || m.yaw > FEEDBACK_SPEC.turnRatio || Math.abs(m.yaw - b.yaw.median) > FEEDBACK_SPEC.turnChange) return out;
   if (b.ear && b.eye && b.shoulder && b.ear.median > 0 && b.eye.median > 0 && b.shoulder.median > 0) {
     const earScale = m.ear / b.ear.median, eyeScale = m.eye / b.eye.median, shoulderScale = m.shoulder / b.shoulder.median;
     // Uniform zoom/body translation is ambiguous: require face growth relative to shoulders too.
@@ -60,11 +83,29 @@ export function classifyEvidence(m: Metrics | null, baseline: FeedbackBaseline |
   }
   if (b.earRoll && b.eyeRoll) {
     const a = m.earRoll - b.earRoll.median, c = m.eyeRoll - b.eyeRoll.median;
-    out.headTilt = Math.sign(a) === Math.sign(c) && Math.abs(a - c) < 8 ? Math.min(Math.abs(a) / Math.max(12, b.earRoll.mad * 5), Math.abs(c) / Math.max(12, b.eyeRoll.mad * 5)) : 0;
+    out.headTilt = Math.sign(a) === Math.sign(c) && Math.abs(a - c) < 8 ? Math.min(Math.abs(a) / Math.max(FEEDBACK_SPEC.headTiltDeg, b.earRoll.mad * 5), Math.abs(c) / Math.max(FEEDBACK_SPEC.headTiltDeg, b.eyeRoll.mad * 5)) : 0;
   }
-  if (m.bodyRoll !== null && b.bodyRoll) out.bodyTilt = Math.abs(m.bodyRoll - b.bodyRoll.median) / Math.max(10, b.bodyRoll.mad * 5);
-  if (m.forward !== null && b.forward && m.facingX !== null && m.facingZ !== null && b.facingX && b.facingZ && m.facingX * b.facingX.median + m.facingZ * b.facingZ.median > .94) {
-    out.headForward = Math.max(0, (m.forward - b.forward.median) / Math.max(.18, b.forward.mad * 5));
+  if (m.bodyRoll !== null && b.bodyRoll) out.bodyTilt = Math.abs(m.bodyRoll - b.bodyRoll.median) / Math.max(FEEDBACK_SPEC.bodyTiltDeg, b.bodyRoll.mad * 5);
+  const forwardKey = m.forward !== null && b.forward ? 'forward' : 'forwardUpper';
+  const forward = m[forwardKey], baseForward = b[forwardKey];
+  if (forward !== null && baseForward && m.facingX !== null && m.facingZ !== null && b.facingX && b.facingZ && m.facingX * b.facingX.median + m.facingZ * b.facingZ.median > .94) {
+    const raw = Math.max(0, (forward - baseForward.median) / Math.max(FEEDBACK_SPEC.forwardRatio, baseForward.mad * 5));
+    out.headForward = forwardKey === 'forward' ? raw : m.forwardAligned !== null && b.forwardAligned
+      ? Math.max(0, Math.min(raw, (m.forwardAligned - b.forwardAligned.median) / Math.max(FEEDBACK_SPEC.forwardRatio, b.forwardAligned.mad * 5))) : null;
+  }
+  for (const [reason, key, floor] of [['headShift', 'shift', FEEDBACK_SPEC.headShiftRatio], ['headPitch', 'pitch', FEEDBACK_SPEC.headPitchDeg], ['shoulderTilt', 'shoulderSide', FEEDBACK_SPEC.shoulderTiltDeg]] as const) {
+    const value = m[key], base = b[key];
+    if (value !== null && base) out[reason] = Math.abs(value - base.median) / Math.max(floor, 5 * base.mad);
+  }
+  return out;
+}
+
+export function classifyDirections(m: Metrics | null, baseline: FeedbackBaseline | null): Directions {
+  const out: Directions = {};
+  if (!m || !baseline) return out;
+  for (const [reason, key] of [['headTilt', 'headSide'], ['bodyTilt', 'bodySide'], ['headShift', 'shift'], ['headPitch', 'pitch'], ['shoulderTilt', 'shoulderSide'], ['headTurn', 'turn']] as const) {
+    const value = m[key], base = baseline.values[key];
+    if (value !== null && base && value !== base.median) out[reason] = reason === 'headPitch' ? value > base.median ? 'down' : 'up' : value > base.median ? 'left' : 'right';
   }
   return out;
 }
@@ -88,8 +129,11 @@ export class FeedbackObserver {
         const med = median(v);
         return [k, v.length >= 12 ? { median: med, mad: median(v.map(n => Math.abs(n - med))) } : null];
       })) as FeedbackBaseline['values'];
-      this.baseline = { version: 1, camera: key, values }; this.samples = [];
+      this.baseline = { version: 2, camera: key, values }; this.samples = [];
     }
-    return { epoch: this.epoch, baselineReady: !!this.baseline, available: m !== null, evidence: classifyEvidence(m, this.baseline, key) };
+    const b = this.baseline?.values;
+    const headYawDeg = m?.facingX != null && m?.facingZ != null && b?.facingX && b.facingZ
+      ? relativeHeadYaw(m.facingX,m.facingZ,b.facingX.median,b.facingZ.median) : null;
+    return { headYawDeg, epoch: this.epoch, baselineReady: !!this.baseline, available: m !== null, directions: classifyDirections(m, this.baseline), evidence: classifyEvidence(m, this.baseline, key) };
   }
 }

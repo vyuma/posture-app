@@ -1,3 +1,4 @@
+import { t, useAppLanguage } from "../i18n";
 import { useEffect, useRef, type CSSProperties, type PointerEvent } from "react";
 
 const MAX_STRETCH = 0.2;
@@ -6,6 +7,7 @@ const MAX_LIFT_PERCENT = 16;
 type Props = { image: string; name: string; flip?: boolean; style: CSSProperties };
 
 export function BeachCharacter({ image, name, flip, style }: Props) {
+  useAppLanguage();
   const ref = useRef<HTMLButtonElement>(null);
   const drag = useRef<{ id: number; y: number; height: number; start: number } | null>(null);
   const tension = useRef(0);
@@ -84,7 +86,7 @@ export function BeachCharacter({ image, name, flip, style }: Props) {
       type="button"
       className="lp-beach-character"
       style={style}
-      aria-label={`${name}を上に引っぱる`}
+      aria-label={t("{0}を上に引っぱる", { 0: name })}
       onPointerDown={down}
       onPointerMove={move}
       onPointerUp={release}

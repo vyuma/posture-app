@@ -1,3 +1,4 @@
+import { t, useAppLanguage } from "../i18n";
 import { useEffect, useRef, useState, type MouseEvent } from 'react';
 import { CharacterStars } from '../characters/CharacterStars';
 import { character, characterStyle, numberOf, Portrait } from '../work/CharacterCard';
@@ -22,6 +23,7 @@ sample.samples = [92, 72, 80, 70, 74, 55, 87, 82, 72, 78, 70, 67, 76, 80, 74, 79
 
 /** Product card styling and effects, with an explicitly illustrative LP measurement. */
 export function LandingResultCard() {
+  useAppLanguage();
   const host = useRef<HTMLDivElement>(null);
   const scene = useReplayScene(host, .7);
   const [entering, setEntering] = useState(false), [tapped, setTapped] = useState(false);
@@ -51,7 +53,7 @@ export function LandingResultCard() {
     clearTimeout(tapTimer.current); tapTimer.current = window.setTimeout(() => setTapped(false), 520);
   }
   return <div ref={host} className={`lp-new-result${scene.playing ? ' is-scene-playing' : ''}`} data-revealed={scene.entered}>
-    <article className={`work-detail-card work-detail-card--acquired${entering ? ' is-entering' : ''}${tapped ? ' is-tapped' : ''}`} style={characterStyle(oto.id)} tabIndex={0} aria-label="獲得カードの表示例：オトアナゴ、集中した時間140分、ピーン率78％。クリックまたはEnterで獲得演出"
+    <article className={`work-detail-card work-detail-card--acquired${entering ? ' is-entering' : ''}${tapped ? ' is-tapped' : ''}`} style={characterStyle(oto.id)} tabIndex={0} aria-label={t("獲得カードの表示例：オトアナゴ、集中した時間140分、ピーン率78％。クリックまたはEnterで獲得演出")}
       onClick={tap} onKeyDown={event => { if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) { event.preventDefault(); event.currentTarget.click(); } }}
       onMouseMove={event => { if (scene.reduced || (event.target as Element).closest('.work-graph')) onResultCardMouseLeave(event); else onResultCardMouseMove(event); }} onMouseLeave={onResultCardMouseLeave}>
       <div className="work-detail-character">
@@ -62,7 +64,7 @@ export function LandingResultCard() {
       </div>
       <div className="work-detail-body">
         <time dateTime="2026-05-07T08:49">2026/05/07 08:49</time>
-        <div className="work-result-metrics"><div><span>集中した時間</span><strong>140</strong><small>分</small></div><div><span>ピーン率</span><strong>78</strong><small>%</small></div></div>
+        <div className="work-result-metrics"><div><span>{t("集中した時間")}</span><strong>140</strong><small>{t("分")}</small></div><div><span>{t("ピーン率")}</span><strong>78</strong><small>%</small></div></div>
         <ScoreGraph session={sample} />
         <CardStory>{oto.story ?? ''}</CardStory>
       </div>
