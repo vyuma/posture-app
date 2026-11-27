@@ -14,14 +14,15 @@ import { FEATURE_KEYS, POSTURE_SPEC } from "./engine.spec";
 import type { BaselineStats, FeatureKey, PostureEngineState, PostureFeatures, PostureFrameResult } from "./engine.types";
 import { judgmentScale, type JudgmentSettings } from "./judgment";
 import "./model-lab.css";
+import { Tex } from "./Tex";
 
-const FEATURE_META: Record<FeatureKey, { sym: string; label: string; formula: string; unit: string }> = {
-  headLateralOffsetRatio: { sym: "x₁", label: "頭の横ずれ", formula: "(N − SM)·ĥ / W", unit: "" },
-  earShoulderDistanceRatio: { sym: "x₂", label: "耳–肩距離", formula: "‖EM − SM‖ / W", unit: "" },
-  torsoTiltDeg: { sym: "x₃", label: "体の傾き", formula: "∠(t̂, −ŷ)", unit: "°" },
-  neckAngleDeg: { sym: "x₄", label: "首の角度", formula: "∠ᵧᵤ(N − EM, t̂)", unit: "°" },
-  earShoulderAsymmetryRatio: { sym: "x₅", label: "左右非対称", formula: "|‖EL−SL‖ − ‖ER−SR‖| / W", unit: "" },
-  headForwardAngleDeg: { sym: "x₆", label: "頭の前方突出", formula: "∠ᵧᵤ(EM − SM, −ŷ)", unit: "°" },
+const FEATURE_META: Record<FeatureKey, { sym: string; tex: string; label: string; formula: string; unit: string }> = {
+  headLateralOffsetRatio: { sym: "x₁", tex: "x_1", label: "頭の横ずれ", formula: String.raw`\dfrac{(N - S_M)\cdot\hat{h}}{W}`, unit: "" },
+  earShoulderDistanceRatio: { sym: "x₂", tex: "x_2", label: "耳–肩距離", formula: String.raw`\dfrac{\lVert E_M - S_M \rVert}{W}`, unit: "" },
+  torsoTiltDeg: { sym: "x₃", tex: "x_3", label: "体の傾き", formula: String.raw`\angle\left(\hat{t},\, -\hat{y}\right)`, unit: "°" },
+  neckAngleDeg: { sym: "x₄", tex: "x_4", label: "首の角度", formula: String.raw`\angle_{yz}\left(N - E_M,\, \hat{t}\right)`, unit: "°" },
+  earShoulderAsymmetryRatio: { sym: "x₅", tex: "x_5", label: "左右非対称", formula: String.raw`\dfrac{\bigl|\,\lVert E_L - S_L\rVert - \lVert E_R - S_R\rVert\,\bigr|}{W}`, unit: "" },
+  headForwardAngleDeg: { sym: "x₆", tex: "x_6", label: "頭の前方突出", formula: String.raw`\angle_{yz}\left(E_M - S_M,\, -\hat{y}\right)`, unit: "°" },
 };
 
 type Frame = {
@@ -218,7 +219,7 @@ export default function ModelLab() {
         <div>
           <span className="ml-tag">TEST</span>
           <h1>姿勢モデル 特徴量抽出ラボ</h1>
-          <p>f : 𝐋 ∈ ℝ³³ˣ³ → 𝐱 ∈ ℝ⁶ → 𝐳 → s → ŝ<sub>EMA</sub> → {"{good, bad}"}</p>
+          <p><Tex>{String.raw`f:\ \mathbf{L}\in\mathbb{R}^{33\times 3}\to\mathbf{x}\in\mathbb{R}^{6}\to\mathbf{z}\to s\to\hat{s}_{\mathrm{EMA}}\to\{\mathrm{good},\,\mathrm{bad}\}`}</Tex></p>
         </div>
         <div className="ml-controls">
           <span className="ml-dim">{frame ? `${fmt(frame.fps, 1)} fps · ${view} · ${result?.usingWorldLandmarks ? "3D world" : "2D image"}` : "—"}</span>
@@ -252,7 +253,10 @@ export default function ModelLab() {
             )}
           </div>
           <Pipeline calibrating={calibrating} posture={calibrating ? "calibrating" : posture} />
-          <Panel n={4} title="判定 (ヒステリシス)" sub={`m = ${scale},  現在のしきい値 ${fmt(badT, 2)} (bad ${POSTURE_SPEC.badDurationMs / 1000}s / good < ${fmt(goodT, 2)} ${POSTURE_SPEC.recoverDurationMs / 1000}s)  ※頭の左右傾き・複数モニター判定は未入力`}>
+          <Panel title="判定 (ヒステリシス)" sub={<>
+            <Tex>{String.raw`m=${scale},\quad \hat{s}\ge\theta=${fmt(badT, 2)}\ (${POSTURE_SPEC.badDurationMs / 1000}\,\mathrm{s})\Rightarrow\mathrm{bad},\quad \hat{s}<${fmt(goodT, 2)}\ (${POSTURE_SPEC.recoverDurationMs / 1000}\,\mathrm{s})\Rightarrow\mathrm{good}`}</Tex>
+            <span className="ml-note">※頭の左右傾き・複数モニター判定は未入力</span>
+          </>}>
             <div className={`ml-verdict ${calibrating ? "hold" : isBad ? "bad" : isWarn ? "warn" : posture}`}>
               <span>{calibrating ? "CALIBRATING" : isBad ? "BAD" : isWarn ? "WARNING" : posture.toUpperCase()}</span>
               {calibrating ? (
@@ -275,15 +279,15 @@ export default function ModelLab() {
         </section>
 
         <section className="ml-panels">
-          <Panel n={1} title="特徴量ベクトル 𝐱" sub="W = ‖SL − SR‖, t̂ = 体幹軸, ĥ ⊥ t̂">
+          <Panel title={<>特徴量ベクトル <Tex>{String.raw`\mathbf{x}`}</Tex></>} sub={<Tex>{String.raw`W=\lVert S_L-S_R\rVert,\quad \hat{t}=\text{体幹軸},\quad \hat{h}\perp\hat{t}`}</Tex>}>
             <table className="ml-table">
               <thead><tr><th /><th>特徴</th><th>式</th><th className="r">値</th><th className="r">r<sub>k</sub></th></tr></thead>
               <tbody>
                 {FEATURE_KEYS.map((key) => (
                   <tr key={key} className={z?.[key] != null && z[key]! >= badT ? "hot" : ""}>
-                    <td className="sym">{FEATURE_META[key].sym}</td>
+                    <td className="sym"><Tex>{FEATURE_META[key].tex}</Tex></td>
                     <td>{FEATURE_META[key].label}</td>
-                    <td className="f">{FEATURE_META[key].formula}</td>
+                    <td className="f"><Tex>{FEATURE_META[key].formula}</Tex></td>
                     <td className="r mono">{features ? `${fmt(features[key])}${FEATURE_META[key].unit}` : "—"}</td>
                     <td className="r mono dim">{rel ? fmt(rel[key], 2) : "—"}</td>
                   </tr>
@@ -292,14 +296,17 @@ export default function ModelLab() {
             </table>
           </Panel>
 
-          <Panel n={2} title="正規化偏差 𝐳" sub={`z₁…₅ = |xₖ − μ̃ₖ| / scaleₖ, z₆ = max(0, x₆ − μ̃₆) / scale₆, clip[0, ${POSTURE_SPEC.scoreZClamp}] ┃ = 統合スコアのしきい値（参考）`}>
+          <Panel title={<>正規化偏差 <Tex>{String.raw`\mathbf{z}`}</Tex></>} sub={<>
+            <Tex>{String.raw`z_{k}=\dfrac{\lvert x_k-\tilde{\mu}_k\rvert}{\mathrm{scale}_k}\ (k\le 5),\quad z_6=\dfrac{\max(0,\,x_6-\tilde{\mu}_6)}{\mathrm{scale}_6},\quad z_k\in[0,\,${POSTURE_SPEC.scoreZClamp}]`}</Tex>
+            <span className="ml-note">┃ = 統合スコアのしきい値（参考）</span>
+          </>}>
             <div className="ml-zs">
               {FEATURE_KEYS.map((key) => {
                 const v = z?.[key] ?? null;
                 const pct = v === null ? 0 : Math.min(v, POSTURE_SPEC.scoreZClamp) / POSTURE_SPEC.scoreZClamp;
                 return (
                   <div className="ml-z" key={key}>
-                    <span className="sym">{FEATURE_META[key].sym}</span>
+                    <span className="sym"><Tex>{FEATURE_META[key].tex}</Tex></span>
                     <div className="ml-zbar">
                       <i className={v !== null && v >= badT ? "hot" : ""} style={{ width: `${pct * 100}%` }} />
                       <b style={{ left: `${(badT / POSTURE_SPEC.scoreZClamp) * 100}%` }} />
@@ -312,13 +319,13 @@ export default function ModelLab() {
             </div>
           </Panel>
 
-          <Panel n={3} title="重み付き統合 → EMA" sub="s = Σw′ₖzₖ / Σw′ₖ + b,  ŝₜ = αs + (1−α)ŝₜ₋₁">
+          <Panel title={<>重み付き統合 <Tex>{String.raw`\to`}</Tex> EMA</>} sub={<Tex>{String.raw`s=\dfrac{\sum_k w'_k z_k}{\sum_k w'_k}+b,\qquad \hat{s}_t=\alpha s+(1-\alpha)\,\hat{s}_{t-1}`}</Tex>}>
             <div className="ml-eq mono">
-              <div>Σw′z = <em>{fmt(num)}</em> / Σw′ = <em>{fmt(den)}</em></div>
-              <div>b<sub>headWidth</sub> = <em>{fmt(boost)}</em></div>
-              <div>s = <em>{fmt(raw)}</em></div>
-              <div>c = <em>{fmt(confidence, 2)}</em> → α = <em>{fmt(alpha, 3)}</em></div>
-              <div className="big">ŝ = <em>{fmt(ema, 3)}</em></div>
+              <div><Tex>{String.raw`\textstyle\sum w'z`}</Tex> = <em>{fmt(num)}</em> / <Tex>{String.raw`\textstyle\sum w'`}</Tex> = <em>{fmt(den)}</em></div>
+              <div><Tex>{String.raw`b_{\mathrm{headWidth}}`}</Tex> = <em>{fmt(boost)}</em></div>
+              <div><Tex>s</Tex> = <em>{fmt(raw)}</em></div>
+              <div><Tex>c</Tex> = <em>{fmt(confidence, 2)}</em> <Tex>{String.raw`\to\ \alpha`}</Tex> = <em>{fmt(alpha, 3)}</em></div>
+              <div className="big"><Tex>{String.raw`\hat{s}`}</Tex> = <em>{fmt(ema, 3)}</em></div>
             </div>
             <Spark raw={historyRef.current.raw} ema={historyRef.current.ema} bad={badT} good={goodT} />
           </Panel>
@@ -328,10 +335,10 @@ export default function ModelLab() {
   );
 }
 
-function Panel({ n, title, sub, children }: { n: number; title: string; sub: string; children: React.ReactNode }) {
+function Panel({ title, sub, children }: { title: React.ReactNode; sub: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="ml-panel">
-      <div className="ml-ph"><span className="ml-n">{String(n).padStart(2, "0")}</span><div><h2>{title}</h2><p className="mono">{sub}</p></div></div>
+      <div className="ml-ph"><div><h2>{title}</h2><p className="ml-sub">{sub}</p></div></div>
       {children}
     </div>
   );
