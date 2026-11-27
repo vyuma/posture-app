@@ -3,8 +3,7 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 
 import { WEB_APP_PATH } from "../../routes";
 import { CHARACTER_CATALOG } from "../characters/characterCatalog";
-import { STORY_CHARACTER_CARDS } from "../characters/storyCharacterCards";
-import type { CharacterDefinition } from "../characters/types";
+import STORY_CARDS from "../onboarding/storyCards.json";
 import { BeachCharacter } from "./BeachCharacter";
 import { DesktopDemo } from "./DesktopDemo";
 import { GrowingPet } from "./GrowingPet";
@@ -40,18 +39,6 @@ const CONCERN_QUOTES = [
   "気をつけていても、気づけば猫背に...",
   "アプリを試したけど、結局続かず...",
 ] as const;
-
-const CHARACTER_BY_ID = new Map(
-  CHARACTER_CATALOG.map((character) => [character.id, character]),
-);
-
-function getCharacter(id: string): CharacterDefinition {
-  const character = CHARACTER_BY_ID.get(id);
-  if (!character) {
-    throw new Error(`LP character is missing from the catalog: ${id}`);
-  }
-  return character;
-}
 
 function BrandMark({ light = false }: { light?: boolean }) {
   useAppLanguage();
@@ -286,31 +273,29 @@ function CollectionRail() {
               key={copy}
               aria-hidden={copy > 0 ? true : undefined}
             >
-              {STORY_CHARACTER_CARDS.map((card) => (
+              {STORY_CARDS.map((card, i) => (
                 <article
                   className="lp-collection-card"
                   key={card.characterId}
                   style={
                     {
-                      "--lp-tag-color": card.primaryColor,
-                      "--lp-card-soft": card.previewColor,
+                      "--lp-tag-color": card.color,
+                      "--lp-card-soft": card.background,
                     } as CSSProperties
                   }
                 >
                   <div>
                     <img
-                      src={
-                        card.imageSrc ??
-                        getCharacter(card.characterId).portraitSrc
-                      }
+                      className={i === 0 || i === 7 ? "is-new-character" : undefined}
+                      src={card.src}
                       alt=""
                       draggable={false}
                     />
                   </div>
-                  <h3>{t(card.displayName)}</h3>
+                  <h3>{t(card.name)}</h3>
                   <CharacterStars characterId={card.characterId} />
                   <ul>
-                    {card.personalityTags.map((tag) => (
+                    {card.tags.map((tag) => (
                       <li key={tag}>{t(tag)}</li>
                     ))}
                   </ul>
@@ -376,7 +361,7 @@ function AboutSection() {
             <p>{t("仲間を集めながら、毎日の姿勢を意識してみよう。")}</p>
           </div>
           <CollectionRail />
-          <p className="lp-collection-rare">{t("次はどんな仲間に出会えるかな？")}</p>
+          <p className="lp-collection-rare">{t("ピーン率が高いと、レアなピンアナゴにも出会えるかも…？")}</p>
         </div>
       </section>
     </>

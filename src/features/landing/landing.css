@@ -1536,7 +1536,7 @@ body.lp-document #root {
   height: 0.4902cqw;
 }
 
-/* Same 264 × 348 card, portrait crop and copy as Story 6/6. */
+/* Match the story card artwork while retaining the LP rail interactions. */
 .lp-collection-gallery {
   margin-top: 28px;
 }
@@ -1574,62 +1574,64 @@ body.lp-document #root {
   container-type: size;
   border-radius: 24.267px;
   background: #fff;
-  box-shadow: 0 6px 22px #50505026;
+  box-shadow: 0 0 calc(var(--lp6-unit) * 6.461) #00000026;
+  overflow: hidden;
   transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.28s ease;
 }
 .lp-collection-card > div {
   position: absolute;
-  left: 6.0606cqw;
-  top: 4.5977cqh;
-  width: 87.8788cqw;
-  height: 66.6667cqh;
-  border-radius: 9.0909cqw;
+  left: calc(var(--lp6-unit) * 12.133);
+  top: calc(var(--lp6-unit) * 12.133);
+  width: calc(var(--lp6-unit) * 175.933);
+  height: calc(var(--lp6-unit) * 175.933);
+  border-radius: calc(var(--lp6-unit) * 18.2);
   background: var(--lp-card-soft);
   overflow: hidden;
 }
 .lp-collection-card img {
   position: absolute;
-  left: 9.48276%;
-  top: 13.7931%;
-  width: 81.03448%;
-  height: 130.17241%;
+  left: calc(var(--lp6-unit) * 16.68);
+  top: calc(var(--lp6-unit) * 24.27);
+  width: calc(var(--lp6-unit) * 142.613);
+  height: calc(var(--lp6-unit) * 228.943);
   max-width: none;
   object-fit: fill;
   transform-origin: center bottom;
-  filter: drop-shadow(5px 6px 4px #0003);
+}
+.lp-collection-card img.is-new-character {
+  left: calc(var(--lp6-unit) * 16.69);
+  width: calc(var(--lp6-unit) * 142.597);
+  height: calc(var(--lp6-unit) * 229.142);
 }
 .lp-collection-card h3 {
   position: absolute;
-  left: 6.0606cqw;
-  top: 75.8621cqh;
-  width: 87.8788cqw;
+  left: calc(var(--lp6-unit) * 12.133);
+  top: calc(var(--lp6-unit) * 200.2);
   margin: 0;
   color: #000;
-  font-size: 7.57576cqw;
-  line-height: 1.2;
+  font-size: calc(var(--lp6-unit) * 15.167);
+  line-height: calc(var(--lp6-unit) * 18.2);
   font-weight: 700;
   letter-spacing: 0;
 }
 .lp-collection-card ul {
   position: absolute;
-  left: 6.0606cqw;
-  top: 87.3563cqh;
+  left: calc(var(--lp6-unit) * 12.133);
+  top: calc(var(--lp6-unit) * 230.533);
   display: flex;
-  gap: 3.0303cqw;
+  flex-wrap: nowrap;
+  gap: calc(var(--lp6-unit) * 6.067);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 .lp-collection-card li {
-  display: flex;
-  align-items: center;
-  height: 8.046cqh;
-  padding: 3.0303cqw;
-  border-radius: 999px;
+  padding: calc(var(--lp6-unit) * 6.067);
+  border-radius: calc(var(--lp6-unit) * 75.833);
   color: var(--lp-tag-color);
-  background: var(--lp-card-soft);
-  font-size: 3.78788cqw;
-  line-height: 1;
+  background: color-mix(in srgb, var(--lp-tag-color) 20%, white);
+  font-size: calc(var(--lp6-unit) * 7.583);
+  line-height: calc(var(--lp6-unit) * 9.1);
   font-weight: 700;
   white-space: nowrap;
 }
