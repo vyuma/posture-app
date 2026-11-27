@@ -24,12 +24,12 @@ function scoreVersion(settings: TimerSettings) {
 }
 export type Baseline = { stats: BaselineStats; headWidthRatio: number | null; feedback?: FeedbackBaseline };
 export type Calibration = { id: string; focusMs: number; elapsedMs: number; baseline: Baseline; scoreVersion: string };
-export type RecordedFeedback = { version: 2; observedAtMs: number; evidence: Evidence; directions?: Directions };
+export type RecordedFeedback = { version: 2 | 3; observedAtMs: number; evidence: Evidence; directions?: Directions };
 export type Sample = { sequence: number; focusMs: number; elapsedMs: number; calibrationId: string; segment: number; score: number | null; deviation: number | null; state: 'good' | 'bad' | 'untracked'; feedback?: RecordedFeedback };
 export type EventKind = 'start' | 'rest' | 'focus' | 'pause' | 'resume' | 'recalibrate' | 'calibrated' | 'calibration_cancelled' | 'tracking_lost' | 'tracking_restored' | 'finish';
 export type SessionEvent = { kind: EventKind; focusMs: number; elapsedMs: number; segment: number };
 export type Session = {
-  feedbackVersion?: 2;
+  feedbackVersion?: 2 | 3;
   analysis?: AnalysisTicket;
   provenance?: Provenance;
   id: string; startedAt: string; endedAt: string | null; status: 'running' | 'paused' | 'recalibrating' | 'completed' | 'interrupted';
@@ -60,7 +60,7 @@ export function timerValid(timer: TimerSettings) {
 export function createSession(id: string, settings: TimerSettings, generation: number, baseline: Baseline, now = Date.now()): Session {
   settings = normalizeTimer(settings);
   return { id, startedAt: new Date(now).toISOString(), endedAt: null, status: 'running', settings: { ...settings },
-    feedbackVersion: 2, ratioBasis: 'focus-v1', phase: 'focus', cycle: 1, remainingMs: settings.focusMinutes * 60_000, focusMs: 0, validMs: 0, goodMs: 0,
+    feedbackVersion: 3, ratioBasis: 'focus-v1', phase: 'focus', cycle: 1, remainingMs: settings.focusMinutes * 60_000, focusMs: 0, validMs: 0, goodMs: 0,
     elapsedMs: 0, generation, calibrations: [{ id: `${id}:baseline:0`, focusMs: 0, elapsedMs: 0, baseline, scoreVersion: scoreVersion(settings) }],
     samples: [], events: [{ kind: 'start', focusMs: 0, elapsedMs: 0, segment: 0 }], segment: 0,
     acquiredCharacterId: null, rewardQualified: false, lastTickMs: null, wasPaused: false, lastSampleFocusMs: -1000, tracking: null };

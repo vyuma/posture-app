@@ -8,7 +8,7 @@ export const isWarningSpeech = (code: SpeechCode) => code === 'general' || code 
 export const speechDuration = (code: SpeechCode) =>
   isWarningSpeech(code) ? WARNING_SPEECH_DURATION : SPEECH_DURATION;
 type Candidate = { below: number | null; active: boolean; strength: number; direction?: Direction };
-type Input = { context: string; sessionId?: string; mode: 'focus' | 'rest' | 'paused' | 'off'; now: number; observedAt: number; maxAge: number; valid: boolean; retain?: boolean; reasonAvailable?: boolean; trackingMissing?: boolean; directions?: Directions; posture: 'good' | 'bad' | 'hold'; evidence: Evidence };
+type Input = { causes?: Reason[]; context: string; sessionId?: string; mode: 'focus' | 'rest' | 'paused' | 'off'; now: number; observedAt: number; maxAge: number; valid: boolean; retain?: boolean; reasonAvailable?: boolean; trackingMissing?: boolean; directions?: Directions; posture: 'good' | 'bad' | 'hold'; evidence: Evidence };
 /** One selected reason, independently tracked candidates. Bubble expiry never clears a reason. */
 export class FeedbackSpeech {
   private context = '';
@@ -83,8 +83,8 @@ export class FeedbackSpeech {
       else if (strength < FEEDBACK_SPEC.release) { c.below ??= observedAt; if (observedAt - c.below >= FEEDBACK_SPEC.releaseMs) c.active = false; }
       else c.below = null;
     }
-    const active = REASONS.filter(r => this.candidates[r].active).sort((a, b) => this.candidates[b].strength - this.candidates[a].strength);
-    const current = REASONS.find(r => r === this.selected && this.candidates[r].active);
+    const active = input.causes ?? REASONS.filter(r => this.candidates[r].active).sort((a, b) => this.candidates[b].strength - this.candidates[a].strength);
+    const current = active.find(r => r === this.selected);
     const next = current ?? active[0];
     if (input.posture === 'bad') {
       this.goodAt = null;

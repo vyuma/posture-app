@@ -12,6 +12,8 @@ export type PostureFeatures = {
 export type PostureState = "good" | "bad" | "hold";
 
 export type PostureEval = {
+  scoreBreakdown?: ScoreBreakdown;
+  headTurnCandidateBad?: boolean;
   score: number;
   candidateBad: boolean;
   qualityOk: boolean;
@@ -45,6 +47,7 @@ export type PostureExperimentProxy = {
 };
 
 export type PostureExperimentMetrics = {
+  headShoulderSignedDeg?: number | null;
   neckAngle2dFallback: number | null;
   neckAngle3d: number | null;
   headForwardAngleDeg: number | null;
@@ -112,12 +115,15 @@ export type ExtractFeatureResult =
     };
 
 export type ScoreResult = {
+  breakdown: ScoreBreakdown;
   scoreEma: number;
   headWidthScale: number | null;
   headWidthScoreBoost: number;
   confidence: number;
   usableFeatureCount: number;
 };
+
+export type ScoreBreakdown = Partial<Record<FeatureKey | 'headWidth', { deviation: number; contribution: number }>>;
 
 export type NormalizedFeatureMap = Record<FeatureKey, number | null>;
 

@@ -70,6 +70,15 @@ export function computeHeadForwardAngle3D(
   );
 }
 
+/** Same YZ angle as the score, signed toward/away from the observed face direction. */
+export function computeSignedHeadShoulderAngle3D(selected: LandmarkSelection, nose: Point3, ears: Point3, shoulders: Point3) {
+  const angle = computeHeadForwardAngle3D(selected, ears, shoulders);
+  const faceDepth = nose.z - ears.z;
+  // Near a side-on face the YZ projection cannot resolve anatomical front/back.
+  if (angle === null || shoulders.y <= ears.y || Math.abs(faceDepth) < Math.hypot(nose.x - ears.x, faceDepth) * .25 || Math.abs(faceDepth) < 1e-6) return null;
+  return angle * Math.sign((ears.z - shoulders.z) * faceDepth);
+}
+
 export function computePostureExperiment(
   selected: LandmarkSelection,
   extracted: ExtractFeatureResult,
@@ -111,6 +120,7 @@ export function computePostureExperiment(
     neckAngle2dFallback,
     neckAngle3d,
     headForwardAngleDeg: extracted.features.headForwardAngleDeg,
+    headShoulderSignedDeg: computeSignedHeadShoulderAngle3D(selected, N, EM, SM),
     sourceQuality: hipsFromWorld ? sourceQuality : "vertical-fallback",
     proxy: {
       nose: toExperimentProxyPoint(N),

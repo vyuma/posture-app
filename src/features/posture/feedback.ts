@@ -1,11 +1,11 @@
 import { relativeHeadYaw } from './judgment';
 /** Calibrated observations for dialogue. Head tilt also informs the bad/good decision; weighted score stays separate. */
-export type Reason = 'faceNear' | 'headForward' | 'headTilt' | 'bodyTilt' | 'headShift' | 'headPitch' | 'shoulderTilt' | 'headTurn';
-export type Direction = 'left' | 'right' | 'up' | 'down';
+export type Reason = 'faceNear' | 'headForward' | 'headTilt' | 'bodyTilt' | 'headShift' | 'headPitch' | 'shoulderTilt' | 'headTurn' | 'headShoulderAngle' | 'headShoulderDistance' | 'neckAngle' | 'earShoulderBalance' | 'faceScale';
+export type Direction = 'left' | 'right' | 'up' | 'down' | 'forward' | 'backward';
 export type Directions = Partial<Record<Reason, Direction>>;
-export const REASONS: Reason[] = ['faceNear', 'headForward', 'headTilt', 'bodyTilt', 'headShift', 'headPitch', 'shoulderTilt', 'headTurn'];
+export const REASONS: Reason[] = ['faceNear', 'headForward', 'headTilt', 'bodyTilt', 'headShift', 'headPitch', 'shoulderTilt', 'headTurn', 'headShoulderAngle', 'headShoulderDistance', 'neckAngle', 'earShoulderBalance', 'faceScale'];
 export type Evidence = Record<Reason, number | null>;
-export const emptyEvidence = (): Evidence => ({ faceNear: null, headForward: null, headTilt: null, bodyTilt: null, headShift: null, headPitch: null, shoulderTilt: null, headTurn: null });
+export const emptyEvidence = (): Evidence => ({ faceNear: null, headForward: null, headTilt: null, bodyTilt: null, headShift: null, headPitch: null, shoulderTilt: null, headTurn: null, headShoulderAngle: null, headShoulderDistance: null, neckAngle: null, earShoulderBalance: null, faceScale: null });
 type Landmark = { x: number; y: number; z: number; visibility?: number };
 type Metrics = { ear: number; eye: number; shoulder: number; yaw: number; earRoll: number; eyeRoll: number; bodyRoll: number | null; forward: number | null; facingX: number | null; facingZ: number | null } & Record<ExtraKey, number | null>;
 type ExtraKey = 'forwardAligned' | 'forwardUpper' | 'headSide' | 'bodySide' | 'shift' | 'pitch' | 'shoulderSide' | 'turn';
@@ -13,7 +13,7 @@ type Key = keyof Metrics;
 // Existing floors remain unchanged; new cues start conservatively and need camera calibration.
 export const FEEDBACK_SPEC = { headTiltDeg: 12, bodyTiltDeg: 10, forwardRatio: .18, headShiftRatio: .12, headPitchDeg: 12, shoulderTiltDeg: 8, turnRatio: .22, turnChange: .12, release: .65, releaseMs: 350 } as const;
 export type FeedbackBaseline = { version: 1 | 2; camera: string; values: Partial<Record<Key, { median: number; mad: number } | null>> };
-export type FeedbackObservation = { headYawDeg?: number | null; epoch: number; evidence: Evidence; directions?: Directions; baselineReady: boolean; available: boolean };
+export type FeedbackObservation = { causes?: Reason[]; headYawDeg?: number | null; epoch: number; evidence: Evidence; directions?: Directions; baselineReady: boolean; available: boolean };
 const keys: Key[] = ['ear', 'eye', 'shoulder', 'yaw', 'earRoll', 'eyeRoll', 'bodyRoll', 'forward', 'facingX', 'facingZ', 'forwardAligned', 'forwardUpper', 'headSide', 'bodySide', 'shift', 'pitch', 'shoulderSide', 'turn'];
 const median = (values: number[]) => { const v = [...values].sort((a, b) => a - b); return (v[Math.floor((v.length - 1) / 2)] + v[Math.floor(v.length / 2)]) / 2; };
 const point = (points: Landmark[] | null, index: number) => {

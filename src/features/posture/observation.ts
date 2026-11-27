@@ -4,6 +4,7 @@ import type { Landmark, NormalizedLandmark } from '@mediapipe/tasks-vision';
 import { evaluatePostureFrame } from './engine';
 import type { PostureEngineState } from './engine.types';
 import { FeedbackObserver } from './feedback';
+import { explainPostureDecision } from './scoreFeedback';
 
 /** One decoded camera frame supplies both the decision and its explanation. */
 export function evaluatePostureObservation(
@@ -33,5 +34,5 @@ export function evaluatePostureObservation(
     feedback = observer.observe(image, world, camera.width, camera.height,
       camera.id, true, evaluated.result.eval.qualityOk, now);
   }
-  return { ...evaluated, feedback };
+  return { ...evaluated, feedback: explainPostureDecision(feedback, evaluated.result, evaluated.state, image, scale) };
 }

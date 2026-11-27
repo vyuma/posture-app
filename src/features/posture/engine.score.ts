@@ -54,6 +54,7 @@ export function computeScore(
   let totalWeight = 0;
   let confidenceWeight = 0;
   let usableFeatureCount = 0;
+  const breakdown: ScoreResult['breakdown'] = {};
   const totalBaseWeight = FEATURE_KEYS.reduce((sum, key) => sum + weights[key], 0);
 
   for (const key of FEATURE_KEYS) {
@@ -68,6 +69,7 @@ export function computeScore(
 
     const clampedZ = clamp(normalizedValue, 0, POSTURE_SPEC.scoreZClamp);
     weightedScore += effectiveWeight * clampedZ;
+    breakdown[key] = { deviation: clampedZ, contribution: effectiveWeight * clampedZ };
     totalWeight += effectiveWeight;
     usableFeatureCount += 1;
   }
@@ -77,6 +79,8 @@ export function computeScore(
   const scoreBase = totalWeight > 1e-6 ? weightedScore / totalWeight : 0;
   let scoreRaw = scoreBase;
   scoreRaw += headWidthScoreBoost;
+  for (const component of Object.values(breakdown)) component.contribution /= totalWeight;
+  if (headWidthScoreBoost > 0) breakdown.headWidth = { deviation: headWidthScoreBoost, contribution: headWidthScoreBoost };
 
   const alpha = lerp(
     POSTURE_SPEC.emaAlphaMin,
@@ -89,6 +93,7 @@ export function computeScore(
       : alpha * scoreRaw + (1 - alpha) * previousEmaScore;
 
   return {
+    breakdown,
     scoreEma,
     headWidthScale,
     headWidthScoreBoost,
