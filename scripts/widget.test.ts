@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { widgetPose, widgetGrowth, widgetGeometry } from '../src/features/work/widgetPresentation';
+import { widgetArtworkPose, widgetPose, widgetGrowth, widgetGeometry } from '../src/features/work/widgetPresentation';
 import { petEvent, replayPet, ASSET_VERSION } from '../src/features/timelapse/model';
 const focus = { sessionId:'qa', remainingMs:120000, durationMs:300000, phase:'focus' as const, paused:false, bad:true, badSince:10000, cycle:1, cycles:4 };
 describe('widget state and recording compatibility', () => {
@@ -13,17 +13,32 @@ describe('widget state and recording compatibility', () => {
   });
   test('growth is bounded and respects reduced motion and short windows', () => {
     expect(widgetGrowth(focus,9000)).toBe(0);
-    expect(widgetGrowth(focus,12500)).toBe(.5);
+    expect(widgetGrowth(focus,11999)).toBe(0);
+    expect(widgetGrowth(focus,12000)).toBe(0);
+    expect(widgetGrowth(focus,13500)).toBe(.5);
+    expect(widgetGrowth(focus,15000)).toBe(1);
     expect(widgetGrowth(focus,90000)).toBe(1);
     expect(widgetGrowth(focus,90000,true)).toBe(0);
     const full = widgetGeometry('bad',1,982), short = widgetGeometry('bad',1,492);
-    expect(full.maskWidth).toBe(291); expect(full.maskHeight).toBe(639);
+    expect(full.maskWidth).toBe(327); expect(full.maskHeight).toBeCloseTo(417.95, 2);
     expect(short.growth).toBeLessThan(1);
     for(const h of [300,492,720,822,982]) {
       const g=widgetGeometry('bad',1,h);
       // Reserve 77px for timer + bottom inset, and the rotated bubble's upper edge.
       expect(h - 77 + g.bubbleTop - 24).toBeGreaterThanOrEqual(0);
     }
+  });
+  test('bad posture keeps the neutral artwork in live and new recordings', () => {
+    expect(widgetArtworkPose('bad')).toBe('good');
+    const bad = {...petEvent(0, focus), badAt: 0};
+    expect(replayPet([bad], 2)?.growth).toBe(0);
+    expect(replayPet([bad], 5)?.growth).toBe(1);
+    const replay = replayPet([bad], 3.5)!;
+    expect(replay.frame).toBe(0); expect(replay.growth).toBe(.5);
+    expect(replay.angle).not.toBe(0);
+    expect(replayPet([{...bad, widgetVersion: 2}], 2.5)?.frame).toBe(1);
+    const paused = petEvent(3, {...focus, paused: true}, bad);
+    expect(replayPet([bad, paused], 3)?.frame).toBe(409);
   });
   test('old Lottie layers and their keyframe timing are preserved byte-for-byte', () => {
     const original=JSON.parse(readFileSync('public/animations/anago/normal-nago/expression-states.json','utf8'));

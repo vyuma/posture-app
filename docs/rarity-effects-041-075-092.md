@@ -49,3 +49,19 @@ Web/desktopの`rarity-effects.css`で、新3種のカードの下端に透明な
 修正後、同じ下端位置で18回すべてhover=true、カードy=77pxで安定。だんごは1回動いて元の形状に戻り、再スタートしない。1512×982、720×512、390×844で横overflowなし、絵枠overflow:hiddenを確認。Sakuraのキーボードfocus-visibleによる再生と実コレクションからの詳細表示も成功。実行証跡はWebの`output/sakura-hover/`。
 
 両方の`bun run build`とdesktopの`cargo check --manifest-path src-tauri/Cargo.toml`成功。既存のbundle/eval警告・Rust unused警告あり。macOS実アプリの静的画面は取得できたが、ポインター操作は再び`noWindowsAvailable`となり、今回のネイティブhover実行は未検証。Webでの実行確認とdesktopのビルド確認を区別する。共有カタログ/モバイル/通信/保存形式は変更なし。
+
+## 獲得演出の自動再生ループ修正（2026-11-27）
+
+多言語対応で `character()` が翻訳済みオブジェクトを毎回生成するようになった一方、`ResultCard` の獲得 effect はそのオブジェクトを依存値にしていた。登場終了の `setEntering(false)` でも依存値が変わり、獲得演出を再起動していた。実コンポーネントを使う回帰テストでは、操作なしの10秒間に通常14回・サクラ9回・ミイラ6回・キング5回の開始を再現した。
+
+再生の依存値をキャラクターIDとカタログの色に限定。言語変更・表示更新では再起動せず、新しい測定の獲得時には再生する。演出時間、キーフレーム、クリック時のミニ紙吹雪、hover、Reduced Motionの既存処理は変更していない。データ・獲得確率・保存形式への変更なし。
+
+- `bun test scripts/result-card-effects.test.tsx`: 修正前5失敗/1成功、修正後6成功/32 assertions。4種の10秒経過、Strict Mode、再レンダー、言語変更、クリック、新しい測定、未獲得/コレクション、unmount時の停止を確認。
+- `bun run build:web`（Node 22.23.2）、`bun run build`、`cargo check --manifest-path src-tauri/Cargo.toml` 成功。初回Webビルドはシェル既定Nodeが古く失敗し、対応版で再実行して成功。既存のbundle/eval/Rust unused警告あり。
+- Chromeの `/dev/work`、1710×951で通常・サクラ・キングを実行。サクラ/キングの開始時は `is-entering=true`・canvas 1・CSS iteration 1、終了後は `is-entering=false`・canvas 0・カードanimation none。通常も終了後の再取得でcanvas 0を維持。
+- 証跡: `/Users/kyoungpin/Documents/piiin/output/acquisition-effect/after.jpg`。静止画像だけでは再生回数を証明しないため、上記の実行状態と回帰テストを判定根拠とする。
+- 共通React画面の修正でWeb/macOS/Windowsを対象とする。今回はネイティブ実機の再確認・本番公開・TestFlight配布は未実施。
+
+### Macロック解除後の確認（2026-11-27）
+
+`PiiiN Story QA` の1200×748で通常キャラクターの結果導入画面から獲得カードへの遷移と最終表示を確認した。証跡は `/Users/kyoungpin/Documents/piiin/output/native-unlocked/reward-settled-mac.png`。途中で画面制御ツールが長時間応答しなくなったため、Macで演出全体を連続観測できたとは扱わない。自動再生が1回で止まる判定根拠は、上記の実コンポーネント回帰テストとブラウザーの再生状態取得。Mac全4種の連続実行確認、Windows実機、本番公開・TestFlight配布は未実施。

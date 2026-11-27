@@ -66,7 +66,7 @@ PRは共通・サーバー・macOS・Windowsの検査後、`piiin-pr-N` Worker�
 
 リポジトリ変数`PIIIN_CLOUDFLARE_CI_ENABLED=true`のときだけGitHubから配布する。2026-11-08にCI接続を保留する指示があったため、現在は無効。共通・サーバー・macOS・Windowsの検査は継続する。管理者が3環境の資格情報を登録した後に有効化する。配布のskipを実デプロイ成功と扱わない。
 
-`scripts/cloudflare-preflight.mjs <preview|staging|production>`は未設定値・Worker名・正確なHTTPS origin・UUID・誤った公開ドメイン/認証フラグを検査する。ローカルOAuth認証なら`--local-auth`を加える。`PIIIN_PRODUCTION_D1_ID`も渡すと、本番DBとの取り違えを拒否する。
+`scripts/cloudflare-preflight.mjs <preview|staging|production>`は未設定値・Worker名・正確なHTTPS origin・UUID・誤った公開ドメイン/認証フラグを検査する。ローカルOAuth認証なら`--local-auth`を加える。`PIIIN_PRODUCTION_D1_ID`を全環境で必須とし、本番は同じDB、非本番は異なるDBであることを検査する。staging/productionは認証・Apple・開発者・メールの有効フラグを明示し、productionはドメイン有効フラグも明示する。未設定をfalse扱いして既存のsecretやrouteを失う配布を防ぐ。PR previewにはメール資格情報も渡さない。
 
 配布後に`node scripts/check-web-deployment.mjs <origin>`で公開経路、最新Macインストーラー、匿名セッション、開発者認証設定を検査する。`PIIIN_AUTH_ENABLED=true`の場合はGoogle認証開始とcallback originも検査するが、プロバイダーへの実ログインは別途ブラウザーで行う。診断はOAuth URL/state・Cookie・秘密値を出力しない。
 
@@ -173,3 +173,11 @@ Resendのpiiin.appドメインはTokyoで認証済み。DKIM TXTと発信用CNAM
 - 接続成功後にアプリが前面へ戻らない問題を確認し、安全保管成功後だけunminimize/show/set_focusを行う修正を追加した。修正版のQAアプリでSSO接続後に自動で前面へ戻ることを、利用者が実機で確認した。
 - 利用者が試したメールアドレスは運用・ステージングともGoogle専用で、credential/passwordがないことをD1で確認。再登録/再設定によるメール未送信は暗黙結合防止の仕様。再設定案内を「メール・パスワードで登録した場合」に限定し、Google/Apple登録では同じ方法でログインする短い案内へ変更した。アカウントの有無を一般APIに返さない。
 - 残件: 新Storeビルドの配布・実機検証、Windows実画面と認証往復、運用環境のメール新規登録/再設定の実受信、Google追加権限の検証、外部OAuth/Store連絡先・申告の更新。Chrome接続ツールに接続不良があり、macOS検証はネイティブUI経由で行った。
+
+## 2026-11-27 CI設定の訂正と配布前検査
+
+最新mainの検査は成功したが、`PIIIN_CLOUDFLARE_CI_ENABLED=false` のため配布ジョブはskip。GitHubのproduction/staging/previewに同じプレビューDB IDが入っていた。Cloudflareの実Workerを読取専用で照合すると、本番は `piiin-accounts`、stagingは `piiin-staging-accounts` へ正しく接続されていた。GitHubの2環境のDB IDをそれぞれ実Workerと一致させ、既存の認証・Apple・開発者・メールの有効フラグ、本番ドメイン有効フラグを登録した。Google追加プロフィールと復旧ロックは本番のfalseを維持した。secretの値は読取・変更していない。
+
+preflightは本番DB参照を必須にし、本番へプレビューDBを指定した場合と既存ログインのフラグが未設定の場合を拒否する。メールフラグも検査し、PR previewへの資格情報付与を禁止する。回帰7件成功（追加した不正設定3ケースは修正前に失敗することを確認）。ウィジェット操作・獲得演出の1回再生・ロゴ画面の言語選択もCIの独立プロセスのテスト一覧へ追加した。
+
+この設定訂正では自動配布フラグはfalseのまま。Workerへの配置、DBマイグレーション、実データの変更は行っていない。GitHub tokenの実デプロイ権限は、配布再開時のstagingで確認する必要がある。

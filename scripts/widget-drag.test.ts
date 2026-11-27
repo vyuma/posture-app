@@ -1,3 +1,5 @@
+import feedback from '../src/features/posture/postureFeedback.json';
+import translations from '../src/features/i18n/messages.json';
 import { expect, test } from 'bun:test';
 import { widgetBounds, clampWidgetPosition } from '../src/features/work/widgetPosition';
 import { speechGeometry, widgetGeometry, type WidgetPose } from '../src/features/work/widgetPresentation';
@@ -5,8 +7,8 @@ import { speechGeometry, widgetGeometry, type WidgetPose } from '../src/features
 test('all poses, growth sizes and long dialogue stay reachable at viewport edges', () => {
   for (const [width, height] of [[1512,982],[720,512],[390,844],[320,568]]) {
     for (const pose of ['good','bad','rest','paused'] as WidgetPose[]) {
-      for (const growth of [0,.5,1]) {
-        const bounds = widgetBounds(pose, speechGeometry(widgetGeometry(pose, growth, height - 60), '頭が前に出てるよ！'));
+      for (const growth of [0,.5,1]) for (const text of Object.values(feedback).flatMap(ja => [ja, ...Object.values(translations[ja as keyof typeof translations])])) {
+        const bounds = widgetBounds(pose, speechGeometry(widgetGeometry(pose, growth, height - 60, width), text));
         for (const [x,y] of [[-10000,-10000],[10000,10000],[width/2,height/2]]) {
           const p = clampWidgetPosition({x,y}, {width,height}, bounds);
           expect(p.x + bounds.left).toBeGreaterThanOrEqual(7.99);
