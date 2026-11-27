@@ -140,8 +140,9 @@ export function OnboardingStoryScreen({ onComplete }: { onComplete: () => void }
 
 function Hero({ scene }: { scene: Scene }) {
   useAppLanguage();
+  const enterFromBelow = useRef(scene === "happy");
   return (
-    <div className="onboarding-hero" aria-hidden="true">
+    <div className={`onboarding-hero${enterFromBelow.current ? " is-entering" : ""}`} aria-hidden="true">
       <div className="onboarding-hero-motion">
         <div className="onboarding-expression is-visible">
           <StoryAnago pose={scene === "angry" ? "intro" : "happy"} />

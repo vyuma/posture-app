@@ -64,3 +64,11 @@
 macOSネイティブの画面取得は前の検証でScreenCaptureKitのエラーとなり、今回もネイティブ表示確認完了とはしていない。ブラウザでの実表示と、Desktopのビルド・ソース同一性の検証は区別する。実機タッチ操作とOSのReduce Motion切り替えは今回未実行。
 
 Web側 `output/story-audit/` に `figma-story2.png`、`figma-story3.png`、`story2-1512.png`、`story3-1512.png`、`story5-1920x720.png`、各小画面、Skottieのキャプチャを保存。`story23-comparison.html` と `font-comparison.html` で比較できる。コミット・pushはしていない。
+
+## 2026-11-27 最初のピンアナゴの登場を復元
+
+旧ストーリー1の削除で外れた `is-entering` を、開始ボタン後の最初のHeroマウントへ接続。既存の560msの上昇・オーバーシュート・着地を再利用し、LottieやCSSキーフレームは変更していない。姿勢の変形、吹き出し、揺れの順序を保持し、前後移動で登場が再生し直されないようにした。
+
+- 実ブラウザー1512×982・1024×640・390×844で、下から上昇→約−28pxのオーバーシュート→約+10px→0pxへの着地、560ms・1回再生・横方向のはみ出しなしをDOMのフレーム値で確認。前後移動後も開始回数は1。計測は初回フレームから全フレームを保証する性能測定ではない。
+- ストーリー回帰2件・53 assertions、Webとdesktopのビルド成功。共有コンポーネントの修正でWeb/macOS/Windowsに適用される。
+- ローカル検証用ページは測定後に削除。証跡は `Documents/piiin/output/story-entrance/`。Mac QAアプリは画面取得がタイムアウトし、今回のmacOS/Windows実機再生・OSのReduce Motion切替・TestFlight配布は未確認。既存のReduced Motion CSS規則は変更していない。
