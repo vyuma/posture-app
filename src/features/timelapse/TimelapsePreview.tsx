@@ -1,3 +1,4 @@
+import { openMeasurementCamera } from '../posture/camera';
 import { emptyEvidence } from '../posture/feedback';
 /** Development-only, isolated media store. Never uses a real collection or its reset. */
 import { useEffect, useRef, useState } from 'react';
@@ -38,7 +39,7 @@ export default function TimelapsePreview() {
         let ended = false;
         const cancel = () => { ended = true; reject(new Error('カメラを取得できませんでした（権限待ち・中止）')); };
         const timeout = setTimeout(cancel, 15_000); signal.addEventListener('abort', cancel, { once: true });
-        navigator.mediaDevices.getUserMedia({ video: { width: { ideal: target.width }, height: { ideal: target.height } }, audio: false }).then(stream => { if (ended) stream.getTracks().forEach(track => track.stop()); else resolve(stream); }, reject).finally(() => { clearTimeout(timeout); signal.removeEventListener('abort', cancel); });
+        openMeasurementCamera(target.height).then(stream => { if (ended) stream.getTracks().forEach(track => track.stop()); else resolve(stream); }, reject).finally(() => { clearTimeout(timeout); signal.removeEventListener('abort', cancel); });
       }) : target.captureStream(30);
       if (camera) {
         // Production records an already-running posture camera. Warm the test

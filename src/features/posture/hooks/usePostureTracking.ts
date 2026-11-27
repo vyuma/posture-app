@@ -1,3 +1,4 @@
+import { openMeasurementCamera } from '../camera';
 import { normalizeJudgment, type JudgmentSettings } from '../judgment';
 import { resetLandmarkTracking } from "../engine.state";
 import { VideoFrameGate } from "../videoFrameGate";
@@ -330,34 +331,6 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
       trackingTimerRef.current = window.setTimeout(callback, Math.max(0, delayMs));
     };
 
-    const startCamera = async () => {
-      if (
-        typeof navigator === "undefined" ||
-        !navigator.mediaDevices ||
-        typeof navigator.mediaDevices.getUserMedia !== "function"
-      ) {
-        throw new Error(
-          "この環境では navigator.mediaDevices を利用できません。",
-        );
-      }
-
-      try {
-        return await navigator.mediaDevices.getUserMedia({
-          video: {
-            facingMode: "user",
-            width: { ideal: captureHeight === 1080 ? 1920 : 1280 },
-            height: { ideal: captureHeight },
-          },
-          audio: false,
-        });
-      } catch {
-        return navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: false,
-        });
-      }
-    };
-
     const createPoseLandmarker = async (
       vision: Awaited<ReturnType<typeof FilesetResolver.forVisionTasks>>,
     ) => {
@@ -652,7 +625,7 @@ export function usePostureTracking(options: UsePostureTrackingOptions = {}) {
           return;
         }
 
-        initStream = await startCamera();
+        initStream = await openMeasurementCamera(captureHeight);
         if (shouldAbortInit(initStream)) {
           return;
         }

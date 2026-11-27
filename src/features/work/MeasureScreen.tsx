@@ -34,7 +34,7 @@ export function MeasureScreen({ stage, session, videoRef, canvasRef, status, rea
         <image href="/figma/posture-frame-shoulders.svg" x="41" y="198" width="435" height="106" />
       </svg>
       {!ready && <div className="work-camera-preparation-status" role="status">
-        <p>{status.startsWith('初期化に失敗しました') ? t("カメラを開けません。権限を確認して、ホームからやり直してください。") : t("カメラを準備中…")}</p>
+        <p>{status.startsWith('初期化に失敗しました') ? t("カメラを開けません。設定でカメラの選択と権限を確認してください。") : t("カメラを準備中…")}</p>
         {status.startsWith('初期化に失敗しました') && <button className="work-button white" onClick={onCancel}>{t("ホームへ戻る")}</button>}
       </div>}
     </>}
