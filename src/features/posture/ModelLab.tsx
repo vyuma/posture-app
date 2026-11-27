@@ -252,7 +252,7 @@ export default function ModelLab() {
             )}
           </div>
           <Pipeline calibrating={calibrating} posture={calibrating ? "calibrating" : posture} />
-          <Panel n={5} title="判定 (ヒステリシス)" sub={`m = ${scale},  現在のしきい値 ${fmt(badT, 2)} (bad ${POSTURE_SPEC.badDurationMs / 1000}s / good < ${fmt(goodT, 2)} ${POSTURE_SPEC.recoverDurationMs / 1000}s)  ※頭の左右傾き・複数モニター判定は未入力`}>
+          <Panel n={4} title="判定 (ヒステリシス)" sub={`m = ${scale},  現在のしきい値 ${fmt(badT, 2)} (bad ${POSTURE_SPEC.badDurationMs / 1000}s / good < ${fmt(goodT, 2)} ${POSTURE_SPEC.recoverDurationMs / 1000}s)  ※頭の左右傾き・複数モニター判定は未入力`}>
             <div className={`ml-verdict ${calibrating ? "hold" : isBad ? "bad" : isWarn ? "warn" : posture}`}>
               <span>{calibrating ? "CALIBRATING" : isBad ? "BAD" : isWarn ? "WARNING" : posture.toUpperCase()}</span>
               {calibrating ? (
@@ -292,7 +292,7 @@ export default function ModelLab() {
             </table>
           </Panel>
 
-          <Panel n={3} title="正規化偏差 𝐳" sub={`z₁…₅ = |xₖ − μ̃ₖ| / scaleₖ, z₆ = max(0, x₆ − μ̃₆) / scale₆, clip[0, ${POSTURE_SPEC.scoreZClamp}] ┃ = 統合スコアのしきい値（参考）`}>
+          <Panel n={2} title="正規化偏差 𝐳" sub={`z₁…₅ = |xₖ − μ̃ₖ| / scaleₖ, z₆ = max(0, x₆ − μ̃₆) / scale₆, clip[0, ${POSTURE_SPEC.scoreZClamp}] ┃ = 統合スコアのしきい値（参考）`}>
             <div className="ml-zs">
               {FEATURE_KEYS.map((key) => {
                 const v = z?.[key] ?? null;
@@ -312,7 +312,7 @@ export default function ModelLab() {
             </div>
           </Panel>
 
-          <Panel n={4} title="重み付き統合 → EMA" sub="s = Σw′ₖzₖ / Σw′ₖ + b,  ŝₜ = αs + (1−α)ŝₜ₋₁">
+          <Panel n={3} title="重み付き統合 → EMA" sub="s = Σw′ₖzₖ / Σw′ₖ + b,  ŝₜ = αs + (1−α)ŝₜ₋₁">
             <div className="ml-eq mono">
               <div>Σw′z = <em>{fmt(num)}</em> / Σw′ = <em>{fmt(den)}</em></div>
               <div>b<sub>headWidth</sub> = <em>{fmt(boost)}</em></div>
