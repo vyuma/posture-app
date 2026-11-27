@@ -57,7 +57,7 @@ public final class PetRig: NSView {
     }
     public func setPose(_ pose: String, reducedMotion: Bool) {
         guard still[pose] != nil else { return }
-        desired = pose
+        desired = pose == "bad" ? "good" : pose
         if reducedMotion {
             animationView.stop()
             current = desired

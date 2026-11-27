@@ -1519,6 +1519,10 @@
     "ko": "자세 위젯",
     "en": "Posture widget"
   },
+  "メイン画面を開く": {
+    "ko": "메인 화면 열기",
+    "en": "Open main window"
+  },
   "ウィジェットを移動。ドラッグまたは矢印キー、Shiftで大きく移動": {
     "ko": "위젯 이동. 드래그 또는 방향키로 이동하고 Shift로 더 크게 이동합니다",
     "en": "Move widget. Drag or use arrow keys; hold Shift for larger steps"
@@ -2010,6 +2014,22 @@
   "いろんなピンアナゴが仲間になるよ！": {
     "ko": "다양한 핀아나고가 친구가 될 거야!",
     "en": "and meet all kinds of Pin-anago!"
+  },
+  "姿勢が悪くなったときは、": {
+    "ko": "자세가 나빠지면,",
+    "en": "When your posture slips,"
+  },
+  "どこを直せばいいか教えてあげるよ！": {
+    "ko": "어디를 고치면 좋을지 알려줄게!",
+    "en": "I'll show you what to adjust!"
+  },
+  "正しい姿勢をキープできたら、": {
+    "ko": "바른 자세를 유지하면,",
+    "en": "Keep up your good posture,"
+  },
+  "首が曲がってるよ！": {
+    "ko": "목이 굽었어!",
+    "en": "Your neck is bent!"
   },
   "PiiiN ストーリー": {
     "ko": "PiiiN 스토리",

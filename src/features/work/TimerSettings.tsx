@@ -38,16 +38,16 @@ export function TimerSettings({ saved, onSubmit, onClose }: { saved: Settings | 
     }}>
       <div className="work-timer-heading"><h1>{t("設定")}</h1><p>{t("姿勢測定時の設定をしましょう。")}</p></div>
       <div className="work-judgment-controls">
-        <fieldset className="work-judgment-level"><legend>{t("判定基準")}</legend>
-          <div>{([['easy','やさしい'],['normal','ふつう'],['hard','きびしい']] as const).map(([value,label]) =>
+        <div className="work-setting-group work-judgment-level" role="radiogroup" aria-labelledby="timer-judgment-title"><span id="timer-judgment-title" className="work-setting-title">{t("判定基準")}</span>
+          <div className="work-setting-options">{([['easy','やさしい'],['normal','ふつう'],['hard','きびしい']] as const).map(([value,label]) =>
             <label key={value}><input type="radio" name="judgment" value={value} checked={judgment.difficulty === value}
               onChange={() => setTimer(current => ({...current,posture:{...judgment,difficulty:value}}))}/><span>{t(label)}</span></label>)}</div>
-        </fieldset>
-        <fieldset className="work-monitor-choice"><legend>{t("使用モニター")}</legend>
-          <div>{([[false,'1台'],[true,'2台以上']] as const).map(([value,label]) =>
+        </div>
+        <div className="work-setting-group work-monitor-choice" role="radiogroup" aria-labelledby="timer-monitor-title"><span id="timer-monitor-title" className="work-setting-title">{t("使用モニター")}</span>
+          <div className="work-setting-options">{([[false,'1台'],[true,'2台以上']] as const).map(([value,label]) =>
             <label key={label}><input type="radio" name="monitors" checked={judgment.dualMonitor === value}
               onChange={() => setTimer(current => ({...current,posture:{...judgment,dualMonitor:value}}))}/><span>{t(label)}</span></label>)}</div>
-        </fieldset>
+        </div>
       </div>
       <div className="work-timer-controls">
         {controls.map(({ key, label, unit }) => {

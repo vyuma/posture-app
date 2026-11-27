@@ -52,7 +52,7 @@ export function MeasureScreen({ stage, session, videoRef, canvasRef, status, rea
     <Brand />
     {stage !== 'active' && <button className="work-close screen-close" aria-label={t("登録をキャンセル")} onClick={onCancel}><img src="/figma/timelapse-close.svg" alt="" /></button>}
     <section className={stage === 'active' ? 'work-measuring-panel' : 'work-glass work-registration-panel'}>
-      <header className="work-measure-heading"><h1>{heading}</h1><p>{description}</p>{stage === 'active' && <button className="work-button white" onClick={onRecalibrate}>{t("姿勢を再登録")}</button>}</header>
+      <header className="work-measure-heading"><h1>{heading}</h1><p>{description}</p>{stage === 'active' && <button className="work-button white" onClick={onRecalibrate}><img className="work-recalibrate-icon" src="/figma/measure-recalibrate.svg" alt="" /><span>{t("姿勢を再登録")}</span></button>}</header>
       {stage === 'prepare' ? <>
         <PostureGuide>{camera}</PostureGuide>
         <button className="work-button orange" onClick={onRegister} disabled={!ready}>{t("準備できた！")}</button>
@@ -69,7 +69,7 @@ export function MeasureScreen({ stage, session, videoRef, canvasRef, status, rea
             <div className="work-inline-sound"><label><span>{t("音量")}</span><input aria-label={t("音量")} type="range" min="0" max="1" step="0.01" style={{ '--volume-progress': `${(sound?.volume ?? .7) * 100}%` } as CSSProperties} value={sound?.volume ?? .7} onChange={event => sound && onSoundChange?.({ ...sound, volume: Number(event.target.value) })} /></label><SoundSelect settings={sound ?? DEFAULT_SOUND_SETTINGS} onChange={onSoundChange} /></div>
           </aside>
         </div>
-        <footer className="work-measure-footer"><button className="work-button white" onClick={onPause}>{paused && <svg className="work-resume-icon" viewBox="0 0 21 24" aria-hidden="true"><image href="/figma/measure-resume.svg" x="6" y="2" width="15" height="20" /></svg>}<span>{paused ? t("再開") : t("一時停止")}</span></button><button className="work-button blue" onClick={onFinish}>{t("終了")}</button></footer>
+        <footer className="work-measure-footer"><button className="work-button white" onClick={onPause}>{paused ? <svg className="work-resume-icon" viewBox="0 0 21 24" aria-hidden="true"><image href="/figma/measure-resume.svg" x="6" y="2" width="15" height="20" /></svg> : <svg className="work-pause-icon" viewBox="0 0 14.19 17.73" aria-hidden="true"><image href="/figma/measure-pause-action.svg" width="15" height="18" /></svg>}<span>{paused ? t("再開") : t("一時停止")}</span></button><button className="work-button blue" onClick={onFinish}>{t("終了")}</button></footer>
       </> : <div className="work-calibration-content">{camera}</div>}
     </section>
   </main>;

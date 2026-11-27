@@ -6,13 +6,12 @@ import XCTest
 /// Exercise the real AppKit/Lottie renderer in an offscreen window. A bare view
 /// does not attach its animation layers and would miss completion-time sweeps.
 final class PetPlaybackTests: XCTestCase {
-    private let still: [String: Double] = ["good": 0, "bad": 1, "rest": 2, "paused": 408]
+    private let still: [String: Double] = ["good": 0, "bad": 0, "rest": 2, "paused": 408]
     private let transitions: [(String, String, Double, Double)] = [
-        ("good", "bad", 183, 213), ("bad", "good", 213, 288),
         ("good", "rest", 288, 318), ("rest", "good", 318, 348),
-        ("bad", "rest", 348, 378), ("rest", "bad", 378, 408),
+        ("bad", "rest", 288, 318), ("rest", "bad", 318, 348),
         ("good", "paused", 409, 439), ("paused", "good", 439, 469),
-        ("bad", "paused", 469, 499), ("paused", "bad", 499, 529),
+        ("bad", "paused", 409, 439), ("paused", "bad", 439, 469),
         ("rest", "paused", 529, 559), ("paused", "rest", 559, 589)
     ]
     private var assetPath: String {
@@ -82,7 +81,7 @@ final class PetPlaybackTests: XCTestCase {
         rig.setPose("bad", reducedMotion: false)
         rig.setPose("paused", reducedMotion: false)
         rig.setPose("rest", reducedMotion: false)
-        try sample(rig, seconds: 0.7, ranges: [183..<213, 348..<378])
+        try sample(rig, seconds: 0.7, ranges: [409..<439, 559..<589])
         assertSettled(rig, "rest")
         rig.setPose("good", reducedMotion: false)
         rig.setPose("paused", reducedMotion: true)
@@ -115,10 +114,10 @@ final class PetPlaybackTests: XCTestCase {
         try sample(rig, seconds: 0.3, ranges: []) { try update(false) }
         assertSettled(rig, "good")
         try update(true)
-        try sample(rig, seconds: 1.35, ranges: [183..<213]) { try update(true) }
+        try sample(rig, seconds: 1.35, ranges: []) { try update(true) }
         assertSettled(rig, "bad")
         try update(false, phase: "rest")
-        try sample(rig, seconds: 1.35, ranges: [348..<378]) { try update(false, phase: "rest") }
+        try sample(rig, seconds: 1.35, ranges: [288..<318]) { try update(false, phase: "rest") }
         assertSettled(rig, "rest")
     }
 }

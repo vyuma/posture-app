@@ -34,10 +34,10 @@ jobs:
       - run: bun test scripts/head-tilt-posture.test.ts scripts/landmark-loss.test.ts scripts/work-session.test.ts scripts/timelapse-pet-layout.test.ts scripts/widget-drag.test.ts
       - name: Verify posture, language, and timelapse regressions
         run: |
-          for suite in i18n posture-check-screen timer-settings; do
+          for suite in i18n posture-check-screen timer-settings widget-interaction result-card-effects story-navigation; do
             bun test "scripts/$suite.test.tsx"
           done
-          for suite in posture-feedback posture-judgment posture-comment posture-praise-policy posture-speech-stability timelapse timelapse-export timelapse-timeline; do
+          for suite in posture-feedback posture-judgment posture-comment posture-praise-policy posture-speech-stability widget timelapse timelapse-export timelapse-timeline; do
             bun test "scripts/$suite.test.ts"
           done
           bun test scripts/timelapse-motion.test.tsx
@@ -121,6 +121,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
       PIIIN_D1_ID: ${{ vars.PIIIN_D1_ID }}
       PIIIN_WORKER_NAME: piiin
+      PIIIN_PRODUCTION_D1_ID: ${{ vars.PIIIN_PRODUCTION_D1_ID }}
       PIIIN_APP_ORIGIN: https://www.piiin.app
       PIIIN_DOMAIN_ENABLED: ${{ vars.PIIIN_DOMAIN_ENABLED }}
       PIIIN_AUTH_ENABLED: ${{ vars.PIIIN_AUTH_ENABLED }}

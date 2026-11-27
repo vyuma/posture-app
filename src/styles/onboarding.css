@@ -24,6 +24,7 @@
   transform-origin: center;
   isolation: isolate;
 }
+.onboarding-language { position: absolute; z-index: 4; top: max(16px, calc(41px * var(--story-scale))); right: max(20px, calc(49px * var(--story-scale))); }
 .onboarding-header { position: absolute; inset: 0 0 auto; height: 120px; z-index: 3; }
 
 /* Restore the pre-redesign splash motion; retain the current Figma geometry. */
@@ -80,11 +81,12 @@
 }
 .onboarding-copy small { font-size: 20px; line-height: 0; }
 .onboarding-copy-phrase { display: inline-block; }
-.onboarding--happy .onboarding-copy { left: 756px; width: 520px; }
-.onboarding--angry .onboarding-copy { left: 723px; width: 479px; min-height: 222px; }
+.onboarding--happy .onboarding-copy { left: 662px; width: 640px; }
+.onboarding--angry .onboarding-copy { left: 642px; width: 676px; min-height: 222px; }
 .onboarding--friends .onboarding-copy,
 .onboarding--collection .onboarding-copy { top: 317px; left: 755.5px; transform: translateX(-50%); text-align: center; }
-.onboarding--friends .onboarding-copy { left: 749.5px; width: 827px; }
+.onboarding--friends .onboarding-copy { left: 749.5px; width: 637px; }
+html:not([lang="ja"]) .onboarding-copy p { white-space: normal; }
 .onboarding-navigation { position: absolute; inset: 0; z-index: 4; pointer-events: none; }
 .onboarding-arrow {
   position: absolute;
@@ -124,7 +126,25 @@
 .onboarding-cheek--left { left: 368.16px; }
 .onboarding-cheek--right { left: 459.78px; }
 .onboarding-angry-fallback { position: absolute; left: 199.91px; top: 315.16px; width: 408.99px; height: 2061.19px; transform: scaleX(-1); }
-.onboarding--angry .onboarding-pet-lottie { transform-origin: 431px 945px; animation: onboarding-angry-shake 680ms ease-in-out 1050ms 4; }
+.onboarding--angry .onboarding-pet { transform-origin: 379px 945px; animation: onboarding-angry-shake 680ms ease-in-out 1270ms 2; }
+.onboarding--angry .onboarding-pet-lottie svg { filter: drop-shadow(-14.4px 14.4px 9.6px #00000026); }
+/* Finish the existing 1s pose morph, reveal the feedback, then shake twice. */
+.onboarding-warning-speech {
+  position: absolute; left: 226.84px; top: 236px; width: 325.17px; height: 117.31px;
+  filter: drop-shadow(0 7.81888px 7.81888px #00000040);
+  animation: onboarding-line-in 220ms ease-out 1050ms both;
+}
+.onboarding-warning-balloon {
+  position: absolute; left: 3.145px; top: 20.411px; width: 318.88px; height: 68.42px;
+  display: grid; place-items: center; background: #fff; color: #000; border-radius: 298.029px;
+  transform: rotate(-7.46deg); font-family: "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 25.8997px; font-weight: 510; line-height: 31px; letter-spacing: 1.35166px;
+}
+.onboarding-warning-balloon::after {
+  content: ""; position: absolute; left: 45%; top: 75%; width: 41.87px; height: 37.23px;
+  background: #fff; clip-path: polygon(0 0, 100% 0, 72% 100%); z-index: -1;
+}
+.onboarding-warning-balloon span { white-space: nowrap; }
 
 /* Extend past the fitted artboard's lower letterbox to the actual window floor. */
 .onboarding-friends-stage { position: absolute; inset: 0; bottom: calc((982px - 100dvh / var(--story-scale)) / 2); pointer-events: none; }
@@ -244,6 +264,7 @@
   .onboarding-hero { position: relative; inset: auto; flex: 1 0 240px; min-height: 240px; margin-top: 24px; overflow: hidden; }
   .onboarding-hero-motion { --story-rise-start: max(720px, 100%); }
   .onboarding-expression { left: calc(50% - 500px * var(--portrait-pet-scale)); top: calc(-340px * var(--portrait-pet-scale)); right: auto; bottom: auto; width: 1512px; height: 2000px; transform: scale(var(--portrait-pet-scale)); transform-origin: left top; }
+  .onboarding--angry .onboarding-expression { left: calc(50% - 390px * var(--portrait-pet-scale)); top: calc(-180px * var(--portrait-pet-scale)); }
   .onboarding-friends-stage { position: relative; inset: auto; flex: 1 0 240px; min-height: 240px; margin-top: 24px; overflow: hidden; }
   .onboarding-friends { left: 50%; bottom: 0; transform: translateX(-50%) scale(var(--friends-scale)); transform-origin: bottom center; }
   /* Keep the moving card row below the shared arrow line, including short windows. */

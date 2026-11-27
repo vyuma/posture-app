@@ -27,21 +27,23 @@ export function ResultCard({ session, celebrate = false, variant = 'result', onT
   useAppLanguage();
   const ref = useRef<HTMLElement>(null); const [error, setError] = useState(''); const [busy, setBusy] = useState(false);
   const item = session.acquiredCharacterId ? character(session.acquiredCharacterId) : null; const ratio = goodRatio(session);
-  const effect = getRarityEffect(item?.id);
+  // Translated display objects change on every render; acquisition identity does not.
+  const characterId = item?.id; const characterColors = item?.characterColor;
+  const effect = getRarityEffect(characterId);
   const comment = postureComment(session);
   const [entering, setEntering] = useState(celebrate && Boolean(item));
   const [tapped, setTapped] = useState(false);
   const tapFrame = useRef(0); const tapTimer = useRef(0);
   const tapController = useRef<AbortController | null>(null);
   useEffect(() => {
-    if (!celebrate || !item) return;
+    if (!celebrate || !characterId) return;
     // Defer one frame so Strict Mode's effect replay cancels the first launch.
     setEntering(true);
     let stopConfetti: (() => void) | undefined;
-    const frame = requestAnimationFrame(() => { stopConfetti = effect ? playRarityAcquisitionConfetti(effect) : playAcquisitionConfetti({ characterColors: item.characterColor }); });
+    const frame = requestAnimationFrame(() => { stopConfetti = effect ? playRarityAcquisitionConfetti(effect) : playAcquisitionConfetti({ characterColors }); });
     const timer = window.setTimeout(() => setEntering(false), effect ? rarityEffects[effect].acquisitionMs : 760);
     return () => { cancelAnimationFrame(frame); clearTimeout(timer); stopConfetti?.(); };
-  }, [celebrate, item, session.id, effect]);
+  }, [celebrate, characterId, characterColors, session.id, effect]);
   useEffect(() => {
     const controller = new AbortController();
     tapController.current = controller;

@@ -1,4 +1,5 @@
 import { t, useAppLanguage } from "../../i18n";
+import { LanguageMenu } from "../../i18n/LanguageMenu";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 
 import { Brand } from "../../work/Brand";
@@ -8,13 +9,12 @@ import { CharacterStars } from "../../characters/CharacterStars";
 import { StoryAnago } from "./StoryAnago";
 import { useStoryCardDrag } from "../useStoryCardDrag";
 
-type Scene = "splash" | "intro" | "happy" | "angry" | "friends" | "collection";
-const SCENES: Scene[] = ["splash", "intro", "happy", "angry", "friends", "collection"];
+type Scene = "splash" | "happy" | "angry" | "friends" | "collection";
+const SCENES: Scene[] = ["splash", "happy", "angry", "friends", "collection"];
 const COPY: Record<Exclude<Scene, "splash">, readonly [string, string]> = {
-  intro: ["はじめまして、ボクはピンアナゴ。", "キミの姿勢をチェックしにきたよ！"],
-  happy: ["ボクは姿勢のいいニンゲンが", "大好きなんだ！"],
-  angry: ["姿勢が悪いニンゲンには", "厳しくいかせてもらうよ！"],
-  friends: ["ピーン率（正しい姿勢を継続できた割合）が50％以上になると、", "新しい仲間をここに連れてくるよ！"],
+  happy: ["はじめまして、ボクはピンアナゴ。", "キミの姿勢をチェックしにきたよ！"],
+  angry: ["姿勢が悪くなったときは、", "どこを直せばいいか教えてあげるよ！"],
+  friends: ["正しい姿勢をキープできたら、", "新しい仲間をここに連れてくるよ！"],
   collection: ["毎日コツコツ続けていけば、", "いろんなピンアナゴが仲間になるよ！"],
 };
 const portrait = (id: string) => `/characters/anago/${id}/portrait.png`;
@@ -79,7 +79,7 @@ export function OnboardingStoryScreen({ onComplete }: { onComplete: () => void }
   useEffect(() => {
     const handleKey = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.repeat || event.altKey || event.ctrlKey || event.metaKey) return;
-      if (event.target instanceof HTMLElement && event.target.closest("input, textarea, select, [contenteditable=true], [data-story-gallery]")) return;
+      if (event.target instanceof HTMLElement && event.target.closest("input, textarea, select, [contenteditable=true], [data-story-gallery], .language-control")) return;
       // Let native buttons handle Space/Enter once, including the Back button.
       if (event.key === "ArrowRight" || (event.key === " " && !(event.target instanceof HTMLButtonElement))) {
         event.preventDefault();
@@ -98,6 +98,7 @@ export function OnboardingStoryScreen({ onComplete }: { onComplete: () => void }
       <div className="onboarding-bubbles" aria-hidden="true">
         {Array.from({ length: 11 }, (_, i) => <span key={i} />)}
       </div>
+      {scene === "splash" && <div className="onboarding-language"><LanguageMenu /></div>}
       {scene !== "splash" && <header className="onboarding-header"><Brand /></header>}
       <div className="onboarding-canvas">
         {scene === "splash" ? (
@@ -112,14 +113,14 @@ export function OnboardingStoryScreen({ onComplete }: { onComplete: () => void }
           <>
             <div className="onboarding-header-space" aria-hidden="true" />
             <div className="onboarding-copy" key={scene} role="status" aria-live="polite" aria-atomic="true">
-              <span className="onboarding-sr-only">{t("ストーリー")}{index} / 5。</span>
+              <span className="onboarding-sr-only">{t("ストーリー")}{index} / {SCENES.length - 1}。</span>
               {COPY[scene].map((line, i) => (
                 <p key={line} style={{ "--line-delay": `${140 + i * 110}ms` } as CSSProperties}>
-                  {scene === "friends" && i === 0 ? <>{t("ピーン率")}<small>{t("（正しい姿勢を継続できた割合）")}</small><span className="onboarding-copy-phrase">{t("が50％以上になると、")}</span></> : t(line)}
+                  {t(line)}
                 </p>
               ))}
             </div>
-            {index <= 3 && <Hero scene={scene} />}
+            {(scene === "happy" || scene === "angry") && <Hero scene={scene} />}
             {scene === "friends" && (
               <div className="onboarding-friends-stage" aria-hidden="true"><div className="onboarding-friends">
                 {FRIENDS.map((id, i) => <img key={id} src={portrait(id)} alt="" draggable={false} style={{ left: `${169 * i}px`, "--character-delay": `${[0, 100, 180, 260, 340, 420, 500][i]}ms` } as CSSProperties} />)}
@@ -140,10 +141,11 @@ export function OnboardingStoryScreen({ onComplete }: { onComplete: () => void }
 function Hero({ scene }: { scene: Scene }) {
   useAppLanguage();
   return (
-    <div className={`onboarding-hero${scene === "intro" ? " is-entering" : ""}`} aria-hidden="true">
+    <div className="onboarding-hero" aria-hidden="true">
       <div className="onboarding-hero-motion">
         <div className="onboarding-expression is-visible">
-          <StoryAnago pose={scene === "intro" ? "intro" : scene === "angry" ? "angry" : "happy"} />
+          <StoryAnago pose={scene === "angry" ? "intro" : "happy"} />
+          {scene === "angry" && <div className="onboarding-warning-speech"><div className="onboarding-warning-balloon"><span>{t("首が曲がってるよ！")}</span></div></div>}
         </div>
       </div>
     </div>
