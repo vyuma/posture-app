@@ -1,4 +1,5 @@
 import { REASONS, type Direction, type Reason } from '../posture/feedback';
+import { preferredFeedbackReason } from '../posture/feedbackPriority';
 import type { Session } from './model';
 
 const patterns: Record<Reason, string> = {
@@ -31,7 +32,7 @@ const suggestions: Record<Reason, string> = {
 
 /** Adjacent observed seconds only: gaps, pauses and new baselines cannot imply recovery. */
 export function summarizeFeedback(session: Pick<Session, 'samples'>) {
-  const reasons = Object.fromEntries(REASONS.map(reason => [reason, { observedMs: 0, activeMs: 0, directions: {} as Partial<Record<Direction, number>> }])) as Record<Reason, { observedMs: number; activeMs: number; directions: Partial<Record<Direction, number>> }>;
+  const reasons = Object.fromEntries(REASONS.map(reason => [reason, { observedMs: 0, activeMs: 0, commentMs: 0, directions: {} as Partial<Record<Direction, number>> }])) as Record<Reason, { observedMs: number; activeMs: number; commentMs: number; directions: Partial<Record<Direction, number>> }>;
   let observedMs = 0, goodMs = 0, badMs = 0, recovered = false, badRun = 0, goodRun = 0, pendingRecovery = false;
   for (let i = 1; i < session.samples.length; i++) {
     const a = session.samples[i - 1], b = session.samples[i], ms = b.focusMs - a.focusMs;
@@ -51,12 +52,17 @@ export function summarizeFeedback(session: Pick<Session, 'samples'>) {
       if (a.state === 'bad' && b.state === 'bad') { badMs += ms; badRun += ms; if (badRun >= 3000) pendingRecovery = true; }
       if (a.state === 'good' && b.state === 'bad') { badRun = 0; pendingRecovery = false; }
     }
+    const [ac, bc] = [a.feedback, b.feedback].map(feedback => {
+      const active = REASONS.filter(reason => Number.isFinite(feedback.evidence[reason]) && feedback.evidence[reason]! >= 1);
+      return active.map(reason => preferredFeedbackReason(reason, active, feedback.directions));
+    });
     for (const reason of REASONS) {
       const av = a.feedback.evidence[reason], bv = b.feedback.evidence[reason], stats = reasons[reason];
       if (av === null || bv === null || !Number.isFinite(av) || !Number.isFinite(bv)) continue;
       stats.observedMs += ms;
       if (a.state !== 'bad' || b.state !== 'bad' || av < 1 || bv < 1) continue;
       stats.activeMs += ms;
+      if (ac.includes(reason) && bc.includes(reason)) stats.commentMs += ms;
       const direction = a.feedback.directions?.[reason];
       if (direction && direction === b.feedback.directions?.[reason]) stats.directions[direction] = (stats.directions[direction] ?? 0) + ms;
     }
@@ -70,8 +76,8 @@ export function postureComment(session: Session): [string, string] | null {
   if (summary.observedMs < 10000 || summary.observedMs < session.focusMs * .5) return [
     '今日は姿勢を確認できた時間が短かったね。', '明日は顔と肩が映る位置で、また測ってみよう！',
   ];
-  const reason = REASONS.filter(r => summary.reasons[r].activeMs >= 3000 && summary.reasons[r].activeMs >= summary.reasons[r].observedMs * .1)
-    .sort((a, b) => summary.reasons[b].activeMs - summary.reasons[a].activeMs)[0];
+  const reason = REASONS.filter(r => summary.reasons[r].commentMs >= 3000 && summary.reasons[r].commentMs >= summary.reasons[r].observedMs * .1)
+    .sort((a, b) => summary.reasons[b].commentMs - summary.reasons[a].commentMs)[0];
   if (reason) {
     const stats = summary.reasons[reason];
     const direction = (Object.keys(stats.directions) as Direction[]).find(d => stats.directions[d]! >= stats.activeMs * .6);
