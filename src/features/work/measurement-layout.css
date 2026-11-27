@@ -29,7 +29,7 @@
 .work-app .work-measuring-panel .work-switch-row input:checked::before{translate:21.94px 0}
 .work-app .work-measure-footer{display:flex;gap:23.26px;margin:55px 19.42px 0 0;transform:none}
 .work-app .work-measure-footer .work-button{width:258.37px;min-height:63.73px;height:63.73px;padding:12px 20px;font-size:24px;line-height:29px;font-weight:700}
-.work-app .work-measure-footer .white{display:inline-flex;align-items:center;justify-content:center;gap:13px;background:transparent;border:2.5px solid #13a2d7;color:#13a2d7;filter:drop-shadow(1px 1px 4px #00000040)}
+.work-app .work-measure-footer .white{display:inline-flex;align-items:center;justify-content:center;gap:13px;background:#fff;border:2.5px solid #13a2d7;color:#13a2d7;filter:drop-shadow(1px 1px 4px #00000040)}
 .work-app .work-measure-footer .blue{background:#13a2d7;box-shadow:0 1px 1px #00000040}
 /* Registration 4024:3723: 1160px panel, 924px camera; the existing progress clock is unchanged. */
 .work-app .work-measure-screen:is(.stage-calibrate,.stage-ready) .work-registration-panel{min-height:753px;max-width:1160px;padding:54px 118px 67px;border-radius:32px;background:#fff;box-shadow:0 0 8.52px #00000026}
