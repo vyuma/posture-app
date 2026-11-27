@@ -66,7 +66,7 @@ struct PetGeometry {
     static func make(_ state: PetState, _ now: Double, _ height: Double, _ reduced: Bool, _ availableWidth: Double = .infinity,
                      text: String? = nil, measure: (String, Double, Double) -> Double = speechTextWidth) -> Self {
         let pose = state.pose
-        let growth = !reduced && pose == "bad" ? clamp((now - (state.badSince ?? now) - 2000)/3000) : 0
+        let growth = !reduced && pose == "bad" ? clamp((now - (state.badSince ?? now))/3000) : 0
         let g = min(growth, clamp((height - 40 - 300)/253.11), clamp((availableWidth - 276)/144))
         let scale = pose == "rest" ? 27.3894/226 : pose == "paused" ? 35.9935/226 : (34.5135 + 40.7261*g)/226
         var left = pose == "rest" ? 2 : pose == "bad" ? -1.32 - 36.82*g : 27.4

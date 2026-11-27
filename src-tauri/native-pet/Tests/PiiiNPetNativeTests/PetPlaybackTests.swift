@@ -106,7 +106,7 @@ final class PetPlaybackTests: XCTestCase {
             try widget.update(json: JSONSerialization.data(withJSONObject: [
                 "sessionId": "playback-test", "remainingMs": 60_000, "durationMs": 120_000,
                 "phase": phase, "paused": false, "bad": bad,
-                "badSince": now-4_000, "cycle": 1, "cycles": 2, "feedbackVersion": 1
+                "badSince": now-1_500, "cycle": 1, "cycles": 2, "feedbackVersion": 1
             ]))
             widget.layoutSubtreeIfNeeded()
         }
