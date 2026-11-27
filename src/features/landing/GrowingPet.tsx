@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { LandingPet, landingPetGeometry } from './LandingPet';
 import { useReplayScene } from './useReplayScene';
+import { t, useAppLanguage } from '../i18n';
 
-export function GrowingPet() {
+export function GrowingPet({ speech }: { speech: string }) {
+  useAppLanguage();
   const host = useRef<HTMLDivElement>(null);
   const scene = useReplayScene(host, .85);
   const elapsed = useRef(0);
@@ -31,8 +33,9 @@ export function GrowingPet() {
   // Figma's final 85.2514px body stroke and unchanged 178×65 timer at (123,428).
   const finalGrowth = (85.2514 - 34.5135) / (130.754 - 34.5135);
   const finalHeight = 300 + finalGrowth * 517;
-  const geometry = landingPetGeometry(pose, (scene.reduced ? 1 : growth) * finalGrowth, finalHeight);
+  const warning = { id: 'lp-growing-warning', code: 'general' as const, text: speech, startedAt: 0, endsAt: Number.MAX_SAFE_INTEGER, whileBad: true as const };
+  const geometry = landingPetGeometry(pose, (scene.reduced ? 1 : growth) * finalGrowth, finalHeight, { ...warning, text: t(speech) });
   return <div ref={host} className="lp-example-pet-art lp-growing-pet" data-growth={!scene.entered ? 'waiting' : growth >= 1 || scene.reduced ? 'complete' : scene.playing ? 'growing' : 'paused'} aria-hidden="true">
-    <LandingPet pose={pose} geometry={geometry} playing={scene.playing} reduced={scene.reduced} />
+    <LandingPet pose={pose} geometry={geometry} speech={warning} playing={scene.playing} reduced />
   </div>;
 }

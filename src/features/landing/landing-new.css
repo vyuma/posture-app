@@ -25,11 +25,9 @@
 .lp6-mechanism-grid { margin-top: calc(var(--lp6-unit) * 48); }
 .lp6-mechanism--straight { top: calc(var(--lp6-unit) * -8); }
 .lp6-mechanism--straight h3 { font-size: calc(var(--lp6-unit) * 20); line-height: 2; }
-.lp6-mechanism--straight > strong { top: calc(var(--lp6-unit) * 520); padding-left: calc(var(--lp6-unit) * 27); color: #f70000; }
-/* Original vector assets include their shadow bounds; origins below align the timer
-   surfaces to the Figma frames rather than centering the SVG export boxes. */
-.lp-example-pet-art { position: absolute; left: calc(var(--lp6-unit) * 72); top: calc(var(--lp6-unit) * 221.487); width: calc(var(--lp6-unit) * 186); height: auto; }
-.lp6-mechanism--normal .lp-example-pet-art { top: calc(var(--lp6-unit) * 227.187); }
+.lp6-mechanism--straight > strong { top: calc(var(--lp6-unit) * 520); padding-left: calc(var(--lp6-unit) * 27); color: #f78000; }
+/* Capture padding preserves speech/shadows and aligns the visible 178×65 timers. */
+.lp-example-pet-art { position: absolute; left: calc(var(--lp6-unit) * 52); top: calc(var(--lp6-unit) * 194.487); width: calc(var(--lp6-unit) * 214); height: auto; }
 .lp6-mechanism--straight .lp-example-pet-art { top: 0; left: 0; width: 100%; }
 /* Product widgets retain their own geometry inside scaled LP scenes. */
 .lp-desktop-motion { position:absolute; bottom:auto; width:97px; height:35.422px; overflow:visible; }
@@ -89,10 +87,8 @@
 .lp-how .lp-how-step:nth-child(2) p { margin-left: calc(var(--how-unit) * 6); }
 .lp-how .lp-how-devices--2 { margin-left: calc(var(--how-unit) * -1); }
 .lp-how .lp-how-devices, .lp-how .lp-how-step:first-child .lp-how-devices { left: calc(var(--how-unit) * -18); width: calc(var(--how-unit) * 393.59); height: calc(var(--how-unit) * 251); aspect-ratio: 393.59 / 251; overflow: hidden; }
-.lp-how .lp-how-devices > .lp-how-screen-art, .lp-how .lp-how-step:first-child .lp-how-devices > .lp-how-screen-art { position: absolute; inset: 0 auto auto 0; width: 325.38022%; height: 100%; max-width: none; }
-.lp-how .lp-how-devices--2 > .lp-how-screen-art { left: -110.01296%; }
-.lp-how .lp-how-devices--3 > .lp-how-screen-art { left: -225.36142%; }
-.lp-how .lp-how-devices > .lp-how-laptop-shell { position: absolute; inset: 0; width: 100%; height: 100%; }
+.lp-how .lp-how-devices > .lp-how-laptop-shell, .lp-how .lp-how-step:first-child .lp-how-devices > .lp-how-laptop-shell { position: absolute; inset: 0; width: 100%; height: 100%; }
+.lp-how .lp-how-devices > .lp-how-current-screen { position: absolute; left: 11.54%; top: 11.95%; width: 76.5%; height: 76.17%; object-fit: fill; }
 .lp-final-cta { height: calc(var(--lp6-unit) * 707); padding-top: calc(var(--lp6-unit) * 121); }
 .lp-final-cta h2 { max-width: none; line-height: calc(85 / 48); }
 .lp-final-cta-buttons { margin-top: calc(var(--lp6-unit) * 56); }
