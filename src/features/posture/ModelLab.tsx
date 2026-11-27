@@ -101,7 +101,6 @@ export default function ModelLab() {
   const engineRef = useRef<PostureEngineState>(createPostureEngineState());
   const judgmentRef = useRef<JudgmentSettings>({ difficulty: "normal", dualMonitor: false });
   const historyRef = useRef<{ raw: (number | null)[]; ema: number[] }>({ raw: [], ema: [] });
-  const logRef = useRef<string[]>([]);
   const [frame, setFrame] = useState<Frame | null>(null);
   const [status, setStatus] = useState("カメラとモデルを初期化しています…");
   const [difficulty, setDifficulty] = useState<JudgmentSettings["difficulty"]>("normal");
@@ -166,7 +165,6 @@ export default function ModelLab() {
               if (now - lastUi >= 80) {
                 lastUi = now;
                 pushHistory(historyRef.current, state, computeBreakdown(result, state, reliability, judgmentScale(judgmentRef.current)).raw);
-                pushLog(logRef.current, result, state);
                 setFrame({ result, state, reliability, landmarks: lm, fps });
               }
             }
@@ -194,7 +192,6 @@ export default function ModelLab() {
   const recalibrate = () => {
     engineRef.current = createPostureEngineState();
     historyRef.current = { raw: [], ema: [] };
-    logRef.current = [];
     setFrame(null);
   };
 
@@ -255,7 +252,26 @@ export default function ModelLab() {
             )}
           </div>
           <Pipeline calibrating={calibrating} posture={calibrating ? "calibrating" : posture} />
-          <pre className="ml-log">{logRef.current.join("\n")}</pre>
+          <Panel n={5} title="判定 (ヒステリシス)" sub={`m = ${scale},  現在のしきい値 ${fmt(badT, 2)} (bad ${POSTURE_SPEC.badDurationMs / 1000}s / good < ${fmt(goodT, 2)} ${POSTURE_SPEC.recoverDurationMs / 1000}s)  ※頭の左右傾き・複数モニター判定は未入力`}>
+            <div className={`ml-verdict ${calibrating ? "hold" : isBad ? "bad" : isWarn ? "warn" : posture}`}>
+              <span>{calibrating ? "CALIBRATING" : isBad ? "BAD" : isWarn ? "WARNING" : posture.toUpperCase()}</span>
+              {calibrating ? (
+                <div className="ml-calib">
+                  <div className="ml-bar"><i style={{ width: `${warmupProgress * 100}%` }} /></div>
+                  <span className="mono">サンプル収集中 {fmt(state ? state.warmupValidMs / 1000 : 0, 1)} / {POSTURE_SPEC.warmupMs / 1000}s · n = {state?.warmupSamples.neckAngleDeg.length ?? 0}</span>
+                  <span className="dim">良い姿勢のまま正面を向いてください</span>
+                </div>
+              ) : (
+                <div className="ml-hold">
+                  <i style={{ width: `${badProgress * 100}%` }} />
+                  <em className="mono">bad {Math.round(badProgress * 100)}% / {POSTURE_SPEC.badDurationMs / 1000}s</em>
+                </div>
+              )}
+              <small className="mono">
+                badAccum {Math.round(state?.badAccumMs ?? 0)}ms · goodAccum {Math.round(state?.goodAccumMs ?? 0)}ms · tracking {result?.trackingStatus ?? "—"}
+              </small>
+            </div>
+          </Panel>
         </section>
 
         <section className="ml-panels">
@@ -274,31 +290,6 @@ export default function ModelLab() {
                 ))}
               </tbody>
             </table>
-          </Panel>
-
-          <Panel n={2} title="基準分布 (median / MAD)" sub="scaleₖ = max(MADₖ, floorₖ)">
-            {calibrating ? (
-              <div className="ml-calib">
-                <div className="ml-bar"><i style={{ width: `${warmupProgress * 100}%` }} /></div>
-                <span className="mono">サンプル収集中 {fmt(state ? state.warmupValidMs / 1000 : 0, 1)} / {POSTURE_SPEC.warmupMs / 1000}s · n = {state?.warmupSamples.neckAngleDeg.length ?? 0}</span>
-                <span className="dim">良い姿勢のまま正面を向いてください</span>
-              </div>
-            ) : (
-              <table className="ml-table">
-                <thead><tr><th /><th className="r">μ̃ (median)</th><th className="r">MAD</th><th className="r">scale</th><th className="r">n</th></tr></thead>
-                <tbody>
-                  {FEATURE_KEYS.map((key) => (
-                    <tr key={key}>
-                      <td className="sym">{FEATURE_META[key].sym}</td>
-                      <td className="r mono">{fmt(baseline![key].median)}</td>
-                      <td className="r mono">{fmt(baseline![key].mad)}</td>
-                      <td className="r mono">{fmt(baseline![key].scale)}</td>
-                      <td className="r mono dim">{baseline![key].sampleCount}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
           </Panel>
 
           <Panel n={3} title="正規化偏差 𝐳" sub={`z₁…₅ = |xₖ − μ̃ₖ| / scaleₖ, z₆ = max(0, x₆ − μ̃₆) / scale₆, clip[0, ${POSTURE_SPEC.scoreZClamp}] ┃ = 統合スコアのしきい値（参考）`}>
@@ -330,21 +321,6 @@ export default function ModelLab() {
               <div className="big">ŝ = <em>{fmt(ema, 3)}</em></div>
             </div>
             <Spark raw={historyRef.current.raw} ema={historyRef.current.ema} bad={badT} good={goodT} />
-          </Panel>
-
-          <Panel n={5} title="判定 (ヒステリシス)" sub={`m = ${scale},  現在のしきい値 ${fmt(badT, 2)} (bad ${POSTURE_SPEC.badDurationMs / 1000}s / good < ${fmt(goodT, 2)} ${POSTURE_SPEC.recoverDurationMs / 1000}s)  ※頭の左右傾き・複数モニター判定は未入力`}>
-            <div className={`ml-verdict ${calibrating ? "hold" : isBad ? "bad" : isWarn ? "warn" : posture}`}>
-              <span>{calibrating ? "CALIBRATING" : isBad ? "BAD" : isWarn ? "WARNING" : posture.toUpperCase()}</span>
-              {!calibrating && (
-                <div className="ml-hold">
-                  <i style={{ width: `${badProgress * 100}%` }} />
-                  <em className="mono">bad {Math.round(badProgress * 100)}% / {POSTURE_SPEC.badDurationMs / 1000}s</em>
-                </div>
-              )}
-              <small className="mono">
-                badAccum {Math.round(state?.badAccumMs ?? 0)}ms · goodAccum {Math.round(state?.goodAccumMs ?? 0)}ms · tracking {result?.trackingStatus ?? "—"}
-              </small>
-            </div>
           </Panel>
         </section>
       </div>
@@ -399,18 +375,6 @@ function pushHistory(h: { raw: (number | null)[]; ema: number[] }, state: Postur
   h.ema.push(state.emaScore);
   h.raw.push(raw);
   if (h.ema.length > HISTORY) { h.ema.shift(); h.raw.shift(); }
-}
-
-function pushLog(log: string[], result: PostureFrameResult, state: PostureEngineState) {
-  const t = (performance.now() / 1000).toFixed(2).padStart(8);
-  const f = result.features;
-  const line = !f
-    ? `[${t}] extract  → quality=NG  (landmarks insufficient)`
-    : !state.baseline
-      ? `[${t}] warmup   → x=[${FEATURE_KEYS.map((k) => fmt(f[k], 2)).join(", ")}]`
-      : `[${t}] score    → ŝ=${fmt(state.emaScore, 3)}  view=${result.eval.view}  state=${result.postureState}`;
-  log.push(line);
-  if (log.length > 9) log.shift();
 }
 
 const SKELETON: [number, number][] = [

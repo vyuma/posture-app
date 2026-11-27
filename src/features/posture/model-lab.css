@@ -57,8 +57,6 @@
 .ml-pipe .wait { color: var(--dim); }
 @keyframes ml-pulse { 50% { box-shadow: 0 0 0 3px rgba(124, 242, 196, .12); } }
 
-.ml-log { margin: 0; min-height: 150px; padding: 10px 12px; background: #04070c; border: 1px solid var(--line); border-radius: 10px; color: #8fd9b6; font: 12px/1.5 ui-monospace, Menlo, monospace; white-space: pre; overflow: auto; }
-
 .ml-panels { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .ml-panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; overflow-x: auto; }
 .ml-ph { display: flex; gap: 10px; align-items: baseline; margin-bottom: 8px; }
@@ -96,7 +94,7 @@
 .ml-spark .th-good { stroke: var(--amber); }
 
 .ml-verdict { display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 10px; border: 1px solid var(--line); }
-.ml-verdict span { font: 700 26px ui-monospace, Menlo, monospace; letter-spacing: .1em; }
+.ml-verdict > span { font: 700 26px ui-monospace, Menlo, monospace; letter-spacing: .1em; }
 .ml-verdict small { color: var(--dim); font-size: 11.5px; }
 .ml-verdict.good span { color: var(--mint); }
 .ml-verdict.bad { border-color: rgba(255, 122, 168, .5); background: rgba(255, 122, 168, .06); }
@@ -131,7 +129,6 @@
 @keyframes ml-blink { 50% { opacity: .55; } }
 
 .ml-pipe .alarm { color: #fff; background: var(--bad); border-color: var(--bad); font-weight: 700; animation: ml-blink .9s steps(2, start) infinite; }
-.is-bad .ml-log { color: #ff8fa3; border-color: rgba(255, 77, 109, .5); }
 .is-bad .ml-panel { border-color: rgba(255, 77, 109, .35); }
 .is-bad .ml-eq .big em { color: var(--bad); }
 
@@ -150,4 +147,29 @@
 
 @media (prefers-reduced-motion: reduce) {
   .is-bad .ml-stage, .is-bad .ml-alert, .ml-pipe .alarm, .ml-verdict.bad span, .is-bad .ml-scan { animation: none; }
+}
+
+@media (min-width: 1001px) and (max-height: 800px) {
+  .ml { padding: 8px 16px; }
+  .ml-head { gap: 12px; margin-bottom: 8px; }
+  .ml-head h1 { font-size: 20px; line-height: 1.2; }
+  .ml-head p { font-size: 11px; line-height: 1.2; }
+  .ml-controls { gap: 8px; }
+  .ml-dim { font-size: 11px; }
+  .ml-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; }
+  .ml-cam, .ml-panels { gap: 8px; }
+  .ml-panel { padding: 6px 10px; }
+  .ml-ph { gap: 8px; margin-bottom: 6px; }
+  .ml-ph h2 { font-size: 14px; line-height: 1.2; }
+  .ml-ph p { font-size: 10.5px; line-height: 1.25; }
+  .ml-table { font-size: 11.5px; line-height: 1.25; }
+  .ml-table th, .ml-table td { padding: 2px 4px; }
+  .ml-table .f { font-size: 10.5px; }
+  .ml-zs { gap: 2px; }
+  .ml-z { font-size: 11.5px; line-height: 1.25; }
+  .ml-eq { font-size: 11.5px; line-height: 1.25; }
+  .ml-eq .big { font-size: 16px; margin-top: 2px; }
+  .ml-spark { display: block; height: 56px; margin-top: 6px; }
+  .ml-verdict { padding: 8px; }
+  .ml-calib { gap: 4px; }
 }
