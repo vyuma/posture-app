@@ -3,12 +3,40 @@ import { IDBFactory } from 'fake-indexeddb';
 import { openBrowserTimelapse } from '../src/features/timelapse/storage';
 import { openVideoFrames } from '../src/features/timelapse/videoFrames';
 import { recordingMime } from '../src/features/timelapse/recorder';
+import { createComposition } from '../src/features/timelapse/composition';
+import { DEFAULT_TIMELAPSE, type Clip } from '../src/features/timelapse/model';
 
 function replace(name: string, value: unknown) {
   const before = Object.getOwnPropertyDescriptor(globalThis, name);
   Object.defineProperty(globalThis, name, { value, configurable: true });
   return () => { if (before) Object.defineProperty(globalThis, name, before); else Reflect.deleteProperty(globalThis, name); };
 }
+
+test('scene clips the actual video bounds without painting letterbox bands', async () => {
+  const restore = replace('Image', class {
+    naturalWidth = 636; naturalHeight = 1022;
+    async decode() {}
+  });
+  try {
+    for (const [width, height] of [[1280, 720], [640, 480], [720, 1280]]) {
+      let rounded: number[] = [], clipped: number[] = [], camera: number[] = [];
+      const fills: number[][] = [];
+      const context = new Proxy({
+        roundRect: (...rect: number[]) => { rounded = rect.slice(0, 4); },
+        clip: () => { clipped = rounded; },
+        fillRect: (...rect: number[]) => fills.push(rect),
+        createLinearGradient: () => ({ addColorStop() {} }),
+      }, { get: (target, key) => Reflect.get(target, key) ?? (() => {}) }) as unknown as CanvasRenderingContext2D;
+      const composition = await createComposition({ width, height } as Clip, DEFAULT_TIMELAPSE, null, true);
+      try {
+        composition.paint(context, 1512, 982, 0, (_context, ...rect) => { camera = rect; });
+        expect(clipped).toEqual(camera);
+        expect(fills.slice(1)).toEqual([camera]);
+        expect(camera[2] / camera[3]).toBeCloseTo(width / height);
+      } finally { composition.dispose(); }
+    }
+  } finally { restore(); }
+});
 
 test('prepared browser sharing calls the API inside the new gesture with exactly one file', async () => {
   let gesture = false, calls = 0, released = 0, passed: ShareData | undefined;
