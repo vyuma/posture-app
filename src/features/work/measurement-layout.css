@@ -7,7 +7,7 @@
 .work-app .work-measuring-panel .work-measure-heading{display:flex;flex-wrap:nowrap;gap:38px;min-height:46px;margin:0 -13px 40px 0;align-items:center}
 .work-app .work-measuring-panel .work-measure-heading h1{font-size:36px;font-weight:700;line-height:43px;color:#13a2d7}
 .work-app .work-measuring-panel .work-measure-heading p{font-size:20px;line-height:24px;font-weight:700;color:#666;flex:1}
-.work-app .work-measuring-panel .work-measure-heading>.work-button{width:163px;height:46px;min-height:46px;padding:0 12px;margin:0 0 0 auto;border:1px solid #f5f5f5;border-radius:57.12px;box-shadow:0 2px 2.5px #00000040;font-size:13.7091px;line-height:16px;color:#13a2d7}
+.work-app .work-measuring-panel .work-measure-heading>.work-button{width:163px;min-width:max-content;height:46px;min-height:46px;padding:0 12px;gap:6px;white-space:nowrap;margin:0 0 0 auto;border:1px solid #f5f5f5;border-radius:57.12px;box-shadow:0 2px 2.5px #00000040;font-size:13.7091px;line-height:16px;color:#13a2d7}
 .work-app .work-measure-screen.is-rest .work-measure-heading h1{color:#f78000}
 .work-app .work-measure-screen.is-rest .work-measure-heading{column-gap:34px}
 .work-app .work-measuring-grid{display:grid;grid-template-columns:minmax(0,768fr) minmax(0,383.42fr);gap:42px;min-height:452px}
@@ -133,3 +133,9 @@
 
 /* Figma 4403:1307: trimmed 15×20 artwork inside its rotated 21×24 layout slot. */
 .work-resume-icon{display:block;flex:none;width:21px;height:24px}
+.work-pause-icon{display:block;flex:none;width:14.19px;height:17.73px}
+.work-recalibrate-icon{display:block;flex:none;width:18px;height:18px}
+@media(max-width:359px){
+ .work-app .work-measure-footer .work-button{padding-inline:6px;white-space:nowrap}
+ .work-app .work-measure-footer .white{gap:8px}
+}

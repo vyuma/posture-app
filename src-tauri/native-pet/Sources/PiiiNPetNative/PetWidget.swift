@@ -36,11 +36,13 @@ struct PetGeometry {
     subscript(_ index: Int) -> Double { values[index] }
     static func make(_ state: PetState, _ now: Double, _ height: Double, _ reduced: Bool) -> Self {
         let pose = state.pose
-        let growth = !reduced && pose == "bad" ? clamp((now - (state.badSince ?? now))/5000) : 0
-        let g = min(growth, clamp((height - 40 - 300)/517))
-        let scale = pose == "rest" ? 27.3894/226 : pose == "paused" ? 35.9935/226 : (34.5135 + 96.2405*g)/226
-        var left = pose == "rest" ? 2 : pose == "bad" ? 17.21 - 47.62*g : 27.4
-        var width = pose == "rest" ? 124.55 : pose == "bad" ? 129.04 + 38.35*g : 110
+        let growth = !reduced && pose == "bad" ? clamp((now - (state.badSince ?? now) - 2000)/3000) : 0
+        let g = min(growth, clamp((height - 40 - 300)/253.11))
+        let scale = pose == "rest" ? 27.3894/226 : pose == "paused" ? 35.9935/226 : (34.5135 + 40.7261*g)/226
+        var left = pose == "rest" ? 2 : pose == "bad" ? -1.32 - 36.82*g : 27.4
+        var width = pose == "rest" ? 124.55 : pose == "bad" ? 163.13 + 80.46*g : 110
+        let bubbleHeight = 35 + 18.26*g, bubbleAngle = 7.71 + 7.32*g
+        let bubbleOffsetY = pose == "bad" ? (width*sin(bubbleAngle * .pi/180) + bubbleHeight*cos(bubbleAngle * .pi/180) - bubbleHeight)/2 : 0
         let font = 13.2498 + 6.9133*g
         let tracking = pose == "rest" ? -0.308514 : 0.691486 + 0.360794*g
         if state.feedbackVersion == 1 {
@@ -51,9 +53,9 @@ struct PetGeometry {
             let next = max(width, textWidth*font + max(0,count-1)*tracking + 24)
             left -= (next - width)/2; width = next
         }
-        return Self(values: [g, 860*scale, 1280*scale, 88-650*scale, (pose == "paused" ? -149 : -145)-496.4*g,
-                             pose == "rest" ? -60 : 5-78*g, -166-463*g, pose == "rest" ? 238 : 150+141*g, 191.72+447.28*g,
-                             left, pose == "rest" ? -160 : -192-517*g, width, 35+18.26*g, 7.71+7.32*g, font, 16+8*g, tracking])
+        return Self(values: [g, 860*scale, 1280*scale, 88-650*scale, (pose == "paused" ? -149 : -145)-200.6*g,
+                             pose == "rest" ? -60 : 5-97*g, -166-226*g, pose == "rest" ? 238 : 150+177*g, 191.72+226.23*g,
+                             left, pose == "rest" ? -160 : (pose == "bad" ? -195.89 : -192)-253.11*g+bubbleOffsetY, width, bubbleHeight, bubbleAngle, font, 16+8*g, tracking])
     }
     func between(_ other: Self, _ t: Double) -> Self { Self(values: zip(values, other.values).map { $0 + ($1-$0)*t }) }
 }
@@ -91,11 +93,13 @@ final class PetButton: NSButton {
 /// Public AppKit renderer for the Store channel; the direct/web widget is unchanged.
 public final class PetWidget: NSView {
     public override var isFlipped: Bool { true }
+    public override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
     private let rig: PetRig
     private let shadowView = FlippedView(), maskView = FlippedView(), shakeView = FlippedView()
     private let artwork = FlippedView(), speechView = SpeechView(), bar = BarView()
     private let timeButton = PetButton(), toggleButton = PetButton(), stopButton = PetButton()
     private var state: PetState?
+    private var mouseDownPoint: NSPoint?
     private var timer: Timer?
     private var geometry: PetGeometry?, geometryStart: PetGeometry?, target: PetGeometry?
     private var geometryAt = 0.0, geometryUpdateAt = 0.0, poseAt = 0.0, compactAt: Double?
@@ -138,6 +142,7 @@ public final class PetWidget: NSView {
         let now = Date().timeIntervalSince1970*1000
         let fresh = next?.sessionId != state?.sessionId
         let changed = next?.pose != state?.pose
+        if fresh || next == nil { mouseDownPoint = nil }
         state = next
         guard let next else { timer?.invalidate(); timer = nil; rig.animationView.pause(); isHidden = true; speechView.reset(); geometry = nil; return }
         isHidden = false
@@ -195,8 +200,8 @@ public final class PetWidget: NSView {
         if shadowGrowth != g[0] {
             shadowGrowth = g[0]
             let characterShadow = NSShadow(); characterShadow.shadowColor = color(0, 0.35)
-            characterShadow.shadowOffset = CGSize(width: 3.4049+g[0]*9.4946,height: -(3.4049+g[0]*9.4946))
-            characterShadow.shadowBlurRadius = 6.8098+g[0]*18.9891
+            characterShadow.shadowOffset = CGSize(width: 3.4049+g[0]*4.01779,height: -(3.4049+g[0]*4.01779))
+            characterShadow.shadowBlurRadius = 6.8098+g[0]*8.0356
             shadowView.shadow = characterShadow
         }
         let shake = !reduced && state.pose == "bad" ? angryShake((now-poseAt)/680) : (0.0,0.0)
@@ -241,10 +246,23 @@ public final class PetWidget: NSView {
     public override func hitTest(_ point: NSPoint) -> NSView? {
         let local = convert(point,from:superview)
         for button in [timeButton,toggleButton,stopButton] where button.frame.contains(local) { return button }
-        if shadowView.frame.contains(local) || speechView.bubbleHit.offsetBy(dx:speechView.frame.minX,dy:speechView.frame.minY).contains(local) { return self }
+        if NSBezierPath(roundedRect: bar.frame, xRadius: 32.5, yRadius: 32.5).contains(local) || shadowView.frame.contains(local) || speechView.bubbleHit.offsetBy(dx:speechView.frame.minX,dy:speechView.frame.minY).contains(local) { return self }
         return nil
     }
-    public override func mouseDown(with event: NSEvent) { send("drag") }
+    public override func mouseDown(with event: NSEvent) { mouseDownPoint = event.locationInWindow }
+    public override func mouseDragged(with event: NSEvent) {
+        guard let start = mouseDownPoint,
+              hypot(event.locationInWindow.x-start.x, event.locationInWindow.y-start.y) >= 4 else { return }
+        mouseDownPoint = nil
+        send("drag")
+    }
+    public override func mouseUp(with event: NSEvent) {
+        defer { mouseDownPoint = nil }
+        guard let start = mouseDownPoint,
+              hypot(event.locationInWindow.x-start.x, event.locationInWindow.y-start.y) < 4,
+              hitTest(superview?.convert(event.locationInWindow, from: nil) ?? event.locationInWindow) === self else { return }
+        send("open")
+    }
 }
 func angryShake(_ cycles: Double) -> (Double,Double) {
     let time = cycles - floor(cycles)

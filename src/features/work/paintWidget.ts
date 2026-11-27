@@ -31,8 +31,8 @@ export function paintWidget(context: CanvasRenderingContext2D, image: HTMLCanvas
   artwork.drawImage(image, g.rigLeft, g.rigTop, g.rigWidth, g.rigHeight); artwork.restore();
   context.save();
   // Canvas blur is twice the CSS drop-shadow standard deviation, in device pixels.
-  context.shadowColor = '#00000059'; context.shadowBlur = (6.8098 + 18.9891 * g.growth) * 2 * pixelScale;
-  context.shadowOffsetX = context.shadowOffsetY = (3.4049 + 9.4946 * g.growth) * pixelScale;
+  context.shadowColor = '#00000059'; context.shadowBlur = (6.8098 + 8.0356 * g.growth) * 2 * pixelScale;
+  context.shadowOffsetX = context.shadowOffsetY = (3.4049 + 4.01779 * g.growth) * pixelScale;
   context.drawImage(surface, 0, 0, width, height, maskLeft, g.maskTop, width / pixelScale, height / pixelScale); context.restore();
   if (motion.visible) {
   context.save(); context.translate(g.bubbleLeft + g.bubbleWidth / 2, g.bubbleTop + g.bubbleHeight / 2); context.rotate(g.bubbleAngle * Math.PI / 180);

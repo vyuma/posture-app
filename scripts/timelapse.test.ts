@@ -14,23 +14,24 @@ describe('timelapse time and historical pet', () => {
     }
     expect(recordingAllowed(null, true)).toBe(false);
   });
-  test('seek reconstructs 30fps transition, timer and cycle from the same local time', () => {
+  test('seek reconstructs neutral warnings, timer and cycle from the same local time', () => {
     const initial = petEvent(0, widget);
     const bad = petEvent(2, { ...widget, bad: true, badSince: Date.now(), remainingMs: 58_000 }, initial);
     const resumed = petEvent(4, { ...widget, cycle: 2, remainingMs: 60_000 }, bad);
     const events = [initial, bad, resumed];
-    expect(replayPet(events, 2.5)?.frame).toBe(198);
+    expect(replayPet(events, 2.5)?.frame).toBe(0);
     expect(replayPet(events, 2.5)?.remainingMs).toBe(57_500);
     expect(replayPet(events, 5)?.remainingMs).toBe(59_000);
     expect(replayPet(events, 5)?.cycle).toBe(2);
-    expect(replayPet(events, 2.5)?.frame).toBe(198); // Seeking backward doesn't accumulate state.
+    expect(replayPet(events, 2.5)?.frame).toBe(0); // Seeking backward doesn't accumulate state.
+    expect(replayPet(events.map(event => ({...event, widgetVersion: 2 as const})), 2.5)?.frame).toBe(198);
     expect(eventAt(events, -1)).toBeUndefined();
   });
   test('same-time boundary uses resumed interval; reduced motion preserves the recorded timer', () => {
     const first = petEvent(0, widget);
     const next = petEvent(0, { ...widget, cycle: 2, bad: true, badSince: Date.now() }, first, true, true);
     expect(eventAt([first, next], 0)).toBe(next);
-    expect(replayPet([first, next], 5)).toMatchObject({ frame: 1, growth: 0, angle: 0, cycle: 2, remainingMs: 55_000 });
+    expect(replayPet([first, next], 5)).toMatchObject({ frame: 0, growth: 0, angle: 0, cycle: 2, remainingMs: 55_000 });
   });
   test('free placement stays within the movie and rejects non-finite coordinates', () => {
     expect(clampRect({ x: -1, y: 2, width: 4, height: -2 })).toEqual({ x: 0, y: .88, width: 1, height: .12 });

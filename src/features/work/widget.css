@@ -3,7 +3,7 @@
 .work-widget.is-native{right:calc((100vw - 178px)/2);bottom:36px}
 .work-widget-character{position:absolute;inset:0;pointer-events:none}
 /* Give WebKit the full character bounds before filtering the clipped artwork. */
-.work-widget-character-shadow{position:absolute;left:var(--widget-maskLeft);top:var(--widget-maskTop);width:var(--widget-maskWidth);height:var(--widget-maskHeight);pointer-events:none;filter:drop-shadow(calc(3.4049px + var(--widget-growth)*9.4946px) calc(3.4049px + var(--widget-growth)*9.4946px) calc(6.8098px + var(--widget-growth)*18.9891px) #00000059)}
+.work-widget-character-shadow{position:absolute;left:var(--widget-maskLeft);top:var(--widget-maskTop);width:var(--widget-maskWidth);height:var(--widget-maskHeight);pointer-events:none;filter:drop-shadow(calc(3.4049px + var(--widget-growth)*4.01779px) calc(3.4049px + var(--widget-growth)*4.01779px) calc(6.8098px + var(--widget-growth)*8.0356px) #00000059)}
 .work-widget-mask{position:absolute;inset:0;overflow:hidden;pointer-events:auto;cursor:grab;touch-action:none}
 .work-widget-mask:active{cursor:grabbing}
 .work-widget.is-rest .work-widget-character-shadow{left:-60px;width:238px}
@@ -11,11 +11,11 @@
 .work-widget-rig{position:absolute;left:calc(var(--widget-rigLeft) - var(--widget-maskLeft));top:calc(var(--widget-rigTop) - var(--widget-maskTop));width:var(--widget-rigWidth);height:var(--widget-rigHeight)}
 .work-widget.is-rest .work-widget-rig{left:calc(var(--widget-rigLeft) + 60px)}
 .work-widget-rig svg{display:block!important;overflow:visible}
-.work-widget.is-bad .work-widget-shake{animation:widget-angry-shake .68s ease-in-out infinite}
+.work-widget.is-bad .work-widget-shake{animation:widget-warning-shake .68s ease-in-out infinite}
 .work-widget-speech{position:absolute;left:var(--widget-bubbleLeft);top:var(--widget-bubbleTop);width:var(--widget-bubbleWidth);height:var(--widget-bubbleHeight);display:grid;place-items:center;background:#fff;border-radius:232px;filter:drop-shadow(0 4px 4px #00000040);transform:rotate(var(--widget-bubbleAngle));color:#000;pointer-events:auto;cursor:grab}
 .work-widget-speech::after{content:"";position:absolute;width:calc(21.42px + var(--widget-growth)*11.18px);height:calc(19.04px + var(--widget-growth)*9.94px);left:47%;top:75%;background:#fff;clip-path:polygon(0 0,100% 0,28% 100%);z-index:-1}
 .work-widget-speech span{white-space:nowrap;font-size:var(--widget-fontSize);font-weight:510;line-height:var(--widget-lineHeight);letter-spacing:var(--widget-tracking);animation:widget-speech-appear .18s ease-out both}
-.work-widget-bar{position:absolute;inset:0;pointer-events:auto;width:178px;height:65px;border-radius:44px;background:var(--widget-bar);box-shadow:4px 6px 4px #00000040}
+.work-widget-bar{position:absolute;inset:0;pointer-events:auto;width:178px;height:65px;border-radius:44px;cursor:pointer;background:var(--widget-bar);box-shadow:4px 6px 4px #00000040}
 .work-widget-bar button{position:absolute;border:0;margin:0;padding:0;background:transparent;color:inherit;cursor:pointer;border-radius:50%;transition:background-color .15s ease-out,transform .15s ease-out;-webkit-tap-highlight-color:transparent}
 .work-widget-bar button:hover{background:#ffffff80}
 .work-widget-bar button:active{transform:scale(.96)}
@@ -31,7 +31,7 @@
 .work-widget-bar progress::-webkit-progress-value{background:var(--widget-progress);border-radius:44px}
 .work-widget-bar progress::-moz-progress-bar{background:var(--widget-progress);border-radius:44px}
 @keyframes widget-speech-appear{from{opacity:0}to{opacity:1}}
-@keyframes widget-angry-shake{0%,100%{transform:translateX(0) rotate(0deg)}12%{transform:translateX(-2px) rotate(-1.2deg)}26%{transform:translateX(2px) rotate(1.6deg)}40%{transform:translateX(-2px) rotate(-1.6deg)}55%{transform:translateX(2px) rotate(1.3deg)}70%{transform:translateX(-1px) rotate(-.9deg)}84%{transform:translateX(1px) rotate(.6deg)}}
+@keyframes widget-warning-shake{0%,100%{transform:translateX(0) rotate(0deg)}12%{transform:translateX(-2px) rotate(-1.2deg)}26%{transform:translateX(2px) rotate(1.6deg)}40%{transform:translateX(-2px) rotate(-1.6deg)}55%{transform:translateX(2px) rotate(1.3deg)}70%{transform:translateX(-1px) rotate(-.9deg)}84%{transform:translateX(1px) rotate(.6deg)}}
 @media(prefers-reduced-motion:reduce){.work-widget *{animation:none!important;transition:none!important}}
 
 .work-widget-character-shadow,.work-widget-rig,.work-widget-speech,.work-widget-speech-frame{transition:width .6s cubic-bezier(.2,.75,.34,.94),height .6s cubic-bezier(.2,.75,.34,.94),left .6s cubic-bezier(.2,.75,.34,.94),top .6s cubic-bezier(.2,.75,.34,.94)}
@@ -45,8 +45,8 @@
 .work-widget-speech.is-feedback span{animation:none}
 .work-widget-announcement{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 
-/* The character/speech is the drag handle; timer controls remain ordinary buttons. */
+/* The character/speech opens the app on click and moves on drag; timer controls remain ordinary buttons. */
 .work-widget:not(.is-native) .work-widget-character{touch-action:none;user-select:none;-webkit-user-select:none}
-.work-widget:not(.is-native) .work-widget-character:focus-visible{outline:none}
-.work-widget:not(.is-native) .work-widget-character:focus-visible .work-widget-mask{outline:2px solid #6e4211;outline-offset:3px;border-radius:12px}
+.work-widget .work-widget-character:focus-visible{outline:none}
+.work-widget .work-widget-character:focus-visible .work-widget-mask{outline:2px solid #6e4211;outline-offset:3px;border-radius:12px}
 .work-widget.is-dragging .work-widget-mask,.work-widget.is-dragging .work-widget-speech-frame,.work-widget.is-dragging .work-widget-speech{cursor:grabbing}

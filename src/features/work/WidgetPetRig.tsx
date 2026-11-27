@@ -1,13 +1,14 @@
 import { t, useAppLanguage } from "../i18n";
 import { useEffect, useRef } from 'react';
 import lottie from 'lottie-web';
-import { WIDGET_STILL, WIDGET_TRANSITIONS, type WidgetPose } from './widgetPresentation';
+import { widgetArtworkPose, WIDGET_STILL, WIDGET_TRANSITIONS, type WidgetPose } from './widgetPresentation';
 
 /** Finish an in-flight morph before accepting the newest state; no mid-pose jumps. */
 export function WidgetPetRig({ pose }: { pose: WidgetPose }) {
   useAppLanguage();
   const container = useRef<HTMLDivElement>(null);
-  const desired = useRef(pose); desired.current = pose;
+  const artworkPose = widgetArtworkPose(pose);
+  const desired = useRef(artworkPose); desired.current = artworkPose;
   const drive = useRef<() => void>(() => {});
   useEffect(() => {
     if (!container.current) return;
@@ -31,6 +32,6 @@ export function WidgetPetRig({ pose }: { pose: WidgetPose }) {
     player.addEventListener('DOMLoaded', loaded); player.addEventListener('complete', complete); reduced.addEventListener('change', advance);
     return () => { drive.current = () => {}; reduced.removeEventListener('change', advance); player.destroy(); };
   }, []);
-  useEffect(() => { drive.current(); }, [pose]);
-  return <div className="work-widget-rig" ref={container} role="img" aria-label={pose === 'bad' ? t("怒っているシマアナゴ") : pose === 'rest' ? t("休憩中のシマアナゴ") : pose === 'paused' ? t("目を閉じたシマアナゴ") : t("シマアナゴ")} />;
+  useEffect(() => { drive.current(); }, [artworkPose]);
+  return <div className="work-widget-rig" ref={container} role="img" aria-label={pose === 'rest' ? t("休憩中のシマアナゴ") : pose === 'paused' ? t("目を閉じたシマアナゴ") : t("シマアナゴ")} />;
 }
