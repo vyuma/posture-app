@@ -12,7 +12,7 @@ export function PostureGuide({ children }: { children: ReactNode }) {
   return <div className="work-posture-check">
     <div className="work-posture-camera-column">
       <p className="work-posture-framing-instruction">
-        <svg viewBox="0 0 37.47 39" aria-hidden="true"><image href="/figma/posture-check-warning.svg" x="3.235" y="2" width="31" height="29"/><text x="10.71" y="9.94" dominantBaseline="hanging">！</text></svg>
+        <img src="/figma/posture-check-warning.svg" width="27" height="27" alt="" aria-hidden="true" />
         <span>{t('姿勢を正して、肩を画面内に収めてください。')}</span>
       </p>
       {children}
