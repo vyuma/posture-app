@@ -100,12 +100,11 @@ export default function ModelLab() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<PostureEngineState>(createPostureEngineState());
   const judgmentRef = useRef<JudgmentSettings>({ difficulty: "normal", dualMonitor: false });
-  const historyRef = useRef<{ raw: number[]; ema: number[] }>({ raw: [], ema: [] });
+  const historyRef = useRef<{ raw: (number | null)[]; ema: number[] }>({ raw: [], ema: [] });
   const logRef = useRef<string[]>([]);
   const [frame, setFrame] = useState<Frame | null>(null);
   const [status, setStatus] = useState("カメラとモデルを初期化しています…");
   const [difficulty, setDifficulty] = useState<JudgmentSettings["difficulty"]>("normal");
-  const [, force] = useState(0);
 
   useEffect(() => { judgmentRef.current = { difficulty, dualMonitor: false }; }, [difficulty]);
 
@@ -118,6 +117,17 @@ export default function ModelLab() {
     let lastTs = 0;
     let fps = 0;
 
+    const release = () => {
+      cancelAnimationFrame(raf);
+      const camera = stream;
+      stream = null;
+      camera?.getTracks().forEach((track) => track.stop());
+      if (videoRef.current?.srcObject === camera) videoRef.current.srcObject = null;
+      const model = landmarker;
+      landmarker = null;
+      model?.close();
+    };
+
     (async () => {
       try {
         const acquired = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
@@ -126,14 +136,16 @@ export default function ModelLab() {
         const video = videoRef.current!;
         video.srcObject = stream;
         await video.play();
+        if (!alive) return;
         setStatus("MediaPipe Pose Landmarker を読み込み中…");
         const vision = await FilesetResolver.forVisionTasks(VISION_WASM_URL);
+        if (!alive) return;
         landmarker = await PoseLandmarker.createFromOptions(vision, {
           baseOptions: { modelAssetPath: POSE_MODEL_URL, delegate: "GPU" },
           runningMode: "VIDEO",
           numPoses: 1,
         });
-        if (!alive) { landmarker.close(); return; }
+        if (!alive) { release(); return; }
         setStatus("");
         const loop = () => {
           if (!alive) return;
@@ -159,6 +171,7 @@ export default function ModelLab() {
               }
             }
           } catch (error) {
+            release();
             setStatus(`計測中にエラーが発生しました: ${error instanceof Error ? error.message : String(error)}`);
             return;
           }
@@ -166,15 +179,15 @@ export default function ModelLab() {
         };
         raf = requestAnimationFrame(loop);
       } catch (error) {
+        if (!alive) return;
+        release();
         setStatus(`初期化に失敗しました: ${error instanceof Error ? error.message : String(error)}`);
       }
     })();
 
     return () => {
       alive = false;
-      cancelAnimationFrame(raf);
-      landmarker?.close();
-      stream?.getTracks().forEach((track) => track.stop());
+      release();
     };
   }, []);
 
@@ -182,7 +195,7 @@ export default function ModelLab() {
     engineRef.current = createPostureEngineState();
     historyRef.current = { raw: [], ema: [] };
     logRef.current = [];
-    force((n) => n + 1);
+    setFrame(null);
   };
 
   const result = frame?.result ?? null;
@@ -212,9 +225,9 @@ export default function ModelLab() {
         </div>
         <div className="ml-controls">
           <span className="ml-dim">{frame ? `${fmt(frame.fps, 1)} fps · ${view} · ${result?.usingWorldLandmarks ? "3D world" : "2D image"}` : "—"}</span>
-          <div className="ml-seg" role="radiogroup" aria-label="判定基準">
+          <div className="ml-seg" role="group" aria-label="判定基準">
             {(["easy", "normal", "hard"] as const).map((d) => (
-              <button key={d} role="radio" aria-checked={difficulty === d} className={difficulty === d ? "on" : ""} onClick={() => setDifficulty(d)}>
+              <button key={d} aria-pressed={difficulty === d} className={difficulty === d ? "on" : ""} onClick={() => setDifficulty(d)}>
                 {d === "easy" ? "やさしい" : d === "normal" ? "ふつう" : "きびしい"}
               </button>
             ))}
@@ -288,7 +301,7 @@ export default function ModelLab() {
             )}
           </Panel>
 
-          <Panel n={3} title="正規化偏差 𝐳" sub="zₖ = |xₖ − μ̃ₖ| / scaleₖ,  clip[0, 3.5]  ┃ = 統合スコアのしきい値（参考）">
+          <Panel n={3} title="正規化偏差 𝐳" sub={`z₁…₅ = |xₖ − μ̃ₖ| / scaleₖ, z₆ = max(0, x₆ − μ̃₆) / scale₆, clip[0, ${POSTURE_SPEC.scoreZClamp}] ┃ = 統合スコアのしきい値（参考）`}>
             <div className="ml-zs">
               {FEATURE_KEYS.map((key) => {
                 const v = z?.[key] ?? null;
@@ -359,9 +372,17 @@ function Pipeline({ calibrating, posture }: { calibrating: boolean; posture: str
   );
 }
 
-function Spark({ raw, ema, bad, good }: { raw: number[]; ema: number[]; bad: number; good: number }) {
+function Spark({ raw, ema, bad, good }: { raw: (number | null)[]; ema: number[]; bad: number; good: number }) {
   const W = 400, H = 90, max = Math.max(3, bad * 1.3);
-  const path = (list: number[]) => list.map((v, i) => `${i ? "L" : "M"}${(i / (HISTORY - 1)) * W},${H - (Math.min(v, max) / max) * H}`).join("");
+  const path = (list: (number | null)[]) => {
+    let connected = false;
+    return list.map((v, i) => {
+      if (v === null) { connected = false; return ""; }
+      const command = connected ? "L" : "M";
+      connected = true;
+      return `${command}${(i / (HISTORY - 1)) * W},${H - (Math.min(v, max) / max) * H}`;
+    }).join("");
+  };
   const y = (v: number) => H - (v / max) * H;
   return (
     <svg className="ml-spark" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-label="スコア推移">
@@ -373,10 +394,10 @@ function Spark({ raw, ema, bad, good }: { raw: number[]; ema: number[]; bad: num
   );
 }
 
-function pushHistory(h: { raw: number[]; ema: number[] }, state: PostureEngineState, raw: number | null) {
+function pushHistory(h: { raw: (number | null)[]; ema: number[] }, state: PostureEngineState, raw: number | null) {
   if (!state.baseline || state.emaScore === null) return;
   h.ema.push(state.emaScore);
-  h.raw.push(raw ?? state.emaScore);
+  h.raw.push(raw);
   if (h.ema.length > HISTORY) { h.ema.shift(); h.raw.shift(); }
 }
 
