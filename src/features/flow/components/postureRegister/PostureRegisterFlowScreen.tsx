@@ -1,3 +1,4 @@
+import { openMeasurementCamera } from '../../../posture/camera';
 import { useEffect, useRef, useState } from "react";
 
 import { emitOverlayPlacementHintRefresh } from "../../../overlay/overlayPlacementHintBridge";
@@ -83,18 +84,7 @@ export function PostureRegisterFlowScreen({
       }
 
       try {
-        const stream = await navigator.mediaDevices
-          .getUserMedia({
-            video: {
-              facingMode: "user",
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-            },
-            audio: false,
-          })
-          .catch(() =>
-            navigator.mediaDevices.getUserMedia({ video: true, audio: false }),
-          );
+        const stream = await openMeasurementCamera();
 
         if (cancelled) {
           stopPreviewStream(stream);

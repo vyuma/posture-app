@@ -34,7 +34,7 @@ jobs:
       - run: bun test scripts/head-tilt-posture.test.ts scripts/landmark-loss.test.ts scripts/work-session.test.ts scripts/timelapse-pet-layout.test.ts scripts/widget-drag.test.ts
       - name: Verify posture, language, and timelapse regressions
         run: |
-          for suite in i18n posture-check-screen timer-settings widget-interaction result-card-effects posture-comment-text story-navigation model-lab; do
+          for suite in i18n posture-check-screen timer-settings widget-interaction result-card-effects posture-comment-text story-navigation model-lab camera-settings; do
             bun test "scripts/$suite.test.tsx"
           done
           for suite in posture-feedback posture-causal-feedback posture-judgment posture-comment posture-praise-policy posture-speech-stability widget timelapse timelapse-export timelapse-timeline; do

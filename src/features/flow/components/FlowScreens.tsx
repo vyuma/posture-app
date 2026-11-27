@@ -1,3 +1,4 @@
+import { openMeasurementCamera } from '../../posture/camera';
 import { useLiveFigmaPrScaleStyle } from "../hooks/useLiveFigmaPrScaleStyle";
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type RefObject } from "react";
 
@@ -374,17 +375,7 @@ export function CodeReadScreen({
       }
 
       try {
-        const stream =
-          await navigator.mediaDevices.getUserMedia({
-            video: {
-              facingMode: "user",
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-            },
-            audio: false,
-          }).catch(() =>
-            navigator.mediaDevices.getUserMedia({ video: true, audio: false }),
-          );
+        const stream = await openMeasurementCamera();
 
         if (cancelled) {
           stopPreviewStream(stream);
