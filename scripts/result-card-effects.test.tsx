@@ -5,7 +5,7 @@ import { createRoot } from 'react-dom/client';
 import { createSession, type Baseline } from '../src/features/work/model';
 
 const browser = new Window({ url: 'https://example.test/app' });
-Object.assign(globalThis, { window: browser, document: browser.document, navigator: browser.navigator, localStorage: browser.localStorage, location: browser.location, Element: browser.Element, IS_REACT_ACT_ENVIRONMENT: true });
+Object.assign(globalThis, { window: browser, document: browser.document, navigator: browser.navigator, localStorage: browser.localStorage, location: browser.location, Element: browser.Element, ResizeObserver: browser.ResizeObserver, IS_REACT_ACT_ENVIRONMENT: true });
 const originalTimers = { clearTimeout: globalThis.clearTimeout, requestAnimationFrame: globalThis.requestAnimationFrame, cancelAnimationFrame: globalThis.cancelAnimationFrame };
 afterAll(() => Object.assign(globalThis, originalTimers));
 let now = 0, nextId = 0;
