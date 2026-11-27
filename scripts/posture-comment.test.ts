@@ -23,9 +23,9 @@ test('records all causes without recording a movie and reports one grounded patt
   expect(stats.observedMs).toBe(30000);expect(stats.reasons.headTilt.activeMs).toBe(19000);
   expect(stats.reasons.headForward.activeMs).toBe(19000);expect(stats.reasons.headTilt.directions.right).toBe(19000);
   expect(stats.recovered).toBe(true);
-  expect(postureComment(s)).toEqual(['頭が前に出る場面があったね。','登録した姿勢に戻せた場面もあったよ。']);
+  expect(postureComment(s)).toEqual(['今日は頭が前に出がちだったね。','でも、登録した姿勢に戻せていたよ！']);
   for(const sample of s.samples) sample.feedback!.evidence.headForward=0;
-  expect(postureComment(s)?.[0]).toBe('頭が右に傾く場面があったね。');
+  expect(postureComment(s)?.[0]).toBe('今日は頭が右に傾きがちだったね。');
 });
 test('irregular intervals use elapsed duration; duplicated/stale samples and unavailable causes add nothing',()=>{
   const s=session();s.samples=s.samples.slice(0,3);
@@ -56,7 +56,7 @@ test('past sessions and sparse observation do not invent body-specific or compar
   const unavailable=session();for(const p of unavailable.samples)p.feedback!.evidence=emptyEvidence();
   expect(summarizeFeedback(unavailable).observedMs).toBe(0);
   const good=session();for(const p of good.samples){p.state='good';p.feedback!.evidence.headTilt=0;p.feedback!.evidence.headForward=0;}
-  expect(postureComment(good)?.[0]).toBe('登録した姿勢をよく保てていたね。');
+  expect(postureComment(good)?.[0]).toBe('今日は登録した姿勢をよく保てていたね。');
 });
 test('local checkpoints, crash recovery and finish preserve feedback but telemetry excludes it',async()=>{
   Object.defineProperty(globalThis,'indexedDB',{value:new IDBFactory(),configurable:true});

@@ -105,7 +105,7 @@ test('result comments preserve backward causes and never count unrelated cues or
   }
   expect(s.samples[0].feedback?.version).toBe(3);
   expect(summarizeFeedback(s).reasons.faceNear.activeMs).toBe(0);
-  expect(postureComment(s)?.[0]).toBe('頭が後ろに傾く場面があったね。');
+  expect(postureComment(s)?.[0]).toBe('今日は頭が後ろに傾きがちだったね。');
   s.samples[10].feedback!.version=2;
   expect(summarizeFeedback(s).reasons.headShoulderAngle.activeMs).toBe(18000);
 });

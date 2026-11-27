@@ -2,31 +2,31 @@ import { REASONS, type Direction, type Reason } from '../posture/feedback';
 import type { Session } from './model';
 
 const patterns: Record<Reason, string> = {
-  headShoulderAngle: '肩に対する頭の位置が変わる場面があったね。',
-  headShoulderDistance: '頭と肩の間隔が変わる場面があったね。', neckAngle: '首の角度が変わる場面があったね。',
-  earShoulderBalance: '耳と肩のバランスが変わる場面があったね。', faceScale: '顔が大きく映る場面があったね。',
-  faceNear: '顔が近づく場面があったね。', headForward: '頭が前に出る場面があったね。',
-  headTilt: '頭が傾く場面があったね。', bodyTilt: '体が傾く場面があったね。',
-  headShift: '頭が横にずれる場面があったね。', headPitch: 'あごの位置が変わる場面があったね。',
-  shoulderTilt: '左右の肩の高さが変わる場面があったね。', headTurn: '顔が横を向く場面があったね。',
+  headShoulderAngle: '今日は肩に対する頭の位置が変わりがちだったね。',
+  headShoulderDistance: '今日は頭と肩の間隔が変わりがちだったね。', neckAngle: '今日は首の角度が変わりがちだったね。',
+  earShoulderBalance: '今日は耳と肩のバランスが崩れがちだったね。', faceScale: '今日は顔が大きく映りがちだったね。',
+  faceNear: '今日は画面に顔が近づきがちだったね。', headForward: '今日は頭が前に出がちだったね。',
+  headTilt: '今日は頭が傾きがちだったね。', bodyTilt: '今日は体が傾きがちだったね。',
+  headShift: '今日は頭が横にずれがちだったね。', headPitch: '今日はあごの位置が変わりがちだったね。',
+  shoulderTilt: '今日は左右の肩の高さがずれがちだったね。', headTurn: '今日は顔が横を向きがちだったね。',
 };
 const directed: Partial<Record<Reason, Partial<Record<Direction, string>>>> = {
-  headShoulderAngle: { forward: '頭が前に出る場面があったね。', backward: '頭が後ろに傾く場面があったね。' },
-  headTilt: { left: '頭が左に傾く場面があったね。', right: '頭が右に傾く場面があったね。' },
-  bodyTilt: { left: '体が左に傾く場面があったね。', right: '体が右に傾く場面があったね。' },
-  headShift: { left: '頭が左にずれる場面があったね。', right: '頭が右にずれる場面があったね。' },
-  headPitch: { down: 'あごが下がる場面があったね。', up: 'あごが上がる場面があったね。' },
-  shoulderTilt: { left: '左肩が高くなる場面があったね。', right: '右肩が高くなる場面があったね。' },
-  headTurn: { left: '顔が左を向く場面があったね。', right: '顔が右を向く場面があったね。' },
+  headShoulderAngle: { forward: '今日は頭が前に出がちだったね。', backward: '今日は頭が後ろに傾きがちだったね。' },
+  headTilt: { left: '今日は頭が左に傾きがちだったね。', right: '今日は頭が右に傾きがちだったね。' },
+  bodyTilt: { left: '今日は体が左に傾きがちだったね。', right: '今日は体が右に傾きがちだったね。' },
+  headShift: { left: '今日は頭が左にずれがちだったね。', right: '今日は頭が右にずれがちだったね。' },
+  headPitch: { down: '今日はあごが下がりがちだったね。', up: '今日はあごが上がりがちだったね。' },
+  shoulderTilt: { left: '今日は左肩が上がりがちだったね。', right: '今日は右肩が上がりがちだったね。' },
+  headTurn: { left: '今日は顔が左を向きがちだったね。', right: '今日は顔が右を向きがちだったね。' },
 };
 const suggestions: Record<Reason, string> = {
-  headShoulderAngle: '次は肩に対する頭の位置を意識してみよう。',
-  headShoulderDistance: '次は登録したときの頭と肩の間隔を意識してみよう。', neckAngle: '次は登録したときの首の角度を意識してみよう。',
-  earShoulderBalance: '次は登録したときの耳と肩のバランスを意識してみよう。', faceScale: '次は画面との距離も意識してみよう。',
-  faceNear: '次は画面との距離も意識してみよう。', headForward: '次は肩に対する頭の位置を意識してみよう。',
-  headTilt: '次は頭の傾きを意識してみよう。', bodyTilt: '次は体の傾きを意識してみよう。',
-  headShift: '次は肩の中央に頭を戻すことを意識してみよう。', headPitch: '次は登録したときのあごの位置を意識してみよう。',
-  shoulderTilt: '次は左右の肩の高さを意識してみよう。', headTurn: '次は登録したときの顔の向きを意識してみよう。',
+  headShoulderAngle: '首や肩に負担がかかりやすいから、明日は肩の真上に頭を戻してみよう！',
+  headShoulderDistance: '首や肩に負担がかかりやすいから、明日は肩の力を抜いて、登録したときの頭の位置に戻してみよう！', neckAngle: '首や肩に負担がかかりやすいから、明日は首を曲げすぎず、画面を正面から見てみよう！',
+  earShoulderBalance: '首や肩に負担がかかりやすいから、明日は左右の肩の高さをそろえて、頭を中央に戻してみよう！', faceScale: '目や背中に負担がかかりやすいから、明日はもう少し画面から離れてみよう！',
+  faceNear: '目や背中に負担がかかりやすいから、明日はもう少し画面から離れてみよう！', headForward: '首や肩に負担がかかりやすいから、明日は肩の真上に頭を戻してみよう！',
+  headTilt: '首や肩に負担がかかりやすいから、明日は頭をまっすぐにしてみよう！', bodyTilt: '背中や腰に負担がかかりやすいから、明日は体を中央に戻して座ってみよう！',
+  headShift: '首や肩に負担がかかりやすいから、明日は左右の肩の中央に頭を戻してみよう！', headPitch: '首に負担がかかりやすいから、明日はあごを登録したときの位置に戻してみよう！',
+  shoulderTilt: '肩こりにつながりやすいから、次は左右の肩の高さをそろえてみよう！', headTurn: '首や肩に負担がかかりやすいから、明日は画面を正面に置いて、顔も正面に向けてみよう！',
 };
 
 /** Adjacent observed seconds only: gaps, pauses and new baselines cannot imply recovery. */
@@ -68,7 +68,7 @@ export function postureComment(session: Session): [string, string] | null {
   if (session.feedbackVersion !== 2 && session.feedbackVersion !== 3) return null;
   const summary = summarizeFeedback(session);
   if (summary.observedMs < 10000 || summary.observedMs < session.focusMs * .5) return [
-    '今回は姿勢を確認できた時間が短かったね。', '顔と肩が映る位置で、また測ってみよう。',
+    '今日は姿勢を確認できた時間が短かったね。', '明日は顔と肩が映る位置で、また測ってみよう！',
   ];
   const reason = REASONS.filter(r => summary.reasons[r].activeMs >= 3000 && summary.reasons[r].activeMs >= summary.reasons[r].observedMs * .1)
     .sort((a, b) => summary.reasons[b].activeMs - summary.reasons[a].activeMs)[0];
@@ -76,9 +76,9 @@ export function postureComment(session: Session): [string, string] | null {
     const stats = summary.reasons[reason];
     const direction = (Object.keys(stats.directions) as Direction[]).find(d => stats.directions[d]! >= stats.activeMs * .6);
     return [direction ? directed[reason]?.[direction] ?? patterns[reason] : patterns[reason],
-      summary.recovered ? '登録した姿勢に戻せた場面もあったよ。' : suggestions[reason]];
+      summary.recovered ? 'でも、登録した姿勢に戻せていたよ！' : suggestions[reason]];
   }
-  if (summary.goodMs >= session.focusMs * .8) return ['登録した姿勢をよく保てていたね。', '次もこの調子で、無理なく続けよう。'];
-  if (summary.badMs < 3000) return ['今回の測定、お疲れさま。', '次もときどき姿勢を意識してみよう。'];
-  return ['登録した姿勢から変わる場面があったね。', summary.recovered ? '登録した姿勢に戻せた場面もあったよ。' : '次もときどき姿勢を意識してみよう。'];
+  if (summary.goodMs >= session.focusMs * .8) return ['今日は登録した姿勢をよく保てていたね。', '明日もこの調子で、無理なく続けよう！'];
+  if (summary.badMs < 3000) return ['今日の測定、お疲れさま！', '明日はときどき姿勢を整えてみよう！'];
+  return ['今日は登録した姿勢から変わりがちだったね。', summary.recovered ? 'でも、登録した姿勢に戻せていたよ！' : '明日はときどき姿勢を整えてみよう！'];
 }
