@@ -31,7 +31,7 @@ export async function loadPetArt(version: string) {
 
 type ReplayWidget = {
   pose: WidgetPose; frame: number; growth: number; angle: number; remainingMs: number; durationMs: number;
-  widgetVersion?: 2 | 3; feedbackVersion?: 1; speech?: SpeechEvent | null; reduced: boolean;
+  widgetVersion?: 2 | 3 | 4; feedbackVersion?: 1; speech?: SpeechEvent | null; reduced: boolean;
 };
 export function paintReplayWidget(context: CanvasRenderingContext2D, art: Awaited<ReturnType<typeof loadPetArt>>, box: { x: number; y: number; width: number; height: number }, pet: ReplayWidget, time: number, suppressMotion = false) {
   const { scale, x, y, availableHeight } = timelapsePetLayout(box);
@@ -39,7 +39,7 @@ export function paintReplayWidget(context: CanvasRenderingContext2D, art: Awaite
   context.save();
   context.translate(x, y);
   context.scale(scale, scale);
-  art.frame(suppressMotion ? WIDGET_STILL[pet.widgetVersion === 3 ? widgetArtworkPose(pet.pose) : pet.pose] : pet.frame);
+  art.frame(suppressMotion ? WIDGET_STILL[(pet.widgetVersion ?? 0) >= 3 ? widgetArtworkPose(pet.pose) : pet.pose] : pet.frame);
   paintWidget(context, art.canvas, art.controls, pet.pose, suppressMotion ? 0 : pet.growth, suppressMotion ? 0 : pet.angle, pet.remainingMs, pet.durationMs, availableHeight, pet.feedbackVersion === 1 ? pet.speech ?? null : undefined, time * 1000, suppressMotion || pet.reduced);
   context.restore();
 }

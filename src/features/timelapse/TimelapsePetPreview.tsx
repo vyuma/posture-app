@@ -17,7 +17,7 @@ export function TimelapsePetPreview() {
       const context = target.getContext('2d')!;
       context.scale(dpr, dpr);
       context.save(); context.globalAlpha = .22;
-      paintReplayWidget(context, art, { x: 0, y: 0, width, height }, { widgetVersion: 3, pose: 'bad', frame: 0, growth: 1, angle: 0, remainingMs: 1_500_000, durationMs: 1_500_000, reduced: true }, 0);
+      paintReplayWidget(context, art, { x: 0, y: 0, width, height }, { widgetVersion: 4, pose: 'bad', frame: 0, growth: 1, angle: 0, remainingMs: 1_500_000, durationMs: 1_500_000, reduced: true }, 0);
       context.restore();
       paintReplayWidget(context, art, { x: 0, y: 0, width, height }, { pose: 'good', frame: 0, growth: 0, angle: 0, remainingMs: 1_500_000, durationMs: 1_500_000, reduced: true }, 0);
     }

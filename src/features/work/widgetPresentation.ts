@@ -13,7 +13,7 @@ export function widgetPose(state: Pick<WidgetState, 'paused' | 'phase' | 'bad'>)
   return state.paused ? 'paused' : state.phase === 'rest' ? 'rest' : state.bad ? 'bad' : 'good';
 }
 export function widgetGrowth(state: Pick<WidgetState, 'paused' | 'phase' | 'bad' | 'badSince'>, now: number, reduced = false) {
-  return reduced || widgetPose(state) !== 'bad' || state.badSince == null ? 0 : Math.max(0, Math.min(1, (now - state.badSince - 2000) / 3000));
+  return reduced || widgetPose(state) !== 'bad' || state.badSince == null ? 0 : Math.max(0, Math.min(1, (now - state.badSince) / 3000));
 }
 export function widgetGeometry(pose: WidgetPose, growth: number, availableHeight = 822, availableWidth = Infinity) {
   // Keep the 178×65 timer; reserve narrow-screen space for the longest localized feedback.

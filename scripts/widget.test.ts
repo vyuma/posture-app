@@ -11,12 +11,14 @@ describe('widget state and recording compatibility', () => {
     expect(widgetGrowth({...focus,paused:true},20000)).toBe(0);
     expect(widgetGrowth({...focus,phase:'rest'},20000)).toBe(0);
   });
-  test('growth is bounded and respects reduced motion and short windows', () => {
+  test('growth starts immediately, reaches maximum in 3 seconds and respects motion limits', () => {
     expect(widgetGrowth(focus,9000)).toBe(0);
-    expect(widgetGrowth(focus,11999)).toBe(0);
-    expect(widgetGrowth(focus,12000)).toBe(0);
-    expect(widgetGrowth(focus,13500)).toBe(.5);
-    expect(widgetGrowth(focus,15000)).toBe(1);
+    expect(widgetGrowth(focus,10000)).toBe(0);
+    expect(widgetGrowth(focus,10001)).toBeCloseTo(1 / 3000, 8);
+    expect(widgetGrowth(focus,11500)).toBe(.5);
+    expect(widgetGrowth(focus,13000)).toBe(1);
+    expect(widgetGrowth({...focus,badSince:null},13000)).toBe(0);
+    expect(widgetGrowth({...focus,bad:false},13000)).toBe(0);
     expect(widgetGrowth(focus,90000)).toBe(1);
     expect(widgetGrowth(focus,90000,true)).toBe(0);
     const full = widgetGeometry('bad',1,982), short = widgetGeometry('bad',1,492);
@@ -31,14 +33,29 @@ describe('widget state and recording compatibility', () => {
   test('bad posture keeps the neutral artwork in live and new recordings', () => {
     expect(widgetArtworkPose('bad')).toBe('good');
     const bad = {...petEvent(0, focus), badAt: 0};
-    expect(replayPet([bad], 2)?.growth).toBe(0);
-    expect(replayPet([bad], 5)?.growth).toBe(1);
-    const replay = replayPet([bad], 3.5)!;
+    expect(bad.widgetVersion).toBe(4);
+    expect(replayPet([bad], .1)?.growth).toBeCloseTo(.1 / 3);
+    expect(replayPet([bad], 3)?.growth).toBe(1);
+    const replay = replayPet([bad], 1.5)!;
     expect(replay.frame).toBe(0); expect(replay.growth).toBe(.5);
     expect(replay.angle).not.toBe(0);
     expect(replayPet([{...bad, widgetVersion: 2}], 2.5)?.frame).toBe(1);
     const paused = petEvent(3, {...focus, paused: true}, bad);
     expect(replayPet([bad, paused], 3)?.frame).toBe(409);
+  });
+  test('recorded warning and recovery retain each version’s growth timing', () => {
+    const bad = {...petEvent(0, focus), badAt: 0};
+    const good = petEvent(1.5, {...focus, bad: false}, bad);
+    expect(replayPet([bad, good], 1.5)?.growth).toBe(.5);
+    expect(replayPet([bad, good], 2.1)?.growth).toBe(0);
+    const delayed = {...bad, widgetVersion: 3 as const};
+    expect(replayPet([delayed], 2)?.growth).toBe(0);
+    expect(replayPet([delayed], 3.5)?.growth).toBe(.5);
+    expect(replayPet([delayed], 5)?.growth).toBe(1);
+    expect(replayPet([delayed, {...good, widgetVersion: 3}], 1.5)?.growth).toBe(0);
+    for (const widgetVersion of [undefined, 2] as const) {
+      expect(replayPet([{...bad, widgetVersion}], 2.5)?.growth).toBe(.5);
+    }
   });
   test('old Lottie layers and their keyframe timing are preserved byte-for-byte', () => {
     const original=JSON.parse(readFileSync('public/animations/anago/normal-nago/expression-states.json','utf8'));

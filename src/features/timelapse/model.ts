@@ -9,7 +9,7 @@ export const DEFAULT_TIMELAPSE: TimelapseSettings = { enabled: false, quality: 7
   camera: { x: 0, y: 0, width: 1, height: 1 }, pet: { x: .72, y: .25, width: .24, height: .6 } };
 export const ASSET_VERSION = 'widget-states-v2';
 export type Pose = WidgetPose;
-export type PetEvent = { widgetVersion?: 2 | 3; feedbackVersion?: 1; speech?: SpeechEvent | null; at: number; pose: Pose; from: Pose; transitionAt: number; badAt: number | null; remainingMs: number; cycle: number; cycles: number; durationMs: number; visible: boolean; reduced: boolean };
+export type PetEvent = { widgetVersion?: 2 | 3 | 4; feedbackVersion?: 1; speech?: SpeechEvent | null; at: number; pose: Pose; from: Pose; transitionAt: number; badAt: number | null; remainingMs: number; cycle: number; cycles: number; durationMs: number; visible: boolean; reduced: boolean };
 export type Clip = { id: string; epoch: number; sessionId: string; generation: number; state: 'recording' | 'ready' | 'partial' | 'failed'; mime: string; file: string; width: number; height: number; duration: number; bytes: number; createdAt: string; assetVersion: string; events: PetEvent[]; error?: string };
 export function clampRect(rect: Rect): Rect {
   const width = Math.max(.12, Math.min(1, Number.isFinite(rect.width) ? rect.width : .3));
@@ -29,7 +29,7 @@ export function petEvent(at: number, widget: WidgetState, previous?: PetEvent, v
   // Convert the shared wall clock into the recording's stitched focus timeline once per utterance.
   const speech = widget.speech ? previous?.speech?.id === widget.speech.id ? previous.speech : { ...widget.speech,
     startedAt: at * 1000 - (now - widget.speech.startedAt), endsAt: at * 1000 - (now - widget.speech.endsAt) } : null;
-  return { widgetVersion: 3, ...(widget.feedbackVersion === 1 ? { feedbackVersion: 1 as const, speech } : {}), at, pose, from: changed ? previous?.pose ?? pose : previous.from, transitionAt: changed ? at : previous.transitionAt,
+  return { widgetVersion: 4, ...(widget.feedbackVersion === 1 ? { feedbackVersion: 1 as const, speech } : {}), at, pose, from: changed ? previous?.pose ?? pose : previous.from, transitionAt: changed ? at : previous.transitionAt,
     badAt: pose === 'bad' ? (previous?.pose === 'bad' ? previous.badAt : at - Math.max(0, Date.now() - (widget.badSince ?? Date.now())) / 1000) : null,
     remainingMs: widget.remainingMs, cycle: widget.cycle, cycles: widget.cycles, durationMs: widget.durationMs, visible, reduced };
 }
@@ -48,7 +48,7 @@ function easeInOut(x: number) {
 // Reconstruct recovery from the timeline, so seeking and export match playback.
 function recoveryGrowth(events: PetEvent[], event: PetEvent, seconds: number) {
   if (event.reduced) return 0;
-  const growthAt = (at: number, badAt: number) => Math.min(1, Math.max(0, at - badAt - (event.widgetVersion === 3 ? 2 : 0)) / (event.widgetVersion === 3 ? 3 : 5));
+  const growthAt = (at: number, badAt: number) => Math.min(1, Math.max(0, at - badAt - (event.widgetVersion === 3 ? 2 : 0)) / ((event.widgetVersion ?? 0) >= 3 ? 3 : 5));
   if (event.pose === 'bad') return growthAt(seconds, event.badAt ?? seconds);
   if (event.widgetVersion == null || event.from !== 'bad' || event.pose !== 'good') return 0;
   const progress = Math.min(1, Math.max(0, (seconds - event.transitionAt) / .6));
@@ -70,8 +70,8 @@ function recoveryGrowth(events: PetEvent[], event: PetEvent, seconds: number) {
 export function replayPet(events: PetEvent[], seconds: number, fps = 30) {
   const event = eventAt(events, seconds); if (!event) return null;
   const elapsed = Math.max(0, seconds - event.transitionAt);
-  const pose = event.widgetVersion === 3 ? widgetArtworkPose(event.pose) : event.pose;
-  const from = event.widgetVersion === 3 ? widgetArtworkPose(event.from) : event.from;
+  const pose = (event.widgetVersion ?? 0) >= 3 ? widgetArtworkPose(event.pose) : event.pose;
+  const from = (event.widgetVersion ?? 0) >= 3 ? widgetArtworkPose(event.from) : event.from;
   const segment = (event.widgetVersion != null ? WIDGET_TRANSITIONS : transitions)[`${from}:${pose}`];
   const frame = !event.reduced && segment ? Math.min(segment[1] - .001, segment[0] + elapsed * fps) : (event.widgetVersion != null ? WIDGET_STILL : { good: 0, bad: 1, paused: 2, rest: 2 })[pose];
   const badElapsed = Math.max(0, seconds - (event.badAt ?? seconds));
