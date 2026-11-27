@@ -6,7 +6,7 @@ import { evaluatePostureObservation } from '../src/features/posture/observation'
 import { postureSpeechSample } from '../src/features/work/usePostureSpeech';
 import { computeScore, resolveCandidateBadState } from '../src/features/posture/engine.score';
 import { explainPostureDecision } from '../src/features/posture/scoreFeedback';
-import { emptyEvidence, type Reason } from '../src/features/posture/feedback';
+import { emptyEvidence } from '../src/features/posture/feedback';
 import { FEATURE_KEYS } from '../src/features/posture/engine.spec';
 import { pickLandmarkSetFromSource } from '../src/features/posture/engine.pose.landmarks';
 import { computeHeadForwardAngle3D, computeSignedHeadShoulderAngle3D } from '../src/features/posture/engine.pose.metrics';
@@ -148,58 +148,75 @@ for (const depth of [-.03,.03]) for (const mirror of [false,true]) {
   });
 }
 
-function forwardWarningSession() {
-  const base=calibrated(), session=createSession('summary',{focusMinutes:1,restMinutes:0,cycles:1},0,{stats:base.state.baseline!,headWidthRatio:1},0);
-  const speech=new FeedbackSpeech();
-  let forwardWarnings=0;
-  for(let now=0;now<=30000;now+=1000) {
-    const bad=now<6000 || now>=12000;
-    const causes: Reason[]=bad ? now<6000 ? ['headShoulderDistance'] : ['headShoulderAngle','headShoulderDistance'] : [];
-    const snapshot={observedAtMs:now,trackingIntervalMs:100,baselineReady:true,qualityOk:true,postureState:bad?'bad' as const:'good' as const,score:bad?2:.8,
-      feedback:{epoch:1,baselineReady:true,available:true,causes,directions:{headShoulderAngle:'forward' as const},evidence:{...emptyEvidence(),headShoulderAngle:now>=12000?2:null,headShoulderDistance:2}}};
-    const said=speech.update({context:'summary',mode:'focus',now,...postureSpeechSample(snapshot,0)});
-    if(said?.text==='頭が前に出てるよ！')forwardWarnings++;
-    advanceSession(session,now,measurementReading(snapshot,now,said?.code ?? null));
+test('a confirmed forward cause replaces the earlier distance warning without promoting unrelated causes',()=>{
+  const machine=new FeedbackSpeech();
+  const input={context:'priority',mode:'focus' as const,maxAge:1500,valid:true,posture:'bad' as const,
+    evidence:{...emptyEvidence(),headShoulderDistance:3,headShoulderAngle:2,neckAngle:2}};
+  expect(machine.update({...input,now:0,observedAt:0,causes:['headShoulderDistance']})?.code).toBe('headShoulderDistance');
+  expect(new FeedbackSpeech().update({...input,now:0,observedAt:0,causes:['headShoulderDistance','headShoulderAngle'],directions:{headShoulderAngle:'forward'}})?.text).toBe('頭が前に出てるよ！');
+  const forward=machine.update({...input,now:100,observedAt:100,causes:['headShoulderDistance','neckAngle','headShoulderAngle'],directions:{headShoulderAngle:'forward'}});
+  expect(forward?.text).toBe('頭が前に出てるよ！');
+  expect(machine.update({...input,now:200,observedAt:200,causes:['headShoulderAngle','headShoulderDistance','neckAngle'],directions:{headShoulderAngle:'forward'}})?.id).toBe(forward?.id);
+  expect(machine.update({...input,now:300,observedAt:300,causes:['headShoulderDistance']})?.code).toBe('headShoulderDistance');
+});
+
+function overlappingHeadCauses(direction?: 'forward' | 'backward') {
+  const base=calibrated(), s=createSession('overlap',{focusMinutes:1,restMinutes:0,cycles:1},0,{stats:base.state.baseline!,headWidthRatio:1},0);
+  for(let second=0;second<=24;second++) {
+    const angle=second>=4, now=second*1000;
+    advanceSession(s,now,measurementReading({observedAtMs:now,trackingIntervalMs:100,baselineReady:true,qualityOk:true,postureState:'bad',score:2,
+      feedback:{epoch:1,baselineReady:true,available:true,causes:angle?['headShoulderDistance','headShoulderAngle']:['headShoulderDistance'],
+        directions:direction?{headShoulderAngle:direction}:{},evidence:{...emptyEvidence(),headShoulderDistance:3,headShoulderAngle:angle?2:0}}},now));
   }
-  expect(forwardWarnings).toBe(19);
-  return session;
+  return s;
 }
-test('the result preserves the main forward warning instead of its longer secondary distance cue',()=>{
-  expect(postureComment(forwardWarningSession())?.[0]).toBe('今日は頭が前に出がちだったね。');
-});
-test('a GOOD score with a persistent head/shoulder deviation does not establish baseline recovery',()=>{
-  expect(postureComment(forwardWarningSession())?.[1]).not.toBe('でも、登録した姿勢に戻せていたよ！');
-});
-
-for (const remainingDepth of [0, .015]) test(`forward recovery requires the observed offset to return, remaining depth=${remainingDepth}`,()=>{
-  let state=createPostureEngineState();
-  const observer=new FeedbackObserver(), speech=new FeedbackSpeech(), base=calibrated();
-  const s=createSession('recovery',{focusMinutes:1,restMinutes:0,cycles:1},0,{stats:base.state.baseline!,headWidthRatio:1},6000);
-  let out: ReturnType<typeof evaluatePostureObservation>;
-  for(let now=0;now<=26000;now+=100) {
-    const p=now<=6000 ? pose() : now<16000 ? pose(.03,.04) : pose(remainingDepth);
-    out=evaluatePostureObservation(state,observer,now,p.image,p.world,{width:1280,height:720,id:'camera'},{difficulty:'hard',dualMonitor:false});state=out.state;
-    const snapshot={...out.result,feedback:out.feedback,qualityOk:out.result.eval.qualityOk,score:out.result.eval.score,observedAtMs:now,trackingIntervalMs:100};
-    const said=speech.update({context:'recovery',mode:'focus',now,...postureSpeechSample(snapshot,0)});
-    if(now>=6000)advanceSession(s,now,measurementReading(snapshot,now,said?.code ?? null));
-  }
-  expect(out!.result.postureState).toBe('good');
-  expect(summarizeFeedback(s).reasons.headShoulderAngle.activeMs).toBeGreaterThan(3000);
+test('the card gives overlapping time to the confirmed forward cause while retaining both measured durations',()=>{
+  const s=overlappingHeadCauses('forward'), stats=summarizeFeedback(s);
+  expect(stats.reasons.headShoulderDistance.activeMs).toBe(24000);
+  expect(stats.reasons.headShoulderAngle.activeMs).toBe(20000);
+  expect(stats.reasons.headShoulderDistance.commentMs).toBe(3000);
+  expect(stats.reasons.headShoulderAngle.commentMs).toBe(20000);
   expect(postureComment(s)?.[0]).toBe('今日は頭が前に出がちだったね。');
-  expect(postureComment(s)?.[1]==='でも、登録した姿勢に戻せていたよ！').toBe(remainingDepth===0);
 });
 
-test('unknown recovery evidence and old censored records cannot create recovery praise',()=>{
-  const s=forwardWarningSession();
-  for(const p of s.samples) delete p.feedback!.recoveryEvidence;
-  expect(summarizeFeedback(s).recovered).toBe(false);
-  for(const p of s.samples) p.feedback!.recoveryEvidence=emptyEvidence();
-  expect(summarizeFeedback(s).recovered).toBe(false);
+test('backward, unknown and absent forward evidence keep the distance feedback eligible',()=>{
+  for(const direction of ['backward',undefined] as const) {
+    const s=overlappingHeadCauses(direction);
+    expect(postureComment(s)?.[0]).toBe('今日は頭と肩の間隔が変わりがちだったね。');
+    const input={context:'distance',mode:'focus' as const,now:0,observedAt:0,maxAge:1500,valid:true,posture:'bad' as const,
+      causes:['headShoulderDistance','headShoulderAngle'] as const,evidence:{...emptyEvidence(),headShoulderDistance:3,headShoulderAngle:2},directions:direction?{headShoulderAngle:direction}:{}};
+    expect(new FeedbackSpeech().update({...input,causes:[...input.causes]})?.code).toBe('headShoulderDistance');
+  }
+  const s=overlappingHeadCauses('forward');
+  for(const p of s.samples)p.feedback!.evidence.headShoulderAngle=null;
+  expect(postureComment(s)?.[0]).toBe('今日は頭と肩の間隔が変わりがちだったね。');
 });
 
-test('recovery of another cause cannot praise the selected forward-head pattern',()=>{
-  const s=forwardWarningSession();
-  for(const p of s.samples) if(p.state==='good')p.feedback!.recoveryEvidence!.headShoulderDistance=0;
-  expect(summarizeFeedback(s).reasons.headShoulderDistance.recovered).toBe(true);
-  expect(postureComment(s)?.[1]).not.toBe('でも、登録した姿勢に戻せていたよ！');
+
+test('independent causes retain their priority and distance-only time remains eligible',()=>{
+  const machine=new FeedbackSpeech();
+  const input={context:'independent',mode:'focus' as const,maxAge:1500,valid:true,posture:'bad' as const,
+    evidence:{...emptyEvidence(),headTilt:2,headShoulderDistance:3,headShoulderAngle:2},directions:{headShoulderAngle:'forward' as const}};
+  expect(machine.update({...input,now:0,observedAt:0,causes:['headTilt']})?.code).toBe('headTilt');
+  expect(machine.update({...input,now:100,observedAt:100,causes:['headShoulderDistance','headShoulderAngle','headTilt']})?.code).toBe('headTilt');
+  const s=overlappingHeadCauses('forward');
+  for(const p of s.samples)if(p.sequence<15)p.feedback!.evidence.headShoulderAngle=0;
+  expect(postureComment(s)?.[0]).toBe('今日は頭と肩の間隔が変わりがちだったね。');
+});
+
+test('forward priority preserves the existing BAD-to-GOOD recovery condition',()=>{
+  const s=overlappingHeadCauses('forward');
+  for(let now=25000;now<=30000;now+=1000)advanceSession(s,now,measurementReading({observedAtMs:now,trackingIntervalMs:100,baselineReady:true,qualityOk:true,postureState:'good',score:.8,
+    feedback:{epoch:1,baselineReady:true,available:true,causes:[],directions:{headShoulderAngle:'forward'},evidence:{...emptyEvidence(),headShoulderDistance:3,headShoulderAngle:2}}},now));
+  expect(summarizeFeedback(s).recovered).toBe(true);
+  expect(postureComment(s)).toEqual(['今日は頭が前に出がちだったね。','でも、登録した姿勢に戻せていたよ！']);
+});
+
+test('the direct forward-head reason uses the same priority as the signed head/shoulder angle',()=>{
+  const input={context:'direct',mode:'focus' as const,now:0,observedAt:0,maxAge:1500,valid:true,posture:'bad' as const,
+    evidence:{...emptyEvidence(),headShoulderDistance:3,headForward:2},causes:['headShoulderDistance','headForward'] as const};
+  expect(new FeedbackSpeech().update({...input,causes:[...input.causes]})?.text).toBe('頭が前に出てるよ！');
+  const s=overlappingHeadCauses();
+  for(const p of s.samples){p.feedback!.evidence.headForward=p.feedback!.evidence.headShoulderAngle;p.feedback!.evidence.headShoulderAngle=0;}
+  expect(postureComment(s)?.[0]).toBe('今日は頭が前に出がちだったね。');
 });

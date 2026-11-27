@@ -1,5 +1,6 @@
 import messages from './postureFeedback.json';
 import { FEEDBACK_SPEC, REASONS, type Direction, type Directions, type Evidence, type Reason } from './feedback';
+import { preferredFeedbackReason } from './feedbackPriority';
 export type SpeechCode = keyof typeof messages;
 export type SpeechEvent = { id: string; code: SpeechCode; text: string; startedAt: number; endsAt: number; whileBad?: true };
 export const SPEECH_DURATION = 6500;
@@ -85,7 +86,8 @@ export class FeedbackSpeech {
     }
     const active = input.causes ?? REASONS.filter(r => this.candidates[r].active).sort((a, b) => this.candidates[b].strength - this.candidates[a].strength);
     const current = active.find(r => r === this.selected);
-    const next = current ?? active[0];
+    const candidate = current ?? active[0];
+    const next = candidate ? preferredFeedbackReason(candidate, active, input.directions) : undefined;
     if (input.posture === 'bad') {
       this.goodAt = null;
       this.choose(next ?? 'general', now, next ? { [next]: this.candidates[next].direction } : {});
