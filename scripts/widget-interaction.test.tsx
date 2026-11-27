@@ -4,6 +4,7 @@ import { act } from 'react';
 import { createRoot } from 'react-dom/client';
 const browser = new Window({ url: 'https://example.test/app' });
 Object.assign(globalThis, { window: browser, document: browser.document, navigator: browser.navigator, localStorage: browser.localStorage, location: browser.location,
+  requestAnimationFrame: () => 0, cancelAnimationFrame: () => {},
   innerWidth: 1512, innerHeight: 982, matchMedia: browser.matchMedia.bind(browser), IS_REACT_ACT_ENVIRONMENT: true });
 mock.module('../src/features/work/WidgetPetRig', () => ({ WidgetPetRig: () => <div data-pet /> }));
 mock.module('../src/features/work/WidgetTimerText', () => ({ WidgetTimerText: ({time}: {time:string}) => <b>{time}</b> }));
@@ -52,4 +53,19 @@ test('native pet waits for movement before OS drag and does not open on drag com
   await pointer(pet,'pointerdown'); await act(() => browser.dispatchEvent(new browser.Event('blur'))); await pointer(pet,'pointerup');
   expect(actions).toEqual([]);
   await pointer(pet,'pointerdown'); await pointer(pet,'pointerup'); expect(actions).toEqual(['open']);
+});
+
+test('outgoing feedback keeps its width until the existing fade has finished', async () => {
+  const now = Date.now();
+  const event = { id:'long', code:'general' as const, text:'Right shoulder higher! Reset your chin position!', startedAt:now, endsAt:now+60000, whileBad:true };
+  const value = {...state,bad:true,badSince:now,feedbackVersion:1 as const,speech:event};
+  await act(() => root.render(<Widget state={value} onAction={() => {}} />));
+  const width = () => +host.querySelector<HTMLElement>('aside')!.style.getPropertyValue('--widget-bubbleWidth').replace('px','');
+  const before = width();
+  await act(() => root.render(<Widget state={{...value,speech:{...event,id:'short',text:'顔が近い！'}}} onAction={() => {}} />));
+  expect(host.querySelector('.work-widget-speech span')!.textContent).toBe(event.text);
+  expect(width()).toBe(before);
+  await act(() => new Promise(resolve => setTimeout(resolve, 350)));
+  expect(host.querySelector('.work-widget-speech span')!.textContent).toBe('顔が近い！');
+  expect(width()).toBeLessThan(before);
 });

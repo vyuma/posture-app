@@ -2,7 +2,7 @@ import feedback from '../src/features/posture/postureFeedback.json';
 import translations from '../src/features/i18n/messages.json';
 import { expect, test } from 'bun:test';
 import { widgetBounds, clampWidgetPosition } from '../src/features/work/widgetPosition';
-import { speechGeometry, widgetGeometry, type WidgetPose } from '../src/features/work/widgetPresentation';
+import { speechGeometry, speechLines, measureSpeechText, widgetGeometry, type WidgetPose } from '../src/features/work/widgetPresentation';
 
 test('all poses, growth sizes and long dialogue stay reachable at viewport edges', () => {
   for (const [width, height] of [[1512,982],[720,512],[390,844],[320,568]]) {
@@ -27,4 +27,21 @@ test('window shrink reclamps an existing position without changing pet geometry'
   expect(p.x + bounds.right).toBeLessThanOrEqual(712);
   expect(p.y + bounds.bottom).toBeLessThanOrEqual(504);
   expect(geometry).toEqual(before);
+});
+
+test('speech keeps Figma type and vertical spacing, widens first, then wraps with 30px each side', () => {
+  const text = 'Right shoulder higher! Reset your chin position!';
+  const base = widgetGeometry('bad', 0, 922, 1512);
+  const wide = speechGeometry(base, text);
+  expect(wide.fontSize).toBe(13.2498); expect(wide.lineHeight).toBe(16); expect(wide.tracking).toBe(.691486);
+  expect(wide.bubbleHeight).toBe(35); expect(speechLines(wide, text)).toHaveLength(1);
+  expect(wide.bubbleWidth).toBeGreaterThan(base.bubbleWidth);
+  const narrow = speechGeometry(widgetGeometry('bad', 0, 784, 320), text);
+  const lines = speechLines(narrow, text);
+  expect(lines.length).toBeGreaterThan(1); expect(lines.join(' ')).toBe(text);
+  expect(narrow.fontSize).toBe(wide.fontSize); expect(narrow.lineHeight).toBe(wide.lineHeight);
+  expect(narrow.bubbleHeight - lines.length*narrow.lineHeight).toBe(19);
+  expect(narrow.bubbleTop + narrow.bubbleHeight).toBeCloseTo(wide.bubbleTop + wide.bubbleHeight, 5);
+  for (const line of lines) expect((narrow.bubbleWidth-measureSpeechText(line,narrow.fontSize,narrow.tracking))/2).toBeGreaterThanOrEqual(29.99);
+  expect(narrow.bubbleLeft + narrow.bubbleWidth/2).toBeCloseTo(base.bubbleLeft + base.bubbleWidth/2, 5);
 });

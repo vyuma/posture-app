@@ -2,6 +2,7 @@ import { expect, test } from 'bun:test';
 import { timelapsePetLayout } from '../src/features/timelapse/petLayout';
 import { speechGeometry, widgetGeometry, type WidgetPose } from '../src/features/work/widgetPresentation';
 import { widgetBounds } from '../src/features/work/widgetPosition';
+import { t } from '../src/features/i18n';
 import messages from '../src/features/posture/postureFeedback.json';
 import { paintWidgetTimer, type WidgetControlArt } from '../src/features/work/paintWidget';
 
@@ -12,7 +13,7 @@ test('placement reserves full growth, speech and shadows at every video edge and
         const box = { x:x*width, y:y*height, width:rw*width, height:rh*height };
         const layout = timelapsePetLayout(box);
         expect(widgetGeometry('bad',1,layout.availableHeight).growth).toBe(1);
-        for (const pose of ['good','bad','rest','paused'] as WidgetPose[]) for (const growth of [0,.2,.5,.8,1]) for (const text of Object.values(messages)) {
+        for (const pose of ['good','bad','rest','paused'] as WidgetPose[]) for (const growth of [0,.2,.5,.8,1]) for (const text of Object.values(messages).flatMap(text => ['ja','ko','en'].map(language => t(text,{},language as 'ja'|'ko'|'en')))) {
           const bounds = widgetBounds(pose, speechGeometry(widgetGeometry(pose,growth,layout.availableHeight),text));
           expect(layout.x + bounds.left*layout.scale).toBeGreaterThanOrEqual(box.x);
           expect(layout.y + bounds.top*layout.scale).toBeGreaterThanOrEqual(box.y);

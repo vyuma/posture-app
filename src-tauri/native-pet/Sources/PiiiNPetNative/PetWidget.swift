@@ -30,34 +30,65 @@ func bezier(_ t: Double, _ x1: Double, _ y1: Double, _ x2: Double, _ y2: Double)
     for _ in 0..<16 { let mid = (low + high)/2; if value(mid, x1, x2) < t { low = mid } else { high = mid } }
     return value((low + high)/2, y1, y2)
 }
+func speechLine(_ text: String, _ font: Double, _ tracking: Double) -> NSAttributedString {
+    NSAttributedString(string: text, attributes: [.font: NSFont.systemFont(ofSize: font, weight: NSFont.Weight(rawValue: 0.25)), .foregroundColor: NSColor.black, .kern: tracking])
+}
+private let speechWidths: NSCache<NSString, NSNumber> = {
+    let cache = NSCache<NSString, NSNumber>(); cache.countLimit = 512; return cache
+}()
+func speechTextWidth(_ text: String, _ font: Double, _ tracking: Double) -> Double {
+    let key = "\(font):\(tracking):\(text)" as NSString
+    if let width = speechWidths.object(forKey: key) { return width.doubleValue }
+    let width = Double(speechLine(text, font, tracking).size().width)
+    speechWidths.setObject(NSNumber(value: width), forKey: key)
+    return width
+}
+func speechLines(_ text: String, _ limit: Double, _ font: Double, _ tracking: Double,
+                 measure: (String, Double, Double) -> Double = speechTextWidth) -> [String] {
+    if measure(text, font, tracking) <= limit { return [text] }
+    var lines: [String] = [], line = ""
+    for char in text {
+        let next = line + String(char)
+        if !line.isEmpty && measure(next, font, tracking) > limit {
+            if let space = next.lastIndex(of: " "), space != next.startIndex {
+                lines.append(String(next[..<space])); line = String(next[next.index(after: space)...])
+            } else { lines.append(line); line = String(char).trimmingCharacters(in: .whitespaces) }
+        } else { line = next }
+    }
+    lines.append(line.trimmingCharacters(in: .whitespaces))
+    return lines
+}
 /// Values are relative to the unchanged 178×65 bar, matching widgetPresentation.ts.
 struct PetGeometry {
     var values: [Double]
+    var speechMaxWidth = Double.infinity, speechPadding = 12.0
     subscript(_ index: Int) -> Double { values[index] }
-    static func make(_ state: PetState, _ now: Double, _ height: Double, _ reduced: Bool) -> Self {
+    static func make(_ state: PetState, _ now: Double, _ height: Double, _ reduced: Bool, _ availableWidth: Double = .infinity,
+                     text: String? = nil, measure: (String, Double, Double) -> Double = speechTextWidth) -> Self {
         let pose = state.pose
         let growth = !reduced && pose == "bad" ? clamp((now - (state.badSince ?? now))/3000) : 0
-        let g = min(growth, clamp((height - 40 - 300)/253.11))
+        let g = min(growth, clamp((height - 40 - 300)/253.11), clamp((availableWidth - 276)/144))
         let scale = pose == "rest" ? 27.3894/226 : pose == "paused" ? 35.9935/226 : (34.5135 + 40.7261*g)/226
         var left = pose == "rest" ? 2 : pose == "bad" ? -1.32 - 36.82*g : 27.4
         var width = pose == "rest" ? 124.55 : pose == "bad" ? 163.13 + 80.46*g : 110
-        let bubbleHeight = 35 + 18.26*g, bubbleAngle = 7.71 + 7.32*g
+        var bubbleHeight = 35 + 18.26*g
+        let bubbleAngle = 7.71 + 7.32*g
         let bubbleOffsetY = pose == "bad" ? (width*sin(bubbleAngle * .pi/180) + bubbleHeight*cos(bubbleAngle * .pi/180) - bubbleHeight)/2 : 0
         let font = 13.2498 + 6.9133*g
         let tracking = pose == "rest" ? -0.308514 : 0.691486 + 0.360794*g
+        let padding = pose == "bad" ? 30.0 : 12.0, maxWidth = max(120, availableWidth - 64)
+        var extraHeight = 0.0
         if state.feedbackVersion == 1 {
-            let count = Double(state.speech?.text.unicodeScalars.count ?? 0)
-            let textWidth = (state.speech?.text ?? "").unicodeScalars.reduce(0.0) { total, char in
-                total + (CharacterSet.whitespaces.contains(char) ? 0.3 : char.isASCII ? 0.65 : 1)
-            }
-            let next = max(width, textWidth*font + max(0,count-1)*tracking + 24)
+            let lines = speechLines(text ?? state.speech?.text ?? "", maxWidth - 2*padding, font, tracking, measure: measure)
+            let next = min(maxWidth, max(width, ceil((lines.map { measure($0, font, tracking) }.max() ?? 0) + 2*padding)))
             left -= (next - width)/2; width = next
+            extraHeight = Double(lines.count - 1)*(16 + 8*g); bubbleHeight += extraHeight
         }
         return Self(values: [g, 860*scale, 1280*scale, 88-650*scale, (pose == "paused" ? -149 : -145)-200.6*g,
                              pose == "rest" ? -60 : 5-97*g, -166-226*g, pose == "rest" ? 238 : 150+177*g, 191.72+226.23*g,
-                             left, pose == "rest" ? -160 : (pose == "bad" ? -195.89 : -192)-253.11*g+bubbleOffsetY, width, bubbleHeight, bubbleAngle, font, 16+8*g, tracking])
+                             left, (pose == "rest" ? -160 : (pose == "bad" ? -195.89 : -192)-253.11*g+bubbleOffsetY)-extraHeight, width, bubbleHeight, bubbleAngle, font, 16+8*g, tracking], speechMaxWidth: maxWidth, speechPadding: padding)
     }
-    func between(_ other: Self, _ t: Double) -> Self { Self(values: zip(values, other.values).map { $0 + ($1-$0)*t }) }
+    func between(_ other: Self, _ t: Double) -> Self { Self(values: zip(values, other.values).map { $0 + ($1-$0)*t }, speechMaxWidth: other.speechMaxWidth, speechPadding: other.speechPadding) }
 }
 class FlippedView: NSView {
     override var isFlipped: Bool { true }
@@ -182,7 +213,7 @@ public final class PetWidget: NSView {
     private func tick() {
         guard let state else { return }
         let now = Date().timeIntervalSince1970*1000
-        let next = PetGeometry.make(state, now, bounds.height, reduced)
+        let next = PetGeometry.make(state, now, bounds.height, reduced, bounds.width, text: speechView.displayedText)
         if geometry == nil || reduced { geometry = next; target = next; geometryStart = next; geometryAt = now }
         let duration = state.pose == "bad" ? 60.0 : 600.0
         let t = clamp((now-geometryAt)/duration)
@@ -211,8 +242,11 @@ public final class PetWidget: NSView {
         transform = CATransform3DRotate(transform,shake.1 * .pi/180,0,0,1)
         transform = CATransform3DTranslate(transform,-ax,-ay,0)
         artwork.layer?.anchorPoint = .zero; artwork.layer?.position = .zero; artwork.layer?.transform = transform
-        speechView.frame = NSRect(x: origin.x+g[9]-50, y: origin.y+g[10]-50, width: g[11]+100, height: g[12]+140)
-        speechView.origin = CGPoint(x:50-g[9], y:50-g[10]); speechView.geometry = g
+        let angle = (g[13]+1.5) * .pi/180
+        let padX = max(0, (g[11]*cos(angle)+g[12]*sin(angle)-g[11])/2)+20
+        let padY = (g[11]*sin(angle)+g[12]*cos(angle)-g[12])/2+40
+        speechView.frame = NSRect(x: origin.x+g[9]-padX, y: origin.y+g[10]-padY, width: g[11]+2*padX, height: g[12]+2*padY)
+        speechView.origin = CGPoint(x:padX-g[9], y:padY-g[10]); speechView.geometry = g
         speechView.tick(now: now, reduced: reduced)
         bar.frame = NSRect(origin: origin,size: CGSize(width:178,height:65))
         timeButton.frame = NSRect(x: origin.x+(state.pose == "rest" ? 18 : 21),y: origin.y+10,width: state.pose == "rest" ? 85 : 82,height:33)
@@ -287,6 +321,7 @@ final class SpeechView: FlippedView {
     var geometry: PetGeometry?, origin = CGPoint.zero, bubbleHit = NSRect.zero
     private var shown: PetSpeech?, pending: PetSpeech?, bad=false, pendingBad=false
     private var leaving: Double?, now=0.0, reduced=false
+    var displayedText: String? { shown?.text }
     func reset() { shown=nil;pending=nil;leaving=nil;bad=false }
     func isAnimating(_ at:Double) -> Bool { leaving != nil || shown.map { ($0.whileBad == true && bad) || at < $0.endsAt } == true }
     func update(_ speech: PetSpeech?, bad: Bool, now: Double, reduced: Bool) {
@@ -325,7 +360,9 @@ final class SpeechView: FlippedView {
         let leave=leaving.map { reduced ? 1 : bezier(clamp((now-$0)/300),0.4,0,0.2,1) } ?? 0
         let y=reduced ? 0 : 3*(1-enter)+3*(1-exit)+3*leave
         let w=g[11],h=g[12],x=origin.x+g[9],top=origin.y+g[10]
-        bubbleHit=NSRect(x:x,y:top,width:w,height:h+20).insetBy(dx:-10,dy:-10)
+        let rotation = (g[13]+1.5) * .pi/180
+        let dx = max(0,(w*cos(rotation)+h*sin(rotation)-w)/2), dy = (w*sin(rotation)+h*cos(rotation)-h)/2
+        bubbleHit=NSRect(x:x,y:top,width:w,height:h+20).insetBy(dx:-dx-10,dy:-dy-10)
         ctx.saveGState();ctx.setAlpha(enter*exit*(1-leave))
         ctx.translateBy(x:x+w/2,y:top+h/2);ctx.rotate(by:g[13] * .pi/180);ctx.translateBy(x:-w/2,y:-h/2)
         ctx.translateBy(x:w/2,y:h*0.85+y);ctx.rotate(by:angle * .pi/180);ctx.translateBy(x:-w/2,y:-h*0.85)
@@ -333,8 +370,13 @@ final class SpeechView: FlippedView {
         let tw=21.42+11.18*g[0],th=19.04+9.94*g[0],tx=w*0.47,ty=h*0.75
         shape.move(to:CGPoint(x:tx,y:ty));shape.addLine(to:CGPoint(x:tx+tw,y:ty));shape.addLine(to:CGPoint(x:tx+tw*0.28,y:ty+th));shape.closeSubpath()
         ctx.saveGState();ctx.setShadow(offset:CGSize(width:0,height:-4),blur:4,color:color(0,0.25).cgColor);ctx.setFillColor(NSColor.white.cgColor);ctx.addPath(shape);ctx.fillPath();ctx.restoreGState()
-        let line=NSAttributedString(string:event.text,attributes:[.font:NSFont.systemFont(ofSize:g[14],weight:NSFont.Weight(rawValue:0.25)),.foregroundColor:NSColor.black,.kern:g[16]])
-        let size=line.size();line.draw(at:CGPoint(x:(w-size.width)/2,y:(h-size.height)/2))
+        let lines = speechLines(event.text, g.speechMaxWidth-2*g.speechPadding, g[14], g[16])
+        for (index, text) in lines.enumerated() {
+            let line = speechLine(text, g[14], g[16])
+            let size = line.size()
+            let y = (h-Double(lines.count)*g[15])/2+Double(index)*g[15]+(g[15]-size.height)/2
+            line.draw(at: CGPoint(x: (w-size.width)/2, y: y))
+        }
         ctx.restoreGState()
     }
 }

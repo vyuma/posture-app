@@ -4,7 +4,7 @@ import { act, useState } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import messages from '../src/features/i18n/messages.json';
 import speech from '../src/features/posture/postureFeedback.json';
-import { speechGeometry, widgetGeometry } from '../src/features/work/widgetPresentation';
+import { speechGeometry, speechLines, measureSpeechText, widgetGeometry } from '../src/features/work/widgetPresentation';
 const browser = new Window({ url: 'https://example.test/app' });
 Object.assign(globalThis, { window: browser, document: browser.document, navigator: browser.navigator, location: browser.location, localStorage: browser.localStorage, IS_REACT_ACT_ENVIRONMENT: true });
 const { t, getAppLanguage, setAppLanguage, useAppLanguage } = await import('../src/features/i18n');
@@ -64,7 +64,8 @@ test('localized character display does not modify catalog identity or persisted 
 test('every feedback cause is translated and fits the shared widget balloon', () => {
   for (const source of Object.values(speech)) for (const language of ['ko','en'] as const) {
     const text = t(source, {}, language); expect(text).not.toBe(source);
-    const g = speechGeometry(widgetGeometry('bad', 1), text);
-    expect(g.bubbleWidth, text).toBeLessThan(390);
+    const g = speechGeometry(widgetGeometry('bad', 1, 822, 390), text);
+    expect(g.bubbleWidth, text).toBeLessThanOrEqual(326);
+    for (const line of speechLines(g, text)) expect(g.bubbleWidth - measureSpeechText(line, g.fontSize, g.tracking)).toBeGreaterThanOrEqual(59.99);
   }
 });

@@ -32,6 +32,7 @@ export function widgetGeometry(pose: WidgetPose, growth: number, availableHeight
     bubbleTop: pose === 'rest' ? -160 : (pose === 'bad' ? -195.89 : -192) - 253.11 * g + bubbleOffsetY,
     bubbleWidth, bubbleHeight, bubbleAngle,
     fontSize: 13.2498 + 6.9133 * g, lineHeight: 16 + 8 * g,
+    speechPadding: pose === 'bad' ? 30 : 12, speechMaxWidth: Math.max(120, availableWidth - 64),
     tracking: pose === 'rest' ? -.308514 : .691486 + .360794 * g,
   };
 }
@@ -39,8 +40,43 @@ export function widgetMessage(pose: WidgetPose, growth: number) {
   return pose === 'paused' ? 'お疲れさま！' : pose === 'rest' ? 'ストレッチした？' : pose === 'bad' ? growth >= .98 ? '顔が近い！' : '姿勢を戻して！' : 'いい感じ！';
 }
 
+export const SPEECH_FONT_FAMILY = '"SF Pro", -apple-system, BlinkMacSystemFont, "Hiragino Sans", sans-serif';
+let speechContext: CanvasRenderingContext2D | null = null;
+const speechWidths = new Map<string, number>();
+export function measureSpeechText(text: string, fontSize: number, tracking: number) {
+  if (!speechContext && typeof CanvasRenderingContext2D !== 'undefined') speechContext = document.createElement('canvas').getContext('2d');
+  if (speechContext) {
+    const key = `${fontSize}:${tracking}:${text}`, cached = speechWidths.get(key);
+    if (cached !== undefined) return cached;
+    speechContext.font = `510 ${fontSize}px ${SPEECH_FONT_FAMILY}`;
+    speechContext.letterSpacing = '0px';
+    const width = speechContext.measureText(text).width + Array.from(text).length * tracking;
+    if (speechWidths.size >= 512) speechWidths.clear();
+    speechWidths.set(key, width);
+    return width;
+  }
+  // Headless geometry fixtures inject the same deterministic metrics in AppKit tests.
+  return Array.from(text).reduce((width, char) => width + (/\s/.test(char) ? .3 : /[\x00-\x7f]/.test(char) ? .65 : 1) * fontSize + tracking, 0);
+}
+export function speechLines(g: ReturnType<typeof widgetGeometry>, text: string) {
+  const limit = g.speechMaxWidth - 2 * g.speechPadding;
+  if (measureSpeechText(text, g.fontSize, g.tracking) <= limit) return [text];
+  const lines: string[] = [];
+  let line = '';
+  for (const char of Array.from(text)) {
+    if (line && measureSpeechText(line + char, g.fontSize, g.tracking) > limit) {
+      const space = (line + char).lastIndexOf(' ');
+      if (space > 0) { lines.push((line + char).slice(0, space)); line = (line + char).slice(space + 1); }
+      else { lines.push(line); line = char.trimStart(); }
+    } else line += char;
+  }
+  lines.push(line.trimEnd());
+  return lines;
+}
 export function speechGeometry(g: ReturnType<typeof widgetGeometry>, text: string) {
-  const count = Array.from(text).length;
-  const width = Math.max(g.bubbleWidth, Array.from(text).reduce((width, char) => width + (/\s/.test(char) ? .3 : /[\x00-\x7f]/.test(char) ? .65 : 1), 0) * g.fontSize + Math.max(0, count - 1) * g.tracking + 24);
-  return { ...g, bubbleLeft: g.bubbleLeft - (width - g.bubbleWidth) / 2, bubbleWidth: width };
+  const lines = speechLines(g, text);
+  const width = Math.min(g.speechMaxWidth, Math.max(g.bubbleWidth, ...lines.map(line => Math.ceil(measureSpeechText(line, g.fontSize, g.tracking) + 2 * g.speechPadding))));
+  const extraHeight = (lines.length - 1) * g.lineHeight;
+  return { ...g, bubbleLeft: g.bubbleLeft - (width - g.bubbleWidth) / 2, bubbleTop: g.bubbleTop - extraHeight,
+    bubbleWidth: width, bubbleHeight: g.bubbleHeight + extraHeight };
 }
