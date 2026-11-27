@@ -1,3 +1,4 @@
+import { openMeasurementCamera } from './camera';
 /**
  * Web-only test screen (/dev/model), gated by developer access.
  * Runs the real posture engine on the camera and visualises each stage of the
@@ -129,7 +130,7 @@ export default function ModelLab() {
 
     (async () => {
       try {
-        const acquired = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+        const acquired = await openMeasurementCamera();
         if (!alive) { acquired.getTracks().forEach((track) => track.stop()); return; }
         stream = acquired;
         const video = videoRef.current!;

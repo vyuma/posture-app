@@ -7,7 +7,7 @@ import { computeFeatureReliability, computeScore } from '../src/features/posture
 import { pickLandmarkSetFromSource } from '../src/features/posture/engine.pose.landmarks';
 
 const browser = new Window({ url: 'https://example.test/dev/model' });
-Object.assign(globalThis, { window: browser, document: browser.document, navigator: browser.navigator, IS_REACT_ACT_ENVIRONMENT: true });
+Object.assign(globalThis, { window: browser, document: browser.document, navigator: browser.navigator, localStorage: browser.localStorage, IS_REACT_ACT_ENVIRONMENT: true });
 const callbacks = new Map<number, FrameRequestCallback>();
 let nextId = 0, now = 0;
 globalThis.requestAnimationFrame = callback => { callbacks.set(++nextId, callback); return nextId; };
@@ -32,12 +32,15 @@ let landmarks: ReturnType<typeof points> | null = points();
 const detect = mock(() => ({ landmarks: landmarks ? [landmarks] : [], worldLandmarks: [] }));
 const load = mock(async () => ({}));
 const create = mock(async () => ({ detectForVideo: detect, close }));
-Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia: async () => stream } });
+const getUserMedia = mock(async () => stream);
+Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: { getUserMedia } });
 mock.module('@mediapipe/tasks-vision', () => ({ FilesetResolver: { forVisionTasks: load }, PoseLandmarker: { createFromOptions: create } }));
+const { saveCameraDeviceId } = await import('../src/features/posture/camera');
 const { default: ModelLab } = await import('../src/features/posture/ModelLab');
 const host = document.createElement('div'); document.body.append(host);
 let root = createRoot(host), mounted = true;
 beforeEach(() => {
+  localStorage.clear(); getUserMedia.mockClear();
   now = 0; callbacks.clear(); landmarks = points(); stop.mockClear(); close.mockClear();
   load.mockReset(); load.mockImplementation(async () => ({}));
   create.mockReset(); create.mockImplementation(async () => ({ detectForVideo: detect, close }));
@@ -124,4 +127,9 @@ test('displayed raw and EMA agree with the real engine during a measured deviati
     expect(Number(cells[4].querySelector('em')!.textContent)).toBeCloseTo(expected.emaScore!, 3);
   }
   expect(expected.baseline).not.toBeNull();
+});
+
+test('model lab uses the same saved camera as posture measurement', async () => {
+  saveCameraDeviceId('external-usb'); await render();
+  expect(getUserMedia).toHaveBeenCalledWith({ video: { deviceId: { exact: 'external-usb' }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
 });

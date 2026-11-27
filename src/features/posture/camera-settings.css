@@ -1,0 +1,31 @@
+.camera-settings {
+  margin-top: 28px;
+  padding-top: 24px;
+  border-top: 1px solid #dde5e8;
+  color: #254a54;
+  min-width: 0;
+}
+.timelapse-settings .camera-settings h2 { margin: 0 0 12px; font-size: 20px; line-height: 1.5; }
+.camera-settings-controls { display: flex; gap: 12px; align-items: stretch; }
+.camera-settings select, .camera-settings button {
+  min-height: 44px;
+  border: 1px solid #adc4ca;
+  border-radius: 12px;
+  background: #fff;
+  color: #254a54;
+  padding: 10px 14px;
+  font: inherit;
+  font-size: 16px;
+}
+.camera-settings select { flex: 1; min-width: 0; text-overflow: ellipsis; }
+.camera-settings button { flex: none; cursor: pointer; }
+.camera-settings button:hover:not(:disabled) { background: #eff8fa; }
+.camera-settings :is(button, select):disabled { opacity: .6; cursor: default; }
+.camera-settings :is(button, select):focus-visible { outline: 3px solid #246f8a; outline-offset: 3px; }
+.camera-settings p { margin: 10px 0 0; font-size: 13px; line-height: 1.7; overflow-wrap: anywhere; }
+.camera-settings [role=status] { color: #8b3d1c; }
+@media (max-width: 540px) {
+  .camera-settings-controls { flex-direction: column; }
+  .camera-settings select { width: 100%; flex: auto; }
+  .camera-settings button { align-self: flex-start; }
+}

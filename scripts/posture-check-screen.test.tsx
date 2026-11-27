@@ -29,7 +29,7 @@ test('loading and permission failure disable registration and provide localized 
  expect(host.querySelector('[role=status]')!.textContent).toBe('Preparing camera…');
  expect(host.querySelector<HTMLButtonElement>('.work-registration-panel>.work-button')!.disabled).toBe(true);
  await act(()=>root.render(<MeasureScreen {...props} ready={false} status="初期化に失敗しました: NotAllowedError: private details"/>));
- expect(host.querySelector('[role=status]')!.textContent).toContain('Check permission');expect(host.textContent).not.toContain('private details');
+ expect(host.querySelector('[role=status]')!.textContent).toContain('camera selection and permission');expect(host.textContent).not.toContain('private details');
  await act(()=>host.querySelector<HTMLButtonElement>('.work-camera-preparation-status button')!.click());expect(cancelled).toBe(1);
  await act(()=>root.render(<MeasureScreen {...props}/>));expect(host.querySelector('.work-camera-preparation-status')).toBeNull();
 });
