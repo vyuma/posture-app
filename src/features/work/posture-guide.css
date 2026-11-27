@@ -7,9 +7,8 @@
 .work-app .work-screen.stage-prepare .work-registration-panel>.work-button{display:flex;justify-content:center;align-items:center;width:407px;min-height:77px;margin:31px auto 0;padding:24px 32px;font-size:24px;line-height:29px;transform:translateX(-13px)}
 .work-posture-check{display:grid;grid-template-columns:588fr 527fr;height:calc(419 * var(--prepare-px));background:#fff;border-radius:calc(26.4191 * var(--prepare-px));box-shadow:0 0 calc(7.03409 * var(--prepare-px)) #00000026;overflow:hidden;text-align:left}
 .work-posture-camera-column{position:relative;min-width:0;padding:calc(84 * var(--prepare-px)) calc(33 * var(--prepare-px)) calc(31 * var(--prepare-px)) calc(37 * var(--prepare-px))}
-.work-posture-framing-instruction{position:absolute;display:flex;align-items:center;gap:calc(7.53 * var(--prepare-px));inset:calc(30 * var(--prepare-px)) calc(24 * var(--prepare-px)) auto calc(61 * var(--prepare-px));margin:0;color:#f78000;font-size:max(14px,calc(20 * var(--prepare-px)));font-weight:590;line-height:1.2}
-.work-posture-framing-instruction>svg{flex:none;width:calc(37.47 * var(--prepare-px));height:calc(39 * var(--prepare-px));overflow:visible}
-.work-posture-framing-instruction text{font-size:15.2941px;font-weight:860;fill:#f78000}
+.work-posture-framing-instruction{position:absolute;display:flex;align-items:center;gap:calc(8 * var(--prepare-px));inset:calc(33 * var(--prepare-px)) calc(24 * var(--prepare-px)) auto calc(71 * var(--prepare-px));margin:0;color:#f78000;font-size:max(14px,calc(20 * var(--prepare-px)));font-weight:590;line-height:1.2}
+.work-posture-framing-instruction>img{display:block;flex:none;width:calc(27 * var(--prepare-px));height:calc(27 * var(--prepare-px))}
 .work-app .work-screen.stage-prepare .work-camera{aspect-ratio:518/304;border-radius:calc(32 * var(--prepare-px));background:#a1a1a1;box-shadow:0 0 calc(8.52 * var(--prepare-px)) #00000026}
 .work-camera-framing{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .work-camera-preparation-status{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:20px;background:#183d4de6;color:white;text-align:center;font-size:16px;line-height:1.5}
@@ -57,7 +56,6 @@
  .work-posture-check{grid-template-columns:minmax(0,1fr);border-radius:22px}
  .work-posture-camera-column{padding:16px}
  .work-app .work-posture-framing-instruction{position:static;margin-bottom:14px;font-size:14px;line-height:20px;align-items:center}
- .work-posture-framing-instruction>svg{width:31px;height:33px}
  .work-posture-help{padding-top:54px}
  .work-posture-help h2{left:16px;top:12px}
  .work-posture-help::before{top:0;left:16px;right:16px;bottom:auto;width:auto;height:2px}
