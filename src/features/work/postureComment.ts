@@ -26,7 +26,7 @@ const suggestions: Record<Reason, string> = {
   faceNear: '目や背中に負担がかかりやすいから、明日はもう少し画面から離れてみよう！', headForward: '首や肩に負担がかかりやすいから、明日は肩の真上に頭を戻してみよう！',
   headTilt: '首や肩に負担がかかりやすいから、明日は頭をまっすぐにしてみよう！', bodyTilt: '背中や腰に負担がかかりやすいから、明日は体を中央に戻して座ってみよう！',
   headShift: '首や肩に負担がかかりやすいから、明日は左右の肩の中央に頭を戻してみよう！', headPitch: '首に負担がかかりやすいから、明日はあごを登録したときの位置に戻してみよう！',
-  shoulderTilt: '肩こりにつながりやすいから、次は左右の肩の高さをそろえてみよう！', headTurn: '首や肩に負担がかかりやすいから、明日は画面を正面に置いて、顔も正面に向けてみよう！',
+  shoulderTilt: '肩こりにつながりやすいから、明日は左右の肩の高さをそろえてみよう！', headTurn: '首や肩に負担がかかりやすいから、明日は画面を正面に置いて、顔も正面に向けてみよう！',
 };
 
 /** Adjacent observed seconds only: gaps, pauses and new baselines cannot imply recovery. */

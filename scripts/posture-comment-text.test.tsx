@@ -28,7 +28,7 @@ Object.defineProperty(browser.HTMLElement.prototype, 'getClientRects', { value: 
 } });
 const host = document.createElement('div'); document.body.append(host);
 let root = createRoot(host);
-async function render(text = '今日は右肩が上がりがちだったね。肩こりにつながりやすいから、次は左右の肩の高さをそろえてみよう！') {
+async function render(text = '今日は右肩が上がりがちだったね。肩こりにつながりやすいから、明日は左右の肩の高さをそろえてみよう！') {
   await act(() => root.render(<PostureCommentText>{text}</PostureCommentText>));
   return host.querySelector('span')!;
 }
