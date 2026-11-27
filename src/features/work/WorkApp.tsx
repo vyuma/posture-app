@@ -4,6 +4,7 @@ import { measurementReading } from './postureReading';
 import { AccountBoundary, useAccounts } from '../accounts/AccountBoundary';
 import { AccountSettings } from '../accounts/AccountSettings';
 import { flushOutbox, makeTicket, provenance } from '../accounts/outbox';
+import type { SpeechEvent } from '../posture/feedbackSpeech';
 import { usePostureSpeech } from './usePostureSpeech';
 import { useWorkScreenTransition } from './useWorkScreenTransition';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -76,7 +77,8 @@ function WorkAppContent() {
   const camera = ['prepare', 'calibrate', 'ready', 'active'].includes(screen);
   const posture = usePostureTracking({ judgment: settings.current.posture, enabled: camera, captureHeight: videoSettings.enabled ? videoSettings.quality : 720, overlayEnabled: screen === 'prepare' || screen === 'calibrate', paused: screen === 'prepare' || screen === 'ready' || (screen === 'active' && (session?.status !== 'running' || session?.phase === 'rest')) });
   const snapshotRef = useRef(posture.snapshot); snapshotRef.current = posture.snapshot;
-  const reading = useCallback((): Reading => measurementReading(snapshotRef.current, performance.now()), []);
+  const speechRef = useRef<SpeechEvent | null>(null);
+  const reading = useCallback((): Reading => measurementReading(snapshotRef.current, performance.now(), speechRef.current?.code ?? null), []);
   const report = useCallback((cause: unknown) => setError(cause instanceof Error ? cause.message : "保存に失敗しました。再試行してください。"), []);
   const enqueue = useCallback(<T,>(operation: () => Promise<T>): Promise<T> => { const next = queue.current.catch(() => {}).then(operation); queue.current = next; return next; }, []);
   const refresh = useCallback(() => { if (live.current) setSession({ ...live.current }); }, []);
@@ -129,6 +131,7 @@ function WorkAppContent() {
   const speechContext = `${session?.id ?? 'idle'}:${session?.calibrations[session.calibrations.length - 1]?.id ?? 'none'}`;
   const speechMode = screen !== 'active' || !session || session.status === 'completed' ? 'off' : session.status !== 'running' ? 'paused' : session.phase;
   const { bad, speech } = usePostureSpeech(speechContext, speechMode, posture.snapshot, session?.id ?? 'idle');
+  speechRef.current = speech;
   useEffect(() => { setBadSince(current => bad ? current ?? Date.now() : null); }, [bad]);
   const widget: WidgetState | null = widgetEnabled && screen === 'active' && session && session.status !== 'completed' ? { sessionId: session.id, remainingMs: session.remainingMs, durationMs: (session.phase === 'focus' ? session.settings.focusMinutes : session.settings.restMinutes) * 60_000, phase: session.phase, paused: session.status !== 'running', bad: !!bad, badSince, cycle: session.cycle, cycles: session.settings.cycles, feedbackVersion: 1, speech } : null;
   useEffect(() => { void publishWidget(widget).catch(report); }, [screen, session, bad, badSince, widgetEnabled, report, speech, language]);

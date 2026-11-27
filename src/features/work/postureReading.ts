@@ -1,5 +1,6 @@
 import type { RuntimeSnapshot } from '../posture/types';
-import { REASONS, type Evidence } from '../posture/feedback';
+import type { SpeechCode } from '../posture/feedbackSpeech';
+import { REASONS, type Reason, type Evidence } from '../posture/feedback';
 import type { Reading } from './model';
 
 export type PostureSample = Pick<RuntimeSnapshot, 'observedAtMs' | 'trackingIntervalMs' | 'qualityOk' | 'baselineReady' | 'postureState' | 'trackingStatus' | 'presentationPosture'>;
@@ -7,9 +8,12 @@ export const observationMaxAge = (s: PostureSample) => Math.max(1500, s.tracking
 export function observationFresh(s: PostureSample, now: number) {
   return s.baselineReady && s.observedAtMs !== undefined && now >= s.observedAtMs && now - s.observedAtMs <= observationMaxAge(s);
 }
-export function measurementReading(s: PostureSample & Pick<RuntimeSnapshot, 'score' | 'feedback'>, now: number): Reading {
+export function measurementReading(s: PostureSample & Pick<RuntimeSnapshot, 'score' | 'feedback'>, now: number, warning?: SpeechCode | null): Reading {
   const valid = observationFresh(s, now) && s.qualityOk;
   const feedback = valid && s.feedback?.baselineReady && s.feedback.available ? {
+    ...(warning === undefined ? {} : { warning: s.postureState === 'bad' && warning && REASONS.includes(warning as Reason) &&
+      (s.feedback.causes?.includes(warning as Reason) ?? (s.feedback.evidence[warning as Reason] ?? 0) >= 1) ? warning as Reason : null }),
+    recoveryEvidence: { ...(s.feedback.recoveryEvidence ?? s.feedback.evidence) },
     version: s.feedback.causes ? 3 as const : 2 as const, observedAtMs: s.observedAtMs!, directions: { ...s.feedback.directions },
     evidence: Object.fromEntries(REASONS.map(reason => {
       const value = s.feedback!.evidence[reason];

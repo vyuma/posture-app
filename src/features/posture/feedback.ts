@@ -13,7 +13,7 @@ type Key = keyof Metrics;
 // Existing floors remain unchanged; new cues start conservatively and need camera calibration.
 export const FEEDBACK_SPEC = { headTiltDeg: 12, bodyTiltDeg: 10, forwardRatio: .18, headShiftRatio: .12, headPitchDeg: 12, shoulderTiltDeg: 8, turnRatio: .22, turnChange: .12, release: .65, releaseMs: 350 } as const;
 export type FeedbackBaseline = { version: 1 | 2; camera: string; values: Partial<Record<Key, { median: number; mad: number } | null>> };
-export type FeedbackObservation = { causes?: Reason[]; headYawDeg?: number | null; epoch: number; evidence: Evidence; directions?: Directions; baselineReady: boolean; available: boolean };
+export type FeedbackObservation = { recoveryEvidence?: Evidence; causes?: Reason[]; headYawDeg?: number | null; epoch: number; evidence: Evidence; directions?: Directions; baselineReady: boolean; available: boolean };
 const keys: Key[] = ['ear', 'eye', 'shoulder', 'yaw', 'earRoll', 'eyeRoll', 'bodyRoll', 'forward', 'facingX', 'facingZ', 'forwardAligned', 'forwardUpper', 'headSide', 'bodySide', 'shift', 'pitch', 'shoulderSide', 'turn'];
 const median = (values: number[]) => { const v = [...values].sort((a, b) => a - b); return (v[Math.floor((v.length - 1) / 2)] + v[Math.floor(v.length / 2)]) / 2; };
 const point = (points: Landmark[] | null, index: number) => {

@@ -1,6 +1,6 @@
 import { normalizeJudgment, type JudgmentSettings } from '../posture/judgment';
 import type { AnalysisTicket, Provenance } from '../accounts/types';
-import type { Directions, Evidence, FeedbackBaseline } from '../posture/feedback';
+import type { Directions, Evidence, FeedbackBaseline, Reason } from '../posture/feedback';
 import type { BaselineStats } from '../posture/engine.types';
 
 export type Grade = 1 | 2 | 3 | 4 | 5;
@@ -24,7 +24,7 @@ function scoreVersion(settings: TimerSettings) {
 }
 export type Baseline = { stats: BaselineStats; headWidthRatio: number | null; feedback?: FeedbackBaseline };
 export type Calibration = { id: string; focusMs: number; elapsedMs: number; baseline: Baseline; scoreVersion: string };
-export type RecordedFeedback = { version: 2 | 3; observedAtMs: number; evidence: Evidence; directions?: Directions };
+export type RecordedFeedback = { warning?: Reason | null; recoveryEvidence?: Evidence; version: 2 | 3; observedAtMs: number; evidence: Evidence; directions?: Directions };
 export type Sample = { sequence: number; focusMs: number; elapsedMs: number; calibrationId: string; segment: number; score: number | null; deviation: number | null; state: 'good' | 'bad' | 'untracked'; feedback?: RecordedFeedback };
 export type EventKind = 'start' | 'rest' | 'focus' | 'pause' | 'resume' | 'recalibrate' | 'calibrated' | 'calibration_cancelled' | 'tracking_lost' | 'tracking_restored' | 'finish';
 export type SessionEvent = { kind: EventKind; focusMs: number; elapsedMs: number; segment: number };

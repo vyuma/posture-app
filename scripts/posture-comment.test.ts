@@ -38,7 +38,7 @@ test('irregular intervals use elapsed duration; duplicated/stale samples and una
   expect(summarizeFeedback(s).reasons.headTilt.observedMs).toBe(0);
 });
 test('pause, recalibration, missing observations and version boundaries never imply recovery',()=>{
-  for(const fault of ['pause','calibration','missing','version','gap'] as const){
+  for(const fault of ['pause','calibration','missing','reason-missing','version','gap'] as const){
     const s=session();
     for(const sample of s.samples.filter(sample=>sample.sequence>=20)){
       if(fault==='pause')sample.segment=1;
@@ -46,6 +46,7 @@ test('pause, recalibration, missing observations and version boundaries never im
       if(fault==='version')delete sample.feedback;
     }
     if(fault==='missing') {s.samples[20].state='untracked';delete s.samples[20].feedback;}
+    if(fault==='reason-missing')s.samples[20].feedback!.recoveryEvidence=emptyEvidence();
     if(fault==='gap'){s.samples[20].focusMs+=2000;s.samples[20].elapsedMs+=2000;}
     expect(summarizeFeedback(s).recovered).toBe(false);
   }
@@ -62,7 +63,9 @@ test('local checkpoints, crash recovery and finish preserve feedback but telemet
   Object.defineProperty(globalThis,'indexedDB',{value:new IDBFactory(),configurable:true});
   Object.defineProperty(globalThis,'localStorage',{value:{getItem:()=>null},configurable:true});
   const repo=new WorkRepository(await openBrowserDriver('feedback-test'),false);await repo.initialize();
-  const s=session();await repo.checkpoint(s);await repo.recover();
+  const s=session();
+  for(const sample of s.samples)sample.feedback!.warning=sample.state==='bad'?'headTilt':null;
+  await repo.checkpoint(s);await repo.recover();
   const recovered=(await repo.session(s.id))!;
   expect(recovered.status).toBe('interrupted');expect(recovered.samples).toEqual(s.samples);
   expect(postureComment(recovered)).toEqual(postureComment(s));

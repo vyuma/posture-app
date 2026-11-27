@@ -13,6 +13,15 @@ const featureReasons: Record<FeatureKey, Reason> = {
 export function explainPostureDecision(feedback: FeedbackObservation, frame: PostureFrameResult, state: PostureEngineState, image: NormalizedLandmark[] | null, scale: number): FeedbackObservation {
   const causes: Reason[] = [], evidence = { ...feedback.evidence }, directions = { ...feedback.directions };
   if (!frame.baselineReady || !frame.eval.qualityOk || !state.baseline || !frame.features) return { ...feedback, causes };
+  // Recovery needs uncensored per-feature deviations, even after the combined score becomes GOOD.
+  const recoveryEvidence = { ...feedback.evidence };
+  for (const [key, component] of Object.entries(frame.eval.scoreBreakdown ?? {})) {
+    if (key === 'headWidth') continue;
+    const reason = featureReasons[key as FeatureKey];
+    if (reason === 'bodyTilt' && ![23,24].every(i => image?.[i] && (image[i].visibility ?? 0) >= POSTURE_SPEC.visibilityThreshold)) continue;
+    recoveryEvidence[reason] = Math.max(recoveryEvidence[reason] ?? 0, component.deviation / (POSTURE_SPEC.scoreThresholdGood * scale));
+  }
+  recoveryEvidence.faceScale = frame.eval.headWidthScale == null ? null : frame.eval.headWidthScoreBoost > 0 ? 1 : 0;
   if (state.headTiltCandidateBad) {
     causes.push('headTilt'); evidence.headTilt = Math.max(1, evidence.headTilt ?? 0);
   }
@@ -49,5 +58,5 @@ export function explainPostureDecision(feedback: FeedbackObservation, frame: Pos
       }
     }
   }
-  return { ...feedback, causes, evidence, directions, baselineReady: true, available: feedback.available || causes.length > 0 };
+  return { ...feedback, recoveryEvidence, causes, evidence, directions, baselineReady: true, available: feedback.available || causes.length > 0 };
 }
