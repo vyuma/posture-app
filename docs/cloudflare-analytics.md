@@ -64,7 +64,7 @@ PRは共通・サーバー・macOS・Windowsの検査後、`piiin-pr-N` Worker�
 
 固定の`piiin-staging`を実OAuth検証に使う。workflow_dispatchの`deploy=staging`で配布し、`checks`では配布しない。`production`の手動配布はmainに限定する。新規ワークフローがデフォルトブランチへ入る前はローカルCLIで同じビルド・配布を行う。preview/stagingはビルドと配布の両方に`--mode preview`を渡す。モードを省略した配布で本番設定を混ぜない。
 
-リポジトリ変数`PIIIN_CLOUDFLARE_CI_ENABLED=true`のときだけGitHubから配布する。2026-11-08にCI接続を保留する指示があったため、現在は無効。共通・サーバー・macOS・Windowsの検査は継続する。管理者が3環境の資格情報を登録した後に有効化する。配布のskipを実デプロイ成功と扱わない。
+リポジトリ変数`PIIIN_CLOUDFLARE_CI_ENABLED=true`のときだけGitHubから配布する。2026-11-08のCI接続保留は2026-11-27に利用者が解除を承認し、3環境の資格情報とDB・認証変数を照合して有効化した。再開時はstagingの実配布とPR previewを検証してからmain経由で本番へ反映する。共通・サーバー・macOS・Windowsの検査は継続し、配布のskipを実デプロイ成功と扱わない。
 
 `scripts/cloudflare-preflight.mjs <preview|staging|production>`は未設定値・Worker名・正確なHTTPS origin・UUID・誤った公開ドメイン/認証フラグを検査する。ローカルOAuth認証なら`--local-auth`を加える。`PIIIN_PRODUCTION_D1_ID`を全環境で必須とし、本番は同じDB、非本番は異なるDBであることを検査する。staging/productionは認証・Apple・開発者・メールの有効フラグを明示し、productionはドメイン有効フラグも明示する。未設定をfalse扱いして既存のsecretやrouteを失う配布を防ぐ。PR previewにはメール資格情報も渡さない。
 
