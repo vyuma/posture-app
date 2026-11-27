@@ -6,8 +6,9 @@
 .timelapse-panel>header{display:flex;align-items:center;gap:29px;padding:45px 79px 0;min-width:0}
 .timelapse-panel h1{font-size:36px;font-weight:700;line-height:43px;margin:0;color:#13a2d7;white-space:nowrap;flex:0 0 214px}
 .timelapse-panel>header>p{font-size:24px;font-weight:700;line-height:29px;margin:0;color:#666}
-.timelapse-player{position:relative;isolation:isolate;width:calc(100% - 168px);aspect-ratio:768/451;margin:34px 84px 0;box-shadow:0 0 8.52px #00000026;overflow:hidden;border-radius:32px;background:#a1a1a1}
-.timelapse-player>video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;pointer-events:none}
+.timelapse-player{position:relative;isolation:isolate;width:calc(100% - 168px);margin:34px 84px 0;box-shadow:0 0 8.52px #00000026;overflow:hidden;border-radius:32px;background:#a1a1a1}
+/* Keep the design ratio while loading; loaded video sets the height without bars or cropping. */
+.timelapse-player>video{display:block;width:100%;height:auto;aspect-ratio:auto 768/451;object-fit:contain;pointer-events:none}
 .timelapse-video-toggle{display:block;position:absolute;inset:0;width:100%;height:100%;border:0;padding:0;border-radius:inherit;color:#fff;background:transparent;cursor:pointer;overflow:hidden;touch-action:manipulation}
 .timelapse-video-toggle:disabled{opacity:1;cursor:default}
 .timelapse-video-toggle:focus-visible{outline:3px solid #075c80;outline-offset:-5px}
