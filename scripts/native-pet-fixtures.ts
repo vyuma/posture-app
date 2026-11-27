@@ -16,6 +16,10 @@ for (const [language,text] of [['ko','오른쪽 어깨가 올라갔어!'],['en',
   const state={...base.state,language,speech:{...base.state.speech!,text}};
   const geometry=speechGeometry(widgetGeometry('bad',1,base.height-40),text);
   cases.push({...base,name:`localized/${language}`,state,expected:keys.map(k=>geometry[k])});
+  for (const width of [320, 390]) {
+    const narrow=speechGeometry(widgetGeometry('bad',1,base.height-40,width),text);
+    cases.push({...base,name:`localized/${language}/${width}`,state,width,expected:keys.map(k=>narrow[k])});
+  }
 }
 const path='src-tauri/native-pet/Tests/PiiiNPetNativeTests/Fixtures/presentation.json';
 const json=JSON.stringify(cases,null,2)+'\n';

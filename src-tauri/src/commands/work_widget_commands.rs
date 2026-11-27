@@ -11,6 +11,11 @@ fn is_active_bad(value: Option<&Value>) -> bool {
         && v.get("phase").and_then(Value::as_str) == Some("focus"))
 }
 
+fn speech_window_width(value: Option<&Value>) -> f64 {
+    value.and_then(|v| v.get("speechWindowWidth")).and_then(Value::as_f64)
+        .filter(|width| width.is_finite()).unwrap_or(420.0).clamp(420.0, 2000.0)
+}
+
 
 #[tauri::command]
 pub fn work_preview_window(window: WebviewWindow, width: u32, height: u32) -> Result<(), String> {
@@ -33,10 +38,12 @@ pub fn work_widget_update(app: AppHandle, window: WebviewWindow, state: State<'_
     let was_visible = stored.is_some();
     let was_bad = is_active_bad(stored.as_ref());
     let bad = is_active_bad(value.as_ref());
+    let width = speech_window_width(value.as_ref());
+    let width_changed = width != speech_window_width(stored.as_ref());
     *stored = value.clone();
     drop(stored); // AppKit layout can synchronously issue a native callback.
-    if was_visible != value.is_some() || (!was_bad && bad) {
-        crate::overlay::window::set_work_widget(&app, value.is_some(), bad)?;
+    if was_visible != value.is_some() || (bad && (!was_bad || width_changed)) {
+        crate::overlay::window::set_work_widget(&app, value.is_some(), bad, width)?;
     }
     #[cfg(all(target_os = "macos", feature = "mac-app-store"))]
     {
@@ -64,7 +71,7 @@ pub fn work_widget_compact(app: AppHandle, window: WebviewWindow, state: State<'
     let stored = state.0.lock().map_err(|e| e.to_string())?;
     if stored.as_ref().and_then(|v| v.get("sessionId")).and_then(Value::as_str) == Some(session_id.as_str())
         && !is_active_bad(stored.as_ref()) {
-        crate::overlay::window::set_work_widget(&app, true, false)?;
+        crate::overlay::window::set_work_widget(&app, true, false, 300.0)?;
     }
     Ok(())
 }
@@ -72,6 +79,14 @@ pub fn work_widget_compact(app: AppHandle, window: WebviewWindow, state: State<'
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn speech_width_is_bounded_and_legacy_messages_keep_their_size() {
+        assert_eq!(speech_window_width(None), 420.0);
+        for (input, expected) in [(500.0, 500.0), (-1.0, 420.0), (1e20, 2000.0)] {
+            assert_eq!(speech_window_width(Some(&json!({"speechWindowWidth": input}))), expected);
+        }
+        assert_eq!(speech_window_width(Some(&json!({"speechWindowWidth": "500"}))), 420.0);
+    }
     #[test]
     fn only_active_focus_can_enlarge() {
         for (phase, paused, expected) in [("focus", false, true), ("focus", true, false), ("rest", false, false), ("rest", true, false)] {
