@@ -2925,17 +2925,17 @@
   },
   "頭が後ろに傾いてるよ！": {
     "ko": "머리가 뒤로 기울어졌어!",
-    "en": "Your head is leaning back!"
+    "en": "Your head leans back!"
   },
   "頭と肩の間隔が変わってるよ！": {
-    "ko": "머리와 어깨 사이 간격이 달라졌어!",
-    "en": "Head–shoulder gap changed!"
+    "ko": "머리와 어깨 간격이 달라졌어!",
+    "en": "Head–shoulder gap shift!"
   },
   "首の角度が変わってるよ！": {
     "ko": "목의 각도가 달라졌어!",
     "en": "Your neck angle changed!"
   },
-  "耳と肩のバランスが変わってるよ！": {
+  "耳と肩のバランスが違うよ！": {
     "ko": "귀와 어깨 사이 균형이 달라졌어!",
     "en": "Ear–shoulder shift!"
   },
