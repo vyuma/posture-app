@@ -110,7 +110,6 @@
   overflow: clip;
 }
 .lp6-collection .lp-collection-group { gap: 11.62px; padding-right: 11.62px; }
-.lp6-collection .lp-collection-card { box-shadow: 0 0 8.52px #00000026; }
 .lp-how .lp-how-inner > h2 > .lp-brand-mark { margin-top: 0; }
 .lp-how .lp-brand-mark > img { height: 206.27%; width: 129.14%; left: -12.74%; top: -60.88%; }
 .lp-final-cta { position: relative; padding: calc(var(--lp6-unit) * 176) 0 0; height: calc(var(--lp6-unit) * 784); }

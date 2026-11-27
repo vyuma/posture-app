@@ -68,11 +68,11 @@
 }
 .lp6-collection { position: relative; }
 .lp6-collection .lp-collection-copy h2 { line-height: 2; }
-.lp-collection-rare { position: absolute; bottom: calc(var(--lp6-unit) * 141); width: 100%; margin: 0; text-align: center; color: #f78000; font-size: calc(var(--lp6-unit) * 24); line-height: 2; letter-spacing: calc(var(--lp6-unit) * 2); }
-.lp6-collection .lp-collection-card { width: calc(var(--lp6-unit) * 200.2); flex-basis: calc(var(--lp6-unit) * 200.2); height: calc(var(--lp6-unit) * 263.9); border-radius: calc(var(--lp6-unit) * 24.2667); font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', sans-serif; }
+.lp-collection-rare { position: absolute; bottom: calc(var(--lp6-unit) * 141); left: calc(50% - var(--lp6-unit) * 334); width: calc(var(--lp6-unit) * 700); margin: 0; text-align: center; color: #f78000; font-size: calc(var(--lp6-unit) * 24); line-height: 2; letter-spacing: calc(var(--lp6-unit) * 2); }
+.lp6-collection .lp-collection-card { width: calc(var(--lp6-unit) * 200.2); flex-basis: calc(var(--lp6-unit) * 200.2); height: calc(var(--lp6-unit) * 263.9); border-radius: calc(var(--lp6-unit) * 24.267); font-family: "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, sans-serif; font-weight: 700; font-synthesis: weight; letter-spacing: 0; }
 .lp6-collection .lp-collection-group { gap: calc(var(--lp6-unit) * 11.62); padding-right: calc(var(--lp6-unit) * 11.62); }
-.lp-collection-card > .character-stars { position: absolute; top: 82.2cqh; left: 6.0606cqw; width: 26cqw; height: 4cqh; }
-.lp-collection-card > .character-stars svg { height: 100%; }
+.lp-collection-card > .character-stars { position: absolute; top: calc(var(--lp6-unit) * 201.717); left: calc(var(--lp6-unit) * 109.2); display: flex; gap: calc(var(--lp6-unit) * .75833); }
+.lp-collection-card > .character-stars svg { width: calc(var(--lp6-unit) * 15.16667); height: calc(var(--lp6-unit) * 15.16667); flex: none; }
 .lp-how { --how-unit: var(--lp6-unit); --wave-unit: calc(clamp(760px, 100vw, 1920px) / 1512); margin-top: calc(var(--lp6-unit) * 61); background: #13a2d7; }
 .lp-how::before { background: #13a2d7; }
 .lp-how .lp-how-inner { width: min(100%, 1920px); }
