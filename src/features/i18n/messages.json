@@ -3034,5 +3034,53 @@
   "カメラを開けません。設定でカメラの選択と権限を確認してください。": {
     "ko": "카메라를 열 수 없습니다. 설정에서 카메라 선택과 권한을 확인해 주세요.",
     "en": "Unable to open the camera. Check camera selection and permission in Settings."
+  },
+  "常に画面上にいてくれる": {
+    "ko": "항상 화면 위에서 함께해요",
+    "en": "Always there on your screen"
+  },
+  "正しい姿勢に導いてくれる": {
+    "ko": "바른 자세로 이끌어 줘요",
+    "en": "Guides you back to good posture"
+  },
+  "姿勢が崩れると、ピンアナゴが体を大きくしてお知らせします。": {
+    "ko": "자세가 흐트러지면 핀아나고가 몸을 키워 알려 줘요.",
+    "en": "When your posture slips, your Pin-anago grows to let you know."
+  },
+  "さらに、どこを直せばいいかもピンポイントで教えてくれます。": {
+    "ko": "어느 부분을 바로잡으면 좋을지도 콕 집어 알려 줘요.",
+    "en": "It also points out exactly what you can adjust."
+  },
+  "正しい姿勢に戻ると、褒めてくれるのも嬉しいポイントです。": {
+    "ko": "바른 자세로 돌아오면 칭찬도 해 줘요.",
+    "en": "And when you return to good posture, it cheers you on."
+  },
+  "姿勢のズレをお知らせ！": {
+    "ko": "자세가 흐트러지면 알려 줘요!",
+    "en": "Lets you know when your posture slips!"
+  },
+  "通知に気が付かないと…": {
+    "ko": "알림을 알아차리지 못하면…",
+    "en": "If you miss the reminder…"
+  },
+  "からだが巨大化！": {
+    "ko": "몸이 커져요!",
+    "en": "It grows bigger!"
+  },
+  "褒めてくれる！": {
+    "ko": "칭찬해 줘요!",
+    "en": "Cheers you on!"
+  },
+  "がんばった分だけ仲間が増える": {
+    "ko": "노력한 만큼 친구가 늘어나요",
+    "en": "Your efforts bring new friends"
+  },
+  "ピーン率（正しい姿勢を継続できた割合）が50％を超えると、": {
+    "ko": "핀 비율(바른 자세를 유지한 비율)이 50%를 넘으면,",
+    "en": "When your good-posture rate exceeds 50%,"
+  },
+  "ピンアナゴが新しい仲間を連れてきてくれます。": {
+    "ko": "핀아나고가 새로운 친구를 데려와 줘요.",
+    "en": "your Pin-anago brings a new friend along."
   }
 }

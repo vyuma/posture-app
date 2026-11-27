@@ -249,9 +249,9 @@ function ConceptStory() {
 }
 
 const MECHANISM_STEPS = [
-  { id: "bad", title: "姿勢が崩れると…", caption: "怒る", speech: "姿勢を戻して！", posture: "bad" },
-  { id: "straight", title: "悪い姿勢が続くと…", caption: "どんどん大きくなる！", speech: "", posture: null },
-  { id: "normal", title: "姿勢を正すと…", caption: "褒める", speech: "いい感じ！", posture: "good" },
+  { id: "bad", title: "姿勢が崩れると…", caption: "姿勢のズレをお知らせ！", speech: "首が曲がってるよ！", posture: "bad" },
+  { id: "straight", title: "通知に気が付かないと…", caption: "からだが巨大化！", speech: "首が曲がってるよ！", posture: null },
+  { id: "normal", title: "姿勢を正すと…", caption: "褒めてくれる！", speech: "いい感じ！", posture: "good" },
 ] as const;
 
 function MechanismCard({ step }: { step: (typeof MECHANISM_STEPS)[number] }) {
@@ -260,7 +260,7 @@ function MechanismCard({ step }: { step: (typeof MECHANISM_STEPS)[number] }) {
     <article className={`lp6-mechanism lp6-mechanism--${step.id}`}>
       <h3>{t(step.title)}</h3>
       {step.posture && <img className="lp6-posture-person" src={`/lp/posture-${step.posture}.png`} alt="" />}
-      {step.id === "straight" ? <GrowingPet /> : <img className="lp-example-pet-art" src={`/lp/new/posture-${step.id}.svg`} alt={t(step.speech)} loading="lazy" draggable={false} />}
+      {step.id === "straight" ? <GrowingPet speech={step.speech} /> : <img className="lp-example-pet-art" src={`/lp/new/posture-${step.id === "bad" ? "warning" : "normal"}-current.jpg`} alt={t(step.speech)} loading="lazy" draggable={false} />}
       <strong>{t(step.caption)}</strong>
       {step.id !== "normal" && <div className="lp6-mechanism-arrows" aria-hidden><img src="/lp/lp6/mechanism-arrow.svg" alt="" /><img src="/lp/lp6/mechanism-arrow.svg" alt="" /></div>}
     </article>
@@ -351,7 +351,7 @@ function AboutSection() {
         </div>
         <section className="lp6-point lp6-point--desktop">
           <div className="lp6-point-inner">
-            <PointHeading number={1} title={t("いつでも見守ってくれる")}>{t("ポモドーロタイマー付きのウィジェットをご用意。")}<br />{t("ピンアナゴがあなたの姿勢を常時チェックしてくれます。")}</PointHeading>
+            <PointHeading number={1} title={t("常に画面上にいてくれる")}>{t("ポモドーロタイマー付きのウィジェットをご用意。")}<br />{t("ピンアナゴがあなたの姿勢を常時チェックしてくれます。")}</PointHeading>
             <div className="lp6-point-laptop">
               <DesktopDemo />
               <p className="lp6-position-bubble">{t("表示位置は")}<br />{t("自由に設定可能")}</p>
@@ -360,13 +360,13 @@ function AboutSection() {
         </section>
         <section className="lp6-point lp6-point--posture">
           <div className="lp6-point-inner">
-            <PointHeading number={2} title={t("姿勢が悪くなると怒ってくれる")}>{t("ピンアナゴは姿勢がいい人間が大好き。")}<br />{t("姿勢を正すと褒めてくれますが、")}<br />{t("姿勢が悪いと真っ赤になってカンカンに怒ります。")}</PointHeading>
+            <PointHeading number={2} title={t("正しい姿勢に導いてくれる")}>{t("姿勢が崩れると、ピンアナゴが体を大きくしてお知らせします。")}<br />{t("さらに、どこを直せばいいかもピンポイントで教えてくれます。")}<br />{t("正しい姿勢に戻ると、褒めてくれるのも嬉しいポイントです。")}</PointHeading>
             <div className="lp6-mechanism-grid">{MECHANISM_STEPS.map(step => <MechanismCard key={step.id} step={step} />)}</div>
           </div>
         </section>
         <section className="lp6-point lp6-point--acquisition">
           <div className="lp6-point-inner">
-            <PointHeading number={3} title={t("姿勢がいいと新しい仲間を連れてくる")}>{t("ピーン率（判定できた時間のうち良い姿勢だった割合）が50％以上になると、")}<br />{t("まだ出会っていないピンアナゴを獲得できます。")}</PointHeading>
+            <PointHeading number={3} title={t("がんばった分だけ仲間が増える")}>{t("ピーン率（正しい姿勢を継続できた割合）が50％を超えると、")}<br />{t("ピンアナゴが新しい仲間を連れてきてくれます。")}</PointHeading>
             <LandingResultCard />
           </div>
         </section>
@@ -403,8 +403,8 @@ function HowToSection() {
                 </div>
               </header>
               <div className={`lp-how-devices lp-how-devices--${step.number}`} role="img" aria-label={t("{0}の画面例", { 0: t(step.title) })}>
-                {step.number === "2" && <img className="lp-how-laptop-shell" src="/lp/new/how-laptop.png" alt="" loading="lazy" draggable={false} />}
-                <img className="lp-how-screen-art" src="/lp/new/how-screens.png" alt="" loading="lazy" draggable={false} />
+                <img className="lp-how-laptop-shell" src="/lp/new/how-laptop.png" alt="" loading="lazy" draggable={false} />
+                <img className="lp-how-current-screen" src={`/lp/new/how-${step.number}-current.jpg`} alt="" loading="lazy" draggable={false} />
               </div>
             </article>
           ))}
