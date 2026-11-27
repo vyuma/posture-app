@@ -1,12 +1,13 @@
 import type { Rect } from './model';
 import { speechGeometry, widgetGeometry, type WidgetPose } from '../work/widgetPresentation';
 import { widgetBounds } from '../work/widgetPosition';
+import { t } from '../i18n';
 import messages from '../posture/postureFeedback.json';
 
 const availableHeight = 822;
 const poses: WidgetPose[] = ['good', 'bad', 'rest', 'paused'];
 // Include recovery at full height, all current speech, and the timer/shadows.
-const bounds = poses.flatMap(pose => [0, 1].flatMap(growth => Object.values(messages).map(text =>
+const bounds = poses.flatMap(pose => [0, 1].flatMap(growth => Object.values(messages).flatMap(text => ['ja', 'ko', 'en'].map(language => t(text, {}, language as 'ja' | 'ko' | 'en'))).map(text =>
   widgetBounds(pose, speechGeometry(widgetGeometry(pose, growth, availableHeight), text)),
 )));
 const envelope = {

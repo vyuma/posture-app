@@ -1,5 +1,5 @@
 import { t } from '../i18n';
-import { speechGeometry, widgetGeometry, widgetMessage, type WidgetPose } from './widgetPresentation';
+import { speechLines, SPEECH_FONT_FAMILY, speechGeometry, widgetGeometry, widgetMessage, type WidgetPose } from './widgetPresentation';
 import { speechMotion, type SpeechEvent } from '../posture/feedbackSpeech';
 export type WidgetControlArt = Record<'pause' | 'play' | 'stop', HTMLImageElement>;
 // Reuse the clipped artwork surface across frames; shadows must be drawn after clipping.
@@ -42,7 +42,8 @@ export function paintWidget(context: CanvasRenderingContext2D, image: HTMLCanvas
   const tailWidth = 21.42 + 11.18 * g.growth, tailHeight = 19.04 + 9.94 * g.growth;
   context.moveTo(-4, g.bubbleHeight * .25); context.lineTo(-4 + tailWidth, g.bubbleHeight * .25); context.lineTo(-4 + tailWidth * .28, g.bubbleHeight * .25 + tailHeight); context.closePath(); context.fill();
   context.shadowColor = 'transparent';
-  context.fillStyle = '#000'; context.font = `510 ${g.fontSize}px "SF Pro", -apple-system, sans-serif`; context.textAlign = 'center'; context.textBaseline = 'middle'; context.letterSpacing = `${g.tracking}px`; context.fillText(text, 0, 0); context.restore();
+  context.fillStyle = '#000'; context.font = `510 ${g.fontSize}px ${SPEECH_FONT_FAMILY}`; context.textAlign = 'center'; context.textBaseline = 'middle'; context.letterSpacing = `${g.tracking}px`; const lines = speechLines(g, text);
+  lines.forEach((line, index) => context.fillText(line, 0, (index - (lines.length - 1) / 2) * g.lineHeight)); context.restore();
   }
   paintWidgetTimer(context, pose, remainingMs, durationMs, controls);
 }

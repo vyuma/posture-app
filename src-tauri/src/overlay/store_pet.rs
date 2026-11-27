@@ -55,7 +55,7 @@ fn native_action(app: &AppHandle, action: &str, session: &str) -> Result<(), Str
     drop(stored);
     match action {
         "drag" => super::window::start_drag(app),
-        "compact" => if !bad { super::window::set_work_widget(app, true, false) } else { Ok(()) },
+        "compact" => if !bad { super::window::set_work_widget(app, true, false, 300.0) } else { Ok(()) },
         "open" | "finish" | "pause" | "resume" => {
             if matches!(action, "open" | "finish") { super::window::open_main_window(app)?; }
             app.emit_to("main", "work:action", json!({"sessionId":session,"action":action})).map_err(|e| e.to_string())

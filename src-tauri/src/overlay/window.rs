@@ -17,10 +17,10 @@ const OVERLAY_WIDTH: f64 = 220.0;
 const OVERLAY_HEIGHT: f64 = 238.0;
 
 /// Expand around the timer's bottom-center, keeping its screen anchor stable.
-pub fn set_work_widget(app: &AppHandle, visible: bool, bad: bool) -> Result<(), String> {
+pub fn set_work_widget(app: &AppHandle, visible: bool, bad: bool, speech_width: f64) -> Result<(), String> {
     let window = ensure_overlay_window(app)?;
     // Transparent padding lets the character shadow fade beyond the clipped artwork.
-    let (width, height): (f64, f64) = if bad { (420.0, 870.0) } else { (300.0, 324.0) };
+    let (width, height): (f64, f64) = if bad { (speech_width.clamp(420.0, 2000.0), 870.0) } else { (300.0, 324.0) };
     #[cfg(target_os = "macos")]
     {
         let _ = window;

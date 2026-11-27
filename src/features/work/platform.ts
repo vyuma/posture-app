@@ -1,3 +1,4 @@
+import { speechGeometry, widgetGeometry } from './widgetPresentation';
 import { activeSpace, activeOwner } from '../accounts/localScope';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
@@ -15,7 +16,7 @@ export async function openWorkRepository(space = activeSpace(), owner = activeOw
   };
   return new WorkRepository(driver, space === 'legacy', owner);
 }
-export async function publishWidget(state: WidgetState | null) { if (isDesktop) await invoke('work_widget_update', { value: state ? { ...state, language: getAppLanguage(), speech: state.speech ? {...state.speech,text:t(state.speech.text)} : state.speech } : null }); }
+export async function publishWidget(state: WidgetState | null) { if (isDesktop) await invoke('work_widget_update', { value: state ? { ...state, speechWindowWidth: Math.ceil(speechGeometry(widgetGeometry('bad', 1), t(state.speech?.text ?? '')).bubbleWidth + 64), language: getAppLanguage(), speech: state.speech ? {...state.speech,text:t(state.speech.text)} : state.speech } : null }); }
 export async function subscribeWidgetActions(callback: (sessionId: string, action: WidgetAction) => void): Promise<() => void> {
   if (!isDesktop) return () => {};
   return listen<{ sessionId: string; action: WidgetAction }>('work:action', event => callback(event.payload.sessionId, event.payload.action));
