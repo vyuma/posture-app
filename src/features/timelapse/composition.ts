@@ -35,10 +35,9 @@ export async function createComposition(clip: Clip, settings: TimelapseSettings,
         const rightWidth = right!.naturalWidth / right!.naturalHeight * 326;
         context.drawImage(right!, 1266 + (203 - rightWidth) / 2, 656, rightWidth, 326);
         videoBox = { x: 372, y: 284, width: 768, height: 451 };
-        round(context, videoBox.x, videoBox.y, videoBox.width, videoBox.height, 32); context.clip();
-        context.fillStyle = '#e9eef0'; context.fillRect(videoBox.x, videoBox.y, videoBox.width, videoBox.height);
         const [x, y, w, h] = fit(clip.width, clip.height, videoBox.x, videoBox.y, videoBox.width, videoBox.height);
         videoBox = { x, y, width: w, height: h };
+        round(context, videoBox.x, videoBox.y, videoBox.width, videoBox.height, 32); context.clip();
       }
       context.fillStyle = '#e9eef0'; context.fillRect(videoBox.x, videoBox.y, videoBox.width, videoBox.height);
       const camera = settings.camera;
