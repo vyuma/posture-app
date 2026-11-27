@@ -11,6 +11,7 @@ export function postureSpeechSample(s: PostureSample & Pick<RuntimeSnapshot, 'fe
     valid: s.baselineReady && (s.qualityOk || missing || grace), retain: grace,
     reasonAvailable: !missing && s.feedback?.available !== false,
     trackingMissing: missing, directions: s.feedback?.directions,
+    causes: s.feedback?.causes,
     posture: petPosture(s, now - timeOrigin), evidence: s.feedback?.evidence ?? emptyEvidence() };
 }
 

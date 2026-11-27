@@ -10,10 +10,10 @@ export function observationFresh(s: PostureSample, now: number) {
 export function measurementReading(s: PostureSample & Pick<RuntimeSnapshot, 'score' | 'feedback'>, now: number): Reading {
   const valid = observationFresh(s, now) && s.qualityOk;
   const feedback = valid && s.feedback?.baselineReady && s.feedback.available ? {
-    version: 2 as const, observedAtMs: s.observedAtMs!, directions: { ...s.feedback.directions },
+    version: s.feedback.causes ? 3 as const : 2 as const, observedAtMs: s.observedAtMs!, directions: { ...s.feedback.directions },
     evidence: Object.fromEntries(REASONS.map(reason => {
       const value = s.feedback!.evidence[reason];
-      return [reason, value !== null && Number.isFinite(value) ? Math.round(Math.min(100, Math.max(0, value)) * 100) / 100 : null];
+      return [reason, value !== null && Number.isFinite(value) ? s.feedback!.causes && !s.feedback!.causes.includes(reason) ? 0 : Math.round(Math.min(100, Math.max(0, value)) * 100) / 100 : null];
     })) as Evidence,
   } : undefined;
   return { valid, good: s.postureState === 'good', deviation: s.score, ...(feedback ? { feedback } : {}) };

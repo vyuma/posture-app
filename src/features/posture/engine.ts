@@ -421,6 +421,8 @@ export function evaluatePostureFrame(
         headWidthRatio,
         headWidthScale: scoreResult.headWidthScale,
         headWidthScoreBoost: scoreResult.headWidthScoreBoost,
+        scoreBreakdown: scoreResult.breakdown,
+        headTurnCandidateBad: isHeadTurnedSevere,
       },
       features: extracted.features,
       postureState: next.postureState,

@@ -2,12 +2,16 @@ import { REASONS, type Direction, type Reason } from '../posture/feedback';
 import type { Session } from './model';
 
 const patterns: Record<Reason, string> = {
+  headShoulderAngle: '肩に対する頭の位置が変わる場面があったね。',
+  headShoulderDistance: '頭と肩の間隔が変わる場面があったね。', neckAngle: '首の角度が変わる場面があったね。',
+  earShoulderBalance: '耳と肩のバランスが変わる場面があったね。', faceScale: '顔が大きく映る場面があったね。',
   faceNear: '顔が近づく場面があったね。', headForward: '頭が前に出る場面があったね。',
   headTilt: '頭が傾く場面があったね。', bodyTilt: '体が傾く場面があったね。',
   headShift: '頭が横にずれる場面があったね。', headPitch: 'あごの位置が変わる場面があったね。',
   shoulderTilt: '左右の肩の高さが変わる場面があったね。', headTurn: '顔が横を向く場面があったね。',
 };
 const directed: Partial<Record<Reason, Partial<Record<Direction, string>>>> = {
+  headShoulderAngle: { forward: '頭が前に出る場面があったね。', backward: '頭が後ろに傾く場面があったね。' },
   headTilt: { left: '頭が左に傾く場面があったね。', right: '頭が右に傾く場面があったね。' },
   bodyTilt: { left: '体が左に傾く場面があったね。', right: '体が右に傾く場面があったね。' },
   headShift: { left: '頭が左にずれる場面があったね。', right: '頭が右にずれる場面があったね。' },
@@ -16,6 +20,9 @@ const directed: Partial<Record<Reason, Partial<Record<Direction, string>>>> = {
   headTurn: { left: '顔が左を向く場面があったね。', right: '顔が右を向く場面があったね。' },
 };
 const suggestions: Record<Reason, string> = {
+  headShoulderAngle: '次は肩に対する頭の位置を意識してみよう。',
+  headShoulderDistance: '次は登録したときの頭と肩の間隔を意識してみよう。', neckAngle: '次は登録したときの首の角度を意識してみよう。',
+  earShoulderBalance: '次は登録したときの耳と肩のバランスを意識してみよう。', faceScale: '次は画面との距離も意識してみよう。',
   faceNear: '次は画面との距離も意識してみよう。', headForward: '次は肩に対する頭の位置を意識してみよう。',
   headTilt: '次は頭の傾きを意識してみよう。', bodyTilt: '次は体の傾きを意識してみよう。',
   headShift: '次は肩の中央に頭を戻すことを意識してみよう。', headPitch: '次は登録したときのあごの位置を意識してみよう。',
@@ -28,7 +35,7 @@ export function summarizeFeedback(session: Pick<Session, 'samples'>) {
   let observedMs = 0, goodMs = 0, badMs = 0, recovered = false, badRun = 0, goodRun = 0, pendingRecovery = false;
   for (let i = 1; i < session.samples.length; i++) {
     const a = session.samples[i - 1], b = session.samples[i], ms = b.focusMs - a.focusMs;
-    if (a.feedback?.version !== 2 || b.feedback?.version !== 2 || a.state === 'untracked' || b.state === 'untracked' ||
+    if (!a.feedback || ![2,3].includes(a.feedback.version) || b.feedback?.version !== a.feedback.version || a.state === 'untracked' || b.state === 'untracked' ||
         a.segment !== b.segment || a.calibrationId !== b.calibrationId || b.sequence !== a.sequence + 1 ||
         ms <= 0 || ms > 1500 || Math.abs(b.elapsedMs - a.elapsedMs - ms) > 1 ||
         b.feedback.observedAtMs <= a.feedback.observedAtMs || b.feedback.observedAtMs - a.feedback.observedAtMs > 1500 ||
@@ -58,7 +65,7 @@ export function summarizeFeedback(session: Pick<Session, 'samples'>) {
 }
 
 export function postureComment(session: Session): [string, string] | null {
-  if (session.feedbackVersion !== 2) return null;
+  if (session.feedbackVersion !== 2 && session.feedbackVersion !== 3) return null;
   const summary = summarizeFeedback(session);
   if (summary.observedMs < 10000 || summary.observedMs < session.focusMs * .5) return [
     '今回は姿勢を確認できた時間が短かったね。', '顔と肩が映る位置で、また測ってみよう。',

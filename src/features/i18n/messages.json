@@ -2918,5 +2918,65 @@
   "カメラを開けません。権限を確認して、ホームからやり直してください。": {
     "ko": "카메라를 열 수 없습니다. 권한을 확인한 뒤 홈에서 다시 시작해 주세요.",
     "en": "Unable to open the camera. Check permission and try again from Home."
+  },
+  "頭と肩の位置を戻そう！": {
+    "ko": "머리와 어깨의 위치를 되돌려 봐!",
+    "en": "Reset your head position!"
+  },
+  "頭が後ろに傾いてるよ！": {
+    "ko": "머리가 뒤로 기울어졌어!",
+    "en": "Your head is leaning back!"
+  },
+  "頭と肩の間隔が変わってるよ！": {
+    "ko": "머리와 어깨 사이 간격이 달라졌어!",
+    "en": "Head–shoulder gap changed!"
+  },
+  "首の角度が変わってるよ！": {
+    "ko": "목의 각도가 달라졌어!",
+    "en": "Your neck angle changed!"
+  },
+  "耳と肩のバランスが変わってるよ！": {
+    "ko": "귀와 어깨 사이 균형이 달라졌어!",
+    "en": "Ear–shoulder shift!"
+  },
+  "顔が大きく映ってるよ！": {
+    "ko": "화면에 얼굴이 더 크게 보여!",
+    "en": "Your face looks larger!"
+  },
+  "肩に対する頭の位置が変わる場面があったね。": {
+    "ko": "어깨에 대한 머리 위치가 달라지는 순간이 있었어.",
+    "en": "Your head position relative to your shoulders changed at times."
+  },
+  "頭が後ろに傾く場面があったね。": {
+    "ko": "머리가 뒤로 기울어지는 순간이 있었어.",
+    "en": "Your head leaned back at times."
+  },
+  "頭と肩の間隔が変わる場面があったね。": {
+    "ko": "머리와 어깨 사이 간격이 달라지는 순간이 있었어.",
+    "en": "The gap between your head and shoulders changed at times."
+  },
+  "首の角度が変わる場面があったね。": {
+    "ko": "목의 각도가 달라지는 순간이 있었어.",
+    "en": "Your neck angle changed at times."
+  },
+  "耳と肩のバランスが変わる場面があったね。": {
+    "ko": "귀와 어깨 사이 균형이 달라지는 순간이 있었어.",
+    "en": "Your ear-to-shoulder balance changed at times."
+  },
+  "顔が大きく映る場面があったね。": {
+    "ko": "화면에 얼굴이 더 크게 보이는 순간이 있었어.",
+    "en": "Your face looked larger in the camera at times."
+  },
+  "次は登録したときの頭と肩の間隔を意識してみよう。": {
+    "ko": "다음에는 등록할 때의 머리와 어깨 사이 간격을 의식해 봐.",
+    "en": "Next time, keep the head-to-shoulder gap you registered in mind."
+  },
+  "次は登録したときの首の角度を意識してみよう。": {
+    "ko": "다음에는 등록할 때의 목 각도를 의식해 봐.",
+    "en": "Next time, keep the neck angle you registered in mind."
+  },
+  "次は登録したときの耳と肩のバランスを意識してみよう。": {
+    "ko": "다음에는 등록할 때의 귀와 어깨 사이 균형을 의식해 봐.",
+    "en": "Next time, keep the ear-to-shoulder balance you registered in mind."
   }
 }

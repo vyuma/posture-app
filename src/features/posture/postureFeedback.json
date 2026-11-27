@@ -23,5 +23,12 @@
   "shoulderTiltRight": "右肩が高くなってるよ！",
   "headTurnLeft": "顔が左を向いてるよ！",
   "headTurnRight": "顔が右を向いてるよ！",
-  "unavailable": "姿勢を確認できないよ"
+  "unavailable": "姿勢を確認できないよ",
+  "headShoulderAngle": "頭と肩の位置を戻そう！",
+  "headShoulderAngleForward": "頭が前に出てるよ！",
+  "headShoulderAngleBackward": "頭が後ろに傾いてるよ！",
+  "headShoulderDistance": "頭と肩の間隔が変わってるよ！",
+  "neckAngle": "首の角度が変わってるよ！",
+  "earShoulderBalance": "耳と肩のバランスが変わってるよ！",
+  "faceScale": "顔が大きく映ってるよ！"
 }

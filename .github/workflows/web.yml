@@ -37,7 +37,7 @@ jobs:
           for suite in i18n posture-check-screen timer-settings widget-interaction result-card-effects story-navigation model-lab; do
             bun test "scripts/$suite.test.tsx"
           done
-          for suite in posture-feedback posture-judgment posture-comment posture-praise-policy posture-speech-stability widget timelapse timelapse-export timelapse-timeline; do
+          for suite in posture-feedback posture-causal-feedback posture-judgment posture-comment posture-praise-policy posture-speech-stability widget timelapse timelapse-export timelapse-timeline; do
             bun test "scripts/$suite.test.ts"
           done
           bun test scripts/timelapse-motion.test.tsx
