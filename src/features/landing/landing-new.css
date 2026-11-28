@@ -69,7 +69,9 @@
 }
 .lp6-collection { position: relative; }
 .lp6-collection .lp-collection-copy h2 { line-height: 2; }
-.lp-collection-rare { position: absolute; bottom: calc(var(--lp6-unit) * 141); left: calc(50% - var(--lp6-unit) * 334); width: calc(var(--lp6-unit) * 700); margin: 0; text-align: center; color: #f78000; font-size: calc(var(--lp6-unit) * 24); line-height: 2; letter-spacing: calc(var(--lp6-unit) * 2); }
+.lp-collection-rare { position: absolute; bottom: calc(var(--lp6-unit) * 141); left: calc(50% - var(--lp6-unit) * 335); width: calc(var(--lp6-unit) * 702); margin: 0; text-align: center; color: #f78000; font-size: calc(var(--lp6-unit) * 24); line-height: 2; letter-spacing: calc(var(--lp6-unit) * 2); }
+/* Figma's 700px text also needs the browser's final 2px of letter spacing. */
+.lp-collection-rare:lang(ja) { white-space: nowrap; }
 .lp6-collection .lp-collection-card { width: calc(var(--lp6-unit) * 200.2); flex-basis: calc(var(--lp6-unit) * 200.2); height: calc(var(--lp6-unit) * 263.9); border-radius: calc(var(--lp6-unit) * 24.267); font-family: "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, sans-serif; font-weight: 700; font-synthesis: weight; letter-spacing: 0; }
 .lp6-collection .lp-collection-group { gap: calc(var(--lp6-unit) * 11.62); padding-right: calc(var(--lp6-unit) * 11.62); }
 .lp-collection-card > .character-stars { position: absolute; top: calc(var(--lp6-unit) * 201.717); left: calc(var(--lp6-unit) * 109.2); display: flex; gap: calc(var(--lp6-unit) * .75833); }
@@ -111,6 +113,7 @@
   .lp-new-result { position:relative; left:auto; top:auto; width:min(100%,721px); margin:32px auto 0; }
   .lp6-collection { --lp6-unit: 1px; padding: 48px 0 100px; }
   .lp-collection-rare { position: static; margin: 42px auto 0; width: min(calc(100% - 40px), 700px); font-size: 16px; line-height: 2; letter-spacing: 1px; text-wrap: balance; }
+  .lp-collection-rare:lang(ja) { font-size: min(16px, calc((100vw - 40px) * 24 / 702)); letter-spacing: calc(1em / 12); }
   .lp-how { --how-unit: 1px; margin-top: 0; }
   .lp-how .lp-how-step, .lp-how .lp-how-step:nth-child(1), .lp-how .lp-how-step:nth-child(2), .lp-how .lp-how-step:nth-child(3) { left: auto; width: 100%; }
   .lp-how .lp-how-step header > div { padding-left: 0; }
